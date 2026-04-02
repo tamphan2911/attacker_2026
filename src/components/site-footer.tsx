@@ -54,8 +54,8 @@ export function SiteFooter() {
               <a className="block transition hover:text-[var(--text-strong)]" href={`tel:${contactInfo.phone}`}>
                 {contactInfo.phone}
               </a>
-              <a className="block transition hover:text-[var(--text-strong)]" href={contactInfo.facebook} target="_blank" rel="noreferrer">
-                Facebook community
+              <a className="block transition hover:text-[var(--text-strong)]" href={contactInfo.attackerFacebook} target="_blank" rel="noreferrer">
+                {locale === "en" ? "Attacker Facebook page" : "Fanpage Attacker"}
               </a>
             </div>
           </div>

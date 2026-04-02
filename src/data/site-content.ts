@@ -33,7 +33,8 @@ export const DEMO_ADMIN_PASSWORD = "Aa@291189";
 export const contactInfo = {
   email: "attacker@uel.edu.vn",
   phone: "0378 398 638",
-  facebook: "https://www.facebook.com/clbfintechuel",
+  attackerFacebook: "https://www.facebook.com/clbfintechuel",
+  ftcFacebook: "https://www.facebook.com/clbfintechuel",
 };
 
 export const contactLocation = {
@@ -139,9 +140,9 @@ export const navItems: NavItem[] = [
   { href: "/competition", label: { en: "Competition", vi: "Cuộc thi" } },
   { href: "/rules", label: { en: "Rules & Timeline", vi: "Thể lệ và Lịch trình" } },
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
-  { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
   { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
-  { href: "/organizer", label: { en: "Organizer", vi: "Ban tổ chức" } },
+  { href: "/organizer", label: { en: "About Attacker", vi: "Giới thiệu Attacker" } },
+  { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
 ];
 
 export const heroCopy = {

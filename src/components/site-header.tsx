@@ -53,9 +53,9 @@ const primaryNavItems: Array<{
     ],
   },
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
-  { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
   { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
-  { href: "/organizer", label: { en: "Organizer", vi: "Ban tổ chức" } },
+  { href: "/organizer", label: { en: "About Attacker", vi: "Giới thiệu Attacker" } },
+  { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
 ];
 
 export function SiteHeader() {
@@ -146,7 +146,7 @@ export function SiteHeader() {
                 <span className="hidden h-4 w-px bg-white/12 xl:block" />
                 <a
                   className="hidden h-8 items-center gap-2 px-3 text-[0.68rem] font-medium text-white/84 transition hover:bg-white/8 hover:text-white xl:inline-flex"
-                  href={contactInfo.facebook}
+                  href={contactInfo.attackerFacebook}
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Facebook"
