@@ -313,9 +313,9 @@ export function SiteHeader() {
                 {isProfileMenuOpen ? (
                   <div
                     role="menu"
-                    className="theme-card-shadow-soft theme-panel-strong absolute right-0 top-full z-40 mt-3 w-64 rounded-[1.6rem] border theme-border p-2 backdrop-blur-xl"
+                    className="theme-card-shadow-soft theme-profile-menu absolute right-0 top-full z-40 mt-3 w-[20rem] max-w-[calc(100vw-1rem)] rounded-[1.6rem] border p-3 backdrop-blur-2xl"
                   >
-                    <div className="rounded-[1.2rem] border theme-border bg-[rgba(255,255,255,0.46)] px-4 py-4 dark:bg-[rgba(8,15,30,0.54)]">
+                    <div className="theme-profile-summary rounded-[1.2rem] border px-4 py-4">
                       <div className="flex items-center gap-3">
                         <GradientAvatar
                           label={currentUser.name}
@@ -324,18 +324,18 @@ export function SiteHeader() {
                           className="h-11 w-11 rounded-full text-xs"
                         />
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold theme-text-strong">{currentUser.name}</p>
-                          <p className="truncate text-xs theme-text-soft">{currentUser.email}</p>
+                          <p className="text-sm font-semibold leading-5 theme-text-strong">{currentUser.name}</p>
+                          <p className="mt-1 break-all text-xs leading-5 theme-text-soft">{currentUser.email}</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-2 grid gap-1">
+                    <div className="mt-3 grid gap-1.5">
                       <Link
                         href="/profile"
                         role="menuitem"
                         onClick={() => setIsProfileMenuOpen(false)}
-                        className="inline-flex items-center gap-3 rounded-[1rem] px-4 py-3 text-sm font-medium theme-text-body transition hover:bg-[rgba(23,114,208,0.08)] hover:text-[var(--text-strong)]"
+                        className="inline-flex items-center gap-3 rounded-[1rem] px-4 py-3 text-sm font-medium theme-text-body transition hover:bg-[rgba(23,114,208,0.08)] hover:text-[var(--text-strong)] dark:hover:bg-[rgba(88,196,255,0.12)]"
                       >
                         <UserRound className="h-4 w-4 text-sky-400" />
                         <span>{locale === "en" ? "Profile" : "Hồ sơ"}</span>
@@ -347,7 +347,7 @@ export function SiteHeader() {
                           setIsProfileMenuOpen(false);
                           void signOutCurrentUser();
                         }}
-                        className="inline-flex items-center gap-3 rounded-[1rem] px-4 py-3 text-left text-sm font-medium theme-text-body transition hover:bg-[rgba(23,114,208,0.08)] hover:text-[var(--text-strong)]"
+                        className="inline-flex items-center gap-3 rounded-[1rem] px-4 py-3 text-left text-sm font-medium theme-text-body transition hover:bg-[rgba(23,114,208,0.08)] hover:text-[var(--text-strong)] dark:hover:bg-[rgba(88,196,255,0.12)]"
                       >
                         <LogOut className="h-4 w-4 text-sky-400" />
                         <span>{locale === "en" ? "Log out" : "Đăng xuất"}</span>
