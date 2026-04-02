@@ -19,6 +19,7 @@ import {
   DEMO_ADMIN_LOGIN_ID,
   DEMO_ADMIN_PASSWORD,
   defaultPageContent,
+  judgeProfiles,
   mockInvitations,
   mockLeadershipTransferRequests,
   mockRound1TeamLockRequests,
@@ -404,6 +405,13 @@ async function main() {
     data: {
       scope: "site-page-content",
       payload: JSON.stringify(defaultPageContent),
+    },
+  });
+
+  await prisma.cmsEntry.create({
+    data: {
+      scope: "site-judges",
+      payload: JSON.stringify(judgeProfiles),
     },
   });
 

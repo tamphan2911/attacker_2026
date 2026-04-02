@@ -830,6 +830,7 @@ export const sponsorProfiles: SponsorProfile[] = [
 
 export const judgeProfiles: JudgeProfile[] = [
   {
+    id: "judge-round3-nguyen-bao-chau",
     name: "Nguyen Bao Chau",
     imageSrc: "/judges/nguyen-bao-chau.svg",
     role: {
@@ -850,6 +851,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-3"],
   },
   {
+    id: "judge-round3-vo-gia-han",
     name: "Vo Gia Han",
     imageSrc: "/judges/nguyen-bao-chau.svg",
     role: {
@@ -870,6 +872,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-3"],
   },
   {
+    id: "judge-round3-bui-thanh-son",
     name: "Bui Thanh Son",
     imageSrc: "/judges/le-quynh-nhu.svg",
     role: {
@@ -890,6 +893,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-3"],
   },
   {
+    id: "judge-round3-dang-ngoc-anh",
     name: "Đặng Ngọc Anh",
     imageSrc: "/judges/tran-hoang-minh.svg",
     role: {
@@ -910,6 +914,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-3"],
   },
   {
+    id: "judge-round2-tran-hoang-minh",
     name: "Tran Hoang Minh",
     imageSrc: "/judges/tran-hoang-minh.svg",
     role: {
@@ -930,6 +935,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-2"],
   },
   {
+    id: "judge-round2-phan-thu-trang",
     name: "Phan Thu Trang",
     imageSrc: "/judges/pham-duc-long.svg",
     role: {
@@ -950,6 +956,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-2"],
   },
   {
+    id: "judge-round2-hoang-minh-quan",
     name: "Hoang Minh Quan",
     imageSrc: "/judges/nguyen-bao-chau.svg",
     role: {
@@ -970,6 +977,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-2"],
   },
   {
+    id: "judge-round2-le-thi-mai-anh",
     name: "Le Thi Mai Anh",
     imageSrc: "/judges/le-quynh-nhu.svg",
     role: {
@@ -990,6 +998,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-2"],
   },
   {
+    id: "judge-round2-truong-duc-huy",
     name: "Truong Duc Huy",
     imageSrc: "/judges/tran-hoang-minh.svg",
     role: {
@@ -1010,6 +1019,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-2"],
   },
   {
+    id: "judge-round3-le-quynh-nhu",
     name: "Le Quynh Nhu",
     imageSrc: "/judges/le-quynh-nhu.svg",
     role: {
@@ -1030,6 +1040,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-3"],
   },
   {
+    id: "judge-round1-pham-duc-long",
     name: "Pham Duc Long",
     imageSrc: "/judges/pham-duc-long.svg",
     role: {
@@ -1050,6 +1061,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-1"],
   },
   {
+    id: "judge-round1-nguyen-tuan-kiet",
     name: "Nguyen Tuan Kiet",
     imageSrc: "/judges/tran-hoang-minh.svg",
     role: {
@@ -1070,6 +1082,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-1"],
   },
   {
+    id: "judge-round1-tran-bao-ngan",
     name: "Tran Bao Ngan",
     imageSrc: "/judges/nguyen-bao-chau.svg",
     role: {
@@ -1090,6 +1103,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-1"],
   },
   {
+    id: "judge-round1-pham-kha-vy",
     name: "Pham Kha Vy",
     imageSrc: "/judges/le-quynh-nhu.svg",
     role: {
@@ -1110,6 +1124,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-1"],
   },
   {
+    id: "judge-round1-le-hoang-viet",
     name: "Le Hoang Viet",
     imageSrc: "/judges/pham-duc-long.svg",
     role: {

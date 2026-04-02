@@ -96,16 +96,38 @@ export function RulesPage() {
 
       <section className="overflow-hidden rounded-[2.2rem] border border-slate-900/40 bg-[linear-gradient(140deg,#071223_0%,#0b2744_42%,#12528d_100%)] px-6 py-8 text-white md:px-8 md:py-10">
         <div className="space-y-8">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-white/64">
-              {pickText(locale, pageContent.rules.coreRules.eyebrow)}
-            </p>
-            <h2 className="theme-heading mt-5 max-w-2xl text-3xl font-semibold leading-[1.08] md:text-[3rem]">
-              {pickText(locale, pageContent.rules.coreRules.title)}
-            </h2>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-white/74">
-              {pickText(locale, pageContent.rules.coreRules.description)}
-            </p>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-white/64">
+                {pickText(locale, pageContent.rules.coreRules.eyebrow)}
+              </p>
+              <h2 className="theme-heading mt-5 max-w-2xl text-3xl font-semibold leading-[1.08] md:text-[3rem]">
+                {pickText(locale, pageContent.rules.coreRules.title)}
+              </h2>
+              <p className="mt-5 max-w-2xl text-base leading-8 text-white/74">
+                {pickText(locale, pageContent.rules.coreRules.description)}
+              </p>
+            </div>
+
+            <div className="rounded-[1.9rem] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.06))] px-5 py-5 shadow-[0_24px_55px_rgba(2,6,23,0.22)] backdrop-blur-xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/58">
+                {locale === "en" ? "What matters most" : "Điểm mấu chốt"}
+              </p>
+              <div className="mt-5 space-y-3">
+                {[
+                  locale === "en" ? "One student belongs to one team only." : "Mỗi sinh viên chỉ thuộc một đội duy nhất.",
+                  locale === "en" ? "Round 1 eligibility starts from 3 members." : "Điều kiện vào Vòng 1 bắt đầu từ 3 thành viên.",
+                  locale === "en" ? "Progression is ranked at team level." : "Việc đi tiếp được xếp theo kết quả cấp đội.",
+                ].map((text) => (
+                  <div
+                    key={text}
+                    className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-sm leading-7 text-white/82"
+                  >
+                    {text}
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -115,25 +137,39 @@ export function RulesPage() {
               return (
                 <div
                   key={item.title.en}
-                  className="flex min-h-[210px] flex-col rounded-[1.8rem] border border-white/12 bg-white/8 px-5 py-5 backdrop-blur-md"
+                  className="relative flex min-h-[230px] flex-col overflow-hidden rounded-[1.8rem] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.05))] px-5 py-5 shadow-[0_22px_50px_rgba(2,6,23,0.18)] backdrop-blur-md"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="inline-flex rounded-2xl border border-white/12 bg-white/12 p-3">
+                  <div className="absolute inset-x-5 top-0 h-px bg-[linear-gradient(90deg,rgba(255,255,255,0),rgba(125,211,252,0.9),rgba(255,255,255,0))]" />
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="inline-flex rounded-2xl border border-white/12 bg-white/12 p-3 shadow-[0_12px_30px_rgba(7,18,35,0.2)]">
                       <Icon className="h-5 w-5 text-cyan-200" />
                     </div>
-                    <p className="text-lg font-semibold">{pickText(locale, item.title)}</p>
+                    <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-white/58">
+                      {locale === "en" ? "Priority" : "Ưu tiên"}
+                    </span>
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-white/74">
-                    {pickText(locale, ruleSummaries[index] ?? item.description)}
-                  </p>
+                  <div className="mt-5">
+                    <p className="text-lg font-semibold leading-7 text-white">{pickText(locale, item.title)}</p>
+                    <p className="mt-4 text-sm leading-7 text-white/74">
+                      {pickText(locale, ruleSummaries[index] ?? item.description)}
+                    </p>
+                  </div>
+                  <div className="mt-auto pt-5">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-cyan-200/78">
+                      {locale === "en" ? "Rule focus" : "Trọng tâm"}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 text-white/62">
+                      {pickText(locale, item.description)}
+                    </p>
+                  </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="rounded-[2rem] border border-white/12 bg-white/[0.08] px-5 py-6 backdrop-blur-md md:px-6 md:py-7">
+          <div className="rounded-[2rem] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] px-5 py-6 shadow-[0_24px_55px_rgba(2,6,23,0.16)] backdrop-blur-md md:px-6 md:py-7">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex rounded-2xl border border-white/12 bg-white/12 p-3">
+              <div className="inline-flex rounded-2xl border border-white/12 bg-white/12 p-3 shadow-[0_12px_30px_rgba(7,18,35,0.18)]">
                 <Route className="h-5 w-5 text-cyan-200" />
               </div>
               <div>
@@ -155,7 +191,7 @@ export function RulesPage() {
                 return (
                   <div
                     key={`${item.title.en}-detail`}
-                    className="rounded-[1.6rem] border border-white/10 bg-white/[0.06] px-4 py-4"
+                    className="rounded-[1.6rem] border border-white/10 bg-white/[0.06] px-4 py-4 shadow-[0_18px_36px_rgba(7,18,35,0.12)]"
                   >
                     <div className="flex items-center gap-3">
                       <div className="inline-flex rounded-2xl border border-white/12 bg-white/12 p-2.5">

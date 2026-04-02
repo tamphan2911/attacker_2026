@@ -17,6 +17,7 @@ import {
   TEAM_MAX_MEMBERS,
   TEAM_MIN_MEMBERS,
   defaultPageContent,
+  judgeProfiles as seedJudgeProfiles,
   mockInvitations,
   mockLeadershipTransferRequests,
   mockRound1TeamLockRequests,
@@ -48,6 +49,7 @@ import {
 import type {
   AppSnapshot,
   CompetitionStage,
+  JudgeProfile,
   LeadershipTransferRequest,
   Locale,
   LocalizedText,
@@ -93,6 +95,7 @@ interface WorkspaceApiPayload {
 
 interface SiteDataApiPayload {
   pageContent: SitePageContent;
+  judges: JudgeProfile[];
   newsPosts: NewsPost[];
   round1TestBanks: Round1TestBank[];
 }
@@ -122,6 +125,7 @@ interface SiteStateValue {
   round1TestBanks: Round1TestBank[];
   round1Submissions: Round1Submission[];
   newsPosts: NewsPost[];
+  judges: JudgeProfile[];
   pageContent: SitePageContent;
   currentUser: UserProfile;
   currentTeam?: TeamProfile;
@@ -136,6 +140,9 @@ interface SiteStateValue {
   createNewsPostByAdmin: (payload: NewsPost) => void;
   updateNewsPostByAdmin: (slug: string, payload: NewsPost) => void;
   deleteNewsPostByAdmin: (slug: string) => void;
+  createJudgeByAdmin: (payload: JudgeProfile) => Promise<boolean>;
+  updateJudgeByAdmin: (judgeId: string, payload: JudgeProfile) => Promise<boolean>;
+  deleteJudgeByAdmin: (judgeId: string) => Promise<boolean>;
   updateActiveUserProfile: (payload: Partial<UserProfile>) => void;
   updateUserByAdmin: (userId: string, payload: Partial<UserProfile>) => void;
   deleteUserByAdmin: (userId: string) => void;
@@ -184,6 +191,7 @@ function createInitialSnapshot(): AppSnapshot {
     round1TestBanks: seedRound1TestBanks,
     round1Submissions: seedRound1Submissions,
     newsPosts: seedNewsPosts,
+    judges: seedJudgeProfiles,
     pageContent: clonePageContent(defaultPageContent),
   };
 }
@@ -204,6 +212,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
   const [round1TestBanks, setRound1TestBanks] = useState<Round1TestBank[]>(seedRound1TestBanks);
   const [round1Submissions, setRound1Submissions] = useState<Round1Submission[]>(seedRound1Submissions);
   const [newsPosts, setNewsPosts] = useState<NewsPost[]>(seedNewsPosts);
+  const [judges, setJudges] = useState<JudgeProfile[]>(seedJudgeProfiles);
   const [pageContent, setPageContent] = useState<SitePageContent>(() => clonePageContent(defaultPageContent));
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
@@ -232,6 +241,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       setRound1TestBanks(snapshot.round1TestBanks ?? seedRound1TestBanks);
       setRound1Submissions(snapshot.round1Submissions ?? seedRound1Submissions);
       setNewsPosts(snapshot.newsPosts ?? seedNewsPosts);
+      setJudges(snapshot.judges ?? seedJudgeProfiles);
       setPageContent(snapshot.pageContent ?? clonePageContent(defaultPageContent));
     } catch {
       window.localStorage.removeItem(STORAGE_KEY);
@@ -262,9 +272,10 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       round1TestBanks,
       round1Submissions,
       newsPosts,
+      judges,
       pageContent,
     });
-  }, [activeUserId, hasHydrated, invitations, leadershipTransferRequests, locale, newsPosts, pageContent, round1Submissions, round1TestBanks, submissions, teamLockRequests, theme, teams, users]);
+  }, [activeUserId, hasHydrated, invitations, judges, leadershipTransferRequests, locale, newsPosts, pageContent, round1Submissions, round1TestBanks, submissions, teamLockRequests, theme, teams, users]);
 
   const pushToast = (message: LocalizedText, tone: ToastTone = "info") => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -295,6 +306,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
 
     const payload = (await response.json()) as SiteDataApiPayload;
     setPageContent(payload.pageContent);
+    setJudges(payload.judges);
     setNewsPosts(payload.newsPosts);
     setRound1TestBanks(payload.round1TestBanks);
   }, []);
@@ -415,6 +427,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     setRound1TestBanks(snapshot.round1TestBanks);
     setRound1Submissions(snapshot.round1Submissions);
     setNewsPosts(snapshot.newsPosts);
+    setJudges(snapshot.judges);
     setPageContent(snapshot.pageContent);
     pushToast(
       {
@@ -607,6 +620,149 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         "warning",
       );
     });
+  };
+
+  const createJudgeByAdmin = async (payload: JudgeProfile) => {
+    if (!canAccessAdminMode) {
+      pushToast(
+        {
+          en: "Only admin and moderator accounts can create judges here.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể tạo giám khảo tại đây.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch("/api/admin/judges", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not create the judge.");
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncSiteData();
+      pushToast(
+        {
+          en: "Judge profile created in admin mode.",
+          vi: "Hồ sơ giám khảo đã được tạo trong admin mode.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not create the judge right now.",
+          vi: "Hiện không thể tạo giám khảo.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
+  const updateJudgeByAdmin = async (judgeId: string, payload: JudgeProfile) => {
+    if (!canAccessAdminMode) {
+      pushToast(
+        {
+          en: "Only admin and moderator accounts can edit judges here.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể sửa giám khảo tại đây.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/judges/${judgeId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not update the judge.");
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncSiteData();
+      pushToast(
+        {
+          en: "Judge profile updated in admin mode.",
+          vi: "Hồ sơ giám khảo đã được cập nhật trong admin mode.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not update the judge right now.",
+          vi: "Hiện không thể cập nhật giám khảo.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
+  const deleteJudgeByAdmin = async (judgeId: string) => {
+    if (!canAccessAdminMode) {
+      pushToast(
+        {
+          en: "Only admin and moderator accounts can delete judges here.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể xóa giám khảo tại đây.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/judges/${judgeId}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not delete the judge.");
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncSiteData();
+      pushToast(
+        {
+          en: "Judge profile removed from the admin dataset.",
+          vi: "Hồ sơ giám khảo đã được xóa khỏi dữ liệu admin.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not delete the judge right now.",
+          vi: "Hiện không thể xóa giám khảo.",
+        },
+        "warning",
+      );
+      return false;
+    }
   };
 
   const updateActiveUserProfile = (payload: Partial<UserProfile>) => {
@@ -2080,6 +2236,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     round1TestBanks,
     round1Submissions,
     newsPosts,
+    judges,
     pageContent,
     currentUser,
     currentTeam,
@@ -2094,6 +2251,9 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     createNewsPostByAdmin,
     updateNewsPostByAdmin,
     deleteNewsPostByAdmin,
+    createJudgeByAdmin,
+    updateJudgeByAdmin,
+    deleteJudgeByAdmin,
     updateActiveUserProfile,
     updateUserByAdmin,
     deleteUserByAdmin,

@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -97,19 +99,19 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
               ) : (
                 <figure key={index} className="space-y-4">
                   <div
-                    className={`overflow-hidden rounded-[1.9rem] border theme-border ${
+                    className={`relative overflow-hidden rounded-[1.9rem] border theme-border ${
                       block.emphasis === "feature"
-                        ? "theme-card-shadow-soft"
-                        : ""
+                        ? "aspect-[16/9] md:aspect-[19/9] theme-card-shadow-soft"
+                        : "aspect-[16/10] md:aspect-[16/8.5]"
                     }`}
                   >
-                    <Image
+                    <img
                       src={block.src}
                       alt={pickText(locale, block.alt)}
-                      width={1400}
-                      height={860}
-                      className="h-auto w-full object-cover"
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover"
                     />
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.02),rgba(7,18,35,0.12),rgba(7,18,35,0.18))]" />
                   </div>
                   <figcaption className="text-sm leading-7 theme-text-soft">
                     {pickText(locale, block.caption)}

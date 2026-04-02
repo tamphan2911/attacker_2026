@@ -76,6 +76,7 @@ export interface SponsorProfile {
 }
 
 export interface JudgeProfile {
+  id: string;
   name: string;
   imageSrc: string;
   role: LocalizedText;
@@ -347,5 +348,6 @@ export interface AppSnapshot {
   round1TestBanks: Round1TestBank[];
   round1Submissions: Round1Submission[];
   newsPosts: NewsPost[];
+  judges: JudgeProfile[];
   pageContent: SitePageContent;
 }

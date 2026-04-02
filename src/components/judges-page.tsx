@@ -1,8 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
-import { judgeProfiles } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
@@ -58,12 +55,11 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
   return (
     <Surface className="overflow-hidden px-0 py-0">
       <div className="relative h-44 overflow-hidden md:h-48">
-        <Image
-          src={judge.imageSrc}
-          alt={judge.name}
-          fill
-          sizes="(min-width: 1280px) 24vw, (min-width: 768px) 33vw, 100vw"
-          className="object-cover"
+        <div
+          role="img"
+          aria-label={judge.name}
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${judge.imageSrc})` }}
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.02)_0%,rgba(7,18,35,0.14)_34%,rgba(7,18,35,0.82)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 p-4 text-white">
@@ -92,12 +88,12 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
 }
 
 export function JudgesPage() {
-  const { locale } = useSiteState();
+  const { locale, judges } = useSiteState();
 
   return (
     <div className="space-y-16">
       {judgeSections.map((section) => {
-        const sectionJudges = judgeProfiles.filter((judge) => judge.rounds.includes(section.round));
+        const sectionJudges = judges.filter((judge) => judge.rounds.includes(section.round));
 
         if (sectionJudges.length === 0) {
           return null;
@@ -135,7 +131,7 @@ export function JudgesPage() {
 
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {sectionJudges.map((judge) => (
-                <JudgeCompactCard key={`${section.round}-${judge.name}`} judge={judge} />
+                <JudgeCompactCard key={judge.id} judge={judge} />
               ))}
             </div>
           </section>

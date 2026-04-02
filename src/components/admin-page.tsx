@@ -7,6 +7,7 @@ import {
   FilePenLine,
   FileQuestion,
   LayoutDashboard,
+  Medal,
   Newspaper,
   TableProperties,
   Trash2,
@@ -16,6 +17,7 @@ import {
 import * as XLSX from "xlsx";
 
 import { ContentIndexSection } from "@/components/admin-content-editor";
+import { AdminJudgesList } from "@/components/admin-judges-manager";
 import { AdminNewsList } from "@/components/admin-news-manager";
 import { AdminRound1Manager } from "@/components/admin-round1-manager";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
@@ -26,7 +28,7 @@ import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import type { Locale, LocalizedText } from "@/types/site";
 
-export type AdminSection = "overview" | "content" | "news" | "round1" | "users" | "teams" | "submissions";
+export type AdminSection = "overview" | "content" | "news" | "judges" | "round1" | "users" | "teams" | "submissions";
 
 const adminSections: Array<{
   id: AdminSection;
@@ -63,6 +65,16 @@ const adminSections: Array<{
     description: {
       en: "Create, edit, and manage newsroom articles.",
       vi: "Tao, chinh sua va quan ly cac bai viet newsroom.",
+    },
+  },
+  {
+    id: "judges",
+    href: "/admin/judges",
+    icon: Medal,
+    label: { en: "Judges", vi: "Giám khảo" },
+    description: {
+      en: "Manage judging profiles, round assignments, and the live public panel.",
+      vi: "Quản lý hồ sơ giám khảo, phân bổ theo vòng và hội đồng công khai.",
     },
   },
   {
@@ -126,7 +138,7 @@ function AdminNav({
   activeSection: AdminSection;
 }) {
   return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-8">
       {adminSections.map((section) => {
         const Icon = section.icon;
 
@@ -702,6 +714,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
       {section === "overview" ? <OverviewSection /> : null}
       {section === "content" ? <ContentIndexSection /> : null}
       {section === "news" ? <AdminNewsList /> : null}
+      {section === "judges" ? <AdminJudgesList /> : null}
       {section === "round1" ? <AdminRound1Manager /> : null}
       {section === "users" ? <UsersTableSection /> : null}
       {section === "teams" ? <TeamsTableSection /> : null}

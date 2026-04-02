@@ -6,9 +6,10 @@ import {
   UserRole,
 } from "@prisma/client";
 
-import { DEMO_ADMIN_LOGIN_ID, defaultPageContent } from "@/data/site-content";
+import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles } from "@/data/site-content";
 import { prisma } from "@/lib/db";
 import type {
+  JudgeProfile,
   NewsPost,
   Round1Question,
   SitePageContent,
@@ -75,6 +76,91 @@ export async function savePageContentByAdmin(
   });
 
   return ok({ saved: true });
+}
+
+const JUDGES_SCOPE = "site-judges";
+
+export function getDefaultJudges() {
+  return judgeProfiles;
+}
+
+async function readStoredJudges() {
+  const cmsEntry = await prisma.cmsEntry.findUnique({
+    where: { scope: JUDGES_SCOPE },
+    select: { payload: true },
+  });
+
+  return cmsEntry ? (JSON.parse(cmsEntry.payload) as JudgeProfile[]) : getDefaultJudges();
+}
+
+async function saveJudges(judges: JudgeProfile[]) {
+  await prisma.cmsEntry.upsert({
+    where: { scope: JUDGES_SCOPE },
+    update: { payload: JSON.stringify(judges) },
+    create: {
+      scope: JUDGES_SCOPE,
+      payload: JSON.stringify(judges),
+    },
+  });
+}
+
+export async function createJudgeByAdmin(
+  payload: JudgeProfile,
+): Promise<ServiceResult<{ judgeId: string }>> {
+  const judges = await readStoredJudges();
+  const judgeId = payload.id.trim();
+
+  if (!judgeId) {
+    return fail(400, "Judge ID is required.");
+  }
+
+  if (judges.some((judge) => judge.id === judgeId)) {
+    return fail(409, "That judge ID already exists.");
+  }
+
+  await saveJudges([...judges, payload]);
+  return ok({ judgeId }, 201);
+}
+
+export async function updateJudgeByAdmin(
+  judgeId: string,
+  payload: JudgeProfile,
+): Promise<ServiceResult<{ judgeId: string }>> {
+  const judges = await readStoredJudges();
+  const judgeExists = judges.some((judge) => judge.id === judgeId);
+
+  if (!judgeExists) {
+    return fail(404, "Judge not found.");
+  }
+
+  const nextJudgeId = payload.id.trim();
+  if (!nextJudgeId) {
+    return fail(400, "Judge ID is required.");
+  }
+
+  if (judges.some((judge) => judge.id === nextJudgeId && judge.id !== judgeId)) {
+    return fail(409, "That judge ID already exists.");
+  }
+
+  await saveJudges(
+    judges.map((judge) => (judge.id === judgeId ? payload : judge)),
+  );
+
+  return ok({ judgeId: nextJudgeId });
+}
+
+export async function deleteJudgeByAdmin(
+  judgeId: string,
+): Promise<ServiceResult<{ judgeId: string }>> {
+  const judges = await readStoredJudges();
+  const judgeExists = judges.some((judge) => judge.id === judgeId);
+
+  if (!judgeExists) {
+    return fail(404, "Judge not found.");
+  }
+
+  await saveJudges(judges.filter((judge) => judge.id !== judgeId));
+  return ok({ judgeId });
 }
 
 export async function createNewsPostByAdmin(
