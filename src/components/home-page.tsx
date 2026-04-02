@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowRight,
   Award,
-  CirclePlay,
+  CalendarRange,
   Crown,
   LayoutDashboard,
   Medal,
@@ -20,7 +20,6 @@ import {
 
 import {
   defaultPageContent,
-  heroCopy,
   homeMetrics,
   sponsorProfiles,
   testimonialItems,
@@ -28,7 +27,6 @@ import {
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import {
-  InfoKicker,
   SectionHeading,
   Surface,
 } from "@/components/site-ui";
@@ -137,6 +135,68 @@ const homepageEmergingReward = {
   },
 } as const;
 
+const heroBriefingCards = [
+  {
+    icon: Users2,
+    title: {
+      en: "Target participants",
+      vi: "Đối tượng tham gia",
+    },
+    body: {
+      en: "University students interested in fintech, data, product, trading, and entrepreneurship.",
+      vi: "Sinh viên đại học quan tâm đến fintech, dữ liệu, sản phẩm, trading và khởi nghiệp.",
+    },
+  },
+  {
+    icon: TrendingUp,
+    title: {
+      en: "Competition structure",
+      vi: "Cấu trúc cuộc thi",
+    },
+    body: {
+      en: "Round 1 individual test, Round 2 project report, and a final live presentation round.",
+      vi: "Vòng 1 thi cá nhân, Vòng 2 nộp báo cáo dự án, và vòng chung kết thuyết trình trực tiếp.",
+    },
+  },
+  {
+    icon: CalendarRange,
+    title: {
+      en: "Timeline snapshot",
+      vi: "Mốc thời gian chính",
+    },
+    body: {
+      en: "Competition activities run from May to July 2026, from qualification to final awards.",
+      vi: "Các hoạt động cuộc thi diễn ra từ tháng 5 đến tháng 7 năm 2026, từ vòng loại đến trao giải.",
+    },
+  },
+  {
+    icon: Award,
+    title: {
+      en: "Rewards",
+      vi: "Giải thưởng",
+    },
+    body: {
+      en: "Cash awards, sponsor gifts, scholarship opportunities, and non-cash partner benefits.",
+      vi: "Tiền thưởng, quà tặng từ nhà tài trợ, học bổng và các quyền lợi phi tiền mặt từ đối tác.",
+    },
+  },
+] as const;
+
+const heroQuickStats = [
+  {
+    value: { en: "3-5 members", vi: "3-5 thành viên" },
+    label: { en: "per team", vi: "mỗi đội" },
+  },
+  {
+    value: { en: "Top 50", vi: "Top 50" },
+    label: { en: "to Round 2", vi: "vào Vòng 2" },
+  },
+  {
+    value: { en: "Top 5", vi: "Top 5" },
+    label: { en: "to final", vi: "vào chung kết" },
+  },
+] as const;
+
 export function HomePage() {
   const { locale, newsPosts, pageContent } = useSiteState();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -144,7 +204,6 @@ export function HomePage() {
     pageContent.home.heroSlides.length > 0
       ? pageContent.home.heroSlides
       : defaultPageContent.home.heroSlides;
-  const currentSlide = heroSlides[activeSlide % heroSlides.length];
   const sponsorMarqueeItems = [...sponsorProfiles, ...sponsorProfiles];
 
   useEffect(() => {
@@ -188,44 +247,81 @@ export function HomePage() {
 
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(255,255,255,0.18),transparent_24%),linear-gradient(180deg,rgba(7,18,35,0.18)_0%,rgba(7,18,35,0.62)_68%,rgba(7,18,35,0.84)_100%)]" />
 
-          <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl flex-col items-center justify-center px-4 pb-16 pt-24 text-center text-white md:min-h-[640px] md:px-8">
-            <InfoKicker className="hero-kicker gap-2.5 rounded-full px-4 py-2 text-[0.78rem] font-medium normal-case tracking-[0.08em] shadow-[0_24px_56px_rgba(7,18,35,0.28)] backdrop-blur-xl md:px-5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-white/14 bg-white/12">
-                <Sparkles className="h-3.5 w-3.5 text-cyan-100" />
-              </span>
-              <span className="leading-none text-white/94">{pickText(locale, currentSlide.eyebrow)}</span>
-            </InfoKicker>
-            <h1 className="theme-heading mt-8 max-w-5xl text-4xl font-semibold leading-[1.06] md:text-6xl">
-              {pickText(locale, currentSlide.title)}
-            </h1>
-            <p className="mt-5 max-w-3xl text-base leading-8 text-white/78 md:text-lg">
-              {pickText(locale, currentSlide.description)}
-            </p>
+          <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl items-center px-4 pb-16 pt-24 text-white md:min-h-[640px] md:px-8">
+            <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,1.05fr)_420px] lg:items-end">
+              <div className="max-w-3xl">
+                <span className="inline-flex items-center rounded-full border border-white/16 bg-[rgba(7,18,35,0.4)] px-4 py-2 text-[0.74rem] font-semibold uppercase tracking-[0.2em] text-white/88 shadow-[0_18px_40px_rgba(7,18,35,0.22)] backdrop-blur-xl">
+                  {locale === "en" ? "Student fintech competition 2026" : "Cuộc thi fintech sinh viên 2026"}
+                </span>
+                <h1 className="theme-heading mt-7 text-4xl font-semibold leading-[1.03] md:text-6xl">
+                  {locale === "en"
+                    ? "Attacker 2026 is a national student fintech challenge for teams ready to think, build, and defend ideas."
+                    : "Attacker 2026 là sân chơi fintech dành cho sinh viên, nơi các đội thi phải tư duy, xây dựng và bảo vệ ý tưởng của mình."}
+                </h1>
+                <p className="mt-5 max-w-2xl text-base leading-8 text-white/80 md:text-lg">
+                  {locale === "en"
+                    ? "The competition combines an individual qualifier, a judge-scored project report round, and a live final presentation to spotlight strong student teams in finance and innovation."
+                    : "Cuộc thi kết hợp vòng loại cá nhân, giai đoạn nộp báo cáo được giám khảo chấm điểm và phần thuyết trình chung kết trực tiếp để tìm ra những đội sinh viên nổi bật trong tài chính và đổi mới."}
+                </p>
 
-            <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-              <Link
-                href="/competition"
-                className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition hover:brightness-110"
-              >
-                {pickText(locale, heroCopy.secondaryCta)}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/20 bg-white/12 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/16"
-              >
-                {pickText(locale, heroCopy.primaryCta)}
-              </Link>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center gap-2 rounded-full border border-white/18 bg-transparent px-6 py-3.5 text-sm font-semibold text-white/86"
-              >
-                <CirclePlay className="h-4 w-4" />
-                {locale === "en" ? "Watch preview" : "Xem preview"}
-              </button>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  {heroQuickStats.map((item) => (
+                    <div
+                      key={item.value.en}
+                      className="rounded-[1.15rem] border border-white/14 bg-[rgba(255,255,255,0.12)] px-4 py-3 shadow-[0_14px_34px_rgba(7,18,35,0.18)] backdrop-blur-xl"
+                    >
+                      <p className="text-sm font-semibold text-white">{pickText(locale, item.value)}</p>
+                      <p className="mt-1 text-[0.72rem] uppercase tracking-[0.18em] text-white/62">
+                        {pickText(locale, item.label)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-9 flex flex-col gap-4 sm:flex-row">
+                  <Link
+                    href="/competition"
+                    className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition hover:brightness-110"
+                  >
+                    {locale === "en" ? "Competition overview" : "Tổng quan cuộc thi"}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href="/rules"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/18 bg-[rgba(255,255,255,0.12)] px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-[rgba(255,255,255,0.18)]"
+                  >
+                    {locale === "en" ? "Rules & timeline" : "Thể lệ và lịch trình"}
+                  </Link>
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                {heroBriefingCards.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <div
+                      key={item.title.en}
+                      className="rounded-[1.55rem] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.08))] px-4 py-4 shadow-[0_20px_44px_rgba(7,18,35,0.18)] backdrop-blur-xl"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/12 bg-[rgba(7,18,35,0.26)] text-cyan-100">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-white">{pickText(locale, item.title)}</p>
+                          <p className="mt-2 text-sm leading-6 text-white/74">
+                            {pickText(locale, item.body)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="mt-14 flex gap-2">
+            <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-2">
               {heroSlides.map((slide, index) => (
                 <button
                   key={slide.id}
