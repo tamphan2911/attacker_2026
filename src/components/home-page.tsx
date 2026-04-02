@@ -292,6 +292,21 @@ export function HomePage() {
         </div>
       </section>
 
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {homeMetrics.map((item) => (
+          <div
+            key={item.value + item.label.en}
+            className="rounded-[1.6rem] border theme-border bg-[rgba(255,255,255,0.76)] px-5 py-5 text-center"
+          >
+            <p className="theme-heading text-4xl font-semibold theme-text-strong">{item.value}</p>
+            <p className="mt-3 text-sm font-medium uppercase tracking-[0.22em] theme-eyebrow">
+              {pickText(locale, item.label)}
+            </p>
+            <p className="mt-3 text-sm leading-6 theme-text-soft">{pickText(locale, item.note)}</p>
+          </div>
+        ))}
+      </section>
+
       <section className="relative overflow-hidden rounded-[2.4rem] border border-slate-900/40 bg-[linear-gradient(140deg,#071223_0%,#0b2744_42%,#1772d0_100%)] px-6 py-8 text-white md:px-8 md:py-10">
         <div className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-cyan-300/14 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-sky-300/16 blur-3xl" />
@@ -397,6 +412,39 @@ export function HomePage() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="space-y-5">
+        <div className="flex justify-end">
+          <Link href="/competition/sponsors" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
+            {locale === "en" ? "Open sponsors page" : "Mở trang nhà tài trợ"}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <Surface className="relative overflow-hidden px-0 py-0">
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-[linear-gradient(90deg,var(--shell-start),transparent)]" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-[linear-gradient(270deg,var(--shell-start),transparent)]" />
+          <div className="overflow-hidden py-5">
+            <div className="marquee-track flex w-max items-center gap-4 px-4 hover:[animation-play-state:paused] md:gap-5 md:px-6">
+              {sponsorMarqueeItems.map((sponsor, index) => (
+                <div
+                  key={`${sponsor.name}-${index}`}
+                  className="flex min-w-[180px] shrink-0 items-center justify-center rounded-[1.45rem] border theme-border bg-white px-5 py-4 shadow-[0_18px_38px_rgba(148,163,184,0.1)] md:min-w-[210px]"
+                  aria-hidden={index >= sponsorProfiles.length}
+                >
+                  <Image
+                    src={sponsor.logoSrc}
+                    alt={sponsor.name}
+                    width={180}
+                    height={54}
+                    className="h-10 w-auto object-contain md:h-11"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </Surface>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-3">
@@ -530,67 +578,6 @@ export function HomePage() {
         <p className="mt-5 text-sm uppercase tracking-[0.26em] theme-text-soft">
           {locale === "en" ? "Attacker 2026 frontend concept" : "Concept frontend Attacker 2026"}
         </p>
-      </section>
-
-      <section className="space-y-5">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-2xl">
-            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
-              {pickText(locale, pageContent.home.sponsors.eyebrow)}
-            </p>
-            <p className="theme-heading mt-4 text-2xl font-semibold theme-text-strong md:text-3xl">
-              {locale === "en" ? "Sponsors in motion" : "Cac nha tai tro"}
-            </p>
-            <p className="mt-3 text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "A compact carousel focused on sponsor marks. Full details stay on the dedicated sponsor page."
-                : "Mot carousel gon nhe tap trung vao logo nha tai tro. Thong tin day du nam o trang nha tai tro rieng."}
-            </p>
-          </div>
-          <Link href="/competition/sponsors" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {locale === "en" ? "Open sponsors page" : "Mở trang nhà tài trợ"}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        <Surface className="relative overflow-hidden px-0 py-0">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-[linear-gradient(90deg,var(--shell-start),transparent)]" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-[linear-gradient(270deg,var(--shell-start),transparent)]" />
-          <div className="overflow-hidden py-5">
-            <div className="marquee-track flex w-max items-center gap-4 px-4 hover:[animation-play-state:paused] md:gap-5 md:px-6">
-              {sponsorMarqueeItems.map((sponsor, index) => (
-                <div
-                  key={`${sponsor.name}-${index}`}
-                  className="flex min-w-[180px] shrink-0 items-center justify-center rounded-[1.45rem] border theme-border bg-white px-5 py-4 shadow-[0_18px_38px_rgba(148,163,184,0.1)] md:min-w-[210px]"
-                  aria-hidden={index >= sponsorProfiles.length}
-                >
-                  <Image
-                    src={sponsor.logoSrc}
-                    alt={sponsor.name}
-                    width={180}
-                    height={54}
-                    className="h-10 w-auto object-contain md:h-11"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        </Surface>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {homeMetrics.map((item) => (
-          <div
-            key={item.value + item.label.en}
-            className="rounded-[1.6rem] border theme-border bg-[rgba(255,255,255,0.76)] px-5 py-5 text-center"
-          >
-            <p className="theme-heading text-4xl font-semibold theme-text-strong">{item.value}</p>
-            <p className="mt-3 text-sm font-medium uppercase tracking-[0.22em] theme-eyebrow">
-              {pickText(locale, item.label)}
-            </p>
-            <p className="mt-3 text-sm leading-6 theme-text-soft">{pickText(locale, item.note)}</p>
-          </div>
-        ))}
       </section>
 
       <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-[linear-gradient(135deg,#0a1d34,#0b4f87,#1772d0)]">
