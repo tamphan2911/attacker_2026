@@ -138,7 +138,7 @@ export const competitionRoundWindows: CompetitionRoundWindow[] = [
 export const navItems: NavItem[] = [
   { href: "/", label: { en: "Home", vi: "Trang chủ" } },
   { href: "/competition", label: { en: "Competition", vi: "Cuộc thi" } },
-  { href: "/rules", label: { en: "Rules & Timeline", vi: "Thể lệ và Lịch trình" } },
+  { href: "/rules", label: { en: "Rules", vi: "Thể lệ" } },
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
   { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
   { href: "/organizer", label: { en: "About Attacker", vi: "Giới thiệu Attacker" } },
@@ -322,36 +322,36 @@ export const defaultPageContent: SitePageContent = {
   },
   rules: {
     header: {
-      eyebrow: { en: "Rules & Timeline", vi: "Thể lệ và Lịch trình" },
+      eyebrow: { en: "Competition rules", vi: "Thể lệ cuộc thi" },
       title: {
-        en: "Everything students should understand before they form a team and enter Round 1.",
-        vi: "Tất cả điều sinh viên cần hiểu trước khi lập đội và vào Vòng 1.",
+        en: "The rulebook is now organized by general policy and by each competition round.",
+        vi: "Bộ thể lệ nay được tổ chức theo phần quy định chung và theo từng vòng thi.",
       },
       description: {
-        en: "This page explains team eligibility, the individual Round 1 test, team-average progression, and how teams advance through the later judged stages.",
-        vi: "Trang này giải thích điều kiện đội thi, bài thi cá nhân của Vòng 1, cơ chế đi tiếp theo điểm trung bình đội và cách các đội tiến vào các giai đoạn sau được giám khảo chấm điểm.",
+        en: "Review the shared policies first, then open the round that matters to your team to understand format, qualification logic, submission expectations, and advancement rules.",
+        vi: "Hãy xem trước các quy định chung, sau đó mở đúng vòng thi mà đội của bạn quan tâm để nắm định dạng, điều kiện, yêu cầu nộp bài và cơ chế đi tiếp.",
       },
     },
     coreRules: {
-      eyebrow: { en: "Core rules", vi: "Quy tắc cốt lõi" },
+      eyebrow: { en: "General rules", vi: "Quy định chung" },
       title: {
-        en: "Eligibility and progression logic is expressed plainly.",
-        vi: "Logic điều kiện và việc đi tiếp được trình bày rõ ràng.",
+        en: "The shared framework comes first before any team enters a round.",
+        vi: "Khung quy định chung luôn được áp dụng trước khi bất kỳ đội nào bước vào một vòng thi.",
       },
       description: {
-        en: "These rules already influence the Team Workspace copy so the frontend mirrors the written competition policy.",
-        vi: "Những quy tắc này đã ảnh hưởng trực tiếp đến copy trong Team Workspace để frontend phản ánh đúng chính sách của cuộc thi.",
+        en: "These policies govern account ownership, team formation, team lock, eligibility, and the progression logic used across the platform.",
+        vi: "Các chính sách này chi phối việc sở hữu tài khoản, hình thành đội, khóa đội, điều kiện dự thi và cơ chế đi tiếp xuyên suốt trên nền tảng.",
       },
     },
     timeline: {
-      eyebrow: { en: "2026 timeline proposal", vi: "Đề xuất lịch trình 2026" },
+      eyebrow: { en: "Competition timeline", vi: "Lịch trình cuộc thi" },
       title: {
-        en: "From registration to top 50, top 5, and final jury day.",
-        vi: "Từ đăng ký đến top 50, top 5 và ngày chung kết cùng giám khảo.",
+        en: "A round-based schedule for registration, qualifiers, report review, and the final stage.",
+        vi: "Lịch trình theo từng giai đoạn từ đăng ký, vòng loại, chấm báo cáo đến vòng chung kết.",
       },
       description: {
-        en: "The dates below are still editable frontend content, but the sequencing now matches the real round structure you described.",
-        vi: "Các mốc thời gian bên dưới vẫn là nội dung frontend có thể chỉnh sửa, nhưng trình tự hiện đã khớp với cấu trúc vòng thi thực tế bạn mô tả.",
+        en: "Each phase highlights time, place, method, and a short operational note. Use the linked rule button to jump directly to the corresponding rule block.",
+        vi: "Mỗi giai đoạn nêu rõ thời gian, địa điểm, hình thức và ghi chú vận hành ngắn. Dùng nút thể lệ để chuyển ngay đến đúng khối quy định tương ứng.",
       },
     },
     faq: {
@@ -1180,6 +1180,7 @@ export const ruleItems: RuleItem[] = [
 
 export const timelineItems: TimelineItem[] = [
   {
+    phase: "general",
     startDate: "2026-04-06",
     endDate: "2026-05-10",
     title: { en: "Registration opens", vi: "Mở đăng ký" },
@@ -1191,12 +1192,17 @@ export const timelineItems: TimelineItem[] = [
       en: "Online registration portal",
       vi: "Cổng đăng ký trực tuyến",
     },
+    method: {
+      en: "Open online registration and self-service onboarding",
+      vi: "Mở cổng đăng ký trực tuyến và tự phục vụ",
+    },
     supportLinks: [
       { href: "/auth", label: { en: "Create account", vi: "Tạo tài khoản" } },
       { href: "/dashboard", label: { en: "Open workspace", vi: "Mở workspace" } },
     ],
   },
   {
+    phase: "general",
     startDate: "2026-04-18",
     endDate: "2026-04-18",
     title: { en: "Info session and team clinic", vi: "Workshop thông tin và phòng khám đội thi" },
@@ -1208,12 +1214,17 @@ export const timelineItems: TimelineItem[] = [
       en: "UEL Auditorium A and livestream",
       vi: "Hội trường A UEL và livestream",
     },
+    method: {
+      en: "Hybrid briefing, Q&A, and team-building clinic",
+      vi: "Buổi định hướng hybrid, hỏi đáp và clinic ghép đội",
+    },
     supportLinks: [
       { href: "/competition/faq", label: { en: "View FAQ", vi: "Xem FAQ" } },
       { href: "/news", label: { en: "Read updates", vi: "Đọc cập nhật" } },
     ],
   },
   {
+    phase: "general",
     startDate: "2026-05-10",
     endDate: "2026-05-10",
     title: { en: "Registration deadline and team lock", vi: "Đóng đăng ký và chốt đội" },
@@ -1225,12 +1236,17 @@ export const timelineItems: TimelineItem[] = [
       en: "Online team workspace",
       vi: "Không gian đội trực tuyến",
     },
+    method: {
+      en: "Roster freeze and team lock confirmation on platform",
+      vi: "Khóa danh sách đội và xác nhận chốt đội trên nền tảng",
+    },
     supportLinks: [
       { href: "/dashboard", label: { en: "Finalize team", vi: "Hoàn thiện đội" } },
-      { href: "/rules", label: { en: "Check eligibility", vi: "Kiểm tra điều kiện" } },
+      { href: "/rules#general-rules", label: { en: "Check eligibility", vi: "Kiểm tra điều kiện" } },
     ],
   },
   {
+    phase: "round-1",
     startDate: round1Window.startDate,
     endDate: round1Window.endDate,
     title: { en: "Round 01 individual qualifier", vi: "Vòng 01 bài thi cá nhân" },
@@ -1242,12 +1258,17 @@ export const timelineItems: TimelineItem[] = [
       en: "Official Attacker Round 1 exam portal",
       vi: "Cổng thi chính thức Vòng 1 của Attacker",
     },
+    method: {
+      en: "Timed online exam with individual login and one official attempt",
+      vi: "Bài thi trực tuyến có giới hạn thời gian, đăng nhập cá nhân và chỉ một lượt làm chính thức",
+    },
     supportLinks: [
       { href: "/round-1", label: { en: "Open Round 1 exam", vi: "Mở bài thi Vòng 1" } },
       { href: "/dashboard", label: { en: "Review team status", vi: "Xem trạng thái đội" } },
     ],
   },
   {
+    phase: "round-1",
     startDate: "2026-05-24",
     endDate: "2026-05-24",
     title: { en: "Top 50 teams announced", vi: "Công bố top 50 đội" },
@@ -1259,12 +1280,17 @@ export const timelineItems: TimelineItem[] = [
       en: "Newsroom and official Facebook page",
       vi: "Newsroom và fanpage chính thức",
     },
+    method: {
+      en: "Public result release with team ranking and qualification notice",
+      vi: "Công bố kết quả công khai kèm xếp hạng đội và thông báo đủ điều kiện",
+    },
     supportLinks: [
       { href: "/news", label: { en: "Check announcements", vi: "Xem thông báo" } },
       { href: "/competition", label: { en: "Review Round 2", vi: "Xem Vòng 2" } },
     ],
   },
   {
+    phase: "round-2",
     startDate: round2Window.startDate,
     endDate: round2Window.endDate,
     title: { en: "Round 02 report submission", vi: "Vòng 02 nộp báo cáo" },
@@ -1276,12 +1302,17 @@ export const timelineItems: TimelineItem[] = [
       en: "Team workspace submission center",
       vi: "Trung tâm nộp bài trong không gian đội",
     },
+    method: {
+      en: "Team leader uploads versioned report files through the submission center",
+      vi: "Đội trưởng nộp báo cáo theo phiên bản qua trung tâm nộp bài",
+    },
     supportLinks: [
       { href: "/dashboard", label: { en: "Submit Round 2 file", vi: "Nộp file Vòng 2" } },
       { href: "/competition/judges", label: { en: "Meet the judges", vi: "Xem giám khảo" } },
     ],
   },
   {
+    phase: "round-2",
     startDate: "2026-06-20",
     endDate: "2026-06-20",
     title: { en: "Round 02 results", vi: "Kết quả Vòng 02" },
@@ -1293,12 +1324,17 @@ export const timelineItems: TimelineItem[] = [
       en: "Newsroom, email, and official social channels",
       vi: "Newsroom, email và các kênh mạng xã hội chính thức",
     },
+    method: {
+      en: "Judge result release with finalist shortlist and Emerging Team recognition",
+      vi: "Công bố kết quả giám khảo với danh sách chung kết và ghi nhận Đội tiềm năng",
+    },
     supportLinks: [
       { href: "/news", label: { en: "Read result update", vi: "Đọc cập nhật kết quả" } },
       { href: "/competition", label: { en: "Review finals format", vi: "Xem thể thức chung kết" } },
     ],
   },
   {
+    phase: "round-3",
     startDate: round3Window.startDate,
     endDate: round3Window.endDate,
     title: { en: "Final presentation and awards", vi: "Chung kết thuyết trình và trao giải" },
@@ -1309,6 +1345,10 @@ export const timelineItems: TimelineItem[] = [
     location: {
       en: "UEL main hall, Ho Chi Minh City",
       vi: "Hội trường chính UEL, TP.HCM",
+    },
+    method: {
+      en: "On-site presentation, judge Q&A, and live final scoring",
+      vi: "Thuyết trình trực tiếp, hỏi đáp cùng giám khảo và chấm điểm cuối tại sân khấu",
     },
     supportLinks: [
       { href: "/competition/judges", label: { en: "See judging panel", vi: "Xem hội đồng giám khảo" } },

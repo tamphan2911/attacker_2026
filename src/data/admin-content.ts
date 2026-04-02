@@ -58,10 +58,10 @@ export const contentPageConfigs: ContentPageConfig[] = [
   {
     id: "rules",
     href: "/admin/content/pages/rules",
-    label: { en: "Rules & Timeline", vi: "Thể lệ và Lịch trình" },
+    label: { en: "Rules", vi: "Thể lệ" },
     description: {
-      en: "Rules header, core rules, and timeline section copy.",
-      vi: "Header, quy tắc cốt lõi và nội dung timeline.",
+      en: "Rules header, general rules, and round-specific rule copy.",
+      vi: "Header, quy định chung và nội dung thể lệ theo từng vòng.",
     },
   },
   {

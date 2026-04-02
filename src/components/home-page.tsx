@@ -730,7 +730,7 @@ export function HomePage() {
             },
             {
               href: "/rules",
-              label: locale === "en" ? "Rules & Timeline" : "Thể lệ và lịch trình",
+              label: locale === "en" ? "Rules" : "Thể lệ",
             },
             {
               href: "/news",

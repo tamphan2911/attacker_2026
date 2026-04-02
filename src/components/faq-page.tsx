@@ -91,23 +91,23 @@ export function FaqPage() {
             }
             description={
               locale === "en"
-                ? "The FAQ answers repeated questions quickly, while the rules page still holds the official structure, progression logic, and timeline milestones."
-                : "FAQ giup tra loi nhanh cac cau hoi lap lai, trong khi trang the le van giu cau truc chinh thuc, logic di tiep va cac moc thoi gian."
+                ? "The FAQ answers repeated questions quickly, while the rules page keeps the official structure and progression logic."
+                : "FAQ giúp trả lời nhanh các câu hỏi lặp lại, trong khi trang thể lệ vẫn giữ cấu trúc chính thức và logic đi tiếp."
             }
           />
         </Surface>
 
         <Surface className="px-6 py-6">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Next subsection" : "Sub-section tiep theo"}
+            {locale === "en" ? "Next subsection" : "Tiểu mục tiếp theo"}
           </p>
           <p className="mt-4 text-2xl font-semibold theme-text-strong">
-            {locale === "en" ? "Open Rules & Timeline." : "Mở Thể lệ và Lịch trình."}
+            {locale === "en" ? "Open Rules." : "Mở Thể lệ."}
           </p>
           <p className="mt-4 text-sm leading-7 theme-text-muted">
             {locale === "en"
-              ? "Use the structured rules page when you want the full stage flow, eligibility policy, and graphical timeline."
-              : "Hãy mở trang thể lệ có cấu trúc khi bạn muốn xem đầy đủ lộ trình các vòng, điều kiện và timeline đồ họa."}
+              ? "Use the structured rules page when you want the official stage logic, eligibility policy, and round-specific guidance."
+              : "Hãy mở trang thể lệ có cấu trúc khi bạn muốn xem logic chính thức của từng vòng, điều kiện và hướng dẫn chi tiết."}
           </p>
           <Link href="/rules" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
             {locale === "en" ? "Open rules page" : "Mo trang the le"}

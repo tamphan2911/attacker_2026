@@ -62,7 +62,8 @@ const primaryNavItems: Array<{
     label: { en: "Competition", vi: "Cuộc thi" },
     children: [
       { href: "/competition", label: { en: "Overview", vi: "Tổng quan" } },
-      { href: "/rules", label: { en: "Rules & Timeline", vi: "Thể lệ và Lịch trình" } },
+      { href: "/rules", label: { en: "Rules", vi: "Thể lệ" } },
+      { href: "/competition/timeline", label: { en: "Timeline", vi: "Lịch trình" } },
       { href: "/round-1", label: { en: "Round 1 Test", vi: "Bài thi Vòng 1" } },
       { href: "/competition/faq", label: { en: "FAQ", vi: "FAQ" } },
       { href: "/competition/sponsors", label: { en: "Sponsors", vi: "Nhà tài trợ" } },

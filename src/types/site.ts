@@ -47,11 +47,13 @@ export interface RuleItem {
 }
 
 export interface TimelineItem {
+  phase: "general" | CompetitionRoundKey;
   startDate: string;
   endDate: string;
   title: LocalizedText;
   description: LocalizedText;
   location: LocalizedText;
+  method: LocalizedText;
   supportLinks?: NavItem[];
 }
 

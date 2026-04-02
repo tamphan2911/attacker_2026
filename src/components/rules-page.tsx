@@ -5,88 +5,149 @@ import {
   ArrowRight,
   BadgeCheck,
   CalendarDays,
+  FileCheck2,
   Flag,
-  MapPin,
   Medal,
-  Route,
   ShieldAlert,
+  Trophy,
   UsersRound,
 } from "lucide-react";
 
 import {
   TEAM_MAX_MEMBERS,
   TEAM_MIN_MEMBERS,
+  audienceHighlights,
+  competitionRoundWindows,
+  roundItems,
   ruleItems,
-  timelineItems,
 } from "@/data/site-content";
-import { formatDateLabel, pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
+import { formatDateRangeLabel, pickText } from "@/lib/site";
+
+const generalRuleIcons = [UsersRound, ShieldAlert, BadgeCheck];
+const policyIcons = [Flag, ShieldAlert, FileCheck2, Medal];
+
+const roundRuleMeta = {
+  "01": {
+    anchor: "round-1-rules",
+    icon: FileCheck2,
+    statTone: "from-sky-500/18 via-cyan-400/10 to-white/0",
+    focus: {
+      en: "Round 1 is individual at paper level but ranked at team level.",
+      vi: "Vòng 1 làm bài theo cá nhân nhưng xếp hạng ở cấp độ đội.",
+    },
+    notes: [
+      {
+        en: "Only locked teams with 3 to 5 members may enter the official exam.",
+        vi: "Chỉ các đội đã khóa đội và có từ 3 đến 5 thành viên mới được vào bài thi chính thức.",
+      },
+      {
+        en: "Every member takes one timed paper consisting of 36 objective questions and 2 essay questions.",
+        vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 36 câu khách quan và 2 câu tự luận.",
+      },
+      {
+        en: "Top 50 teams are selected by the average score of eligible team members.",
+        vi: "Top 50 đội được chọn theo điểm trung bình của các thành viên đủ điều kiện trong đội.",
+      },
+    ],
+  },
+  "02": {
+    anchor: "round-2-rules",
+    icon: BadgeCheck,
+    statTone: "from-emerald-500/16 via-teal-400/10 to-white/0",
+    focus: {
+      en: "Round 2 is a judged report stage with versioned file submission.",
+      vi: "Vòng 2 là giai đoạn chấm báo cáo với cơ chế nộp tệp theo phiên bản.",
+    },
+    notes: [
+      {
+        en: "Only teams qualified from Round 1 can access the Round 2 submission center.",
+        vi: "Chỉ các đội vượt qua Vòng 1 mới được truy cập khu vực nộp bài Vòng 2.",
+      },
+      {
+        en: "Team leaders submit the official report file, while all previous versions remain visible for tracking.",
+        vi: "Đội trưởng nộp tệp báo cáo chính thức, còn các phiên bản trước vẫn được lưu để theo dõi.",
+      },
+      {
+        en: "Judge scoring selects the top 5 teams for the final and recognizes the next 10 as Emerging Teams.",
+        vi: "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và ghi nhận 10 đội tiếp theo là Đội tiềm năng.",
+      },
+    ],
+  },
+  "03": {
+    anchor: "round-3-rules",
+    icon: Trophy,
+    statTone: "from-amber-500/18 via-orange-400/10 to-white/0",
+    focus: {
+      en: "The final is a live presentation and defense stage for the top 5 teams.",
+      vi: "Vòng chung kết là giai đoạn thuyết trình và bảo vệ trực tiếp dành cho top 5 đội.",
+    },
+    notes: [
+      {
+        en: "Finalists present their project live and answer questions directly from the judging panel.",
+        vi: "Các đội chung kết thuyết trình dự án trực tiếp và trả lời câu hỏi từ hội đồng giám khảo.",
+      },
+      {
+        en: "Presentation quality, feasibility, and judge Q&A performance all influence the final score.",
+        vi: "Chất lượng thuyết trình, tính khả thi và phần hỏi đáp với giám khảo đều ảnh hưởng đến điểm cuối.",
+      },
+      {
+        en: "Final podium awards are determined only after the live final defense is completed.",
+        vi: "Thứ hạng chung cuộc chỉ được xác định sau khi hoàn tất phần bảo vệ trực tiếp tại vòng chung kết.",
+      },
+    ],
+  },
+} as const;
 
 export function RulesPage() {
   const { locale, pageContent } = useSiteState();
 
-  const ruleIcons = [UsersRound, ShieldAlert, BadgeCheck, Medal];
-  const ruleSummaries = [
-    {
-      en: "Each student can belong to only one team at a time.",
-      vi: "Mỗi sinh viên chỉ có thể thuộc một đội tại một thời điểm.",
-    },
-    {
-      en: "A team leader must transfer authority before leaving the team.",
-      vi: "Đội trưởng phải chuyển quyền trước khi rời đội.",
-    },
-    {
-      en: `Only teams with ${TEAM_MIN_MEMBERS} to ${TEAM_MAX_MEMBERS} members qualify for Round 1.`,
-      vi: `Chỉ các đội có từ ${TEAM_MIN_MEMBERS} đến ${TEAM_MAX_MEMBERS} thành viên mới đủ điều kiện vào Vòng 1.`,
-    },
-    {
-      en: "Progression depends on team results, not on isolated individual performance alone.",
-      vi: "Việc đi tiếp phụ thuộc vào kết quả của đội, không chỉ vào từng cá nhân riêng lẻ.",
-    },
-  ];
-
   return (
-    <div className="space-y-20">
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+    <div className="space-y-16 md:space-y-20">
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <SectionHeading
           eyebrow={pickText(locale, pageContent.rules.header.eyebrow)}
           title={pickText(locale, pageContent.rules.header.title)}
           description={pickText(locale, pageContent.rules.header.description)}
         />
-        <Surface className="px-5 py-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Eligibility snapshot" : "Tom tat dieu kien"}
+
+        <Surface className="relative overflow-hidden px-5 py-5">
+          <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(23,114,208,0),rgba(23,114,208,0.92),rgba(23,114,208,0))]" />
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+            {locale === "en" ? "Quick policy read" : "Đọc nhanh"}
           </p>
-          <div className="mt-6 space-y-3">
+          <div className="mt-5 space-y-3">
             {[
               {
-                icon: <UsersRound className="h-4 w-4 text-cyan-300" />,
+                icon: <UsersRound className="h-4 w-4 text-sky-500" />,
                 label:
                   locale === "en"
-                    ? `${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} members per team for Round 1`
-                    : `${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} thanh vien moi doi de vao Vong 1`,
+                    ? `${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} members are required for official Round 1 access`
+                    : `Cần ${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} thành viên để vào Vòng 1 chính thức`,
               },
               {
-                icon: <ShieldAlert className="h-4 w-4 text-amber-300" />,
+                icon: <ShieldAlert className="h-4 w-4 text-amber-500" />,
                 label:
                   locale === "en"
-                    ? "Leader must transfer before leaving"
-                    : "Đội trưởng phải chuyển quyền trước khi rời đội",
+                    ? "Team lock must be approved by all members before Round 1 starts"
+                    : "Khóa đội phải được toàn bộ thành viên đồng thuận trước khi bắt đầu Vòng 1",
               },
               {
-                icon: <CalendarDays className="h-4 w-4 text-emerald-300" />,
+                icon: <Medal className="h-4 w-4 text-emerald-500" />,
                 label:
                   locale === "en"
-                    ? "Round 1 ranks teams by average member score"
-                    : "Vòng 1 xếp hạng đội theo điểm trung bình thành viên",
+                    ? "Progression is determined by team ranking at every stage"
+                    : "Việc đi tiếp được quyết định theo xếp hạng đội ở từng giai đoạn",
               },
             ].map((item) => (
               <div
                 key={item.label}
-                className="flex items-center gap-3 rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-body"
+                className="flex items-start gap-3 rounded-2xl border theme-border bg-white/70 px-4 py-3 text-sm leading-7 theme-text-body dark:bg-white/[0.05]"
               >
-                {item.icon}
+                <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border border-sky-500/18 bg-sky-500/10">
+                  {item.icon}
+                </span>
                 <span>{item.label}</span>
               </div>
             ))}
@@ -94,248 +155,185 @@ export function RulesPage() {
         </Surface>
       </section>
 
-      <section className="overflow-hidden rounded-[2.2rem] border border-slate-900/40 bg-[linear-gradient(140deg,#071223_0%,#0b2744_42%,#12528d_100%)] px-6 py-8 text-white md:px-8 md:py-10">
-        <div className="space-y-8">
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-white/64">
-                {pickText(locale, pageContent.rules.coreRules.eyebrow)}
-              </p>
-              <h2 className="theme-heading mt-5 max-w-2xl text-3xl font-semibold leading-[1.08] md:text-[3rem]">
-                {pickText(locale, pageContent.rules.coreRules.title)}
-              </h2>
-              <p className="mt-5 max-w-2xl text-base leading-8 text-white/74">
-                {pickText(locale, pageContent.rules.coreRules.description)}
-              </p>
-            </div>
+      <section id="general-rules" className="scroll-mt-36 space-y-7">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <Surface className="overflow-hidden px-6 py-6 md:px-7 md:py-7">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(23,114,208,0.14),transparent_52%)]" />
+            <div className="relative">
+              <SectionHeading
+                eyebrow={pickText(locale, pageContent.rules.coreRules.eyebrow)}
+                title={pickText(locale, pageContent.rules.coreRules.title)}
+                description={pickText(locale, pageContent.rules.coreRules.description)}
+                className="max-w-none"
+              />
 
-            <div className="rounded-[1.9rem] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.06))] px-5 py-5 shadow-[0_24px_55px_rgba(2,6,23,0.22)] backdrop-blur-xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/58">
-                {locale === "en" ? "What matters most" : "Điểm mấu chốt"}
-              </p>
-              <div className="mt-5 space-y-3">
-                {[
-                  locale === "en" ? "One student belongs to one team only." : "Mỗi sinh viên chỉ thuộc một đội duy nhất.",
-                  locale === "en" ? "Round 1 eligibility starts from 3 members." : "Điều kiện vào Vòng 1 bắt đầu từ 3 thành viên.",
-                  locale === "en" ? "Progression is ranked at team level." : "Việc đi tiếp được xếp theo kết quả cấp đội.",
-                ].map((text) => (
-                  <div
-                    key={text}
-                    className="rounded-2xl border border-white/10 bg-white/[0.08] px-4 py-3 text-sm leading-7 text-white/82"
-                  >
-                    {text}
-                  </div>
-                ))}
+              <div className="mt-7 grid gap-4 md:grid-cols-3">
+                {audienceHighlights.map((item, index) => {
+                  const Icon = generalRuleIcons[index] ?? Flag;
+
+                  return (
+                    <div
+                      key={item.title.en}
+                      className="rounded-[1.65rem] border theme-border bg-white/76 px-4 py-4 shadow-[0_16px_36px_rgba(148,163,184,0.08)] dark:bg-white/[0.05]"
+                    >
+                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-sky-500/18 bg-sky-500/10">
+                        <Icon className="h-4.5 w-4.5 text-sky-600 dark:text-sky-200" />
+                      </span>
+                      <p className="mt-4 text-base font-semibold theme-text-strong">
+                        {pickText(locale, item.title)}
+                      </p>
+                      <p className="mt-3 text-sm leading-7 theme-text-soft">
+                        {pickText(locale, item.description)}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-          </div>
+          </Surface>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {ruleItems.map((item, index) => {
-              const Icon = ruleIcons[index] ?? Flag;
+          <Surface className="px-6 py-6 md:px-7 md:py-7">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] theme-eyebrow">
+              {locale === "en" ? "General policy checks" : "Điểm kiểm soát chung"}
+            </p>
+            <div className="mt-6 space-y-3">
+              {ruleItems.map((item, index) => {
+                const Icon = policyIcons[index] ?? BadgeCheck;
 
-              return (
-                <div
-                  key={item.title.en}
-                  className="relative flex min-h-[230px] flex-col overflow-hidden rounded-[1.8rem] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),rgba(255,255,255,0.05))] px-5 py-5 shadow-[0_22px_50px_rgba(2,6,23,0.18)] backdrop-blur-md"
-                >
-                  <div className="absolute inset-x-5 top-0 h-px bg-[linear-gradient(90deg,rgba(255,255,255,0),rgba(125,211,252,0.9),rgba(255,255,255,0))]" />
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="inline-flex rounded-2xl border border-white/12 bg-white/12 p-3 shadow-[0_12px_30px_rgba(7,18,35,0.2)]">
-                      <Icon className="h-5 w-5 text-cyan-200" />
+                return (
+                  <div
+                    key={item.title.en}
+                    className="rounded-[1.55rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.05]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-900/8 bg-slate-950/[0.03] dark:border-white/10 dark:bg-white/[0.04]">
+                        <Icon className="h-4 w-4 theme-text-strong" />
+                      </span>
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] theme-text-strong">
+                        {pickText(locale, item.title)}
+                      </p>
                     </div>
-                    <span className="rounded-full border border-white/10 bg-white/[0.08] px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-white/58">
-                      {locale === "en" ? "Priority" : "Ưu tiên"}
-                    </span>
-                  </div>
-                  <div className="mt-5">
-                    <p className="text-lg font-semibold leading-7 text-white">{pickText(locale, item.title)}</p>
-                    <p className="mt-4 text-sm leading-7 text-white/74">
-                      {pickText(locale, ruleSummaries[index] ?? item.description)}
-                    </p>
-                  </div>
-                  <div className="mt-auto pt-5">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-cyan-200/78">
-                      {locale === "en" ? "Rule focus" : "Trọng tâm"}
-                    </p>
-                    <p className="mt-2 text-sm leading-7 text-white/62">
+                    <p className="mt-3 text-sm leading-7 theme-text-soft">
                       {pickText(locale, item.description)}
                     </p>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="rounded-[2rem] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.1),rgba(255,255,255,0.05))] px-5 py-6 shadow-[0_24px_55px_rgba(2,6,23,0.16)] backdrop-blur-md md:px-6 md:py-7">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex rounded-2xl border border-white/12 bg-white/12 p-3 shadow-[0_12px_30px_rgba(7,18,35,0.18)]">
-                <Route className="h-5 w-5 text-cyan-200" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/60">
-                  {locale === "en" ? "Detailed rules" : "Chi tiết thể lệ"}
-                </p>
-                <p className="mt-2 text-2xl font-semibold text-white">
-                  {locale === "en"
-                    ? "Full rule explanations for participants."
-                    : "Phần giải thích đầy đủ cho các quy tắc tham gia."}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid gap-4">
-              {ruleItems.map((item, index) => {
-                const Icon = ruleIcons[index] ?? Flag;
-
-                return (
-                  <div
-                    key={`${item.title.en}-detail`}
-                    className="rounded-[1.6rem] border border-white/10 bg-white/[0.06] px-4 py-4 shadow-[0_18px_36px_rgba(7,18,35,0.12)]"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="inline-flex rounded-2xl border border-white/12 bg-white/12 p-2.5">
-                        <Icon className="h-4.5 w-4.5 text-cyan-200" />
-                      </div>
-                      <p className="text-lg font-semibold text-white">{pickText(locale, item.title)}</p>
-                    </div>
-                    <p className="mt-4 text-sm leading-8 text-white/74">{pickText(locale, item.description)}</p>
-                  </div>
                 );
               })}
             </div>
-          </div>
+
+            <Link
+              href="/competition/timeline#general-timeline"
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-sky-500/22 bg-sky-500/[0.08] px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-500/36 hover:bg-sky-500/[0.12] active:scale-[0.98] dark:text-sky-100"
+            >
+              {locale === "en" ? "Open timeline overview" : "Mở lịch trình tổng quan"}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Surface>
         </div>
       </section>
 
-      <section className="space-y-8">
-        <div className="rounded-[2.2rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.94),rgba(241,248,255,0.98))] px-6 py-8 md:px-8 md:py-10">
-          <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] theme-eyebrow">
-              {pickText(locale, pageContent.rules.timeline.eyebrow)}
-            </p>
-            <h2 className="theme-heading mt-5 text-3xl font-semibold leading-[1.08] theme-text-strong md:text-[3rem]">
-              {pickText(locale, pageContent.rules.timeline.title)}
-            </h2>
-            <p className="mt-5 text-base leading-8 theme-text-muted">
-              {pickText(locale, pageContent.rules.timeline.description)}
-            </p>
-          </div>
+      <section className="space-y-6">
+        {roundItems.map((round) => {
+          const roundKey = round.id === "01" ? "round-1" : round.id === "02" ? "round-2" : "round-3";
+          const roundWindow = competitionRoundWindows.find((item) => item.round === roundKey);
+          const meta = roundRuleMeta[round.id as keyof typeof roundRuleMeta];
+          const Icon = meta.icon;
 
-          <div className="relative mt-10">
-            <div className="absolute left-[27px] top-2 bottom-2 hidden w-px bg-[linear-gradient(180deg,rgba(23,114,208,0.18),rgba(23,114,208,0.7),rgba(23,114,208,0.12))] md:block" />
-            <div className="space-y-5">
-              {timelineItems.map((item, index) => {
-                const isHighlight = index === 2 || index === 4 || index === 6;
-
-                return (
-                  <div
-                    key={item.startDate + item.endDate + item.title.en}
-                    className="relative grid gap-4 md:grid-cols-[80px_minmax(0,1fr)] md:gap-6"
-                  >
-                    <div className="relative hidden md:block">
-                      <div
-                        className={`absolute left-0 top-5 flex h-14 w-14 items-center justify-center rounded-full border text-sm font-semibold ${
-                          isHighlight
-                            ? "border-sky-400/24 bg-[linear-gradient(135deg,#0a1d34,#1772d0)] text-white shadow-[0_18px_40px_rgba(23,114,208,0.22)]"
-                            : "border-slate-200 bg-white text-[var(--brand)] shadow-[0_12px_30px_rgba(148,163,184,0.14)]"
-                        }`}
-                      >
-                        {index + 1}
-                      </div>
-                    </div>
-
-                    <div
-                      className={`rounded-[1.85rem] border px-5 py-5 md:px-6 md:py-6 ${
-                        isHighlight
-                          ? "border-sky-300/20 bg-[linear-gradient(135deg,rgba(10,29,52,0.98),rgba(23,114,208,0.92))] text-white shadow-[0_22px_55px_rgba(15,23,42,0.18)]"
-                          : "theme-border theme-panel shadow-[0_18px_45px_rgba(148,163,184,0.12)]"
-                      }`}
-                    >
-                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                        <div>
-                          <div className="inline-flex items-center gap-2 rounded-full border border-current/10 bg-white/8 px-3 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.22em]">
-                            <CalendarDays className="h-3.5 w-3.5" />
-                            {locale === "en" ? `Step ${index + 1}` : `Buoc ${index + 1}`}
-                          </div>
-                          <p className={`mt-4 text-2xl font-semibold ${isHighlight ? "text-white" : "theme-text-strong"}`}>
-                            {pickText(locale, item.title)}
-                          </p>
-                        </div>
-                        <div className="grid gap-2 sm:grid-cols-3">
-                          <div
-                            className={`rounded-2xl border px-3 py-3 text-sm ${
-                              isHighlight
-                                ? "border-white/12 bg-white/10 text-white/82"
-                                : "theme-border bg-white/70 theme-text-soft"
-                            }`}
-                          >
-                            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em]">
-                              {locale === "en" ? "Begin" : "Bat dau"}
-                            </p>
-                            <p className={`mt-2 font-medium ${isHighlight ? "text-white" : "theme-text-strong"}`}>
-                              {formatDateLabel(locale, item.startDate)}
-                            </p>
-                          </div>
-                          <div
-                            className={`rounded-2xl border px-3 py-3 text-sm ${
-                              isHighlight
-                                ? "border-white/12 bg-white/10 text-white/82"
-                                : "theme-border bg-white/70 theme-text-soft"
-                            }`}
-                          >
-                            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.22em]">
-                              {locale === "en" ? "End" : "Ket thuc"}
-                            </p>
-                            <p className={`mt-2 font-medium ${isHighlight ? "text-white" : "theme-text-strong"}`}>
-                              {formatDateLabel(locale, item.endDate)}
-                            </p>
-                          </div>
-                          <div
-                            className={`rounded-2xl border px-3 py-3 text-sm ${
-                              isHighlight
-                                ? "border-white/12 bg-white/10 text-white/82"
-                                : "theme-border bg-white/70 theme-text-soft"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.22em]">
-                              <MapPin className="h-3.5 w-3.5" />
-                              <span>{locale === "en" ? "Location" : "Địa điểm"}</span>
-                            </div>
-                            <p className={`mt-2 font-medium leading-6 ${isHighlight ? "text-white" : "theme-text-strong"}`}>
-                              {pickText(locale, item.location)}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <p className={`mt-4 text-sm leading-7 ${isHighlight ? "text-white/76" : "theme-text-muted"}`}>
-                        {pickText(locale, item.description)}
+          return (
+            <section
+              key={round.id}
+              id={meta.anchor}
+              className="scroll-mt-36 overflow-hidden rounded-[2rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(245,249,255,0.98))] px-5 py-6 shadow-[0_24px_60px_rgba(148,163,184,0.12)] dark:bg-[linear-gradient(180deg,rgba(11,23,42,0.96),rgba(7,16,31,0.98))] md:px-7 md:py-7"
+            >
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+                <div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-[1.2rem] border border-sky-500/18 bg-sky-500/10">
+                      <Icon className="h-5 w-5 text-sky-600 dark:text-sky-200" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                        {pickText(locale, round.label)}
                       </p>
-                      {item.supportLinks?.length ? (
-                        <div className="mt-5 flex flex-wrap gap-3">
-                          {item.supportLinks.map((link) => (
-                            <Link
-                              key={link.href + link.label.en}
-                              href={link.href}
-                              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
-                                isHighlight
-                                  ? "border-white/14 bg-white/10 text-white hover:bg-white/16"
-                                  : "theme-border theme-panel text-[var(--text-strong)] hover:bg-[rgba(23,114,208,0.06)]"
-                              }`}
-                            >
-                              {pickText(locale, link.label)}
-                              <ArrowRight className="h-4 w-4" />
-                            </Link>
-                          ))}
-                        </div>
-                      ) : null}
+                      <h3 className="theme-heading mt-2 text-2xl font-semibold theme-text-strong md:text-[2.2rem]">
+                        {pickText(locale, round.title)}
+                      </h3>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <span className="inline-flex items-center gap-2 rounded-full border theme-border bg-white/78 px-4 py-2 text-sm font-medium theme-text-body dark:bg-white/[0.05]">
+                      <CalendarDays className="h-4 w-4 text-sky-500" />
+                      {roundWindow
+                        ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate)
+                        : pickText(locale, round.duration)}
+                    </span>
+                    <span className="inline-flex max-w-xl items-start gap-2 rounded-[1.15rem] border theme-border bg-white/78 px-4 py-3 text-sm font-medium leading-6 theme-text-body dark:bg-white/[0.05]">
+                      <BadgeCheck className="h-4 w-4 text-emerald-500" />
+                      {pickText(locale, meta.focus)}
+                    </span>
+                  </div>
+
+                  <div className="mt-6 rounded-[1.8rem] border theme-border bg-white/72 px-5 py-5 dark:bg-white/[0.05]">
+                    <p className="text-sm leading-8 theme-text-body">{pickText(locale, round.description)}</p>
+
+                    <div className="mt-5 grid gap-3 md:grid-cols-3">
+                      {round.deliverables.map((deliverable) => (
+                        <div
+                          key={deliverable.en}
+                          className={`rounded-[1.35rem] border theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.68))] px-4 py-4 dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))]`}
+                        >
+                          <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                            {locale === "en" ? "Deliverable" : "Đầu việc"}
+                          </p>
+                          <p className="mt-2 text-sm leading-7 theme-text-body">
+                            {pickText(locale, deliverable)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Surface className="relative overflow-hidden px-5 py-5">
+                    <div
+                      className={`absolute inset-x-0 top-0 h-20 bg-[linear-gradient(135deg,var(--tw-gradient-stops))] ${meta.statTone}`}
+                    />
+                    <div className="relative">
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                        {locale === "en" ? "Specific round rules" : "Quy định riêng của vòng"}
+                      </p>
+                      <div className="mt-5 space-y-3">
+                        {meta.notes.map((note, index) => (
+                          <div
+                            key={note.en}
+                            className="rounded-[1.35rem] border theme-border bg-white/76 px-4 py-4 dark:bg-white/[0.05]"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-950/[0.06] text-xs font-semibold theme-text-strong dark:bg-white/[0.08]">
+                                {index + 1}
+                              </span>
+                              <p className="text-sm leading-7 theme-text-body">{pickText(locale, note)}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Surface>
+
+                  <Link
+                    href={`/competition/timeline#${roundKey}-timeline`}
+                    className="inline-flex w-full items-center justify-between rounded-[1.35rem] border border-sky-500/22 bg-sky-500/[0.08] px-4 py-3 text-sm font-semibold text-sky-700 transition hover:border-sky-500/34 hover:bg-sky-500/[0.12] active:scale-[0.99] dark:text-sky-100"
+                  >
+                    <span>{locale === "en" ? "Open this round on timeline page" : "Mở giai đoạn này trên trang lịch trình"}</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </section>
+          );
+        })}
       </section>
     </div>
   );
