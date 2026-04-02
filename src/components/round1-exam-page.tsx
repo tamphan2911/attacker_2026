@@ -59,7 +59,6 @@ interface Round1ExamSession {
 }
 
 const SESSION_STORAGE_PREFIX = "attacker-2026-round1-exam-session-v3";
-const ROUND1_TEST_PREVIEW_MODE = true;
 
 function formatRemainingTime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -90,7 +89,6 @@ export function Round1ExamPage() {
     submitRound1Attempt,
   } = useSiteState();
   const [session, setSession] = useState<Round1ExamSession | null>(null);
-  const [previewCompleted, setPreviewCompleted] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const router = useRouter();
 
@@ -98,32 +96,20 @@ export function Round1ExamPage() {
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
   const round1WordLimit = activeEssayBank?.wordLimit ?? ROUND1_ESSAY_WORD_LIMIT;
   const existingSubmission = getLatestSubmissionForUser(round1Submissions, currentUser.id);
-  const lockedSubmission = ROUND1_TEST_PREVIEW_MODE ? undefined : existingSubmission;
   const isStudent = currentUser.role === "student";
   const currentCompetitionState = currentTeam ? getTeamCompetitionState(currentTeam) : undefined;
   const round1Window = getCompetitionRoundWindow("round-1");
   const round1Finished = isRoundFinished("round-1");
   const teamRound1Locked = Boolean(currentTeam && isTeamRound1Locked(currentTeam));
   const isEligibleForRound1 = Boolean(isStudent && currentTeam && canTeamTakeRound1(currentTeam));
-  const sessionStorageKey = `${SESSION_STORAGE_PREFIX}:${currentUser.id || "preview"}`;
-  const displayCandidateName =
-    currentUser.name || (locale === "en" ? "Qualified candidate" : "Thí sinh đủ điều kiện");
-  const displayCandidateUniversity =
-    currentUser.university ||
-    (locale === "en"
-      ? "University of Economics and Law"
-      : "Trường Đại học Kinh tế - Luật");
-  const displayTeamName =
-    currentTeam?.name || (locale === "en" ? "Neo Ledger" : "Neo Ledger");
-  const displayTeamTag = currentTeam?.tag || "ATK26";
-  const currentTeamMemberCount = currentTeam?.memberIds.length ?? 0;
+  const sessionStorageKey = `${SESSION_STORAGE_PREFIX}:${currentUser.id}`;
 
   useEffect(() => {
     if (!hasHydrated) {
       return;
     }
 
-    if (lockedSubmission) {
+    if (existingSubmission) {
       window.localStorage.removeItem(sessionStorageKey);
       return;
     }
@@ -149,7 +135,7 @@ export function Round1ExamPage() {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [hasHydrated, lockedSubmission, sessionStorageKey]);
+  }, [existingSubmission, hasHydrated, sessionStorageKey]);
 
   useEffect(() => {
     if (!hasHydrated) {
@@ -196,13 +182,6 @@ export function Round1ExamPage() {
 
   const finalizeExam = useCallback(
     (targetSession: Round1ExamSession) => {
-      if (ROUND1_TEST_PREVIEW_MODE) {
-        setPreviewCompleted(true);
-        setSession(null);
-        window.localStorage.removeItem(sessionStorageKey);
-        return;
-      }
-
       const targetObjectiveBank = round1TestBanks.find((bank) => bank.id === targetSession.bankId);
       if (!targetObjectiveBank) {
         return;
@@ -246,35 +225,12 @@ export function Round1ExamPage() {
     [round1TestBanks, router, sessionStorageKey, submitRound1Attempt],
   );
 
-  const startExam = useCallback(() => {
-    if (!activeObjectiveBank || !activeEssayBank) {
-      return;
-    }
-
-    const startedAt = new Date();
-    const deadlineAt = new Date(startedAt.getTime() + activeObjectiveBank.durationMinutes * 60 * 1000);
-
-    setPreviewCompleted(false);
-    setSession({
-      bankId: activeObjectiveBank.id,
-      startedAt: startedAt.toISOString(),
-      deadlineAt: deadlineAt.toISOString(),
-      currentQuestionIndex: 0,
-      answers: {},
-      questions: createRound1ExamPaper({
-        objectiveBank: activeObjectiveBank,
-        essayBank: activeEssayBank,
-      }),
-    });
-    setNowMs(startedAt.getTime());
-  }, [activeEssayBank, activeObjectiveBank]);
-
   const remainingSeconds = session
     ? Math.max(0, Math.ceil((new Date(session.deadlineAt).getTime() - nowMs) / 1000))
     : 0;
 
   useEffect(() => {
-    if (!session || lockedSubmission || remainingSeconds > 0) {
+    if (!session || existingSubmission || remainingSeconds > 0) {
       return;
     }
 
@@ -285,35 +241,7 @@ export function Round1ExamPage() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [finalizeExam, lockedSubmission, remainingSeconds, session]);
-
-  useEffect(() => {
-    if (
-      !ROUND1_TEST_PREVIEW_MODE ||
-      !hasHydrated ||
-      !activeObjectiveBank ||
-      !activeEssayBank ||
-      session ||
-      previewCompleted
-    ) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      startExam();
-    }, 0);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [
-    activeEssayBank,
-    activeObjectiveBank,
-    hasHydrated,
-    previewCompleted,
-    session,
-    startExam,
-  ]);
+  }, [existingSubmission, finalizeExam, remainingSeconds, session]);
 
   if (authStatus === "loading" || !hasHydrated) {
     return (
@@ -326,7 +254,7 @@ export function Round1ExamPage() {
     );
   }
 
-  if (!ROUND1_TEST_PREVIEW_MODE && !isAuthenticated) {
+  if (!isAuthenticated) {
     return (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
@@ -368,6 +296,24 @@ export function Round1ExamPage() {
     );
   }
 
+  const startExam = () => {
+    const startedAt = new Date();
+    const deadlineAt = new Date(startedAt.getTime() + activeObjectiveBank.durationMinutes * 60 * 1000);
+
+    setSession({
+      bankId: activeObjectiveBank.id,
+      startedAt: startedAt.toISOString(),
+      deadlineAt: deadlineAt.toISOString(),
+      currentQuestionIndex: 0,
+      answers: {},
+      questions: createRound1ExamPaper({
+        objectiveBank: activeObjectiveBank,
+        essayBank: activeEssayBank,
+      }),
+    });
+    setNowMs(startedAt.getTime());
+  };
+
   const currentQuestion = session?.questions[session.currentQuestionIndex];
   const currentResponse = currentQuestion ? session?.answers[currentQuestion.id] : undefined;
   const answeredCount = session
@@ -399,7 +345,7 @@ export function Round1ExamPage() {
     );
   };
 
-  if (!ROUND1_TEST_PREVIEW_MODE && existingSubmission) {
+  if (existingSubmission) {
     return (
       <div className="space-y-8">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
@@ -461,7 +407,7 @@ export function Round1ExamPage() {
     );
   }
 
-  if (!ROUND1_TEST_PREVIEW_MODE && !isStudent) {
+  if (!isStudent) {
     return (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
@@ -485,7 +431,7 @@ export function Round1ExamPage() {
     );
   }
 
-  if (!ROUND1_TEST_PREVIEW_MODE && !currentTeam) {
+  if (!currentTeam) {
     return (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
@@ -504,7 +450,7 @@ export function Round1ExamPage() {
     );
   }
 
-  if (!ROUND1_TEST_PREVIEW_MODE && !isEligibleForRound1) {
+  if (!isEligibleForRound1) {
     if (currentCompetitionState && currentCompetitionState !== "not-eligible" && currentCompetitionState !== "round-1") {
       return (
         <Surface className="px-6 py-6 md:px-8 md:py-8">
@@ -609,47 +555,13 @@ export function Round1ExamPage() {
         <div className="mt-6 flex flex-wrap gap-3">
           <StatusPill tone="warning">
             {locale === "en"
-              ? `${currentTeamMemberCount}/${TEAM_MIN_MEMBERS} required members`
-              : `${currentTeamMemberCount}/${TEAM_MIN_MEMBERS} thanh vien bat buoc`}
+              ? `${currentTeam.memberIds.length}/${TEAM_MIN_MEMBERS} required members`
+              : `${currentTeam.memberIds.length}/${TEAM_MIN_MEMBERS} thanh vien bat buoc`}
           </StatusPill>
           <Link href="/dashboard" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
             {locale === "en" ? "Invite more members" : "Mời thêm thành viên"}
           </Link>
         </div>
-      </Surface>
-    );
-  }
-
-  if (ROUND1_TEST_PREVIEW_MODE && previewCompleted) {
-    return (
-      <Surface className="px-6 py-6 md:px-8 md:py-8">
-        <SectionHeading
-          eyebrow="Round 1"
-          title={locale === "en" ? "Round 1 preview completed." : "Đã hoàn tất preview Vòng 1."}
-          description={
-            locale === "en"
-              ? "This temporary preview skips qualification checks so you can keep refining the exam interface."
-              : "Preview tạm thời này bỏ qua các điều kiện vào thi để tiếp tục tinh chỉnh giao diện bài thi."
-          }
-        />
-        <button
-          type="button"
-          onClick={startExam}
-          className="theme-button-primary mt-6 inline-flex rounded-full px-5 py-3 text-sm font-semibold"
-        >
-          {locale === "en" ? "Restart preview exam" : "Mở lại bài thi preview"}
-        </button>
-      </Surface>
-    );
-  }
-
-  if (ROUND1_TEST_PREVIEW_MODE && !session) {
-    return (
-      <Surface className="px-6 py-6 md:px-8 md:py-8">
-        <SectionHeading
-          eyebrow="Round 1"
-          title={locale === "en" ? "Preparing Round 1 test preview..." : "Đang chuẩn bị preview bài thi Vòng 1..."}
-        />
       </Surface>
     );
   }
@@ -786,12 +698,12 @@ export function Round1ExamPage() {
               {locale === "en" ? "Ready to enter" : "Sẵn sàng vào thi"}
             </p>
             <div className="mt-5 rounded-[1.8rem] border theme-border theme-panel px-5 py-5">
-              <p className="text-lg font-semibold theme-text-strong">{displayCandidateName}</p>
+              <p className="text-lg font-semibold theme-text-strong">{currentUser.name}</p>
               <p className="mt-2 text-sm theme-text-soft">
-                {displayTeamName} · {displayCandidateUniversity}
+                {currentTeam.name} · {currentUser.university}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <StatusPill>{`#${displayTeamTag}`}</StatusPill>
+                <StatusPill>{`#${currentTeam.tag}`}</StatusPill>
                 <StatusPill>{`${ROUND1_TOTAL_QUESTIONS} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
               </div>
             </div>
@@ -892,7 +804,7 @@ export function Round1ExamPage() {
           {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
         </Link>
         <div className="flex flex-wrap gap-2">
-          <StatusPill>{`#${displayTeamTag}`}</StatusPill>
+          <StatusPill>{`#${currentTeam.tag}`}</StatusPill>
           <StatusPill>{`${answeredCount}/${session.questions.length} ${locale === "en" ? "answered" : "đã trả lời"}`}</StatusPill>
           <StatusPill tone={currentQuestion?.type === "essay" ? "warning" : "default"}>
             {currentQuestion?.type === "essay"
@@ -1256,8 +1168,8 @@ export function Round1ExamPage() {
                 <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
                   {locale === "en" ? "Candidate" : "Thí sinh"}
                 </p>
-                <p className="mt-3 text-base font-semibold theme-text-strong">{displayCandidateName}</p>
-                <p className="mt-2 text-sm theme-text-muted">{displayTeamName}</p>
+                <p className="mt-3 text-base font-semibold theme-text-strong">{currentUser.name}</p>
+                <p className="mt-2 text-sm theme-text-muted">{currentTeam.name}</p>
               </div>
               <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
