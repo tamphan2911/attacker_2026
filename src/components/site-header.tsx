@@ -34,6 +34,23 @@ function FacebookIcon({ className }: { className?: string }) {
   );
 }
 
+function HeaderTooltip({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="group relative inline-flex">
+      {children}
+      <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-40 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+        {label}
+      </span>
+    </div>
+  );
+}
+
 const primaryNavItems: Array<{
   href: string;
   label: LocalizedText;
@@ -267,27 +284,47 @@ export function SiteHeader() {
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="theme-panel-strong theme-text-strong inline-flex h-10 w-10 items-center justify-center rounded-full border transition hover:-translate-y-0.5"
-              aria-label="Toggle color theme"
+            <HeaderTooltip
+              label={
+                theme === "dark"
+                  ? locale === "en"
+                    ? "Switch to light mode"
+                    : "Chuyển sang chế độ sáng"
+                  : locale === "en"
+                    ? "Switch to dark mode"
+                    : "Chuyển sang chế độ tối"
+              }
             >
-              {theme === "dark" ? (
-                <SunMedium className="h-4 w-4 text-amber-300" />
-              ) : (
-                <MoonStar className="h-4 w-4 theme-accent" />
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={toggleLocale}
-              className="theme-panel-strong theme-text-strong inline-flex items-center gap-2 rounded-full border px-3.5 py-2.5 text-sm font-medium transition hover:-translate-y-0.5"
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="theme-panel-strong theme-text-strong inline-flex h-10 w-10 items-center justify-center rounded-full border transition hover:-translate-y-0.5"
+                aria-label="Toggle color theme"
+              >
+                {theme === "dark" ? (
+                  <SunMedium className="h-4 w-4 text-amber-300" />
+                ) : (
+                  <MoonStar className="h-4 w-4 theme-accent" />
+                )}
+              </button>
+            </HeaderTooltip>
+            <HeaderTooltip
+              label={
+                locale === "en"
+                  ? "Switch to Vietnamese"
+                  : "Chuyển sang tiếng Anh"
+              }
             >
-              <Globe2 className="h-4 w-4 theme-accent" />
-              <span>{locale === "en" ? "VI" : "EN"}</span>
-              {isPending ? <span className="theme-text-soft text-xs">...</span> : null}
-            </button>
+              <button
+                type="button"
+                onClick={toggleLocale}
+                className="theme-panel-strong theme-text-strong inline-flex items-center gap-2 rounded-full border px-3.5 py-2.5 text-sm font-medium transition hover:-translate-y-0.5"
+              >
+                <Globe2 className="h-4 w-4 theme-accent" />
+                <span>{locale === "en" ? "VI" : "EN"}</span>
+                {isPending ? <span className="theme-text-soft text-xs">...</span> : null}
+              </button>
+            </HeaderTooltip>
             {isLoggedIn ? (
               <div ref={profileMenuRef} className="relative">
                 <button
