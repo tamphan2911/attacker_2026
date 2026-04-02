@@ -10,7 +10,6 @@ import {
   Menu,
   MoonStar,
   PhoneCall,
-  Sparkles,
   SunMedium,
   UserRound,
   X,
@@ -93,14 +92,9 @@ export function SiteHeader() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const chromeLabel = {
-    en: "Attacker 2026",
-    vi: "Attacker 2026",
-  };
-
-  const topbarStatus = {
-    en: "Frontend preview live",
-    vi: "Frontend preview đang mở",
+  const topbarSlogan = {
+    en: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",
+    vi: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",
   };
 
   const isActiveRoute = (href: string) => {
@@ -122,45 +116,44 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50">
       <div className="theme-topbar">
-        <div className="mx-auto max-w-7xl px-4 py-2.5 md:px-8">
-          <div className="flex items-center justify-between gap-4 lg:flex-nowrap">
-            <div className="flex min-w-0 items-center gap-2.5 overflow-hidden text-white">
-              <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/12 bg-white/10 px-3.5 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/92 backdrop-blur-md">
-                <Sparkles className="h-3.5 w-3.5 text-cyan-200" />
-                <span>{pickText(locale, chromeLabel)}</span>
-              </div>
-              <div className="hidden shrink-0 items-center gap-2 rounded-full border border-emerald-300/18 bg-emerald-300/12 px-3 py-1.5 text-[0.68rem] font-medium uppercase tracking-[0.18em] text-emerald-50 xl:inline-flex">
-                <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                <span>{pickText(locale, topbarStatus)}</span>
-              </div>
+        <div className="mx-auto max-w-7xl px-4 py-2 md:px-8">
+          <div className="flex items-center justify-between gap-4 overflow-hidden lg:flex-nowrap">
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <p className="truncate text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-white/92 md:text-[0.72rem] md:tracking-[0.24em]">
+                {pickText(locale, topbarSlogan)}
+              </p>
             </div>
 
-            <div className="hidden shrink-0 items-center gap-2 md:flex">
-              <a
-                className="inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3.5 text-[0.72rem] font-medium text-white/84 transition hover:bg-white/14 hover:text-white"
-                href={`mailto:${contactInfo.email}`}
-                aria-label={contactInfo.email}
-              >
-                <Mail className="h-3.5 w-3.5 text-cyan-200" />
-                <span>{contactInfo.email}</span>
-              </a>
-              <a
-                className="inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3.5 text-[0.72rem] font-medium text-white/84 transition hover:bg-white/14 hover:text-white"
-                href={`tel:${contactInfo.phone}`}
-              >
-                <PhoneCall className="h-3.5 w-3.5 text-cyan-200" />
-                <span>{contactInfo.phone}</span>
-              </a>
-              <a
-                className="inline-flex h-9 items-center gap-2 rounded-full border border-white/10 bg-white/8 px-3.5 text-[0.72rem] font-medium text-white/84 transition hover:bg-white/14 hover:text-white"
-                href={contactInfo.facebook}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Facebook"
-              >
-                <FacebookIcon className="h-3.5 w-3.5 text-cyan-200" />
-                <span>Facebook</span>
-              </a>
+            <div className="hidden shrink-0 items-center md:flex">
+              <div className="inline-flex items-center overflow-hidden rounded-full border border-white/12 bg-[rgba(255,255,255,0.09)] shadow-[0_12px_30px_rgba(2,8,20,0.16)] backdrop-blur-md">
+                <a
+                  className="inline-flex h-8 items-center gap-2 px-3 text-[0.68rem] font-medium text-white/84 transition hover:bg-white/8 hover:text-white"
+                  href={`mailto:${contactInfo.email}`}
+                  aria-label={contactInfo.email}
+                >
+                  <Mail className="h-3.5 w-3.5 text-cyan-200" />
+                  <span>{contactInfo.email}</span>
+                </a>
+                <span className="h-4 w-px bg-white/12" />
+                <a
+                  className="inline-flex h-8 items-center gap-2 px-3 text-[0.68rem] font-medium text-white/84 transition hover:bg-white/8 hover:text-white"
+                  href={`tel:${contactInfo.phone}`}
+                >
+                  <PhoneCall className="h-3.5 w-3.5 text-cyan-200" />
+                  <span>{contactInfo.phone}</span>
+                </a>
+                <span className="hidden h-4 w-px bg-white/12 xl:block" />
+                <a
+                  className="hidden h-8 items-center gap-2 px-3 text-[0.68rem] font-medium text-white/84 transition hover:bg-white/8 hover:text-white xl:inline-flex"
+                  href={contactInfo.facebook}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label="Facebook"
+                >
+                  <FacebookIcon className="h-3.5 w-3.5 text-cyan-200" />
+                  <span>Facebook</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
