@@ -245,7 +245,7 @@ export function DashboardPage() {
       <Surface className="mx-auto max-w-4xl px-6 py-10 md:px-8">
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 dark:text-sky-200/80">
+            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
               {locale === "en" ? "Organizer workspace" : "Workspace vận hành"}
             </p>
             <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.7rem]">
