@@ -228,6 +228,17 @@ function pickAdminRoleTone(role: UserProfile["role"]) {
   return "success" as const;
 }
 
+function pickTeamStatusTone(state: ReturnType<typeof getTeamCompetitionState>) {
+  switch (state) {
+    case "not-eligible":
+      return "warning" as const;
+    case "round-1":
+    case "round-2":
+    case "round-3":
+      return "info" as const;
+  }
+}
+
 function UsersTableSection() {
   const { locale, users, teams, deleteUserByAdmin } = useSiteState();
   useAdminTitleScroll();
@@ -540,6 +551,7 @@ function TeamsTableSection() {
   useAdminTitleScroll();
 
   const rows = teams.map((team) => {
+    const competitionState = getTeamCompetitionState(team);
     const leader = users.find((user) => user.id === team.leaderId);
     const members = team.memberIds
       .map((memberId) => users.find((user) => user.id === memberId)?.name ?? memberId)
@@ -551,8 +563,8 @@ function TeamsTableSection() {
       tag: team.tag,
       leader: leader?.name ?? "",
       memberCount: team.memberIds.length,
-      statusTone: getTeamCompetitionState(team) === "not-eligible" ? ("warning" as const) : ("success" as const),
-      status: pickCompetitionStateLabel(locale, getTeamCompetitionState(team)),
+      statusTone: pickTeamStatusTone(competitionState),
+      status: pickCompetitionStateLabel(locale, competitionState),
       stage: pickCompetitionStateLabel(locale, team.stage),
       track: team.track,
       createdAt: team.createdAt,

@@ -188,11 +188,11 @@ export function StatusPill({
         "inline-flex min-h-8 items-center justify-center rounded-full border px-3 py-1 text-center text-xs font-medium whitespace-nowrap",
         tone === "default" && "theme-chip",
         tone === "info" &&
-          "border-sky-500/24 bg-sky-500/12 text-sky-800 dark:border-sky-300/22 dark:bg-sky-300/14 dark:text-sky-100",
+          "border-sky-600/24 bg-sky-500/18 text-sky-950 dark:border-sky-300/22 dark:bg-sky-300/14 dark:text-sky-100",
         tone === "success" &&
-          "border-emerald-500/24 bg-emerald-500/12 text-emerald-800 dark:border-emerald-300/22 dark:bg-emerald-300/12 dark:text-emerald-100",
+          "border-emerald-600/24 bg-emerald-500/18 text-emerald-950 dark:border-emerald-300/22 dark:bg-emerald-300/12 dark:text-emerald-100",
         tone === "warning" &&
-          "border-amber-500/26 bg-amber-500/14 text-amber-800 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100",
+          "border-amber-600/28 bg-amber-400/24 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100",
       )}
     >
       {children}
