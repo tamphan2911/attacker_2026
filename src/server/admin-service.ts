@@ -8,6 +8,7 @@ import {
 
 import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/news-image-storage";
 import type {
   JudgeProfile,
   NewsPost,
@@ -207,7 +208,7 @@ export async function updateNewsPostByAdmin(
 ): Promise<ServiceResult<{ slug: string }>> {
   const existing = await prisma.newsPost.findUnique({
     where: { slug },
-    select: { slug: true },
+    select: { slug: true, coverImageSrc: true },
   });
 
   if (!existing) {
@@ -250,13 +251,20 @@ export async function updateNewsPostByAdmin(
     },
   });
 
+  if (existing.coverImageSrc !== payload.coverImageSrc) {
+    const previousStorageKey = getNewsImageStorageKeyFromUrl(existing.coverImageSrc);
+    if (previousStorageKey) {
+      await deleteNewsImageFile(previousStorageKey).catch(() => {});
+    }
+  }
+
   return ok({ slug: payload.slug });
 }
 
 export async function deleteNewsPostByAdmin(slug: string): Promise<ServiceResult<{ slug: string }>> {
   const existing = await prisma.newsPost.findUnique({
     where: { slug },
-    select: { slug: true },
+    select: { slug: true, coverImageSrc: true },
   });
 
   if (!existing) {
@@ -264,6 +272,12 @@ export async function deleteNewsPostByAdmin(slug: string): Promise<ServiceResult
   }
 
   await prisma.newsPost.delete({ where: { slug } });
+
+  const storageKey = getNewsImageStorageKeyFromUrl(existing.coverImageSrc);
+  if (storageKey) {
+    await deleteNewsImageFile(storageKey).catch(() => {});
+  }
+
   return ok({ slug });
 }
 

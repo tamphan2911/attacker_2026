@@ -104,6 +104,7 @@ export type NewsContentBlock =
       alt: LocalizedText;
       caption: LocalizedText;
       emphasis?: "standard" | "feature";
+      origin?: "cover" | "body";
     };
 
 export interface NewsPost {

@@ -1,10 +1,22 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { ArrowLeft, ImagePlus, Newspaper, Plus, Trash2 } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUp,
+  ImagePlus,
+  Newspaper,
+  Plus,
+  Text,
+  Trash2,
+} from "lucide-react";
 
+import { getNewsImageValidationError } from "@/lib/news-images";
 import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -16,6 +28,14 @@ const fieldClassName =
 
 function cloneNewsPost(post: NewsPost): NewsPost {
   return JSON.parse(JSON.stringify(post)) as NewsPost;
+}
+
+function createDraftNewsPost(post: NewsPost): NewsPost {
+  const nextPost = cloneNewsPost(post);
+  nextPost.content = nextPost.content.filter(
+    (block) => !(block.type === "image" && block.origin === "cover"),
+  );
+  return nextPost;
 }
 
 function createParagraphBlock(): NewsContentBlock {
@@ -32,6 +52,7 @@ function createImageBlock(): NewsContentBlock {
     alt: { en: "", vi: "" },
     caption: { en: "", vi: "" },
     emphasis: "standard",
+    origin: "body",
   };
 }
 
@@ -60,6 +81,85 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function syncCoverImageBlock(post: NewsPost): NewsPost {
+  const manualBlocks = post.content.filter(
+    (block) => !(block.type === "image" && block.origin === "cover"),
+  );
+
+  const coverBlock: NewsContentBlock = {
+    type: "image",
+    src: post.coverImageSrc,
+    alt: post.coverImageAlt,
+    caption: post.coverLabel,
+    emphasis: "feature",
+    origin: "cover",
+  };
+
+  const firstParagraphIndex = manualBlocks.findIndex((block) => block.type === "paragraph");
+
+  if (firstParagraphIndex === -1) {
+    return {
+      ...post,
+      content: [coverBlock, ...manualBlocks],
+    };
+  }
+
+  return {
+    ...post,
+    content: [
+      ...manualBlocks.slice(0, firstParagraphIndex + 1),
+      coverBlock,
+      ...manualBlocks.slice(firstParagraphIndex + 1),
+    ],
+  };
+}
+
+function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= items.length) {
+    return items;
+  }
+
+  const nextItems = [...items];
+  const [current] = nextItems.splice(index, 1);
+  nextItems.splice(targetIndex, 0, current);
+  return nextItems;
+}
+
+function IconToolButton({
+  label,
+  onClick,
+  children,
+  disabled = false,
+  tone = "default",
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+  disabled?: boolean;
+  tone?: "default" | "danger";
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`group relative inline-flex h-10 w-10 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-45 ${
+        tone === "danger"
+          ? "border-rose-300/20 bg-rose-300/10 text-rose-600 hover:bg-rose-300/16 dark:text-rose-100"
+          : "theme-border theme-panel theme-text-strong hover:bg-[var(--panel-strong)]"
+      }`}
+    >
+      {children}
+      <span className="pointer-events-none absolute -top-11 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-slate-900/8 bg-white px-3 py-1.5 text-[0.68rem] font-semibold tracking-[0.14em] text-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.12)] group-hover:flex dark:border-white/10 dark:bg-[rgba(7,18,35,0.96)] dark:text-white/80">
+        {label}
+      </span>
+    </button>
+  );
 }
 
 function LocalizedFieldEditor({
@@ -186,7 +286,7 @@ export function AdminNewsList() {
                       deleteNewsPostByAdmin(post.slug);
                     }
                   }}
-                  className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-4 py-2.5 text-sm font-semibold text-rose-100"
+                  className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-100"
                 >
                   <Trash2 className="h-4 w-4" />
                   {locale === "en" ? "Delete" : "Xoa"}
@@ -232,21 +332,25 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
   } = useSiteState();
   const isCreateMode = slug === "new";
   const sourcePost = isCreateMode ? createEmptyNewsPost() : newsPosts.find((post) => post.slug === slug);
+  const sourceDraftPost = sourcePost ? createDraftNewsPost(sourcePost) : undefined;
   const [draft, setDraft] = useState<NewsPost | null>(() =>
-    sourcePost ? cloneNewsPost(sourcePost) : null,
+    sourceDraftPost ? cloneNewsPost(sourceDraftPost) : null,
   );
+  const [editorMessage, setEditorMessage] = useState("");
+  const [coverUploadMessage, setCoverUploadMessage] = useState("");
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
 
   const isDirty = useMemo(() => {
     if (isCreateMode) {
       return JSON.stringify(draft) !== JSON.stringify(createEmptyNewsPost());
     }
 
-    if (!sourcePost || !draft) {
+    if (!sourceDraftPost || !draft) {
       return false;
     }
 
-    return JSON.stringify(draft) !== JSON.stringify(sourcePost);
-  }, [draft, isCreateMode, sourcePost]);
+    return JSON.stringify(draft) !== JSON.stringify(sourceDraftPost);
+  }, [draft, isCreateMode, sourceDraftPost]);
 
   if (!draft) {
     return (
@@ -261,9 +365,82 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
     );
   }
 
+  const uploadCoverImage = async (file: File) => {
+    const validationError = getNewsImageValidationError(file);
+
+    if (validationError === "type") {
+      setCoverUploadMessage(
+        locale === "en"
+          ? "Only JPG, PNG, and WEBP images are allowed."
+          : "Chỉ chấp nhận ảnh JPG, PNG và WEBP.",
+      );
+      return;
+    }
+
+    if (validationError === "size") {
+      setCoverUploadMessage(
+        locale === "en"
+          ? "The uploaded image must be 2MB or smaller."
+          : "Ảnh tải lên phải có dung lượng không quá 2MB.",
+      );
+      return;
+    }
+
+    setIsUploadingCover(true);
+    setCoverUploadMessage("");
+
+    const formData = new FormData();
+    formData.set("imageFile", file);
+
+    try {
+      const response = await fetch("/api/admin/news/cover-image", {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
+      });
+
+      setIsUploadingCover(false);
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        setCoverUploadMessage(
+          error?.error ||
+            (locale === "en"
+              ? "Could not upload the cover image right now."
+              : "Hiện không thể tải ảnh bìa lên."),
+        );
+        return;
+      }
+
+      const payload = (await response.json()) as { imageUrl: string };
+      setDraft((current) =>
+        current
+          ? {
+              ...current,
+              coverImageSrc: payload.imageUrl,
+            }
+          : current,
+      );
+      setCoverUploadMessage(
+        locale === "en"
+          ? "Cover image uploaded successfully."
+          : "Ảnh bìa đã được tải lên thành công.",
+      );
+    } catch {
+      setIsUploadingCover(false);
+      setCoverUploadMessage(
+        locale === "en"
+          ? "Could not upload the cover image right now."
+          : "Hiện không thể tải ảnh bìa lên.",
+      );
+    }
+  };
+
   const saveDraft = () => {
+    setEditorMessage("");
+
     const nextSlug = slugify(draft.slug || draft.title.en || draft.title.vi || `news-${Date.now()}`);
-    const nextPost: NewsPost = {
+    const nextPostBase: NewsPost = {
       ...draft,
       slug: nextSlug,
       publishedAt: draft.publishedAt || new Date().toISOString().slice(0, 10),
@@ -277,23 +454,34 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
       ),
     };
 
-    if (nextPost.highlights.length === 0) {
-      nextPost.highlights = [{ en: "", vi: "" }];
+    if (!nextPostBase.coverLabel.en.trim() && !nextPostBase.coverLabel.vi.trim()) {
+      setEditorMessage(
+        locale === "en"
+          ? "Cover caption is required. It is also used as the caption for the cover image block inside the article."
+          : "Cần nhập chú thích ảnh bìa. Nội dung này cũng được dùng làm chú thích cho ảnh bìa trong thân bài viết.",
+      );
+      return;
     }
 
-    if (nextPost.content.length === 0) {
-      nextPost.content = [createParagraphBlock()];
+    if (nextPostBase.highlights.length === 0) {
+      nextPostBase.highlights = [{ en: "", vi: "" }];
     }
+
+    if (nextPostBase.content.length === 0) {
+      nextPostBase.content = [createParagraphBlock()];
+    }
+
+    const nextPost = syncCoverImageBlock(nextPostBase);
 
     const hasConflictingSlug = newsPosts.some((post) =>
       isCreateMode ? post.slug === nextSlug : post.slug === nextSlug && post.slug !== slug,
     );
 
     if (hasConflictingSlug) {
-      window.alert(
+      setEditorMessage(
         locale === "en"
           ? "That article slug already exists. Use a different slug."
-          : "Slug bai viet nay da ton tai. Hay dung mot slug khac.",
+          : "Slug bài viết này đã tồn tại. Hãy dùng một slug khác.",
       );
       return;
     }
@@ -358,7 +546,11 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => setDraft(cloneNewsPost(sourcePost ?? createEmptyNewsPost()))}
+            onClick={() => {
+              setEditorMessage("");
+              setCoverUploadMessage("");
+              setDraft(cloneNewsPost(sourceDraftPost ?? createEmptyNewsPost()));
+            }}
             className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
           >
             {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
@@ -374,7 +566,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
           <button
             type="button"
             onClick={deleteCurrentPost}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-5 py-3 text-sm font-semibold text-rose-100"
+            className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-5 py-3 text-sm font-semibold text-rose-600 dark:text-rose-100"
           >
             <Trash2 className="h-4 w-4" />
             {isCreateMode
@@ -433,13 +625,66 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
               </label>
               <label className="space-y-2 md:col-span-2">
                 <span className="text-sm theme-text-muted">
-                  {locale === "en" ? "Cover image path" : "Duong dan anh cover"}
+                  {locale === "en" ? "Cover image" : "Ảnh bìa"}
                 </span>
-                <input
-                  value={draft.coverImageSrc}
-                  onChange={(event) => setDraft((current) => (current ? { ...current, coverImageSrc: event.target.value } : current))}
-                  className={fieldClassName}
-                />
+                <div className="rounded-[1.8rem] border theme-border theme-panel px-4 py-4">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold theme-text-strong">
+                        {locale === "en"
+                          ? "Upload the cover image"
+                          : "Tải ảnh bìa lên"}
+                      </p>
+                      <p className="mt-2 text-sm leading-7 theme-text-soft">
+                        {locale === "en"
+                          ? "JPG, PNG, or WEBP only. Maximum size: 2MB."
+                          : "Chỉ chấp nhận JPG, PNG hoặc WEBP. Dung lượng tối đa: 2MB."}
+                      </p>
+                      <p className="mt-2 text-xs uppercase tracking-[0.18em] theme-text-faint">
+                        {draft.coverImageSrc}
+                      </p>
+                    </div>
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong hover:bg-[var(--panel-strong)]">
+                      <ImagePlus className="h-4 w-4" />
+                      {isUploadingCover
+                        ? locale === "en"
+                          ? "Uploading..."
+                          : "Đang tải..."
+                        : locale === "en"
+                          ? "Upload image"
+                          : "Tải ảnh"}
+                      <input
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        disabled={isUploadingCover}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (!file) {
+                            return;
+                          }
+
+                          void uploadCoverImage(file);
+                          event.target.value = "";
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-4 overflow-hidden rounded-[1.4rem] border theme-border">
+                    <img
+                      src={draft.coverImageSrc}
+                      alt={pickText(locale, draft.coverImageAlt) || "Cover preview"}
+                      className="h-52 w-full object-cover"
+                    />
+                  </div>
+
+                  {coverUploadMessage ? (
+                    <div className="mt-4 rounded-[1.3rem] border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-sm leading-7 text-sky-700 dark:text-sky-100">
+                      {coverUploadMessage}
+                    </div>
+                  ) : null}
+                </div>
               </label>
               <label className="space-y-2 md:col-span-2">
                 <span className="text-sm theme-text-muted">Tags</span>
@@ -496,7 +741,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                 }
               />
               <LocalizedFieldEditor
-                label="Cover label"
+                label={locale === "en" ? "Cover caption (required)" : "Chú thích ảnh bìa (bắt buộc)"}
                 rows={2}
                 value={draft.coverLabel}
                 onChange={(language, value) =>
@@ -517,6 +762,12 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
               />
             </div>
           </Surface>
+
+          {editorMessage ? (
+            <div className="rounded-[1.6rem] border border-amber-300/20 bg-amber-300/10 px-5 py-4 text-sm leading-7 text-amber-700 dark:text-amber-100">
+              {editorMessage}
+            </div>
+          ) : null}
 
           <Surface className="space-y-5 px-6 py-6 md:px-8 md:py-8">
             <div className="flex items-center justify-between gap-4">
@@ -564,7 +815,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                             : current,
                         )
                       }
-                      className="text-xs font-semibold text-rose-200"
+                      className="text-xs font-semibold text-rose-600 dark:text-rose-200"
                     >
                       {locale === "en" ? "Remove" : "Xoa"}
                     </button>
@@ -601,35 +852,31 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                 </p>
                 <p className="mt-2 text-sm theme-text-soft">
                   {locale === "en"
-                    ? "Mix paragraph and image blocks to build the article body."
-                    : "Kết hợp paragraph và image blocks để tạo thân bài viết."}
+                    ? "Mix paragraph and image blocks to build the article body. The uploaded cover image is always inserted automatically after the first paragraph."
+                    : "Kết hợp block đoạn văn và block hình để tạo thân bài viết. Ảnh bìa được chèn tự động sau đoạn văn đầu tiên."}
                 </p>
               </div>
               <div className="flex gap-3">
-                <button
-                  type="button"
+                <IconToolButton
+                  label={locale === "en" ? "Add paragraph block" : "Thêm block đoạn văn"}
                   onClick={() =>
                     setDraft((current) =>
                       current ? { ...current, content: [...current.content, createParagraphBlock()] } : current,
                     )
                   }
-                  className="rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong"
                 >
-                  <Plus className="mr-2 inline h-4 w-4" />
-                  {locale === "en" ? "Add paragraph" : "Them doan"}
-                </button>
-                <button
-                  type="button"
+                  <Text className="h-4 w-4" />
+                </IconToolButton>
+                <IconToolButton
+                  label={locale === "en" ? "Add image block" : "Thêm block hình ảnh"}
                   onClick={() =>
                     setDraft((current) =>
                       current ? { ...current, content: [...current.content, createImageBlock()] } : current,
                     )
                   }
-                  className="rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong"
                 >
-                  <ImagePlus className="mr-2 inline h-4 w-4" />
-                  {locale === "en" ? "Add image" : "Them hinh"}
-                </button>
+                  <ImagePlus className="h-4 w-4" />
+                </IconToolButton>
               </div>
             </div>
 
@@ -665,22 +912,51 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                         <option value="image">image</option>
                       </select>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setDraft((current) =>
-                          current && current.content.length > 1
-                            ? {
-                                ...current,
-                                content: current.content.filter((_, itemIndex) => itemIndex !== index),
-                              }
-                            : current,
-                        )
-                      }
-                      className="text-xs font-semibold text-rose-200"
-                    >
-                      {locale === "en" ? "Remove block" : "Xoa khoi"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <IconToolButton
+                        label={locale === "en" ? "Move block up" : "Đưa block lên"}
+                        disabled={index === 0}
+                        onClick={() =>
+                          setDraft((current) =>
+                            current
+                              ? { ...current, content: moveItem(current.content, index, -1) }
+                              : current,
+                          )
+                        }
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </IconToolButton>
+                      <IconToolButton
+                        label={locale === "en" ? "Move block down" : "Đưa block xuống"}
+                        disabled={index === draft.content.length - 1}
+                        onClick={() =>
+                          setDraft((current) =>
+                            current
+                              ? { ...current, content: moveItem(current.content, index, 1) }
+                              : current,
+                          )
+                        }
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </IconToolButton>
+                      <IconToolButton
+                        label={locale === "en" ? "Delete block" : "Xóa block"}
+                        tone="danger"
+                        disabled={draft.content.length === 1}
+                        onClick={() =>
+                          setDraft((current) =>
+                            current && current.content.length > 1
+                              ? {
+                                  ...current,
+                                  content: current.content.filter((_, itemIndex) => itemIndex !== index),
+                                }
+                              : current,
+                          )
+                        }
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </IconToolButton>
+                    </div>
                   </div>
 
                   {block.type === "paragraph" ? (
@@ -706,7 +982,9 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                   ) : (
                     <div className="space-y-4">
                       <label className="space-y-2">
-                        <span className="text-sm theme-text-muted">Image path</span>
+                        <span className="text-sm theme-text-muted">
+                          {locale === "en" ? "Image path" : "Đường dẫn hình ảnh"}
+                        </span>
                         <input
                           value={block.src}
                           onChange={(event) =>
@@ -801,7 +1079,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
 
         <div className="space-y-4">
           <Surface className="px-6 py-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 dark:text-sky-200/80">
               {locale === "en" ? "Publish preview" : "Preview đăng bài"}
             </p>
             <p className="mt-4 text-sm leading-7 theme-text-muted">
