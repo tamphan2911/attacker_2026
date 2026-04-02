@@ -152,16 +152,16 @@ export function NewsPage() {
                       className="object-cover transition duration-700 group-hover:scale-[1.02]"
                     />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.08),rgba(7,18,35,0.18),rgba(7,18,35,0.82))]" />
-                    <div className="absolute inset-x-0 bottom-0 flex flex-col justify-between px-6 py-6 text-white">
+                    <div className="absolute left-6 top-6 z-10">
                       <StatusPill>{pickText(locale, post.category)}</StatusPill>
-                      <div className="mt-20">
-                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/66">
-                          {pickText(locale, post.coverLabel)}
-                        </p>
-                        <p className="mt-3 text-sm text-white/78">
-                          {formatDateLabel(locale, post.publishedAt)} · {post.readTime}
-                        </p>
-                      </div>
+                    </div>
+                    <div className="absolute inset-x-0 bottom-0 px-6 py-6 text-white">
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/66">
+                        {pickText(locale, post.coverLabel)}
+                      </p>
+                      <p className="mt-3 text-sm text-white/78">
+                        {formatDateLabel(locale, post.publishedAt)} · {post.readTime}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start justify-between gap-6 px-6 py-6 md:px-8 md:py-8">
