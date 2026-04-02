@@ -17,6 +17,7 @@ import {
 import { ContentIndexSection } from "@/components/admin-content-editor";
 import { AdminJudgesList } from "@/components/admin-judges-manager";
 import { AdminNewsList } from "@/components/admin-news-manager";
+import { AdminOrganizerManager } from "@/components/admin-organizer-manager";
 import { AdminRound1Manager } from "@/components/admin-round1-manager";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
@@ -27,7 +28,16 @@ import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import type { UserProfile } from "@/types/site";
 
-export type AdminSection = "overview" | "content" | "news" | "judges" | "round1" | "users" | "teams" | "submissions";
+export type AdminSection =
+  | "overview"
+  | "content"
+  | "news"
+  | "judges"
+  | "round1"
+  | "users"
+  | "organizerTeam"
+  | "teams"
+  | "submissions";
 
 export function AdminShell({
   children,
@@ -235,7 +245,7 @@ function UsersTableSection() {
 
   const userRows = useMemo(
     () =>
-      users.map((user) => {
+      users.filter((user) => user.role === "student").map((user) => {
         const team = getTeamForUser(user.id, teams);
         const status = getAdminUserCompetitionStatus(locale, user, team);
 
@@ -328,14 +338,14 @@ function UsersTableSection() {
     <div className="space-y-6">
       <TableHeader
         id={ADMIN_TITLE_ID}
-        title={locale === "en" ? "Users" : "Nguoi dung"}
+        title={locale === "en" ? "Participants" : "Thí sinh"}
         description={
           locale === "en"
             ? "Participant table with role, current competition status, academic info, and per-column filters."
             : "Bảng thí sinh gồm vai trò, trạng thái thi đấu, thông tin học tập và bộ lọc theo từng cột."
         }
-        exportLabel={locale === "en" ? "Export users.xlsx" : "Xuat users.xlsx"}
-        onExport={() => exportRowsToWorkbook("attacker-2026-users.xlsx", "Users", rows)}
+        exportLabel={locale === "en" ? "Export participants.xlsx" : "Xuất participants.xlsx"}
+        onExport={() => exportRowsToWorkbook("attacker-2026-participants.xlsx", "Participants", rows)}
       />
 
       <Surface className="overflow-hidden">
@@ -386,8 +396,6 @@ function UsersTableSection() {
                   >
                     <option value="all">{locale === "en" ? "All roles" : "Tất cả vai trò"}</option>
                     <option value="student">{locale === "en" ? "Participant" : "Thí sinh"}</option>
-                    <option value="moderator">{locale === "en" ? "Moderator" : "Điều phối viên"}</option>
-                    <option value="admin">{locale === "en" ? "Administrator" : "Quản trị viên"}</option>
                   </select>
                 </th>
                 <th className="px-4 py-3">
@@ -402,8 +410,6 @@ function UsersTableSection() {
                     <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
                     <option value="finished">{locale === "en" ? "Finished" : "Hoàn thành"}</option>
                     <option value="stopped">{locale === "en" ? "Stopped" : "Dừng"}</option>
-                    <option value="moderator">{locale === "en" ? "Moderation" : "Điều phối"}</option>
-                    <option value="admin">{locale === "en" ? "Administration" : "Điều hành"}</option>
                   </select>
                 </th>
                 <th className="px-4 py-3">
@@ -802,6 +808,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
       {section === "judges" ? <AdminJudgesList /> : null}
       {section === "round1" ? <AdminRound1Manager /> : null}
       {section === "users" ? <UsersTableSection /> : null}
+      {section === "organizerTeam" ? <AdminOrganizerManager /> : null}
       {section === "teams" ? <TeamsTableSection /> : null}
       {section === "submissions" ? <SubmissionsTableSection /> : null}
     </>

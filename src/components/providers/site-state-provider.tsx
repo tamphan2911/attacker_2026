@@ -70,6 +70,7 @@ const STORAGE_KEY = "attacker-2026-site-state-v16";
 
 const GUEST_USER: UserProfile = {
   id: "",
+  loginId: "",
   name: "",
   email: "",
   role: "student",
@@ -86,6 +87,7 @@ const GUEST_USER: UserProfile = {
 function normalizeUserProfile(user: UserProfile): UserProfile {
   return {
     ...user,
+    loginId: user.loginId ?? user.studentId ?? user.email,
     phoneNumber: user.phoneNumber ?? "",
   };
 }
@@ -151,6 +153,22 @@ interface SiteStateValue {
   createJudgeByAdmin: (payload: JudgeProfile) => Promise<boolean>;
   updateJudgeByAdmin: (judgeId: string, payload: JudgeProfile) => Promise<boolean>;
   deleteJudgeByAdmin: (judgeId: string) => Promise<boolean>;
+  createModeratorAccountByAdmin: (payload: {
+    loginId: string;
+    name: string;
+    password: string;
+    avatarImageSrc?: string;
+  }) => Promise<boolean>;
+  updateModeratorAccountByAdmin: (
+    userId: string,
+    payload: {
+      loginId: string;
+      name: string;
+      password?: string;
+      avatarImageSrc?: string | null;
+    },
+  ) => Promise<boolean>;
+  deleteModeratorAccountByAdmin: (userId: string) => Promise<boolean>;
   updateActiveUserProfile: (payload: Partial<UserProfile>) => void;
   updateUserByAdmin: (userId: string, payload: Partial<UserProfile>) => void;
   deleteUserByAdmin: (userId: string) => void;
@@ -766,6 +784,171 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         {
           en: "Could not delete the judge right now.",
           vi: "Hiện không thể xóa giám khảo.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
+  const createModeratorAccountByAdmin = async (payload: {
+    loginId: string;
+    name: string;
+    password: string;
+    avatarImageSrc?: string;
+  }) => {
+    if (currentUser.role !== "admin") {
+      pushToast(
+        {
+          en: "Only admin accounts can create moderator accounts here.",
+          vi: "Chỉ tài khoản admin mới có thể tạo tài khoản moderator tại đây.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch("/api/admin/organizer-team", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(
+          response,
+          "Could not create the moderator account.",
+        );
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncWorkspace();
+      pushToast(
+        {
+          en: "Moderator account created.",
+          vi: "Tài khoản moderator đã được tạo.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not create the moderator account right now.",
+          vi: "Hiện không thể tạo tài khoản moderator.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
+  const updateModeratorAccountByAdmin = async (
+    userId: string,
+    payload: {
+      loginId: string;
+      name: string;
+      password?: string;
+      avatarImageSrc?: string | null;
+    },
+  ) => {
+    if (currentUser.role !== "admin") {
+      pushToast(
+        {
+          en: "Only admin accounts can edit moderator accounts here.",
+          vi: "Chỉ tài khoản admin mới có thể chỉnh sửa tài khoản moderator tại đây.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/organizer-team/${userId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(
+          response,
+          "Could not update the moderator account.",
+        );
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncWorkspace();
+      pushToast(
+        {
+          en: "Moderator account updated.",
+          vi: "Tài khoản moderator đã được cập nhật.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not update the moderator account right now.",
+          vi: "Hiện không thể cập nhật tài khoản moderator.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
+  const deleteModeratorAccountByAdmin = async (userId: string) => {
+    if (currentUser.role !== "admin") {
+      pushToast(
+        {
+          en: "Only admin accounts can delete moderator accounts here.",
+          vi: "Chỉ tài khoản admin mới có thể xóa tài khoản moderator tại đây.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/organizer-team/${userId}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(
+          response,
+          "Could not delete the moderator account.",
+        );
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncWorkspace();
+      pushToast(
+        {
+          en: "Moderator account deleted.",
+          vi: "Tài khoản moderator đã được xóa.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not delete the moderator account right now.",
+          vi: "Hiện không thể xóa tài khoản moderator.",
         },
         "warning",
       );
@@ -2286,6 +2469,9 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     createJudgeByAdmin,
     updateJudgeByAdmin,
     deleteJudgeByAdmin,
+    createModeratorAccountByAdmin,
+    updateModeratorAccountByAdmin,
+    deleteModeratorAccountByAdmin,
     updateActiveUserProfile,
     updateUserByAdmin,
     deleteUserByAdmin,

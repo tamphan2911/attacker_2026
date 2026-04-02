@@ -9,6 +9,7 @@ import {
   Medal,
   Newspaper,
   TableProperties,
+  UserCog,
   Users,
   Users2,
 } from "lucide-react";
@@ -78,24 +79,24 @@ const adminNavGroups: Array<{
     ],
   },
   {
-    label: { en: "Operations", vi: "Vận hành" },
+    label: { en: "System", vi: "Hệ thống" },
     items: [
-      {
-        href: "/admin/round-1",
-        icon: FileQuestion,
-        label: { en: "Round 1", vi: "Vòng 1" },
-        description: { en: "Banks, results, and review", vi: "Ngân hàng đề, kết quả và chấm điểm" },
-        children: [
-          { href: "/admin/round-1", label: { en: "Round 1 test bank", vi: "Ngân hàng đề Vòng 1" } },
-        ],
-      },
       {
         href: "/admin/users",
         icon: Users,
         label: { en: "Users", vi: "Người dùng" },
-        description: { en: "Participants and staff accounts", vi: "Thí sinh và tài khoản vận hành" },
+        description: { en: "Participant records", vi: "Hồ sơ thí sinh" },
         children: [
           { href: "/admin/users", label: { en: "Participant list", vi: "Danh sách thí sinh" } },
+        ],
+      },
+      {
+        href: "/admin/organizer-team",
+        icon: UserCog,
+        label: { en: "Organizer team", vi: "Ban tổ chức" },
+        description: { en: "Admin and moderator roster", vi: "Danh sách admin và moderator" },
+        children: [
+          { href: "/admin/organizer-team", label: { en: "Organizer team", vi: "Ban tổ chức" } },
         ],
       },
       {
@@ -105,6 +106,20 @@ const adminNavGroups: Array<{
         description: { en: "Teams and roster status", vi: "Đội thi và trạng thái đội hình" },
         children: [
           { href: "/admin/teams", label: { en: "Team list", vi: "Danh sách đội thi" } },
+        ],
+      },
+    ],
+  },
+  {
+    label: { en: "Operations", vi: "Vận hành" },
+    items: [
+      {
+        href: "/admin/round-1",
+        icon: FileQuestion,
+        label: { en: "Round 1", vi: "Vòng 1" },
+        description: { en: "Banks, results, and review", vi: "Ngân hàng đề, kết quả và chấm điểm" },
+        children: [
+          { href: "/admin/round-1", label: { en: "Round 1 test bank", vi: "Ngân hàng đề Vòng 1" } },
         ],
       },
       {

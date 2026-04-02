@@ -5,6 +5,7 @@ import {
   TeamRound1LockStatus,
   UserRole,
 } from "@prisma/client";
+import { hash } from "bcryptjs";
 
 import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles } from "@/data/site-content";
 import { prisma } from "@/lib/db";
@@ -63,6 +64,14 @@ function mapStage(stage: TeamProfile["stage"]) {
     default:
       return CompetitionStage.ROUND_1;
   }
+}
+
+function normalizeOrganizerLoginId(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function buildOrganizerEmail(loginId: string) {
+  return `organizer+${loginId}@internal.attacker.local`;
 }
 
 export async function savePageContentByAdmin(
@@ -294,20 +303,33 @@ export async function deleteNewsPostByAdmin(slug: string): Promise<ServiceResult
 }
 
 export async function updateUserByAdmin(
+  actorRole: UserRole,
   userId: string,
   payload: Partial<UserProfile>,
 ): Promise<ServiceResult<{ userId: string }>> {
-  if (userId === DEMO_ADMIN_LOGIN_ID) {
-    return fail(403, "The fixed admin account cannot be edited.");
-  }
-
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, role: true, studentId: true },
+    select: { id: true, role: true, studentId: true, loginId: true },
   });
 
   if (!user) {
     return fail(404, "User not found.");
+  }
+
+  if (user.loginId === DEMO_ADMIN_LOGIN_ID) {
+    return fail(403, "The fixed admin account cannot be edited.");
+  }
+
+  if (user.role !== UserRole.STUDENT) {
+    if (actorRole !== UserRole.ADMIN) {
+      return fail(403, "Only admin can manage organizer accounts.");
+    }
+
+    return fail(403, "Organizer accounts are managed from Organizer team.");
+  }
+
+  if (payload.role && payload.role !== "student") {
+    return fail(403, "Participant records cannot change to organizer roles from this screen.");
   }
 
   const nextEmail = payload.email?.trim().toLowerCase();
@@ -353,12 +375,32 @@ export async function updateUserByAdmin(
   return ok({ userId });
 }
 
-export async function deleteUserByAdmin(userId: string): Promise<ServiceResult<{ userId: string }>> {
-  if (userId === DEMO_ADMIN_LOGIN_ID) {
-    return fail(403, "The fixed admin account cannot be deleted.");
-  }
-
+export async function deleteUserByAdmin(
+  actorRole: UserRole,
+  userId: string,
+): Promise<ServiceResult<{ userId: string }>> {
   return prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({
+      where: { id: userId },
+      select: { id: true, role: true, loginId: true },
+    });
+
+    if (!user) {
+      return fail(404, "User not found.");
+    }
+
+    if (user.loginId === DEMO_ADMIN_LOGIN_ID) {
+      return fail(403, "The fixed admin account cannot be deleted.");
+    }
+
+    if (user.role !== UserRole.STUDENT) {
+      if (actorRole !== UserRole.ADMIN) {
+        return fail(403, "Only admin can manage organizer accounts.");
+      }
+
+      return fail(403, "Organizer accounts are managed from Organizer team.");
+    }
+
     const membership = await tx.teamMember.findUnique({
       where: { userId },
       include: { team: true },
@@ -390,6 +432,136 @@ export async function deleteUserByAdmin(userId: string): Promise<ServiceResult<{
 
     return ok({ userId });
   });
+}
+
+export async function createModeratorAccountByAdmin(payload: {
+  loginId: string;
+  name: string;
+  password: string;
+  avatarImageSrc?: string;
+}): Promise<ServiceResult<{ userId: string }>> {
+  const loginId = normalizeOrganizerLoginId(payload.loginId);
+  const name = payload.name.trim();
+  const password = payload.password.trim();
+
+  if (!loginId || !name || !password) {
+    return fail(400, "Login ID, full name, and password are required.");
+  }
+
+  const generatedEmail = buildOrganizerEmail(loginId);
+  const duplicate = await prisma.user.findFirst({
+    where: {
+      OR: [{ loginId }, { email: generatedEmail }, { studentId: loginId }],
+    },
+    select: { id: true },
+  });
+
+  if (duplicate) {
+    return fail(409, "Another account already uses that login ID.");
+  }
+
+  const passwordHash = await hash(password, 12);
+  const created = await prisma.user.create({
+    data: {
+      loginId,
+      email: generatedEmail,
+      passwordHash,
+      name,
+      role: UserRole.MODERATOR,
+      studentId: null,
+      phoneNumber: null,
+      university: "",
+      major: "",
+      classYear: "",
+      bio: "",
+      avatarTone: "from-emerald-500 via-cyan-400 to-blue-400",
+      avatarImageSrc: payload.avatarImageSrc?.trim() || null,
+    },
+    select: { id: true },
+  });
+
+  return ok({ userId: created.id }, 201);
+}
+
+export async function updateModeratorAccountByAdmin(
+  userId: string,
+  payload: {
+    loginId: string;
+    name: string;
+    password?: string;
+    avatarImageSrc?: string | null;
+  },
+): Promise<ServiceResult<{ userId: string }>> {
+  const existing = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true, loginId: true },
+  });
+
+  if (!existing) {
+    return fail(404, "Organizer account not found.");
+  }
+
+  if (existing.role !== UserRole.MODERATOR) {
+    return fail(403, "Only moderator accounts can be edited here.");
+  }
+
+  const loginId = normalizeOrganizerLoginId(payload.loginId);
+  const name = payload.name.trim();
+
+  if (!loginId || !name) {
+    return fail(400, "Login ID and full name are required.");
+  }
+
+  const generatedEmail = buildOrganizerEmail(loginId);
+  const duplicate = await prisma.user.findFirst({
+    where: {
+      id: { not: userId },
+      OR: [{ loginId }, { email: generatedEmail }, { studentId: loginId }],
+    },
+    select: { id: true },
+  });
+
+  if (duplicate) {
+    return fail(409, "Another account already uses that login ID.");
+  }
+
+  const nextPassword = payload.password?.trim();
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      loginId,
+      email: generatedEmail,
+      name,
+      passwordHash: nextPassword ? await hash(nextPassword, 12) : undefined,
+      avatarImageSrc:
+        payload.avatarImageSrc === undefined ? undefined : payload.avatarImageSrc || null,
+    },
+  });
+
+  return ok({ userId });
+}
+
+export async function deleteModeratorAccountByAdmin(
+  userId: string,
+): Promise<ServiceResult<{ userId: string }>> {
+  const existing = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, role: true },
+  });
+
+  if (!existing) {
+    return fail(404, "Organizer account not found.");
+  }
+
+  if (existing.role !== UserRole.MODERATOR) {
+    return fail(403, "Only moderator accounts can be deleted here.");
+  }
+
+  await prisma.user.delete({
+    where: { id: userId },
+  });
+
+  return ok({ userId });
 }
 
 export async function updateTeamByAdmin(

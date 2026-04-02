@@ -17,3 +17,7 @@ export async function getCurrentDbUser() {
 export function hasElevatedRole(role: UserRole) {
   return role === UserRole.ADMIN || role === UserRole.MODERATOR;
 }
+
+export function hasAdminRole(role: UserRole) {
+  return role === UserRole.ADMIN;
+}

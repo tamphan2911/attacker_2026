@@ -240,6 +240,47 @@ export function DashboardPage() {
     );
   }
 
+  if (currentUser.role !== "student") {
+    return (
+      <Surface className="mx-auto max-w-4xl px-6 py-10 md:px-8">
+        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 dark:text-sky-200/80">
+              {locale === "en" ? "Organizer workspace" : "Workspace vận hành"}
+            </p>
+            <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.7rem]">
+              {locale === "en"
+                ? "Admin and moderator accounts do not join teams or competition rounds."
+                : "Tài khoản admin và moderator không tham gia đội thi hoặc các vòng thi."}
+            </h1>
+            <p className="mt-4 text-sm leading-7 theme-text-soft">
+              {locale === "en"
+                ? "This account is reserved for moderation. Use admin mode to manage the platform, and use the profile page only for internal identity details."
+                : "Tài khoản này chỉ dùng cho công tác điều phối. Hãy dùng admin mode để vận hành hệ thống, và chỉ dùng trang hồ sơ cho thông tin định danh nội bộ."}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {canAccessAdminMode ? (
+              <Link
+                href="/admin"
+                className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                {locale === "en" ? "Open admin mode" : "Mở admin mode"}
+              </Link>
+            ) : null}
+            <Link
+              href="/profile"
+              className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+            >
+              {locale === "en" ? "Open profile" : "Mở hồ sơ"}
+            </Link>
+          </div>
+        </div>
+      </Surface>
+    );
+  }
+
   const currentTeamMembers = currentTeam
     ? currentTeam.memberIds
         .map((memberId) => users.find((user) => user.id === memberId))

@@ -180,6 +180,7 @@ export function serializeUser(user: UserWithAccounts): UserProfile {
 
   return {
     id: user.id,
+    loginId: user.loginId,
     name: user.name,
     email: user.email,
     role: mapUserRole(user.role),

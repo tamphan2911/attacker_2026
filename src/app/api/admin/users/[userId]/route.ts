@@ -18,7 +18,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid user payload." }, { status: 400 });
   }
 
-  const result = await updateUserByAdmin(userId, payload);
+  const result = await updateUserByAdmin(user.role, userId, payload);
   if (result.ok) {
     return NextResponse.json(result.data, { status: result.status });
   }
@@ -36,7 +36,7 @@ export async function DELETE(
   }
 
   const { userId } = await params;
-  const result = await deleteUserByAdmin(userId);
+  const result = await deleteUserByAdmin(user.role, userId);
   if (result.ok) {
     return NextResponse.json(result.data, { status: result.status });
   }

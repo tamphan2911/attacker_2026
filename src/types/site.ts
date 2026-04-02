@@ -191,6 +191,7 @@ export interface Round1Submission {
 
 export interface UserProfile {
   id: string;
+  loginId?: string;
   name: string;
   email: string;
   role: UserRole;
