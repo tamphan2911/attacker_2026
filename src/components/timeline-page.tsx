@@ -23,6 +23,9 @@ const timelinePhaseMeta: Array<{
   description: { en: string; vi: string };
   icon: typeof Flag;
   ruleHref: string;
+  iconClass: string;
+  buttonClass: string;
+  statusClass: string;
 }> = [
   {
     phase: "general",
@@ -35,6 +38,12 @@ const timelinePhaseMeta: Array<{
     },
     icon: Flag,
     ruleHref: "/rules#general-rules",
+    iconClass:
+      "border-violet-600/24 bg-[linear-gradient(135deg,rgba(124,58,237,0.2),rgba(168,85,247,0.16))] text-violet-800 dark:border-violet-300/20 dark:bg-violet-300/12 dark:text-violet-100",
+    buttonClass:
+      "border-violet-600/24 bg-[linear-gradient(135deg,rgba(124,58,237,0.12),rgba(168,85,247,0.08))] text-violet-800 hover:border-violet-600/34 hover:bg-[linear-gradient(135deg,rgba(124,58,237,0.16),rgba(168,85,247,0.12))] dark:border-violet-300/22 dark:bg-violet-300/[0.12] dark:text-violet-100",
+    statusClass:
+      "border-violet-600/20 bg-violet-500/12 text-violet-800 dark:border-violet-300/22 dark:bg-violet-300/[0.12] dark:text-violet-100",
   },
   {
     phase: "round-1",
@@ -47,6 +56,12 @@ const timelinePhaseMeta: Array<{
     },
     icon: ShieldCheck,
     ruleHref: "/rules#round-1-rules",
+    iconClass:
+      "border-sky-600/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.2),rgba(59,130,246,0.16))] text-sky-800 dark:border-sky-300/20 dark:bg-sky-300/12 dark:text-sky-100",
+    buttonClass:
+      "border-sky-600/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(59,130,246,0.08))] text-sky-800 hover:border-sky-600/34 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.12))] dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
+    statusClass:
+      "border-sky-600/20 bg-sky-500/12 text-sky-800 dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
   },
   {
     phase: "round-2",
@@ -59,6 +74,12 @@ const timelinePhaseMeta: Array<{
     },
     icon: Route,
     ruleHref: "/rules#round-2-rules",
+    iconClass:
+      "border-emerald-600/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.2),rgba(52,211,153,0.16))] text-emerald-800 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100",
+    buttonClass:
+      "border-emerald-600/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.12),rgba(52,211,153,0.08))] text-emerald-800 hover:border-emerald-600/34 hover:bg-[linear-gradient(135deg,rgba(16,185,129,0.16),rgba(52,211,153,0.12))] dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
+    statusClass:
+      "border-emerald-600/20 bg-emerald-500/12 text-emerald-800 dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
   },
   {
     phase: "round-3",
@@ -71,6 +92,12 @@ const timelinePhaseMeta: Array<{
     },
     icon: CalendarDays,
     ruleHref: "/rules#round-3-rules",
+    iconClass:
+      "border-amber-600/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.2),rgba(249,115,22,0.16))] text-amber-800 dark:border-amber-300/20 dark:bg-amber-300/12 dark:text-amber-100",
+    buttonClass:
+      "border-amber-600/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.08))] text-amber-800 hover:border-amber-600/34 hover:bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(249,115,22,0.12))] dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
+    statusClass:
+      "border-amber-600/20 bg-amber-500/12 text-amber-800 dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
   },
 ];
 
@@ -96,12 +123,12 @@ export function TimelinePage() {
             <section
               key={phase.phase}
               id={phase.anchor}
-              className="scroll-mt-36 rounded-[2rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,249,255,0.98))] px-5 py-6 shadow-[0_22px_55px_rgba(148,163,184,0.12)] dark:bg-[linear-gradient(180deg,rgba(11,23,42,0.96),rgba(7,16,31,0.98))] md:px-7 md:py-7"
+              className="theme-timeline-shell scroll-mt-36 rounded-[2rem] border px-5 py-6 md:px-7 md:py-7"
             >
               <div className="grid gap-6 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
                 <div className="space-y-4 xl:sticky xl:top-32 xl:self-start">
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-[1.25rem] border border-sky-500/18 bg-sky-500/10">
-                    <Icon className="h-5 w-5 text-sky-600 dark:text-sky-200" />
+                  <div className={`inline-flex h-12 w-12 items-center justify-center rounded-[1.25rem] border ${phase.iconClass}`}>
+                    <Icon className="h-5 w-5" />
                   </div>
 
                   <div>
@@ -118,7 +145,7 @@ export function TimelinePage() {
 
                   <Link
                     href={phase.ruleHref}
-                    className="inline-flex items-center gap-2 rounded-full border border-sky-500/22 bg-sky-500/[0.08] px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-500/34 hover:bg-sky-500/[0.12] active:scale-[0.98] dark:text-sky-100"
+                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-[0.98] ${phase.buttonClass}`}
                   >
                     {locale === "en" ? "Open rule block" : "Mở khối thể lệ"}
                     <ArrowRight className="h-4 w-4" />
@@ -127,7 +154,7 @@ export function TimelinePage() {
 
                 <div className="space-y-4">
                   {items.map((item) => (
-                    <Surface key={`${item.phase}-${item.title.en}-${item.startDate}`} className="px-5 py-5">
+                    <Surface key={`${item.phase}-${item.title.en}-${item.startDate}`} className="theme-timeline-card px-5 py-5">
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
@@ -137,14 +164,14 @@ export function TimelinePage() {
                             {pickText(locale, item.title)}
                           </h3>
                         </div>
-                        <span className="inline-flex items-center gap-2 rounded-full border theme-border bg-white/78 px-4 py-2 text-sm font-medium theme-text-body dark:bg-white/[0.05]">
-                          <CalendarDays className="h-4 w-4 text-sky-500" />
+                        <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium ${phase.statusClass}`}>
+                          <CalendarDays className="h-4 w-4" />
                           {locale === "en" ? "Scheduled" : "Đã lên lịch"}
                         </span>
                       </div>
 
                       <div className="mt-5 grid gap-3 md:grid-cols-3">
-                        <div className="rounded-[1.25rem] border theme-border bg-white/76 px-4 py-4 dark:bg-white/[0.05]">
+                        <div className="theme-timeline-meta-card rounded-[1.25rem] border px-4 py-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                             {locale === "en" ? "Time" : "Thời gian"}
                           </p>
@@ -152,13 +179,13 @@ export function TimelinePage() {
                             {formatDateRangeLabel(locale, item.startDate, item.endDate)}
                           </p>
                         </div>
-                        <div className="rounded-[1.25rem] border theme-border bg-white/76 px-4 py-4 dark:bg-white/[0.05]">
+                        <div className="theme-timeline-meta-card rounded-[1.25rem] border px-4 py-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                             {locale === "en" ? "Place" : "Địa điểm"}
                           </p>
                           <p className="mt-2 text-sm leading-7 theme-text-body">{pickText(locale, item.location)}</p>
                         </div>
-                        <div className="rounded-[1.25rem] border theme-border bg-white/76 px-4 py-4 dark:bg-white/[0.05]">
+                        <div className="theme-timeline-meta-card rounded-[1.25rem] border px-4 py-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                             {locale === "en" ? "Method" : "Hình thức"}
                           </p>
@@ -166,7 +193,7 @@ export function TimelinePage() {
                         </div>
                       </div>
 
-                      <div className="mt-4 rounded-[1.25rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.04]">
+                      <div className="theme-timeline-note-card mt-4 rounded-[1.25rem] border px-4 py-4">
                         <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                           {locale === "en" ? "Basic information" : "Thông tin cơ bản"}
                         </p>
@@ -179,7 +206,7 @@ export function TimelinePage() {
                             <Link
                               key={`${item.title.en}-${supportLink.href}`}
                               href={supportLink.href}
-                              className="inline-flex items-center gap-2 rounded-full border theme-border bg-white/80 px-4 py-2 text-sm font-medium theme-text-body transition hover:border-sky-500/28 hover:bg-sky-500/[0.08] hover:text-[var(--text-strong)] active:scale-[0.98] dark:bg-white/[0.05]"
+                              className="theme-timeline-link inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition active:scale-[0.98]"
                             >
                               {pickText(locale, supportLink.label)}
                               <ArrowRight className="h-3.5 w-3.5" />
