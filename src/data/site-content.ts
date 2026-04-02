@@ -723,7 +723,7 @@ export const sponsorProfiles: SponsorProfile[] = [
   {
     name: "BlueFund Capital",
     logoSrc: "/sponsors/bluefund-logo.svg",
-    tier: { en: "Title sponsor", vi: "Nhà tài trợ danh xưng" },
+    tier: { en: "Strategic sponsor", vi: "Nhà tài trợ chiến lược" },
     category: { en: "Investment partner", vi: "Đối tác đầu tư" },
     description: {
       en: "Supports the champion award, founder office hours, and investor-facing coaching for the final teams.",
@@ -733,7 +733,7 @@ export const sponsorProfiles: SponsorProfile[] = [
   {
     name: "NextBank Lab",
     logoSrc: "/sponsors/nextbank-logo.svg",
-    tier: { en: "Strategic sponsor", vi: "Nhà tài trợ chiến lược" },
+    tier: { en: "Diamond sponsor", vi: "Nhà tài trợ kim cương" },
     category: { en: "Digital banking innovation", vi: "Đổi mới ngân hàng số" },
     description: {
       en: "Contributes challenge framing around consumer finance, digital onboarding, and regulated fintech experiences.",
@@ -743,7 +743,7 @@ export const sponsorProfiles: SponsorProfile[] = [
   {
     name: "Quant Studio",
     logoSrc: "/sponsors/quantstudio-logo.svg",
-    tier: { en: "Knowledge sponsor", vi: "Nhà tài trợ tri thức" },
+    tier: { en: "Gold sponsor", vi: "Nhà tài trợ vàng" },
     category: { en: "Trading and analytics", vi: "Giao dịch và phân tích" },
     description: {
       en: "Provides market-data perspectives, evaluation logic, and analyst mentors for Round 1 and Round 2.",
