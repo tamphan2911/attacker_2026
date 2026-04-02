@@ -1372,36 +1372,50 @@ export const faqItems: FAQItem[] = [
 
 export const testimonialItems: TestimonialItem[] = [
   {
-    name: "Nguyen Duc Phu",
-    role: {
-      en: "Past participant · fintech major",
-      vi: "Thí sinh mùa trước · chuyên ngành fintech",
+    name: "Nguyễn Đức Phú",
+    competitionRole: {
+      en: "Attacker 2025 finalist · Team lead",
+      vi: "Chung kết Attacker 2025 · Đội trưởng",
     },
+    university: "Trường Đại học Kinh tế - Luật",
+    currentEmployment: {
+      en: "Equity research intern · Mirae Asset Vietnam",
+      vi: "Thực tập sinh phân tích cổ phiếu · Mirae Asset Việt Nam",
+    },
+    avatarImageSrc: "/testimonials/nguyen-duc-phu.svg",
     quote: {
-      en: "The best part was how close the challenge felt to real market decision-making.",
-      vi: "Giá trị lớn nhất là cảm giác bài toán rất sát với việc ra quyết định trên thị trường thực tế.",
+      en: "The strongest value came from how close the challenge felt to real market decisions and investor feedback.",
+      vi: "Giá trị lớn nhất là cảm giác đề bài rất gần với quyết định thị trường thực tế và cách nhà đầu tư phản biện.",
     },
   },
   {
-    name: "Tran Thi Nhan",
-    role: {
-      en: "Past champion · risk management professional",
-      vi: "Quán quân mùa trước · chuyên viên quản lý rủi ro",
+    name: "Trần Thị Nhàn",
+    competitionRole: {
+      en: "Attacker 2025 champion · Strategy lead",
+      vi: "Quán quân Attacker 2025 · Trưởng nhóm chiến lược",
     },
+    university: "Trường Đại học Ngân hàng TP. Hồ Chí Minh",
+    currentEmployment: {
+      en: "Risk management analyst · Techcombank",
+      vi: "Chuyên viên quản trị rủi ro · Techcombank",
+    },
+    avatarImageSrc: "/testimonials/tran-thi-nhan.svg",
     quote: {
-      en: "It created the right mix of academic depth, teamwork, and industry relevance.",
-      vi: "Cuộc thi tạo ra sự kết hợp hợp lý giữa học thuật, làm việc nhóm và tính liên quan đến doanh nghiệp.",
+      en: "Attacker created the right mix of academic depth, team execution, and business relevance for students who want to build in finance.",
+      vi: "Attacker tạo ra sự cân bằng rất đúng giữa chiều sâu học thuật, năng lực triển khai đội nhóm và tính thực tiễn cho sinh viên muốn đi theo tài chính.",
     },
   },
   {
-    name: "Pham Nguyen Khanh Huy",
-    role: {
-      en: "Past champion · senior student",
-      vi: "Quán quân mùa trước · sinh viên năm cuối",
+    name: "Phạm Nguyễn Khánh Huy",
+    competitionRole: {
+      en: "Attacker 2025 Emerging Team · Product lead",
+      vi: "Đội tiềm năng Attacker 2025 · Trưởng nhóm sản phẩm",
     },
+    university: "Đại học Kinh tế TP. Hồ Chí Minh",
+    avatarImageSrc: "/testimonials/pham-nguyen-khanh-huy.svg",
     quote: {
-      en: "Winning mattered, but the stronger outcome was the skill growth in coding, data, and product thinking.",
-      vi: "Thành tích quan trọng, nhưng giá trị lớn hơn là sự trưởng thành về lập trình, dữ liệu và tư duy sản phẩm.",
+      en: "Even more than the ranking, the competition pushed us to think in product, data, and presentation terms at the same time.",
+      vi: "Quan trọng hơn cả thứ hạng là cuộc thi buộc đội phải trưởng thành đồng thời về sản phẩm, dữ liệu và khả năng trình bày.",
     },
   },
 ];

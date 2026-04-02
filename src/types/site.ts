@@ -89,7 +89,10 @@ export interface JudgeProfile {
 
 export interface TestimonialItem {
   name: string;
-  role: LocalizedText;
+  competitionRole: LocalizedText;
+  university: string;
+  currentEmployment?: LocalizedText;
+  avatarImageSrc: string;
   quote: LocalizedText;
 }
 

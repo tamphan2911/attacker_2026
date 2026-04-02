@@ -26,62 +26,12 @@ import {
   testimonialItems,
 } from "@/data/site-content";
 import { pickText } from "@/lib/site";
-import type { LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import {
-  GradientAvatar,
   InfoKicker,
   SectionHeading,
   Surface,
 } from "@/components/site-ui";
-
-const featureCards: Array<{
-  image: string;
-  label: LocalizedText;
-  title: LocalizedText;
-  description: LocalizedText;
-  href: string;
-}> = [
-  {
-    image: "/theme-feature-1.jpg",
-    label: { en: "Competition structure", vi: "Cấu trúc cuộc thi" },
-    title: {
-      en: "Rounds, rewards, and the challenge narrative in one place.",
-      vi: "Vòng thi, giải thưởng và câu chuyện đề bài trong một trang thống nhất.",
-    },
-    description: {
-      en: "Public-facing information is presented like a serious event launch, not a campus bulletin.",
-      vi: "Thông tin công khai được trình bày như một sự kiện chuyên nghiệp, không phải bảng thông báo học đường.",
-    },
-    href: "/competition",
-  },
-  {
-    image: "/theme-feature-2.jpg",
-    label: { en: "Team workspace", vi: "Không gian đội" },
-    title: {
-      en: "Students can manage invitations and membership rules directly.",
-      vi: "Sinh viên có thể tự quản lý lời mời và các quy tắc thành viên.",
-    },
-    description: {
-      en: "One user, one team at a time. Leaders stay protected until transfer is complete.",
-      vi: "Mỗi người chỉ ở một đội tại một thời điểm. Đội trưởng được bảo toàn cho đến khi chuyển giao xong.",
-    },
-    href: "/dashboard",
-  },
-  {
-    image: "/theme-hero-1.jpg",
-    label: { en: "Organizer preview", vi: "Preview ban tổ chức" },
-    title: {
-      en: "News, rounds, and participant oversight already have a frontend home.",
-      vi: "Tin tức, các vòng thi và việc theo dõi thí sinh đã có một giao diện riêng cho frontend.",
-    },
-    description: {
-      en: "This reduces redesign work later when the real admin tools are connected.",
-      vi: "Điều này giảm bớt công việc thiết kế lại khi kết nối các công cụ quản trị thực tế.",
-    },
-    href: "/organizer",
-  },
-];
 
 const serviceItems = [
   {
@@ -447,36 +397,59 @@ export function HomePage() {
         </Surface>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-3">
-        {featureCards.map((item) => (
-          <Link key={item.href} href={item.href} className="group block">
-            <div className="theme-card-shadow-soft relative min-h-[420px] overflow-hidden rounded-[2rem] border theme-border-strong">
-              <Image
-                src={item.image}
-                alt={pickText(locale, item.title)}
-                fill
-                sizes="(min-width: 1024px) 33vw, 100vw"
-                className="object-cover transition duration-700 group-hover:scale-[1.03]"
-              />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.06)_0%,rgba(7,18,35,0.82)_100%)]" />
-              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/64">
-                  {pickText(locale, item.label)}
-                </p>
-                <p className="theme-heading mt-4 text-2xl font-semibold leading-[1.2]">
-                  {pickText(locale, item.title)}
-                </p>
-                <p className="mt-3 text-sm leading-7 text-white/76">
-                  {pickText(locale, item.description)}
-                </p>
-                <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold">
-                  {locale === "en" ? "Explore" : "Kham pha"}
-                  <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
+      <section className="space-y-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <SectionHeading
+            eyebrow={locale === "en" ? "Attacker 2025 voices" : "Những gương mặt từ Attacker 2025"}
+            title={
+              locale === "en"
+                ? "What last season's participants carried forward after the competition."
+                : "Những điều thí sinh mùa trước mang theo sau khi khép lại cuộc thi."
+            }
+            description={
+              locale === "en"
+                ? "A compact testimonial layer from Attacker 2025, highlighting competition role, university background, and current work direction."
+                : "Một lớp testimonial gọn gàng từ Attacker 2025, cho thấy vị trí tại mùa trước, nền tảng đại học và hướng đi hiện tại của người tham gia."
+            }
+          />
+          <Link href="/organizer" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
+            {locale === "en" ? "About Attacker" : "Giới thiệu Attacker"}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {testimonialItems.map((item) => (
+            <Surface key={item.name} className="px-5 py-5">
+              <div className="flex items-start gap-4">
+                <div className="relative h-18 w-18 shrink-0 overflow-hidden rounded-[1.4rem] border theme-border">
+                  <Image
+                    src={item.avatarImageSrc}
+                    alt={item.name}
+                    fill
+                    sizes="72px"
+                    className="object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="theme-heading text-lg font-semibold theme-text-strong">{item.name}</p>
+                  <p className="mt-2 text-[0.72rem] font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                    {pickText(locale, item.competitionRole)}
+                  </p>
+                  <p className="mt-3 text-sm theme-text-soft">{item.university}</p>
+                  {item.currentEmployment ? (
+                    <p className="mt-1 text-sm theme-text-muted">
+                      {pickText(locale, item.currentEmployment)}
+                    </p>
+                  ) : null}
                 </div>
               </div>
-            </div>
-          </Link>
-        ))}
+              <p className="mt-5 text-sm leading-7 theme-text-body">
+                &ldquo;{pickText(locale, item.quote)}&rdquo;
+              </p>
+            </Surface>
+          ))}
+        </div>
       </section>
 
       <section className="mx-auto max-w-4xl text-center">
@@ -641,80 +614,58 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-        <div>
-          <SectionHeading
-            eyebrow={pickText(locale, pageContent.home.destinations.eyebrow)}
-            title={pickText(locale, pageContent.home.destinations.title)}
-            description={pickText(locale, pageContent.home.destinations.description)}
-          />
+      <section>
+        <SectionHeading
+          eyebrow={pickText(locale, pageContent.home.destinations.eyebrow)}
+          title={pickText(locale, pageContent.home.destinations.title)}
+          description={pickText(locale, pageContent.home.destinations.description)}
+        />
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            {[
-              {
-                href: "/competition",
-                label: locale === "en" ? "Competition" : "Cuoc thi",
-              },
-              {
-                href: "/rules",
-                label: locale === "en" ? "Rules & Timeline" : "Thể lệ và lịch trình",
-              },
-              {
-                href: "/news",
-                label: locale === "en" ? "Newsroom" : "Newsroom",
-              },
-              {
-                href: "/dashboard",
-                label: locale === "en" ? "Team workspace" : "Không gian đội",
-              },
-              {
-                href: "/competition/judges",
-                label: locale === "en" ? "Judges" : "Giam khao",
-              },
-              {
-                href: "/competition/sponsors",
-                label: locale === "en" ? "Sponsors" : "Nha tai tro",
-              },
-            ].map((item) => {
-              const Icon = platformIcons[item.href as keyof typeof platformIcons] ?? Sparkles;
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {[
+            {
+              href: "/competition",
+              label: locale === "en" ? "Competition" : "Cuoc thi",
+            },
+            {
+              href: "/rules",
+              label: locale === "en" ? "Rules & Timeline" : "Thể lệ và lịch trình",
+            },
+            {
+              href: "/news",
+              label: locale === "en" ? "Newsroom" : "Newsroom",
+            },
+            {
+              href: "/dashboard",
+              label: locale === "en" ? "Team workspace" : "Không gian đội",
+            },
+            {
+              href: "/competition/judges",
+              label: locale === "en" ? "Judges" : "Giam khao",
+            },
+            {
+              href: "/competition/sponsors",
+              label: locale === "en" ? "Sponsors" : "Nha tai tro",
+            },
+          ].map((item) => {
+            const Icon = platformIcons[item.href as keyof typeof platformIcons] ?? Sparkles;
 
-              return (
-                <Link key={item.href} href={item.href}>
-                  <Surface className="group px-5 py-5 transition hover:-translate-y-1 hover:bg-[var(--panel-strong)]">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="theme-brand-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[0_18px_40px_rgba(23,114,208,0.2)]">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <ArrowRight className="h-4 w-4 theme-text-faint transition group-hover:translate-x-0.5 group-hover:text-[var(--brand)]" />
+            return (
+              <Link key={item.href} href={item.href}>
+                <Surface className="group px-5 py-5 transition hover:-translate-y-1 hover:bg-[var(--panel-strong)]">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="theme-brand-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[0_18px_40px_rgba(23,114,208,0.2)]">
+                      <Icon className="h-5 w-5" />
                     </div>
-                    <p className="theme-heading mt-5 text-xl font-semibold theme-text-strong">
-                      {item.label}
-                    </p>
-                  </Surface>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          {testimonialItems.map((item, index) => (
-            <Surface key={item.name} className="px-5 py-5">
-              <GradientAvatar
-                label={item.name}
-                tone={
-                  index === 0
-                    ? "from-sky-500 via-cyan-400 to-teal-400"
-                    : index === 1
-                      ? "from-orange-500 via-rose-400 to-fuchsia-400"
-                      : "from-indigo-500 via-blue-400 to-cyan-400"
-                }
-              />
-              <p className="theme-heading mt-5 text-lg font-semibold theme-text-strong">{item.name}</p>
-              <p className="mt-2 text-sm theme-text-soft">{pickText(locale, item.role)}</p>
-              <p className="mt-4 text-sm leading-7 theme-text-muted">{pickText(locale, item.quote)}</p>
-            </Surface>
-          ))}
+                    <ArrowRight className="h-4 w-4 theme-text-faint transition group-hover:translate-x-0.5 group-hover:text-[var(--brand)]" />
+                  </div>
+                  <p className="theme-heading mt-5 text-xl font-semibold theme-text-strong">
+                    {item.label}
+                  </p>
+                </Surface>
+              </Link>
+            );
+          })}
         </div>
       </section>
     </div>
