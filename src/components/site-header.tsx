@@ -20,7 +20,7 @@ import { contactInfo } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import type { LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { BrandMark, GradientAvatar } from "@/components/site-ui";
+import { BrandMarkInner, GradientAvatar } from "@/components/site-ui";
 
 function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
@@ -180,7 +180,7 @@ export function SiteHeader() {
       <div className="theme-navbar border-b backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-8">
           <Link href="/" className="shrink-0" onClick={() => setIsOpen(false)}>
-            <BrandMark showText={false} />
+            <BrandMarkInner showText variant="header" />
           </Link>
 
           <nav className="hidden items-center gap-7 lg:flex">

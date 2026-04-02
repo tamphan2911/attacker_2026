@@ -7,18 +7,40 @@ function cn(...values: Array<string | undefined | false>) {
 }
 
 export function BrandMark({ showText = true }: { showText?: boolean }) {
+  return <BrandMarkInner showText={showText} variant="default" />;
+}
+
+export function BrandMarkInner({
+  showText = true,
+  variant = "default",
+}: {
+  showText?: boolean;
+  variant?: "default" | "header";
+}) {
   return (
     <div className="flex items-center gap-3">
       <div className="theme-brand-gradient theme-card-shadow-soft relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/25 text-lg font-black text-white">
         <span className="relative z-10">A</span>
         <span className="absolute inset-1 rounded-[1rem] border border-white/20" />
       </div>
-      <div className={showText ? "hidden sm:block" : "hidden"}>
-        <p className="theme-eyebrow text-[0.72rem] font-semibold uppercase tracking-[0.34em]">
-          Attacker 2026
-        </p>
-        <p className="theme-heading text-sm theme-text-soft">student fintech challenge</p>
-      </div>
+      {showText ? (
+        <div className="hidden min-w-0 sm:block">
+          {variant === "header" ? (
+            <div className="rounded-[1rem] border border-[rgba(23,114,208,0.14)] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(235,244,254,0.94))] px-3.5 py-2 shadow-[0_14px_30px_rgba(16,38,66,0.08)] dark:border-[rgba(88,196,255,0.16)] dark:bg-[linear-gradient(135deg,rgba(14,29,54,0.96),rgba(10,21,40,0.94))] dark:shadow-[0_14px_32px_rgba(2,8,20,0.24)]">
+              <p className="theme-heading bg-[linear-gradient(135deg,var(--brand-deep),var(--brand),var(--brand-soft))] bg-clip-text text-[1.05rem] font-semibold uppercase tracking-[0.16em] text-transparent">
+                Attacker 2026
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p className="theme-eyebrow text-[0.72rem] font-semibold uppercase tracking-[0.34em]">
+                Attacker 2026
+              </p>
+              <p className="theme-heading text-sm theme-text-soft">student fintech challenge</p>
+            </div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
