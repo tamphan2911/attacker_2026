@@ -47,8 +47,8 @@ export const contactLocation = {
     vi: "669 Quốc lộ 1A, Khu phố 3, phường Linh Xuân, TP. Thủ Đức, TP. Hồ Chí Minh",
   },
   note: {
-    en: "Competition support is available at the organizer desk on campus during the official timeline and event days.",
-    vi: "Bàn hỗ trợ của ban tổ chức tiếp nhận thắc mắc tại trường trong các mốc lịch trình chính thức và vào ngày diễn ra sự kiện.",
+    en: "",
+    vi: "",
   },
   mapEmbedUrl:
     "https://www.google.com/maps?q=University%20of%20Economics%20and%20Law%2C%20Vietnam%20National%20University%20Ho%20Chi%20Minh%20City&output=embed",
