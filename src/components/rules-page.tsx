@@ -217,65 +217,31 @@ export function RulesPage() {
       </section>
 
       <section id="general-rules" className="scroll-mt-36 space-y-7">
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <Surface className="theme-rules-shell overflow-hidden px-6 py-6 md:px-7 md:py-7">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(23,114,208,0.14),transparent_52%)]" />
-            <div className="relative">
-              <SectionHeading
-                eyebrow={pickText(locale, pageContent.rules.coreRules.eyebrow)}
-                title={pickText(locale, pageContent.rules.coreRules.title)}
-                description={pickText(locale, pageContent.rules.coreRules.description)}
-                className="max-w-none"
-              />
+        <Surface className="theme-rules-shell overflow-hidden px-6 py-6 md:px-7 md:py-7">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(23,114,208,0.14),transparent_52%)]" />
+          <div className="relative">
+            <SectionHeading
+              eyebrow={pickText(locale, pageContent.rules.coreRules.eyebrow)}
+              title={pickText(locale, pageContent.rules.coreRules.title)}
+              className="max-w-none"
+            />
 
-              <div className="mt-7 grid gap-4 md:grid-cols-3">
-                {audienceHighlights.map((item, index) => {
-                  const Icon = generalRuleIcons[index] ?? Flag;
-                  const iconClass = generalRuleIconClasses[index] ?? generalRuleIconClasses[0];
-
-                  return (
-                    <div
-                      key={item.title.en}
-                      className="theme-rules-soft-panel rounded-[1.65rem] border px-4 py-4"
-                    >
-                      <span className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border ${iconClass}`}>
-                        <Icon className="h-4.5 w-4.5" />
-                      </span>
-                      <p className="mt-4 text-base font-semibold theme-text-strong">
-                        {pickText(locale, item.title)}
-                      </p>
-                      <p className="mt-3 text-sm leading-7 theme-text-soft">
-                        {pickText(locale, item.description)}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </Surface>
-
-          <Surface className="theme-rules-shell px-6 py-6 md:px-7 md:py-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] theme-eyebrow">
-              {locale === "en" ? "General policy checks" : "Điểm kiểm soát chung"}
-            </p>
-            <div className="mt-6 space-y-3">
-              {ruleItems.map((item, index) => {
-                const Icon = policyIcons[index] ?? BadgeCheck;
-                const iconClass = policyIconClasses[index] ?? policyIconClasses[0];
+            <div className="mt-7 grid gap-4 md:grid-cols-3">
+              {audienceHighlights.map((item, index) => {
+                const Icon = generalRuleIcons[index] ?? Flag;
+                const iconClass = generalRuleIconClasses[index] ?? generalRuleIconClasses[0];
 
                 return (
                   <div
                     key={item.title.en}
-                    className="theme-rules-note-card rounded-[1.55rem] border px-4 py-4"
+                    className="theme-rules-soft-panel rounded-[1.65rem] border px-4 py-4"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className={`inline-flex h-9 w-9 items-center justify-center rounded-2xl border ${iconClass}`}>
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] theme-text-strong">
-                        {pickText(locale, item.title)}
-                      </p>
-                    </div>
+                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border ${iconClass}`}>
+                      <Icon className="h-4.5 w-4.5" />
+                    </span>
+                    <p className="mt-4 text-base font-semibold theme-text-strong">
+                      {pickText(locale, item.title)}
+                    </p>
                     <p className="mt-3 text-sm leading-7 theme-text-soft">
                       {pickText(locale, item.description)}
                     </p>
@@ -284,15 +250,46 @@ export function RulesPage() {
               })}
             </div>
 
-            <Link
-              href="/competition/timeline#general-timeline"
-              className="mt-6 inline-flex items-center gap-2 rounded-full border border-sky-500/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(59,130,246,0.08))] px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-500/36 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.12))] active:scale-[0.98] dark:text-sky-100"
-            >
-              {locale === "en" ? "Open timeline overview" : "Mở lịch trình tổng quan"}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Surface>
-        </div>
+            <div className="mt-8 border-t theme-border pt-7">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] theme-eyebrow">
+                {locale === "en" ? "General policy checks" : "Điểm kiểm soát chung"}
+              </p>
+              <div className="mt-6 grid gap-3 xl:grid-cols-2">
+                {ruleItems.map((item, index) => {
+                  const Icon = policyIcons[index] ?? BadgeCheck;
+                  const iconClass = policyIconClasses[index] ?? policyIconClasses[0];
+
+                  return (
+                    <div
+                      key={item.title.en}
+                      className="theme-rules-note-card rounded-[1.55rem] border px-4 py-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`inline-flex h-9 w-9 items-center justify-center rounded-2xl border ${iconClass}`}>
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <p className="text-sm font-semibold uppercase tracking-[0.18em] theme-text-strong">
+                          {pickText(locale, item.title)}
+                        </p>
+                      </div>
+                      <p className="mt-3 text-sm leading-7 theme-text-soft">
+                        {pickText(locale, item.description)}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <Link
+                href="/competition/timeline#general-timeline"
+                className="mt-6 inline-flex items-center gap-2 rounded-full border border-sky-500/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(59,130,246,0.08))] px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-500/36 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.12))] active:scale-[0.98] dark:text-sky-100"
+              >
+                {locale === "en" ? "Open timeline overview" : "Mở lịch trình tổng quan"}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </Surface>
       </section>
 
       <section className="space-y-6">
