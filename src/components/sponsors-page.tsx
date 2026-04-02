@@ -1,8 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import { ArrowRight, BadgeDollarSign, Building2, Handshake } from "lucide-react";
+import { BadgeDollarSign, Building2, Handshake } from "lucide-react";
 
 import { sponsorProfiles } from "@/data/site-content";
 import { pickText } from "@/lib/site";
@@ -131,34 +130,6 @@ export function SponsorsPage() {
             </div>
           </Surface>
         ))}
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <SectionHeading
-            eyebrow={pickText(locale, pageContent.sponsors.partnership.eyebrow)}
-            title={pickText(locale, pageContent.sponsors.partnership.title)}
-            description={pickText(locale, pageContent.sponsors.partnership.description)}
-          />
-        </Surface>
-
-        <Surface className="px-6 py-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Next subsection" : "Phần tiếp theo"}
-          </p>
-          <p className="mt-4 text-2xl font-semibold theme-text-strong">
-            {locale === "en" ? "Meet the judges." : "Gặp hội đồng giám khảo."}
-          </p>
-          <p className="mt-4 text-sm leading-7 theme-text-muted">
-            {locale === "en"
-              ? "The judges page gives the same level of structure to expertise and evaluation credibility."
-              : "Trang giám khảo sẽ mang mức độ cấu trúc tương tự cho chuyên môn và độ tin cậy trong đánh giá."}
-          </p>
-          <Link href="/competition/judges" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {locale === "en" ? "Open judges page" : "Mở trang giám khảo"}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Surface>
       </section>
     </div>
   );
