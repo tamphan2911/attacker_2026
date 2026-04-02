@@ -39,8 +39,8 @@ export const contactInfo = {
 
 export const contactLocation = {
   campusName: {
-    en: "University of Economics and Law",
-    vi: "Trường Đại học Kinh tế - Luật",
+    en: "Faculty of Finance and Banking, University of Economics and Law",
+    vi: "Khoa Tài chính - Ngân hàng, Trường Đại học Kinh tế - Luật",
   },
   address: {
     en: "669 National Highway 1A, Quarter 3, Linh Xuan Ward, Thu Duc City, Ho Chi Minh City",
