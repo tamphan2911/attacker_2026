@@ -410,6 +410,12 @@ const heroExperienceSlides = [
   },
 ] as const;
 
+const heroCardIconClasses = [
+  "bg-[linear-gradient(135deg,rgba(56,189,248,0.95),rgba(14,165,233,0.95))] text-white shadow-[0_14px_32px_rgba(56,189,248,0.3)]",
+  "bg-[linear-gradient(135deg,rgba(52,211,153,0.95),rgba(16,185,129,0.95))] text-slate-950 shadow-[0_14px_32px_rgba(16,185,129,0.24)]",
+  "bg-[linear-gradient(135deg,rgba(251,191,36,0.98),rgba(249,115,22,0.96))] text-slate-950 shadow-[0_14px_32px_rgba(249,115,22,0.24)]",
+] as const;
+
 export function HomePage() {
   const { locale, newsPosts, pageContent } = useSiteState();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -475,55 +481,55 @@ export function HomePage() {
                 sizes="100vw"
                 className="hero-pan object-cover"
               />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.26),rgba(7,18,35,0.48))]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.16),rgba(7,18,35,0.38))]" />
             </div>
           ))}
 
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.16),transparent_24%),linear-gradient(180deg,rgba(7,18,35,0.2)_0%,rgba(7,18,35,0.56)_62%,rgba(7,18,35,0.82)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_9%,rgba(255,255,255,0.14),transparent_22%),linear-gradient(180deg,rgba(7,18,35,0.14)_0%,rgba(7,18,35,0.44)_62%,rgba(7,18,35,0.72)_100%)]" />
 
           <div className="relative z-10 mx-auto flex min-h-[500px] max-w-7xl items-center px-4 pb-14 pt-22 text-white md:min-h-[560px] md:px-8">
-            <div className="grid w-full gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-              <div className="rounded-[2.25rem] border border-white/12 bg-[linear-gradient(180deg,rgba(8,20,38,0.68),rgba(8,20,38,0.5))] px-6 py-6 shadow-[0_28px_64px_rgba(7,18,35,0.26)] backdrop-blur-xl md:px-7 md:py-7">
+            <div className="grid w-full gap-5 lg:grid-cols-[minmax(0,0.96fr)_320px] lg:items-end">
+              <div className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(8,20,38,0.48),rgba(8,20,38,0.16))] px-5 py-5 shadow-[0_26px_58px_rgba(7,18,35,0.2)] backdrop-blur-lg md:px-6 md:py-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="inline-flex items-center rounded-full border border-white/14 bg-[rgba(255,255,255,0.1)] px-3.5 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white/80">
+                  <span className="inline-flex items-center rounded-full border border-white/12 bg-[rgba(255,255,255,0.08)] px-3 py-1.5 text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-white/82">
                     {pickText(locale, currentHeroSlide.eyebrow)}
                   </span>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-[rgba(255,255,255,0.08)] px-3 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-white/66">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.07)] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/70">
                     <span>{String(activeSlide + 1).padStart(2, "0")}</span>
                     <span className="h-px w-4 bg-white/24" />
                     <span>{String(heroDeck.length).padStart(2, "0")}</span>
                   </div>
                 </div>
 
-                <h1 className="theme-heading mt-5 max-w-3xl text-[2.15rem] font-semibold leading-[1.04] md:text-[3.55rem]">
+                <h1 className="theme-heading mt-4 max-w-3xl text-[1.88rem] font-semibold leading-[1.04] md:text-[3.02rem]">
                   {pickText(locale, currentHeroSlide.title)}
                 </h1>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-white/78 md:text-[1.02rem]">
+                <p className="mt-3.5 max-w-2xl text-[0.94rem] leading-7 text-white/76 md:text-[0.98rem]">
                   {pickText(locale, currentHeroSlide.description)}
                 </p>
 
-                <div className="mt-5 flex flex-wrap gap-2.5">
+                <div className="mt-4.5 flex flex-wrap gap-2">
                   {currentHeroSlide.highlights.map((item) => (
                     <div
                       key={item.en}
-                      className="rounded-full border border-white/12 bg-[rgba(255,255,255,0.1)] px-3.5 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/82 shadow-[0_14px_30px_rgba(7,18,35,0.12)]"
+                      className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.08)] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/84 shadow-[0_12px_28px_rgba(7,18,35,0.1)]"
                     >
                       {pickText(locale, item)}
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                   <Link
                     href={currentHeroSlide.primaryCta.href}
-                    className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:brightness-110"
+                    className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-[0.92rem] font-semibold transition hover:brightness-110"
                   >
                     {pickText(locale, currentHeroSlide.primaryCta.label)}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
                     href={currentHeroSlide.secondaryCta.href}
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/16 bg-[rgba(255,255,255,0.1)] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[rgba(255,255,255,0.18)]"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-[rgba(255,255,255,0.08)] px-5 py-3 text-[0.92rem] font-semibold text-white transition hover:bg-[rgba(255,255,255,0.16)]"
                   >
                     {pickText(locale, currentHeroSlide.secondaryCta.label)}
                   </Link>
@@ -531,26 +537,28 @@ export function HomePage() {
               </div>
 
               <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                {currentHeroSlide.cards.map((item) => {
+                {currentHeroSlide.cards.map((item, index) => {
                   const Icon = item.icon;
 
                   return (
                     <div
                       key={item.label.en}
-                      className="rounded-[1.65rem] border border-white/14 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.08))] px-4 py-4 shadow-[0_20px_44px_rgba(7,18,35,0.18)] backdrop-blur-xl"
+                      className="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.11),rgba(255,255,255,0.05))] px-4 py-3.5 shadow-[0_18px_40px_rgba(7,18,35,0.14)] backdrop-blur-lg"
                     >
                       <div className="flex items-start gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/12 bg-[rgba(7,18,35,0.26)] text-cyan-100">
+                        <div
+                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.05rem] border border-white/12 ${heroCardIconClasses[index % heroCardIconClasses.length]}`}
+                        >
                           <Icon className="h-5 w-5" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-white/58">
+                          <p className="text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-white/60">
                             {pickText(locale, item.label)}
                           </p>
-                          <p className="mt-1.5 text-base font-semibold text-white">
+                          <p className="mt-1 text-[0.96rem] font-semibold text-white">
                             {pickText(locale, item.value)}
                           </p>
-                          <p className="mt-2 text-sm leading-6 text-white/74">
+                          <p className="mt-1.5 text-[0.82rem] leading-6 text-white/74">
                             {pickText(locale, item.note)}
                           </p>
                         </div>
