@@ -8,6 +8,7 @@ import {
 
 import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import { deleteJudgeImageFile, getJudgeImageStorageKeyFromUrl } from "@/server/judge-image-storage";
 import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/news-image-storage";
 import type {
   JudgeProfile,
@@ -128,9 +129,9 @@ export async function updateJudgeByAdmin(
   payload: JudgeProfile,
 ): Promise<ServiceResult<{ judgeId: string }>> {
   const judges = await readStoredJudges();
-  const judgeExists = judges.some((judge) => judge.id === judgeId);
+  const existingJudge = judges.find((judge) => judge.id === judgeId);
 
-  if (!judgeExists) {
+  if (!existingJudge) {
     return fail(404, "Judge not found.");
   }
 
@@ -147,6 +148,13 @@ export async function updateJudgeByAdmin(
     judges.map((judge) => (judge.id === judgeId ? payload : judge)),
   );
 
+  if (existingJudge.imageSrc !== payload.imageSrc) {
+    const previousStorageKey = getJudgeImageStorageKeyFromUrl(existingJudge.imageSrc);
+    if (previousStorageKey) {
+      await deleteJudgeImageFile(previousStorageKey).catch(() => {});
+    }
+  }
+
   return ok({ judgeId: nextJudgeId });
 }
 
@@ -154,13 +162,17 @@ export async function deleteJudgeByAdmin(
   judgeId: string,
 ): Promise<ServiceResult<{ judgeId: string }>> {
   const judges = await readStoredJudges();
-  const judgeExists = judges.some((judge) => judge.id === judgeId);
+  const existingJudge = judges.find((judge) => judge.id === judgeId);
 
-  if (!judgeExists) {
+  if (!existingJudge) {
     return fail(404, "Judge not found.");
   }
 
   await saveJudges(judges.filter((judge) => judge.id !== judgeId));
+  const storageKey = getJudgeImageStorageKeyFromUrl(existingJudge.imageSrc);
+  if (storageKey) {
+    await deleteJudgeImageFile(storageKey).catch(() => {});
+  }
   return ok({ judgeId });
 }
 

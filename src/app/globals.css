@@ -84,6 +84,10 @@ html {
   background: var(--background);
 }
 
+a[href] {
+  cursor: pointer;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -293,6 +297,7 @@ body {
   a[href].theme-button-danger,
   a[href][class*="rounded"]
 ) {
+  cursor: pointer;
   transition:
     transform 180ms ease,
     box-shadow 220ms ease,
@@ -301,6 +306,11 @@ body {
     color 220ms ease,
     opacity 220ms ease,
     filter 220ms ease;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
 @media (hover: hover) {

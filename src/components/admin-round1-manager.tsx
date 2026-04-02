@@ -1257,10 +1257,12 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                   <td className="px-4 py-4">
                     <Link
                       href={`/admin/round-1/banks/${bank.id}/questions/${question.id}`}
-                      className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-4 py-2 text-xs font-semibold theme-text-strong"
+                      title={locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}
+                      aria-label={locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}
+                      className="theme-button-secondary inline-flex h-9 w-9 items-center justify-center rounded-full"
                     >
-                      {locale === "en" ? "Open editor" : "Mo editor"}
                       <ArrowRight className="h-3.5 w-3.5" />
+                      <span className="sr-only">{locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}</span>
                     </Link>
                   </td>
                 </tr>

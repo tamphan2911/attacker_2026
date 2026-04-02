@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   ArrowLeft,
+  ImagePlus,
   PencilLine,
   Plus,
   Sparkles,
@@ -12,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 
+import { getNewsImageValidationError } from "@/lib/news-images";
 import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
@@ -29,6 +31,9 @@ function cn(...values: Array<string | undefined | false>) {
 
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
+
+const tableFieldClassName =
+  "w-full rounded-xl border theme-border theme-panel-subtle px-3 py-2 text-xs theme-text-body outline-none";
 
 const roundLabels: Record<CompetitionRoundKey, LocalizedText> = {
   "round-1": { en: "Round 1", vi: "Vòng 1" },
@@ -49,6 +54,13 @@ type JudgeDraft = {
   rounds: CompetitionRoundKey[];
 };
 
+type JudgeTableFilters = {
+  judge: string;
+  organization: string;
+  round: string;
+  expertise: string;
+};
+
 function slugify(value: string) {
   return value
     .normalize("NFKD")
@@ -63,6 +75,18 @@ function splitList(value: string) {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function matchesFilter(value: string, filterValue: string) {
+  if (!filterValue) {
+    return true;
+  }
+
+  return value.toLowerCase().includes(filterValue.trim().toLowerCase());
+}
+
+function getJudgeExpertiseText(locale: Locale, judge: JudgeProfile) {
+  return judge.expertise.map((item) => pickText(locale, item)).filter(Boolean).join(" · ");
 }
 
 function draftFromJudge(judge: JudgeProfile): JudgeDraft {
@@ -196,11 +220,21 @@ function JudgeFormFields({
   draft,
   onChange,
   compact = false,
+  idEditable = true,
+  imageUploadMessage,
+  imageUploadHelper,
+  isUploadingImage = false,
+  onUploadImage,
 }: {
   locale: Locale;
   draft: JudgeDraft;
   onChange: (nextDraft: JudgeDraft) => void;
   compact?: boolean;
+  idEditable?: boolean;
+  imageUploadMessage?: string;
+  imageUploadHelper?: string;
+  isUploadingImage?: boolean;
+  onUploadImage?: (file: File) => void;
 }) {
   return (
     <div className="space-y-5">
@@ -213,7 +247,8 @@ function JudgeFormFields({
                 value={draft.id}
                 onChange={(event) => onChange({ ...draft, id: slugify(event.target.value) })}
                 placeholder={locale === "en" ? "judge-round2-example" : "judge-round2-vi-du"}
-                className={fieldClassName}
+                className={`${fieldClassName} disabled:cursor-not-allowed disabled:opacity-70`}
+                disabled={!idEditable}
               />
             </label>
             <label className="space-y-2">
@@ -226,7 +261,7 @@ function JudgeFormFields({
                   onChange({
                     ...draft,
                     name: event.target.value,
-                    id: draft.id || slugify(event.target.value),
+                    id: idEditable && !draft.id ? slugify(event.target.value) : draft.id,
                   })
                 }
                 className={fieldClassName}
@@ -243,6 +278,43 @@ function JudgeFormFields({
                 className={fieldClassName}
               />
             </label>
+            {onUploadImage ? (
+              <div className="space-y-2 md:col-span-2">
+                <span className="text-sm theme-text-muted">
+                  {locale === "en" ? "Avatar upload" : "Tải ảnh đại diện"}
+                </span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="theme-button-secondary inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold">
+                    <ImagePlus className="h-4 w-4" />
+                    {isUploadingImage
+                      ? locale === "en"
+                        ? "Uploading..."
+                        : "Đang tải..."
+                      : locale === "en"
+                        ? "Upload avatar"
+                        : "Tải ảnh"}
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          onUploadImage(file);
+                        }
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                  </label>
+                  <p className="text-xs leading-6 theme-text-soft">
+                    {imageUploadHelper}
+                  </p>
+                </div>
+                {imageUploadMessage ? (
+                  <p className="text-xs font-medium theme-text-muted">{imageUploadMessage}</p>
+                ) : null}
+              </div>
+            ) : null}
             <label className="space-y-2 md:col-span-2">
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Organization" : "Tổ chức"}
@@ -367,7 +439,7 @@ function JudgeDeleteDialog({
       <Surface className="w-full max-w-lg px-6 py-6 md:px-7 md:py-7">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rose-300/78">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rose-700 dark:text-rose-200/80">
               {locale === "en" ? "Delete judge" : "Xóa giám khảo"}
             </p>
             <p className="theme-heading mt-3 text-2xl font-semibold theme-text-strong">
@@ -458,7 +530,7 @@ function AddJudgeModal({
           </div>
 
           {validationMessage ? (
-            <div className="mt-5 rounded-[1.35rem] border border-amber-300/18 bg-amber-300/10 px-4 py-3 text-sm leading-7 text-amber-100">
+            <div className="mt-5 rounded-[1.35rem] border border-amber-400/24 bg-amber-400/12 px-4 py-3 text-sm leading-7 text-amber-800 dark:text-amber-100">
               {validationMessage}
             </div>
           ) : null}
@@ -518,6 +590,12 @@ export function AdminJudgesList() {
   const [addDraft, setAddDraft] = useState<JudgeDraft>(() => createEmptyJudgeDraft());
   const [addValidationMessage, setAddValidationMessage] = useState("");
   const [judgePendingDelete, setJudgePendingDelete] = useState<JudgeProfile | null>(null);
+  const [filters, setFilters] = useState<JudgeTableFilters>({
+    judge: "",
+    organization: "",
+    round: "all",
+    expertise: "",
+  });
   useAdminTitleScroll();
 
   const roundStats = useMemo(
@@ -528,13 +606,29 @@ export function AdminJudgesList() {
       })),
     [judges],
   );
+  const filteredJudges = useMemo(
+    () =>
+      judges.filter((judge) => {
+        const judgeLabel = `${judge.name} ${pickText(locale, judge.role)}`;
+        const organizationLabel = judge.organization;
+        const expertiseLabel = getJudgeExpertiseText(locale, judge);
+
+        return (
+          matchesFilter(judgeLabel, filters.judge) &&
+          matchesFilter(organizationLabel, filters.organization) &&
+          matchesFilter(expertiseLabel, filters.expertise) &&
+          (filters.round === "all" || judge.rounds.includes(filters.round as CompetitionRoundKey))
+        );
+      }),
+    [filters.expertise, filters.judge, filters.organization, filters.round, judges, locale],
+  );
   const {
     page,
     setPage,
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(judges, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(filteredJudges, ADMIN_TABLE_PAGE_SIZE);
 
   const handleCreateJudge = async () => {
     const payload = normalizeDraftForSave(addDraft);
@@ -561,21 +655,14 @@ export function AdminJudgesList() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <SectionHeading
-          id={ADMIN_TITLE_ID}
-          className="scroll-mt-32"
-          eyebrow={locale === "en" ? "Admin / Judges" : "Admin / Giám khảo"}
-          title={
-            locale === "en"
-              ? "Manage the judging panel in one place."
-              : "Quản lý hội đồng giám khảo tại một nơi."
-          }
-          description={
-            locale === "en"
-              ? "Add judges, edit their public profiles, and remove outdated records from the live judges page."
-              : "Thêm giám khảo, chỉnh sửa hồ sơ công khai và gỡ các hồ sơ không còn sử dụng khỏi trang giám khảo."
-          }
-        />
+        <div id={ADMIN_TITLE_ID} className="scroll-mt-32 space-y-2">
+          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
+            {locale === "en" ? "Admin / Judges" : "Admin / Giám khảo"}
+          </p>
+          <h1 className="theme-heading text-3xl font-semibold theme-text-strong md:text-[2.6rem]">
+            {locale === "en" ? "Judges" : "Giám khảo"}
+          </h1>
+        </div>
 
         <button
           type="button"
@@ -613,11 +700,6 @@ export function AdminJudgesList() {
             <p className="theme-heading text-2xl font-semibold theme-text-strong">
               {locale === "en" ? "Judge summary" : "Tổng hợp giám khảo"}
             </p>
-            <p className="mt-2 text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "Open a judge to edit the full profile, or remove it directly from the table."
-                : "Mở từng giám khảo để chỉnh sửa hồ sơ đầy đủ, hoặc xóa trực tiếp ngay tại bảng."}
-            </p>
           </div>
           <button
             type="button"
@@ -633,15 +715,57 @@ export function AdminJudgesList() {
         </div>
 
         <div className="mt-5 overflow-x-auto">
-          <table className="min-w-full border-separate border-spacing-y-3">
+          <table className="min-w-[1180px] border-separate border-spacing-y-3 text-sm">
             <thead>
               <tr className="text-left text-[0.72rem] font-semibold uppercase tracking-[0.22em] theme-text-soft">
                 <th className="px-4 py-2">#</th>
-                <th className="px-4 py-2">{locale === "en" ? "Judge" : "Giám khảo"}</th>
-                <th className="px-4 py-2">{locale === "en" ? "Organization" : "Tổ chức"}</th>
-                <th className="px-4 py-2">{locale === "en" ? "Rounds" : "Vòng"}</th>
-                <th className="px-4 py-2">{locale === "en" ? "Expertise" : "Chuyên môn"}</th>
+                <th className="min-w-[23rem] px-4 py-2">{locale === "en" ? "Judge" : "Giám khảo"}</th>
+                <th className="min-w-[16rem] px-4 py-2">{locale === "en" ? "Organization" : "Tổ chức"}</th>
+                <th className="min-w-[15rem] px-4 py-2">{locale === "en" ? "Rounds" : "Vòng"}</th>
+                <th className="min-w-[18rem] px-4 py-2">{locale === "en" ? "Expertise" : "Chuyên môn"}</th>
                 <th className="px-4 py-2 text-right">{locale === "en" ? "Actions" : "Tác vụ"}</th>
+              </tr>
+              <tr>
+                <th className="px-4 py-2" />
+                <th className="px-4 py-2">
+                  <input
+                    value={filters.judge}
+                    onChange={(event) => setFilters((current) => ({ ...current, judge: event.target.value }))}
+                    placeholder={locale === "en" ? "Filter judge" : "Lọc giám khảo"}
+                    className={tableFieldClassName}
+                  />
+                </th>
+                <th className="px-4 py-2">
+                  <input
+                    value={filters.organization}
+                    onChange={(event) => setFilters((current) => ({ ...current, organization: event.target.value }))}
+                    placeholder={locale === "en" ? "Filter organization" : "Lọc tổ chức"}
+                    className={tableFieldClassName}
+                  />
+                </th>
+                <th className="px-4 py-2">
+                  <select
+                    value={filters.round}
+                    onChange={(event) => setFilters((current) => ({ ...current, round: event.target.value }))}
+                    className={tableFieldClassName}
+                  >
+                    <option value="all">{locale === "en" ? "All rounds" : "Tất cả vòng"}</option>
+                    {(["round-1", "round-2", "round-3"] as CompetitionRoundKey[]).map((round) => (
+                      <option key={round} value={round}>
+                        {pickText(locale, roundLabels[round])}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+                <th className="px-4 py-2">
+                  <input
+                    value={filters.expertise}
+                    onChange={(event) => setFilters((current) => ({ ...current, expertise: event.target.value }))}
+                    placeholder={locale === "en" ? "Filter expertise" : "Lọc chuyên môn"}
+                    className={tableFieldClassName}
+                  />
+                </th>
+                <th className="px-4 py-2" />
               </tr>
             </thead>
             <tbody>
@@ -660,7 +784,7 @@ export function AdminJudgesList() {
                       <div className="min-w-0">
                         <Link
                           href={`/admin/judges/${judge.id}`}
-                          className="theme-heading text-lg font-semibold theme-accent"
+                          className="theme-heading block text-lg font-semibold theme-accent"
                         >
                           {judge.name}
                         </Link>
@@ -676,31 +800,39 @@ export function AdminJudgesList() {
                   <td className="border-y theme-border px-4 py-4">
                     <div className="flex flex-wrap gap-2">
                       {judge.rounds.map((round) => (
-                        <StatusPill key={`${judge.id}-${round}`}>
+                        <span
+                          key={`${judge.id}-${round}`}
+                          className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-3 py-1.5 text-xs font-semibold theme-text-strong"
+                        >
+                          <span className="h-2 w-2 rounded-full bg-[var(--brand)]" />
                           {pickText(locale, roundLabels[round])}
-                        </StatusPill>
+                        </span>
                       ))}
                     </div>
                   </td>
-                  <td className="border-y theme-border px-4 py-4 text-sm theme-text-muted">
-                    {judge.expertise.length}
+                  <td className="border-y theme-border px-4 py-4 text-sm theme-text-body">
+                    <p className="line-clamp-2">{getJudgeExpertiseText(locale, judge) || "--"}</p>
                   </td>
                   <td className="rounded-r-[1.4rem] border-y border-r theme-border px-4 py-4">
                     <div className="flex justify-end gap-2">
                       <Link
                         href={`/admin/judges/${judge.id}`}
-                        className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
+                        title={locale === "en" ? "Edit judge" : "Sửa giám khảo"}
+                        aria-label={locale === "en" ? "Edit judge" : "Sửa giám khảo"}
+                        className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full"
                       >
                         <PencilLine className="h-4 w-4" />
-                        {locale === "en" ? "Edit" : "Sửa"}
+                        <span className="sr-only">{locale === "en" ? "Edit judge" : "Sửa giám khảo"}</span>
                       </Link>
                       <button
                         type="button"
+                        title={locale === "en" ? "Delete judge" : "Xóa giám khảo"}
+                        aria-label={locale === "en" ? "Delete judge" : "Xóa giám khảo"}
                         onClick={() => setJudgePendingDelete(judge)}
-                        className="theme-button-danger inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
+                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full"
                       >
                         <Trash2 className="h-4 w-4" />
-                        {locale === "en" ? "Delete" : "Xóa"}
+                        <span className="sr-only">{locale === "en" ? "Delete judge" : "Xóa giám khảo"}</span>
                       </button>
                     </div>
                   </td>
@@ -714,7 +846,7 @@ export function AdminJudgesList() {
           page={page}
           pageCount={pageCount}
           pageSize={ADMIN_TABLE_PAGE_SIZE}
-          totalRows={judges.length}
+          totalRows={filteredJudges.length}
           onPageChange={setPage}
         />
       </Surface>
@@ -764,6 +896,8 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
   const [draft, setDraft] = useState<JudgeDraft | null>(() => (judge ? draftFromJudge(judge) : null));
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [validationMessage, setValidationMessage] = useState("");
+  const [imageUploadMessage, setImageUploadMessage] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   useAdminTitleScroll();
 
   if (!hasHydrated && !judge) {
@@ -804,6 +938,66 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
 
   const isDirty = JSON.stringify(draft) !== JSON.stringify(draftFromJudge(judge));
 
+  const uploadJudgeImage = async (file: File) => {
+    const validationError = getNewsImageValidationError(file);
+    if (validationError === "type") {
+      setImageUploadMessage(
+        locale === "en"
+          ? "Only JPG, PNG, and WEBP files are allowed."
+          : "Chỉ chấp nhận tệp JPG, PNG và WEBP.",
+      );
+      return;
+    }
+
+    if (validationError === "size") {
+      setImageUploadMessage(
+        locale === "en"
+          ? "The uploaded image must be 2MB or smaller."
+          : "Ảnh tải lên phải từ 2MB trở xuống.",
+      );
+      return;
+    }
+
+    setIsUploadingImage(true);
+    setImageUploadMessage("");
+
+    try {
+      const formData = new FormData();
+      formData.append("imageFile", file);
+
+      const response = await fetch("/api/admin/judges/image", {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
+      });
+
+      const payload = (await response.json().catch(() => null)) as { imageUrl?: string; error?: string } | null;
+
+      if (!response.ok || !payload?.imageUrl) {
+        setImageUploadMessage(
+          payload?.error ??
+            (locale === "en"
+              ? "The judge avatar could not be uploaded right now."
+              : "Hiện chưa thể tải ảnh giám khảo."),
+        );
+        return;
+      }
+
+      setDraft((current) => (current ? { ...current, imageSrc: payload.imageUrl! } : current));
+      setImageUploadMessage(
+        locale === "en" ? "Avatar uploaded successfully." : "Đã tải ảnh đại diện thành công.",
+      );
+    } catch {
+      setImageUploadMessage(
+        locale === "en"
+          ? "The judge avatar could not be uploaded right now."
+          : "Hiện chưa thể tải ảnh giám khảo.",
+      );
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   const saveJudge = async () => {
     const payload = normalizeDraftForSave(draft);
 
@@ -822,11 +1016,6 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
     }
 
     setValidationMessage("");
-    if (payload.id !== judgeId) {
-      router.replace(`/admin/judges/${payload.id}`);
-      return;
-    }
-
     setDraft(draftFromJudge(payload));
   };
 
@@ -843,17 +1032,13 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
           className="scroll-mt-32"
           eyebrow={locale === "en" ? "Admin / Judges / Editor" : "Admin / Giám khảo / Chỉnh sửa"}
           title={draft.name || (locale === "en" ? "Edit judge" : "Chỉnh sửa giám khảo")}
-          description={
-            locale === "en"
-              ? "Update the public-facing judge profile used on the live judges page."
-              : "Cập nhật hồ sơ giám khảo công khai đang được dùng trên trang giám khảo."
-          }
         />
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => {
               setValidationMessage("");
+              setImageUploadMessage("");
               setDraft(draftFromJudge(judge));
             }}
             className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
@@ -889,9 +1074,20 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
             setValidationMessage("");
             setDraft(nextDraft);
           }}
+          idEditable={false}
+          imageUploadMessage={imageUploadMessage}
+          imageUploadHelper={
+            locale === "en"
+              ? "JPG, PNG, or WEBP. Maximum 2MB."
+              : "JPG, PNG hoặc WEBP. Tối đa 2MB."
+          }
+          isUploadingImage={isUploadingImage}
+          onUploadImage={(file) => {
+            void uploadJudgeImage(file);
+          }}
         />
         {validationMessage ? (
-          <div className="mt-5 rounded-[1.35rem] border border-amber-300/18 bg-amber-300/10 px-4 py-3 text-sm leading-7 text-amber-100">
+          <div className="mt-5 rounded-[1.35rem] border border-amber-400/24 bg-amber-400/12 px-4 py-3 text-sm leading-7 text-amber-800 dark:text-amber-100">
             {validationMessage}
           </div>
         ) : null}

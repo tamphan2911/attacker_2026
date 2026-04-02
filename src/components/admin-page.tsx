@@ -479,10 +479,12 @@ function UsersTableSection() {
                     <td className="px-4 py-4">
                       <Link
                         href={`/admin/users/${row.id}`}
-                        className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold"
+                        title={locale === "en" ? "Edit user" : "Sửa người dùng"}
+                        aria-label={locale === "en" ? "Edit user" : "Sửa người dùng"}
+                        className="theme-button-secondary inline-flex h-9 w-9 items-center justify-center rounded-full"
                       >
                         <FilePenLine className="h-3.5 w-3.5" />
-                        {locale === "en" ? "Edit" : "Sửa"}
+                        <span className="sr-only">{locale === "en" ? "Edit user" : "Sửa người dùng"}</span>
                       </Link>
                     </td>
                     <td className="px-4 py-4">
@@ -500,10 +502,12 @@ function UsersTableSection() {
                             deleteUserByAdmin(row.id);
                           }
                         }}
-                        className="theme-button-danger inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                        title={locale === "en" ? "Delete user" : "Xóa người dùng"}
+                        aria-label={locale === "en" ? "Delete user" : "Xóa người dùng"}
+                        className="theme-button-danger inline-flex h-9 w-9 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                        {locale === "en" ? "Delete" : "Xoa"}
+                        <span className="sr-only">{locale === "en" ? "Delete user" : "Xóa người dùng"}</span>
                       </button>
                     </td>
                   </tr>
@@ -627,10 +631,12 @@ function TeamsTableSection() {
                             deleteTeamByAdmin(row.id);
                           }
                         }}
-                        className="theme-button-danger inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold"
+                        title={locale === "en" ? "Delete team" : "Xóa đội"}
+                        aria-label={locale === "en" ? "Delete team" : "Xóa đội"}
+                        className="theme-button-danger inline-flex h-9 w-9 items-center justify-center rounded-full"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                        {locale === "en" ? "Delete" : "Xoa"}
+                        <span className="sr-only">{locale === "en" ? "Delete team" : "Xóa đội"}</span>
                       </button>
                     </td>
                   </tr>
