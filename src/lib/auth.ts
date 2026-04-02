@@ -103,6 +103,8 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.sub ?? "";
         session.user.role = token.role ?? session.user.role;
         session.user.loginId = token.loginId ?? session.user.email ?? "";
+        session.user.name = typeof token.name === "string" ? token.name : session.user.name;
+        session.user.email = typeof token.email === "string" ? token.email : session.user.email;
       }
 
       return session;

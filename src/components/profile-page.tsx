@@ -12,7 +12,7 @@ import {
   UserRound,
   Users2,
 } from "lucide-react";
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
@@ -134,6 +134,10 @@ function ProfileEditor({
   const [form, setForm] = useState<ProfileFormState>(() => createProfileFormState(currentUser));
   const [avatarError, setAvatarError] = useState("");
 
+  useEffect(() => {
+    setForm(createProfileFormState(currentUser));
+  }, [currentUser]);
+
   const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -204,6 +208,8 @@ function ProfileEditor({
                 type="email"
                 value={form.email}
                 onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+                autoComplete="email"
+                inputMode="email"
                 className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
               />
             </label>

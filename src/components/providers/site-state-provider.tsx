@@ -205,7 +205,7 @@ function createInitialSnapshot(): AppSnapshot {
 }
 
 export function SiteStateProvider({ children }: { children: ReactNode }) {
-  const { data: session, status: authStatus } = useSession();
+  const { data: session, status: authStatus, update: updateSession } = useSession();
   const [locale, setLocaleState] = useState<Locale>("vi");
   const [theme, setThemeState] = useState<Theme>("light");
   const [activeUserId, setActiveUserIdState] = useState("");
@@ -823,6 +823,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
           ? current.map((user) => (user.id === result.user.id ? normalizeUserProfile(result.user) : user))
           : [normalizeUserProfile(result.user), ...current],
       );
+      await updateSession();
       pushToast(
         {
           en: "Profile updated successfully.",
