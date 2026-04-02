@@ -397,7 +397,22 @@ button:disabled,
     linear-gradient(180deg, var(--page-intro-start), var(--page-intro-end));
 }
 
-::selection {
+[data-theme="light"] ::selection {
+  background: rgba(23, 114, 208, 0.2);
+  color: #08203a;
+}
+
+[data-theme="light"] ::-moz-selection {
+  background: rgba(23, 114, 208, 0.2);
+  color: #08203a;
+}
+
+[data-theme="dark"] ::selection {
+  background: rgba(88, 196, 255, 0.24);
+  color: #ffffff;
+}
+
+[data-theme="dark"] ::-moz-selection {
   background: rgba(88, 196, 255, 0.24);
   color: #ffffff;
 }
