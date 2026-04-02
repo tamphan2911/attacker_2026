@@ -387,7 +387,10 @@ export function HomePage() {
                   </div>
                 ))}
               </div>
-              <Link href="/competition" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200">
+              <Link
+                href="/competition"
+                className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/16 bg-[rgba(7,18,35,0.28)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(7,18,35,0.18)] transition hover:bg-[rgba(7,18,35,0.38)] hover:text-white"
+              >
                 {locale === "en" ? "Open full competition page" : "Mở trang cuộc thi đầy đủ"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
