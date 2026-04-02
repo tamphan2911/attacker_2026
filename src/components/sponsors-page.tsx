@@ -55,31 +55,33 @@ export function SponsorsPage() {
       <section className="grid gap-4 xl:grid-cols-2">
         {sponsorProfiles.map((sponsor, index) => (
           <Surface key={sponsor.name} className="overflow-hidden px-6 py-6">
-            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-              <div className="flex-1">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="w-full max-w-[290px] rounded-[1.5rem] border theme-border bg-white px-4 py-4 shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
-                    <Image
-                      src={sponsor.logoSrc}
-                      alt={sponsor.name}
-                      width={320}
-                      height={96}
-                      className="h-16 w-full object-contain object-left"
-                    />
-                  </div>
-                  <div className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] ${
-                    index === 0
-                      ? "bg-[linear-gradient(135deg,#0a1d34,#1772d0)] text-white"
-                      : "theme-panel-strong theme-text-body border theme-border"
-                  }`}>
-                    {pickText(locale, sponsor.tier)}
-                  </div>
+            <div className="space-y-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="w-full max-w-[290px] rounded-[1.5rem] border theme-border bg-white px-4 py-4 shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
+                  <Image
+                    src={sponsor.logoSrc}
+                    alt={sponsor.name}
+                    width={320}
+                    height={96}
+                    className="h-16 w-full object-contain object-left"
+                  />
                 </div>
-                <p className="theme-heading mt-5 text-2xl font-semibold theme-text-strong">{sponsor.name}</p>
+                <div className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] ${
+                  index === 0
+                    ? "bg-[linear-gradient(135deg,#0a1d34,#1772d0)] text-white"
+                    : "theme-panel-strong theme-text-body border theme-border"
+                }`}>
+                  {pickText(locale, sponsor.tier)}
+                </div>
+              </div>
+
+              <div>
+                <p className="theme-heading text-2xl font-semibold theme-text-strong">{sponsor.name}</p>
                 <p className="mt-2 text-sm theme-text-soft">{pickText(locale, sponsor.category)}</p>
                 <p className="mt-5 text-sm leading-7 theme-text-muted">{pickText(locale, sponsor.description)}</p>
               </div>
-              <div className="w-full rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4 md:max-w-[180px]">
+
+              <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                   {locale === "en" ? "Contribution" : "Đồng hành"}
                 </p>
