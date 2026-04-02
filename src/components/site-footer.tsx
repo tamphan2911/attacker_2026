@@ -1,11 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { CalendarRange, Mail, PhoneCall } from "lucide-react";
 
 import { contactInfo, navItems } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { BrandMark } from "@/components/site-ui";
+
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M13.5 21v-7h2.35l.4-3h-2.75V9.19c0-.87.24-1.46 1.49-1.46H16.5V5.05c-.26-.03-1.15-.11-2.19-.11-2.17 0-3.66 1.32-3.66 3.75V11H8.2v3h2.45v7h2.85Z" />
+    </svg>
+  );
+}
 
 export function SiteFooter() {
   const { locale } = useSiteState();
@@ -48,45 +57,93 @@ export function SiteFooter() {
               {locale === "en" ? "Contact" : "Liên hệ"}
             </p>
             <div className="space-y-3 text-sm theme-text-muted">
-              <a className="block transition hover:text-[var(--text-strong)]" href={`mailto:${contactInfo.email}`}>
-                {contactInfo.email}
+              <a
+                className="inline-flex items-center gap-3 transition hover:text-[var(--text-strong)]"
+                href={`mailto:${contactInfo.email}`}
+              >
+                <Mail className="h-4 w-4 theme-accent" />
+                <span>{contactInfo.email}</span>
               </a>
-              <a className="block transition hover:text-[var(--text-strong)]" href={`tel:${contactInfo.phone}`}>
-                {contactInfo.phone}
+              <a
+                className="inline-flex items-center gap-3 transition hover:text-[var(--text-strong)]"
+                href={`tel:${contactInfo.phone}`}
+              >
+                <PhoneCall className="h-4 w-4 theme-accent" />
+                <span>{contactInfo.phone}</span>
               </a>
-              <a className="block transition hover:text-[var(--text-strong)]" href={contactInfo.attackerFacebook} target="_blank" rel="noreferrer">
-                {locale === "en" ? "Attacker Facebook page" : "Fanpage Attacker"}
+              <a
+                className="inline-flex items-center gap-3 transition hover:text-[var(--text-strong)]"
+                href={contactInfo.attackerFacebook}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <FacebookIcon className="h-4 w-4 theme-accent" />
+                <span>{locale === "en" ? "Attacker Facebook page" : "Fanpage Attacker"}</span>
+              </a>
+              <a
+                className="inline-flex items-center gap-3 transition hover:text-[var(--text-strong)]"
+                href={contactInfo.ftcFacebook}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <FacebookIcon className="h-4 w-4 theme-accent" />
+                <span>{locale === "en" ? "FTC Facebook page" : "Fanpage FTC"}</span>
               </a>
             </div>
           </div>
 
           <div>
             <p className="theme-eyebrow mb-4 text-xs font-semibold uppercase tracking-[0.3em]">
-              {locale === "en" ? "Newsletter" : "Bản tin email"}
+              {locale === "en" ? "Competition snapshot" : "Tóm tắt cuộc thi"}
             </p>
-            <p className="text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "Get deadlines, clinic updates, and competition news in one cleaner channel."
-                : "Nhận hạn đăng ký, cập nhật clinic và tin tức cuộc thi trong một kênh gọn gàng hơn."}
-            </p>
-            <div className="mt-5 space-y-3">
-              <input
-                placeholder={locale === "en" ? "Email address" : "Địa chỉ email"}
-                className="theme-field w-full rounded-full border px-4 py-3 text-sm outline-none"
-              />
-              <button
-                type="button"
-                className="theme-button-primary w-full rounded-full px-5 py-3 text-sm font-semibold transition hover:brightness-110"
-              >
-                {locale === "en" ? "Subscribe" : "Đăng ký"}
-              </button>
+            <div className="space-y-3">
+              {[
+                {
+                  label: locale === "en" ? "Participants" : "Đối tượng",
+                  value:
+                    locale === "en"
+                      ? "University students interested in fintech"
+                      : "Sinh viên đại học quan tâm đến fintech",
+                },
+                {
+                  label: locale === "en" ? "Format" : "Hình thức",
+                  value:
+                    locale === "en"
+                      ? "3 rounds from qualifier to final presentation"
+                      : "3 vòng thi từ vòng loại đến thuyết trình chung kết",
+                },
+                {
+                  label: locale === "en" ? "Timeline" : "Thời gian",
+                  value:
+                    locale === "en"
+                      ? "May - July 2026"
+                      : "Tháng 5 - tháng 7 năm 2026",
+                },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="theme-panel-subtle rounded-[1.15rem] border theme-border px-4 py-3"
+                >
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                    {item.label}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 theme-text-muted">{item.value}</p>
+                </div>
+              ))}
             </div>
+            <Link
+              href="/rules"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold theme-accent"
+            >
+              <CalendarRange className="h-4 w-4" />
+              {locale === "en" ? "View full timeline" : "Xem lịch trình đầy đủ"}
+            </Link>
           </div>
         </div>
 
         <div className="mt-10 flex flex-col gap-3 border-t theme-border pt-6 text-sm theme-text-soft md:flex-row md:items-center md:justify-between">
           <p>{locale === "en" ? "Frontend concept for review and refinement." : "Concept frontend để review và tinh chỉnh tiếp."}</p>
-          <p>(c) 2026 Attacker Fintech Challenge</p>
+          <p>(c) Attacker 2026 - Fintech Challenge</p>
         </div>
       </div>
     </footer>
