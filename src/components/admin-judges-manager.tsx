@@ -671,27 +671,13 @@ export function AdminJudgesList() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div id={ADMIN_TITLE_ID} className="scroll-mt-32 space-y-2">
-          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
-            {locale === "en" ? "Admin / Judges" : "Admin / Giám khảo"}
-          </p>
-          <h1 className="theme-heading text-3xl font-semibold theme-text-strong md:text-[2.6rem]">
-            {locale === "en" ? "Judges" : "Giám khảo"}
-          </h1>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            setAddValidationMessage("");
-            setIsAddOpen(true);
-          }}
-          className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-        >
-          <Plus className="h-4 w-4" />
-          {locale === "en" ? "Add judge" : "Thêm giám khảo"}
-        </button>
+      <div id={ADMIN_TITLE_ID} className="scroll-mt-32 space-y-2">
+        <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
+          {locale === "en" ? "Admin / Judges" : "Admin / Giám khảo"}
+        </p>
+        <h1 className="theme-heading text-3xl font-semibold theme-text-strong md:text-[2.6rem]">
+          {locale === "en" ? "Judges" : "Giám khảo"}
+        </h1>
       </div>
 
       <section className="grid gap-4 md:grid-cols-3">
