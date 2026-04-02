@@ -4,23 +4,24 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
   ImagePlus,
   Newspaper,
+  Pencil,
   Plus,
   Text,
   Trash2,
 } from "lucide-react";
 
-import { getNewsImageValidationError } from "@/lib/news-images";
-import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { getNewsImageValidationError } from "@/lib/news-images";
+import { pickText } from "@/lib/site";
 import type { Locale, LocalizedText, NewsContentBlock, NewsPost } from "@/types/site";
 
 const fieldClassName =
@@ -48,7 +49,7 @@ function createParagraphBlock(): NewsContentBlock {
 function createImageBlock(): NewsContentBlock {
   return {
     type: "image",
-    src: "/theme-feature-1.jpg",
+    src: "",
     alt: { en: "", vi: "" },
     caption: { en: "", vi: "" },
     emphasis: "standard",
@@ -59,13 +60,13 @@ function createImageBlock(): NewsContentBlock {
 function createEmptyNewsPost(): NewsPost {
   return {
     slug: "",
-    category: { en: "Updates", vi: "Cap nhat" },
+    category: { en: "Updates", vi: "Cập nhật" },
     title: { en: "", vi: "" },
     excerpt: { en: "", vi: "" },
     author: "Organizer desk",
     publishedAt: new Date().toISOString().slice(0, 10),
     readTime: "3 min",
-    coverLabel: { en: "Latest update", vi: "Cap nhat moi" },
+    coverLabel: { en: "Latest update", vi: "Cập nhật mới" },
     coverImageSrc: "/theme-feature-1.jpg",
     coverImageAlt: { en: "", vi: "" },
     highlights: [{ en: "", vi: "" }],
@@ -148,10 +149,8 @@ function IconToolButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className={`group relative inline-flex h-10 w-10 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-45 ${
-        tone === "danger"
-          ? "theme-button-danger"
-          : "theme-button-secondary"
+      className={`group relative inline-flex h-10 w-10 items-center justify-center rounded-full border ${
+        tone === "danger" ? "theme-button-danger" : "theme-button-secondary"
       }`}
     >
       {children}
@@ -159,6 +158,34 @@ function IconToolButton({
         {label}
       </span>
     </button>
+  );
+}
+
+function IconToolLink({
+  label,
+  href,
+  children,
+  tone = "default",
+}: {
+  label: string;
+  href: string;
+  children: ReactNode;
+  tone?: "default" | "danger";
+}) {
+  return (
+    <Link
+      href={href}
+      title={label}
+      aria-label={label}
+      className={`group relative inline-flex h-10 w-10 items-center justify-center rounded-full border ${
+        tone === "danger" ? "theme-button-danger" : "theme-button-secondary"
+      }`}
+    >
+      {children}
+      <span className="pointer-events-none absolute -top-11 left-1/2 hidden -translate-x-1/2 whitespace-nowrap rounded-full border border-slate-900/8 bg-white px-3 py-1.5 text-[0.68rem] font-semibold tracking-[0.14em] text-slate-600 shadow-[0_12px_28px_rgba(15,23,42,0.12)] group-hover:flex dark:border-white/10 dark:bg-[rgba(7,18,35,0.96)] dark:text-white/80">
+        {label}
+      </span>
+    </Link>
   );
 }
 
@@ -220,24 +247,15 @@ export function AdminNewsList() {
         <SectionHeading
           id={ADMIN_TITLE_ID}
           className="scroll-mt-32"
-          eyebrow={locale === "en" ? "Admin / News" : "Admin / Tin tuc"}
-          title={
-            locale === "en"
-              ? "Manage newsroom articles from one place."
-              : "Quan ly bai viet newsroom tai mot noi duy nhat."
-          }
-          description={
-            locale === "en"
-              ? "Create new articles, open an existing article to edit it, or remove outdated posts from the live site dataset."
-              : "Tạo bài viết mới, mở bài viết hiện có để chỉnh sửa, hoặc gỡ bài cũ khỏi dữ liệu đang dùng trên website."
-          }
+          eyebrow={locale === "en" ? "Admin / News" : "Admin / Tin tức"}
+          title={locale === "en" ? "Newsroom articles" : "Bài viết newsroom"}
         />
         <Link
           href="/admin/news/new"
           className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
         >
           <Plus className="h-4 w-4" />
-          {locale === "en" ? "Add news article" : "Them bai viet"}
+          {locale === "en" ? "Add news article" : "Thêm bài viết"}
         </Link>
       </div>
 
@@ -266,31 +284,30 @@ export function AdminNewsList() {
                   ))}
                 </div>
               </div>
-              <div className="flex gap-3">
-                <Link
+              <div className="flex items-center gap-3">
+                <IconToolLink
                   href={`/admin/news/${post.slug}`}
-                  className="theme-button-secondary rounded-full px-4 py-2.5 text-sm font-semibold"
+                  label={locale === "en" ? "Edit article" : "Chỉnh sửa bài viết"}
                 >
-                  {locale === "en" ? "Edit" : "Sua"}
-                </Link>
-                <button
-                  type="button"
+                  <Pencil className="h-4 w-4" />
+                </IconToolLink>
+                <IconToolButton
+                  label={locale === "en" ? "Delete article" : "Xóa bài viết"}
+                  tone="danger"
                   onClick={() => {
                     const confirmed = window.confirm(
                       locale === "en"
                         ? `Delete article "${pickText(locale, post.title)}"?`
-                        : `Xoa bai viet "${pickText(locale, post.title)}"?`,
+                        : `Xóa bài viết "${pickText(locale, post.title)}"?`,
                     );
 
                     if (confirmed) {
                       deleteNewsPostByAdmin(post.slug);
                     }
                   }}
-                  className="theme-button-danger inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
                 >
                   <Trash2 className="h-4 w-4" />
-                  {locale === "en" ? "Delete" : "Xoa"}
-                </button>
+                </IconToolButton>
               </div>
             </div>
           </Surface>
@@ -298,6 +315,78 @@ export function AdminNewsList() {
       </div>
     </div>
   );
+}
+
+type UploadResult =
+  | { ok: true; imageUrl: string }
+  | { ok: false; message: string };
+
+async function uploadNewsImageFile(file: File, locale: Locale): Promise<UploadResult> {
+  const validationError = getNewsImageValidationError(file);
+
+  if (validationError === "type") {
+    return {
+      ok: false,
+      message:
+        locale === "en"
+          ? "Only JPG, PNG, and WEBP images are allowed."
+          : "Chỉ chấp nhận ảnh JPG, PNG và WEBP.",
+    };
+  }
+
+  if (validationError === "size") {
+    return {
+      ok: false,
+      message:
+        locale === "en"
+          ? "The uploaded image must be 2MB or smaller."
+          : "Ảnh tải lên phải có dung lượng không quá 2MB.",
+    };
+  }
+
+  if (validationError === "missing") {
+    return {
+      ok: false,
+      message:
+        locale === "en"
+          ? "Choose an image file before uploading."
+          : "Hãy chọn một tệp hình ảnh trước khi tải lên.",
+    };
+  }
+
+  const formData = new FormData();
+  formData.set("imageFile", file);
+
+  try {
+    const response = await fetch("/api/admin/news/cover-image", {
+      method: "POST",
+      body: formData,
+      credentials: "same-origin",
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      return {
+        ok: false,
+        message:
+          error?.error ||
+          (locale === "en"
+            ? "Could not upload the image right now."
+            : "Hiện không thể tải hình ảnh lên."),
+      };
+    }
+
+    const payload = (await response.json()) as { imageUrl: string };
+    return { ok: true, imageUrl: payload.imageUrl };
+  } catch {
+    return {
+      ok: false,
+      message:
+        locale === "en"
+          ? "Could not upload the image right now."
+          : "Hiện không thể tải hình ảnh lên.",
+    };
+  }
 }
 
 export function AdminNewsEditor({ slug }: { slug: string }) {
@@ -338,7 +427,16 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
   );
   const [editorMessage, setEditorMessage] = useState("");
   const [coverUploadMessage, setCoverUploadMessage] = useState("");
+  const [contentUploadFeedback, setContentUploadFeedback] = useState<{
+    index: number;
+    message: string;
+    tone: "info" | "error";
+  } | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [uploadingContentIndex, setUploadingContentIndex] = useState<number | null>(null);
+  const contentBlockRefs = useRef<Record<number, HTMLDivElement | null>>({});
+  const pendingContentScrollRef = useRef<number | null>(null);
+
   const generatedSlug = useMemo(() => {
     if (!draft) {
       return "";
@@ -347,6 +445,24 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
     const sourceLabel = draft.title.vi.trim() || draft.title.en.trim() || draft.slug.trim();
     return sourceLabel ? slugify(sourceLabel) : "";
   }, [draft]);
+
+  useEffect(() => {
+    const pendingIndex = pendingContentScrollRef.current;
+    if (pendingIndex == null) {
+      return;
+    }
+
+    const node = contentBlockRefs.current[pendingIndex];
+    pendingContentScrollRef.current = null;
+
+    if (!node) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      node.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [draft?.content.length]);
 
   const isDirty = useMemo(() => {
     if (isCreateMode) {
@@ -374,74 +490,81 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
   }
 
   const uploadCoverImage = async (file: File) => {
-    const validationError = getNewsImageValidationError(file);
-
-    if (validationError === "type") {
-      setCoverUploadMessage(
-        locale === "en"
-          ? "Only JPG, PNG, and WEBP images are allowed."
-          : "Chỉ chấp nhận ảnh JPG, PNG và WEBP.",
-      );
-      return;
-    }
-
-    if (validationError === "size") {
-      setCoverUploadMessage(
-        locale === "en"
-          ? "The uploaded image must be 2MB or smaller."
-          : "Ảnh tải lên phải có dung lượng không quá 2MB.",
-      );
-      return;
-    }
-
     setIsUploadingCover(true);
     setCoverUploadMessage("");
 
-    const formData = new FormData();
-    formData.set("imageFile", file);
+    const result = await uploadNewsImageFile(file, locale);
+    setIsUploadingCover(false);
 
-    try {
-      const response = await fetch("/api/admin/news/cover-image", {
-        method: "POST",
-        body: formData,
-        credentials: "same-origin",
-      });
+    if (!result.ok) {
+      setCoverUploadMessage(result.message);
+      return;
+    }
 
-      setIsUploadingCover(false);
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            coverImageSrc: result.imageUrl,
+          }
+        : current,
+    );
+    setCoverUploadMessage(
+      locale === "en"
+        ? "Cover image uploaded successfully."
+        : "Ảnh bìa đã được tải lên thành công.",
+    );
+  };
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => null);
-        setCoverUploadMessage(
-          error?.error ||
-            (locale === "en"
-              ? "Could not upload the cover image right now."
-              : "Hiện không thể tải ảnh bìa lên."),
-        );
-        return;
+  const uploadContentImage = async (index: number, file: File) => {
+    setUploadingContentIndex(index);
+    setContentUploadFeedback(null);
+
+    const result = await uploadNewsImageFile(file, locale);
+    setUploadingContentIndex((current) => (current === index ? null : current));
+
+    if (!result.ok) {
+      setContentUploadFeedback({ index, message: result.message, tone: "error" });
+      return;
+    }
+
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            content: current.content.map((item, itemIndex) =>
+              itemIndex === index && item.type === "image"
+                ? { ...item, src: result.imageUrl }
+                : item,
+            ),
+          }
+        : current,
+    );
+    setContentUploadFeedback({
+      index,
+      message:
+        locale === "en"
+          ? "Image block uploaded successfully."
+          : "Ảnh trong block đã được tải lên thành công.",
+      tone: "info",
+    });
+  };
+
+  const appendContentBlock = (type: "paragraph" | "image") => {
+    setDraft((current) => {
+      if (!current) {
+        return current;
       }
 
-      const payload = (await response.json()) as { imageUrl: string };
-      setDraft((current) =>
-        current
-          ? {
-              ...current,
-              coverImageSrc: payload.imageUrl,
-            }
-          : current,
-      );
-      setCoverUploadMessage(
-        locale === "en"
-          ? "Cover image uploaded successfully."
-          : "Ảnh bìa đã được tải lên thành công.",
-      );
-    } catch {
-      setIsUploadingCover(false);
-      setCoverUploadMessage(
-        locale === "en"
-          ? "Could not upload the cover image right now."
-          : "Hiện không thể tải ảnh bìa lên.",
-      );
-    }
+      pendingContentScrollRef.current = current.content.length;
+      return {
+        ...current,
+        content: [
+          ...current.content,
+          type === "paragraph" ? createParagraphBlock() : createImageBlock(),
+        ],
+      };
+    });
   };
 
   const saveDraft = () => {
@@ -458,7 +581,11 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
       content: draft.content.filter((block) =>
         block.type === "paragraph"
           ? block.body.en.trim() || block.body.vi.trim()
-          : block.src.trim() || block.alt.en.trim() || block.alt.vi.trim() || block.caption.en.trim() || block.caption.vi.trim(),
+          : block.src.trim() ||
+              block.alt.en.trim() ||
+              block.alt.vi.trim() ||
+              block.caption.en.trim() ||
+              block.caption.vi.trim(),
       ),
     };
 
@@ -515,7 +642,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
     const confirmed = window.confirm(
       locale === "en"
         ? `Delete article "${pickText(locale, draft.title)}"?`
-        : `Xoa bai viet "${pickText(locale, draft.title)}"?`,
+        : `Xóa bài viết "${pickText(locale, draft.title)}"?`,
     );
 
     if (!confirmed) {
@@ -533,58 +660,69 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
         {locale === "en" ? "Back to news" : "Quay lại danh sách tin"}
       </Link>
 
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <SectionHeading
-          id={ADMIN_TITLE_ID}
-          className="scroll-mt-32"
-          eyebrow={locale === "en" ? "Admin / News / Editor" : "Admin / Tin tuc / Editor"}
-          title={
-            isCreateMode
-              ? locale === "en"
-                ? "Create a new news article"
-                : "Tạo bài viết mới"
-              : pickText(locale, draft.title) || (locale === "en" ? "Edit article" : "Chinh sua bai viet")
-          }
-          description={
-            locale === "en"
-              ? "This editor controls the public newsroom list and the article detail page."
-              : "Editor nay dieu khien ca danh sach newsroom cong khai va trang chi tiet bai viet."
-          }
-        />
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              setEditorMessage("");
-              setCoverUploadMessage("");
-              setDraft(cloneNewsPost(sourceDraftPost ?? createEmptyNewsPost()));
-            }}
-            className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
-          >
-            {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
-          </button>
-          <button
-            type="button"
-            disabled={!isDirty}
-            onClick={saveDraft}
-            className="theme-button-primary rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {locale === "en" ? "Save article" : "Lưu bài viết"}
-          </button>
-          <button
-            type="button"
-            onClick={deleteCurrentPost}
-            className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-          >
-            <Trash2 className="h-4 w-4" />
-            {isCreateMode
-              ? locale === "en"
-                ? "Cancel"
-                : "Huy"
-              : locale === "en"
-                ? "Delete"
-                : "Xoa"}
-          </button>
+      <SectionHeading
+        id={ADMIN_TITLE_ID}
+        className="scroll-mt-32"
+        eyebrow={locale === "en" ? "Admin / News / Editor" : "Admin / Tin tức / Trình sửa"}
+        title={
+          isCreateMode
+            ? locale === "en"
+              ? "Create a new news article"
+              : "Tạo bài viết mới"
+            : pickText(locale, draft.title) || (locale === "en" ? "Edit article" : "Chỉnh sửa bài viết")
+        }
+        description={
+          locale === "en"
+            ? "This editor controls the public newsroom list and the article detail page."
+            : "Trình sửa này điều khiển danh sách newsroom công khai và trang chi tiết bài viết."
+        }
+      />
+
+      <div className="sticky top-4 z-30">
+        <div className="rounded-[1.8rem] border theme-border-strong theme-panel-strong px-5 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.1)] backdrop-blur-xl">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-sky-700 dark:text-sky-200/80">
+                {locale === "en" ? "Article actions" : "Tác vụ bài viết"}
+              </p>
+              <p className="mt-2 text-sm leading-7 theme-text-soft">
+                {editorMessage
+                  ? editorMessage
+                  : isDirty
+                    ? locale === "en"
+                      ? "You have unsaved changes. Save before leaving this editor."
+                      : "Bạn đang có thay đổi chưa lưu. Hãy lưu trước khi rời trình chỉnh sửa."
+                    : locale === "en"
+                      ? "The article is in sync with the current newsroom dataset."
+                      : "Bài viết hiện đang đồng bộ với dữ liệu newsroom hiện tại."}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+              <button
+                type="button"
+                disabled={!isDirty}
+                onClick={saveDraft}
+                className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Newspaper className="h-4 w-4" />
+                {locale === "en" ? "Save article" : "Lưu bài viết"}
+              </button>
+              <button
+                type="button"
+                onClick={deleteCurrentPost}
+                className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+              >
+                <Trash2 className="h-4 w-4" />
+                {isCreateMode
+                  ? locale === "en"
+                    ? "Cancel"
+                    : "Hủy"
+                  : locale === "en"
+                    ? "Delete"
+                    : "Xóa"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -620,7 +758,10 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                   {locale === "en" ? "Slug (auto generated)" : "Slug (tự tạo)"}
                 </span>
                 <input
-                  value={generatedSlug || (locale === "en" ? "Will be generated from the title" : "Sẽ được tạo từ tiêu đề")}
+                  value={
+                    generatedSlug ||
+                    (locale === "en" ? "Will be generated from the title" : "Sẽ được tạo từ tiêu đề")
+                  }
                   readOnly
                   className={`${fieldClassName} cursor-not-allowed opacity-90`}
                 />
@@ -648,32 +789,42 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
               </label>
               <label className="space-y-2">
                 <span className="text-sm theme-text-muted">
-                  {locale === "en" ? "Author" : "Tac gia"}
+                  {locale === "en" ? "Author" : "Tác giả"}
                 </span>
                 <input
                   value={draft.author}
-                  onChange={(event) => setDraft((current) => (current ? { ...current, author: event.target.value } : current))}
+                  onChange={(event) =>
+                    setDraft((current) => (current ? { ...current, author: event.target.value } : current))
+                  }
                   className={fieldClassName}
                 />
               </label>
               <label className="space-y-2">
                 <span className="text-sm theme-text-muted">
-                  {locale === "en" ? "Published date" : "Ngay dang"}
+                  {locale === "en" ? "Published date" : "Ngày đăng"}
                 </span>
                 <input
                   type="date"
                   value={draft.publishedAt}
-                  onChange={(event) => setDraft((current) => (current ? { ...current, publishedAt: event.target.value } : current))}
+                  onChange={(event) =>
+                    setDraft((current) =>
+                      current ? { ...current, publishedAt: event.target.value } : current,
+                    )
+                  }
                   className={fieldClassName}
                 />
               </label>
               <label className="space-y-2">
                 <span className="text-sm theme-text-muted">
-                  {locale === "en" ? "Read time" : "Thoi gian doc"}
+                  {locale === "en" ? "Read time" : "Thời gian đọc"}
                 </span>
                 <input
                   value={draft.readTime}
-                  onChange={(event) => setDraft((current) => (current ? { ...current, readTime: event.target.value } : current))}
+                  onChange={(event) =>
+                    setDraft((current) =>
+                      current ? { ...current, readTime: event.target.value } : current,
+                    )
+                  }
                   className={fieldClassName}
                 />
               </label>
@@ -685,9 +836,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold theme-text-strong">
-                        {locale === "en"
-                          ? "Upload the cover image"
-                          : "Tải ảnh bìa lên"}
+                        {locale === "en" ? "Upload the cover image" : "Tải ảnh bìa lên"}
                       </p>
                       <p className="mt-2 text-sm leading-7 theme-text-soft">
                         {locale === "en"
@@ -698,7 +847,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                         {draft.coverImageSrc}
                       </p>
                     </div>
-                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong hover:bg-[var(--panel-strong)]">
+                    <label className="theme-button-secondary inline-flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold">
                       <ImagePlus className="h-4 w-4" />
                       {isUploadingCover
                         ? locale === "en"
@@ -725,44 +874,41 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                     </label>
                   </div>
 
-                  <div className="mt-4 overflow-hidden rounded-[1.4rem] border theme-border">
-                    <img
-                      src={draft.coverImageSrc}
-                      alt={pickText(locale, draft.coverImageAlt) || "Cover preview"}
-                      className="h-52 w-full object-cover"
+                  <div className="mt-5 space-y-5">
+                    <LocalizedFieldEditor
+                      label={
+                        locale === "en"
+                          ? "Cover caption (required)"
+                          : "Chú thích ảnh bìa (bắt buộc)"
+                      }
+                      rows={2}
+                      value={draft.coverLabel}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          current ? { ...current, coverLabel: { ...current.coverLabel, [language]: value } } : current,
+                        )
+                      }
                     />
-                  </div>
 
-                  {coverUploadMessage ? (
-                    <div className="mt-4 rounded-[1.3rem] border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-sm leading-7 text-sky-700 dark:text-sky-100">
-                      {coverUploadMessage}
+                    <div className="overflow-hidden rounded-[1.4rem] border theme-border">
+                      <img
+                        src={draft.coverImageSrc}
+                        alt={pickText(locale, draft.coverImageAlt) || "Cover preview"}
+                        className="h-52 w-full object-cover"
+                      />
                     </div>
-                  ) : null}
+
+                    {coverUploadMessage ? (
+                      <div className="rounded-[1.3rem] border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-sm leading-7 text-sky-700 dark:text-sky-100">
+                        {coverUploadMessage}
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </label>
             </div>
 
             <div className="mt-6 space-y-5">
-              <LocalizedFieldEditor
-                label="Excerpt"
-                rows={4}
-                value={draft.excerpt}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    current ? { ...current, excerpt: { ...current.excerpt, [language]: value } } : current,
-                  )
-                }
-              />
-              <LocalizedFieldEditor
-                label={locale === "en" ? "Cover caption (required)" : "Chú thích ảnh bìa (bắt buộc)"}
-                rows={2}
-                value={draft.coverLabel}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    current ? { ...current, coverLabel: { ...current.coverLabel, [language]: value } } : current,
-                  )
-                }
-              />
               <LocalizedFieldEditor
                 label="Cover image alt"
                 rows={2}
@@ -773,25 +919,29 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                   )
                 }
               />
+              <LocalizedFieldEditor
+                label="Excerpt"
+                rows={4}
+                value={draft.excerpt}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    current ? { ...current, excerpt: { ...current.excerpt, [language]: value } } : current,
+                  )
+                }
+              />
             </div>
           </Surface>
-
-          {editorMessage ? (
-            <div className="rounded-[1.6rem] border border-amber-300/20 bg-amber-300/10 px-5 py-4 text-sm leading-7 text-amber-700 dark:text-amber-100">
-              {editorMessage}
-            </div>
-          ) : null}
 
           <Surface className="space-y-5 px-6 py-6 md:px-8 md:py-8">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-lg font-semibold theme-text-strong">
-                  {locale === "en" ? "Highlights" : "Diem nhan"}
+                  {locale === "en" ? "Highlights" : "Điểm nhấn"}
                 </p>
                 <p className="mt-2 text-sm theme-text-soft">
                   {locale === "en"
                     ? "Short supporting points shown in the article sidebar."
-                    : "Cac diem nhan ngan duoc hien o cot ben cua bai viet."}
+                    : "Các điểm nhấn ngắn được hiển thị ở cột bên của bài viết."}
                 </p>
               </div>
               <button
@@ -803,9 +953,9 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                       : current,
                   )
                 }
-                className="rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong"
+                className="theme-button-secondary rounded-full px-4 py-2.5 text-sm font-semibold"
               >
-                {locale === "en" ? "Add highlight" : "Them diem nhan"}
+                {locale === "en" ? "Add highlight" : "Thêm điểm nhấn"}
               </button>
             </div>
 
@@ -814,7 +964,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                 <Surface key={`highlight-${index}`} className="space-y-4 px-4 py-4">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-semibold theme-text-strong">
-                      {locale === "en" ? `Highlight ${index + 1}` : `Diem nhan ${index + 1}`}
+                      {locale === "en" ? `Highlight ${index + 1}` : `Điểm nhấn ${index + 1}`}
                     </p>
                     <button
                       type="button"
@@ -828,9 +978,9 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                             : current,
                         )
                       }
-                      className="text-xs font-semibold text-rose-600 dark:text-rose-200"
+                      className="theme-button-danger rounded-full px-3 py-2 text-xs font-semibold"
                     >
-                      {locale === "en" ? "Remove" : "Xoa"}
+                      {locale === "en" ? "Remove" : "Xóa"}
                     </button>
                   </div>
                   <LocalizedFieldEditor
@@ -861,7 +1011,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-lg font-semibold theme-text-strong">
-                  {locale === "en" ? "Article content" : "Noi dung bai viet"}
+                  {locale === "en" ? "Article content" : "Nội dung bài viết"}
                 </p>
                 <p className="mt-2 text-sm theme-text-soft">
                   {locale === "en"
@@ -869,222 +1019,294 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                     : "Kết hợp block đoạn văn và block hình để tạo thân bài viết. Ảnh bìa được chèn tự động sau đoạn văn đầu tiên."}
                 </p>
               </div>
-              <div className="flex gap-3">
-                <IconToolButton
-                  label={locale === "en" ? "Add paragraph block" : "Thêm block đoạn văn"}
-                  onClick={() =>
-                    setDraft((current) =>
-                      current ? { ...current, content: [...current.content, createParagraphBlock()] } : current,
-                    )
-                  }
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => appendContentBlock("paragraph")}
+                  className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
                 >
                   <Text className="h-4 w-4" />
-                </IconToolButton>
-                <IconToolButton
-                  label={locale === "en" ? "Add image block" : "Thêm block hình ảnh"}
-                  onClick={() =>
-                    setDraft((current) =>
-                      current ? { ...current, content: [...current.content, createImageBlock()] } : current,
-                    )
-                  }
+                  {locale === "en" ? "Add paragraph" : "Thêm đoạn văn"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => appendContentBlock("image")}
+                  className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
                 >
                   <ImagePlus className="h-4 w-4" />
-                </IconToolButton>
+                  {locale === "en" ? "Add image" : "Thêm hình ảnh"}
+                </button>
               </div>
             </div>
 
             <div className="space-y-4">
               {draft.content.map((block, index) => (
-                <Surface key={`block-${index}`} className="space-y-4 px-4 py-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <StatusPill>
-                        {locale === "en" ? `Block ${index + 1}` : `Khoi ${index + 1}`}
-                      </StatusPill>
-                      <select
-                        value={block.type}
-                        onChange={(event) =>
-                          setDraft((current) =>
-                            current
-                              ? {
-                                  ...current,
-                                  content: current.content.map((item, itemIndex) =>
-                                    itemIndex === index
-                                      ? event.target.value === "paragraph"
-                                        ? createParagraphBlock()
-                                        : createImageBlock()
-                                      : item,
-                                  ),
-                                }
-                              : current,
-                          )
-                        }
-                        className="rounded-full border theme-border bg-white/70 px-3 py-2 text-sm theme-text-strong"
-                      >
-                        <option value="paragraph">paragraph</option>
-                        <option value="image">image</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <IconToolButton
-                        label={locale === "en" ? "Move block up" : "Đưa block lên"}
-                        disabled={index === 0}
-                        onClick={() =>
-                          setDraft((current) =>
-                            current
-                              ? { ...current, content: moveItem(current.content, index, -1) }
-                              : current,
-                          )
-                        }
-                      >
-                        <ArrowUp className="h-4 w-4" />
-                      </IconToolButton>
-                      <IconToolButton
-                        label={locale === "en" ? "Move block down" : "Đưa block xuống"}
-                        disabled={index === draft.content.length - 1}
-                        onClick={() =>
-                          setDraft((current) =>
-                            current
-                              ? { ...current, content: moveItem(current.content, index, 1) }
-                              : current,
-                          )
-                        }
-                      >
-                        <ArrowDown className="h-4 w-4" />
-                      </IconToolButton>
-                      <IconToolButton
-                        label={locale === "en" ? "Delete block" : "Xóa block"}
-                        tone="danger"
-                        disabled={draft.content.length === 1}
-                        onClick={() =>
-                          setDraft((current) =>
-                            current && current.content.length > 1
-                              ? {
-                                  ...current,
-                                  content: current.content.filter((_, itemIndex) => itemIndex !== index),
-                                }
-                              : current,
-                          )
-                        }
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </IconToolButton>
-                    </div>
-                  </div>
-
-                  {block.type === "paragraph" ? (
-                    <LocalizedFieldEditor
-                      label="Paragraph"
-                      rows={6}
-                      value={block.body}
-                      onChange={(language, value) =>
-                        setDraft((current) =>
-                          current
-                            ? {
-                                ...current,
-                                content: current.content.map((item, itemIndex) =>
-                                  itemIndex === index && item.type === "paragraph"
-                                    ? { ...item, body: { ...item.body, [language]: value } }
-                                    : item,
-                                ),
-                              }
-                            : current,
-                        )
-                      }
-                    />
-                  ) : (
-                    <div className="space-y-4">
-                      <label className="space-y-2">
-                        <span className="text-sm theme-text-muted">
-                          {locale === "en" ? "Image path" : "Đường dẫn hình ảnh"}
-                        </span>
-                        <input
-                          value={block.src}
-                          onChange={(event) =>
-                            setDraft((current) =>
-                              current
-                                ? {
-                                    ...current,
-                                    content: current.content.map((item, itemIndex) =>
-                                      itemIndex === index && item.type === "image"
-                                        ? { ...item, src: event.target.value }
-                                        : item,
-                                    ),
-                                  }
-                                : current,
-                            )
-                          }
-                          className={fieldClassName}
-                        />
-                      </label>
-                      <label className="space-y-2">
-                        <span className="text-sm theme-text-muted">Emphasis</span>
+                <div
+                  key={`block-wrap-${index}`}
+                  ref={(node) => {
+                    contentBlockRefs.current[index] = node;
+                  }}
+                >
+                  <Surface className="space-y-4 px-4 py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <StatusPill>
+                          {locale === "en" ? `Block ${index + 1}` : `Khối ${index + 1}`}
+                        </StatusPill>
                         <select
-                          value={block.emphasis ?? "standard"}
+                          value={block.type}
                           onChange={(event) =>
                             setDraft((current) =>
                               current
                                 ? {
                                     ...current,
                                     content: current.content.map((item, itemIndex) =>
-                                      itemIndex === index && item.type === "image"
-                                        ? {
-                                            ...item,
-                                            emphasis: event.target.value as "standard" | "feature",
-                                          }
+                                      itemIndex === index
+                                        ? event.target.value === "paragraph"
+                                          ? createParagraphBlock()
+                                          : createImageBlock()
                                         : item,
                                     ),
                                   }
                                 : current,
                             )
                           }
-                          className={fieldClassName}
+                          className="rounded-full border theme-border theme-panel px-3 py-2 text-sm theme-text-strong"
                         >
-                          <option value="standard">standard</option>
-                          <option value="feature">feature</option>
+                          <option value="paragraph">paragraph</option>
+                          <option value="image">image</option>
                         </select>
-                      </label>
-                      <LocalizedFieldEditor
-                        label="Image alt"
-                        rows={2}
-                        value={block.alt}
-                        onChange={(language, value) =>
-                          setDraft((current) =>
-                            current
-                              ? {
-                                  ...current,
-                                  content: current.content.map((item, itemIndex) =>
-                                    itemIndex === index && item.type === "image"
-                                      ? { ...item, alt: { ...item.alt, [language]: value } }
-                                      : item,
-                                  ),
-                                }
-                              : current,
-                          )
-                        }
-                      />
-                      <LocalizedFieldEditor
-                        label="Caption"
-                        rows={3}
-                        value={block.caption}
-                        onChange={(language, value) =>
-                          setDraft((current) =>
-                            current
-                              ? {
-                                  ...current,
-                                  content: current.content.map((item, itemIndex) =>
-                                    itemIndex === index && item.type === "image"
-                                      ? { ...item, caption: { ...item.caption, [language]: value } }
-                                      : item,
-                                  ),
-                                }
-                              : current,
-                          )
-                        }
-                      />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <IconToolButton
+                          label={locale === "en" ? "Move block up" : "Đưa block lên"}
+                          disabled={index === 0}
+                          onClick={() =>
+                            setDraft((current) =>
+                              current ? { ...current, content: moveItem(current.content, index, -1) } : current,
+                            )
+                          }
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </IconToolButton>
+                        <IconToolButton
+                          label={locale === "en" ? "Move block down" : "Đưa block xuống"}
+                          disabled={index === draft.content.length - 1}
+                          onClick={() =>
+                            setDraft((current) =>
+                              current ? { ...current, content: moveItem(current.content, index, 1) } : current,
+                            )
+                          }
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </IconToolButton>
+                        <IconToolButton
+                          label={locale === "en" ? "Delete block" : "Xóa block"}
+                          tone="danger"
+                          disabled={draft.content.length === 1}
+                          onClick={() =>
+                            setDraft((current) =>
+                              current && current.content.length > 1
+                                ? {
+                                    ...current,
+                                    content: current.content.filter((_, itemIndex) => itemIndex !== index),
+                                  }
+                                : current,
+                            )
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </IconToolButton>
+                      </div>
                     </div>
-                  )}
-                </Surface>
+
+                    {block.type === "paragraph" ? (
+                      <LocalizedFieldEditor
+                        label="Paragraph"
+                        rows={6}
+                        value={block.body}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  content: current.content.map((item, itemIndex) =>
+                                    itemIndex === index && item.type === "paragraph"
+                                      ? { ...item, body: { ...item.body, [language]: value } }
+                                      : item,
+                                  ),
+                                }
+                              : current,
+                          )
+                        }
+                      />
+                    ) : (
+                      <div className="space-y-4">
+                        <label className="space-y-2">
+                          <span className="text-sm theme-text-muted">
+                            {locale === "en" ? "Image upload" : "Tải hình ảnh"}
+                          </span>
+                          <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
+                            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold theme-text-strong">
+                                  {locale === "en"
+                                    ? "Upload an image for this block"
+                                    : "Tải hình cho block này"}
+                                </p>
+                                <p className="mt-2 text-sm leading-7 theme-text-soft">
+                                  {locale === "en"
+                                    ? "JPG, PNG, or WEBP only. Maximum size: 2MB."
+                                    : "Chỉ chấp nhận JPG, PNG hoặc WEBP. Dung lượng tối đa: 2MB."}
+                                </p>
+                                {block.src ? (
+                                  <p className="mt-2 text-xs uppercase tracking-[0.18em] theme-text-faint">
+                                    {block.src}
+                                  </p>
+                                ) : null}
+                              </div>
+                              <label className="theme-button-secondary inline-flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold">
+                                <ImagePlus className="h-4 w-4" />
+                                {uploadingContentIndex === index
+                                  ? locale === "en"
+                                    ? "Uploading..."
+                                    : "Đang tải..."
+                                  : locale === "en"
+                                    ? "Upload image"
+                                    : "Tải ảnh"}
+                                <input
+                                  type="file"
+                                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                  className="hidden"
+                                  disabled={uploadingContentIndex === index}
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0];
+                                    if (!file) {
+                                      return;
+                                    }
+
+                                    void uploadContentImage(index, file);
+                                    event.target.value = "";
+                                  }}
+                                />
+                              </label>
+                            </div>
+
+                            {block.src ? (
+                              <div className="mt-4 overflow-hidden rounded-[1.3rem] border theme-border">
+                                <img
+                                  src={block.src}
+                                  alt={pickText(locale, block.alt) || "Body image preview"}
+                                  className="h-48 w-full object-cover"
+                                />
+                              </div>
+                            ) : null}
+
+                            {contentUploadFeedback?.index === index ? (
+                              <div
+                                className={`mt-4 rounded-[1.3rem] border px-4 py-3 text-sm leading-7 ${
+                                  contentUploadFeedback.tone === "error"
+                                    ? "border-rose-300/20 bg-rose-300/10 text-rose-700 dark:text-rose-100"
+                                    : "border-sky-300/20 bg-sky-300/10 text-sky-700 dark:text-sky-100"
+                                }`}
+                              >
+                                {contentUploadFeedback.message}
+                              </div>
+                            ) : null}
+                          </div>
+                        </label>
+                        <label className="space-y-2">
+                          <span className="text-sm theme-text-muted">
+                            {locale === "en" ? "Image path" : "Đường dẫn hình ảnh"}
+                          </span>
+                          <input
+                            value={block.src}
+                            onChange={(event) =>
+                              setDraft((current) =>
+                                current
+                                  ? {
+                                      ...current,
+                                      content: current.content.map((item, itemIndex) =>
+                                        itemIndex === index && item.type === "image"
+                                          ? { ...item, src: event.target.value }
+                                          : item,
+                                      ),
+                                    }
+                                  : current,
+                              )
+                            }
+                            className={fieldClassName}
+                          />
+                        </label>
+                        <label className="space-y-2">
+                          <span className="text-sm theme-text-muted">Emphasis</span>
+                          <select
+                            value={block.emphasis ?? "standard"}
+                            onChange={(event) =>
+                              setDraft((current) =>
+                                current
+                                  ? {
+                                      ...current,
+                                      content: current.content.map((item, itemIndex) =>
+                                        itemIndex === index && item.type === "image"
+                                          ? {
+                                              ...item,
+                                              emphasis: event.target.value as "standard" | "feature",
+                                            }
+                                          : item,
+                                      ),
+                                    }
+                                  : current,
+                              )
+                            }
+                            className={fieldClassName}
+                          >
+                            <option value="standard">standard</option>
+                            <option value="feature">feature</option>
+                          </select>
+                        </label>
+                        <LocalizedFieldEditor
+                          label="Image alt"
+                          rows={2}
+                          value={block.alt}
+                          onChange={(language, value) =>
+                            setDraft((current) =>
+                              current
+                                ? {
+                                    ...current,
+                                    content: current.content.map((item, itemIndex) =>
+                                      itemIndex === index && item.type === "image"
+                                        ? { ...item, alt: { ...item.alt, [language]: value } }
+                                        : item,
+                                    ),
+                                  }
+                                : current,
+                            )
+                          }
+                        />
+                        <LocalizedFieldEditor
+                          label="Caption"
+                          rows={3}
+                          value={block.caption}
+                          onChange={(language, value) =>
+                            setDraft((current) =>
+                              current
+                                ? {
+                                    ...current,
+                                    content: current.content.map((item, itemIndex) =>
+                                      itemIndex === index && item.type === "image"
+                                        ? { ...item, caption: { ...item.caption, [language]: value } }
+                                        : item,
+                                    ),
+                                  }
+                                : current,
+                            )
+                          }
+                        />
+                      </div>
+                    )}
+                  </Surface>
+                </div>
               ))}
             </div>
           </Surface>
@@ -1103,7 +1325,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
             <div className="mt-5 rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">URL</p>
               <p className="mt-2 text-sm font-semibold theme-text-strong">
-                /news/{slugify(draft.slug || draft.title.en || draft.title.vi || "news-article")}
+                /news/{generatedSlug || slugify(draft.title.en || draft.title.vi || "news-article")}
               </p>
             </div>
           </Surface>
@@ -1112,19 +1334,19 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
             <div className="flex items-center gap-3">
               <Newspaper className="h-5 w-5 text-cyan-300" />
               <p className="text-lg font-semibold theme-text-strong">
-                {locale === "en" ? "Article status" : "Trang thai bai viet"}
+                {locale === "en" ? "Article status" : "Trạng thái bài viết"}
               </p>
             </div>
             <div className="mt-5 space-y-3">
               <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                  {locale === "en" ? "Blocks" : "So khoi"}
+                  {locale === "en" ? "Blocks" : "Số khối"}
                 </p>
                 <p className="mt-2 text-2xl font-semibold theme-text-strong">{draft.content.length}</p>
               </div>
               <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                  {locale === "en" ? "Highlights" : "So diem nhan"}
+                  {locale === "en" ? "Highlights" : "Số điểm nhấn"}
                 </p>
                 <p className="mt-2 text-2xl font-semibold theme-text-strong">{draft.highlights.length}</p>
               </div>
