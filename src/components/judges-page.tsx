@@ -92,18 +92,10 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
 }
 
 export function JudgesPage() {
-  const { locale, pageContent } = useSiteState();
+  const { locale } = useSiteState();
 
   return (
     <div className="space-y-16">
-      <section className="space-y-6">
-        <SectionHeading
-          eyebrow={pickText(locale, pageContent.judges.header.eyebrow)}
-          title={pickText(locale, pageContent.judges.header.title)}
-          description={pickText(locale, pageContent.judges.header.description)}
-        />
-      </section>
-
       {judgeSections.map((section) => {
         const sectionJudges = judgeProfiles.filter((judge) => judge.rounds.includes(section.round));
 
