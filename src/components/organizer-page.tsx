@@ -314,14 +314,14 @@ export function OrganizerPage() {
         <div className="grid gap-5 xl:grid-cols-2">
           {seasonStories.map((season) => (
             <Surface key={season.year} className="overflow-hidden px-0 py-0">
-              <div className="grid gap-0 lg:grid-cols-[220px_minmax(0,1fr)]">
-                <div className="relative min-h-[260px] overflow-hidden">
+              <div className="grid gap-0 lg:min-h-[336px] lg:grid-cols-[220px_minmax(0,1fr)] lg:items-stretch">
+                <div className="relative min-h-[260px] overflow-hidden lg:h-full lg:min-h-full">
                   <Image
                     src={season.image}
                     alt={pickText(locale, season.title)}
                     fill
                     sizes="(min-width: 1280px) 220px, 100vw"
-                    className="object-cover"
+                    className="object-cover object-center"
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.08),rgba(7,18,35,0.24),rgba(7,18,35,0.84))]" />
                   <div className="absolute left-4 top-4 rounded-[1.4rem] border border-white/18 bg-[rgba(6,20,38,0.78)] px-4 py-3 text-white shadow-[0_18px_44px_rgba(2,8,20,0.38)] backdrop-blur-md">
@@ -333,7 +333,7 @@ export function OrganizerPage() {
                     </p>
                   </div>
                 </div>
-                <div className="px-6 py-6 md:px-7 md:py-7">
+                <div className="flex h-full flex-col justify-between px-6 py-6 md:px-7 md:py-7">
                   <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
                     {pickText(locale, season.label)}
                   </p>
