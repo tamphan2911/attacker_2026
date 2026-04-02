@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  MODERATOR
+  ADMIN
+}
+
+enum CompetitionStage {
+  ROUND_1
+  ROUND_2
+  ROUND_3
+}
+
+enum SubmissionRound {
+  ROUND_2
+  ROUND_3
+}
+
+enum TeamRound1LockStatus {
+  OPEN
+  PENDING
+  LOCKED
+  DECLINED
+}
+
+enum TeamInvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+enum LeadershipTransferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+enum Round1TeamLockRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+}
+
+enum Round1TestBankType {
+  OBJECTIVE
+  ESSAY
+}
+
+enum Round1QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum Round1QuestionType {
+  TRUE_FALSE
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  PAIRING
+  ESSAY
+}
+
+enum Round1BankStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum TeamSubmissionResourceSource {
+  EXTERNAL
+  UPLOAD
+}
+
+model User {
+  id              String    @id @default(cuid())
+  loginId         String    @unique @default(cuid())
+  email           String    @unique
+  passwordHash    String?
+  name            String
+  role            UserRole  @default(STUDENT)
+  studentId       String?   @unique
+  university      String    @default("")
+  major           String    @default("")
+  classYear       String    @default("")
+  bio             String    @default("")
+  avatarTone      String    @default("from-sky-500 via-cyan-400 to-emerald-400")
+  avatarImageSrc  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  accounts        Account[]
+  sessions        Session[]
+  teamMembership  TeamMember?
+  ledTeams        Team[]                     @relation("TeamLeader")
+  declinedLocks   Team[]                     @relation("DeclinedRound1Lock")
+  sentInvitations TeamInvitation[]           @relation("InvitationSender")
+  receivedInvites TeamInvitation[]           @relation("InvitationRecipient")
+  sentTransfers   LeadershipTransferRequest[] @relation("TransferSender")
+  receivedTransfers LeadershipTransferRequest[] @relation("TransferRecipient")
+  sentLockRequests Round1TeamLockRequest[]   @relation("Round1LockSender")
+  receivedLockRequests Round1TeamLockRequest[] @relation("Round1LockRecipient")
+  round1Submissions Round1Submission[]
+  teamSubmissions TeamSubmission[]
+}
+
+model Team {
+  id                        String                @id @default(cuid())
+  name                      String
+  tag                       String                @unique
+  leaderId                  String
+  stage                     CompetitionStage      @default(ROUND_1)
+  round1LockStatus          TeamRound1LockStatus  @default(OPEN)
+  round1LockProtocolId      String?
+  round1LockRequestedAt     DateTime?
+  round1LockedAt            DateTime?
+  round1LockDeclinedAt      DateTime?
+  round1LockDeclinedByUserId String?
+  avatarTone                String
+  avatarImageSrc            String?
+  track                     String
+  bio                       String
+  createdAt                 DateTime              @default(now())
+  updatedAt                 DateTime              @updatedAt
+  leader                    User                  @relation("TeamLeader", fields: [leaderId], references: [id], onDelete: Restrict)
+  declinedByUser            User?                 @relation("DeclinedRound1Lock", fields: [round1LockDeclinedByUserId], references: [id], onDelete: SetNull)
+  members                   TeamMember[]
+  invitations               TeamInvitation[]
+  leadershipTransferRequests LeadershipTransferRequest[]
+  round1LockRequests        Round1TeamLockRequest[]
+  round1Submissions         Round1Submission[]
+  submissions               TeamSubmission[]
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId     String
+  userId     String   @unique
+  joinedAt   DateTime @default(now())
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+model TeamInvitation {
+  id          String               @id @default(cuid())
+  teamId       String
+  fromUserId   String
+  toUserId     String
+  status       TeamInvitationStatus @default(PENDING)
+  createdAt    DateTime             @default(now())
+  respondedAt  DateTime?
+  team         Team                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  fromUser     User                 @relation("InvitationSender", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser       User                 @relation("InvitationRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
+}
+
+model LeadershipTransferRequest {
+  id          String                   @id @default(cuid())
+  teamId       String
+  fromUserId   String
+  toUserId     String
+  status       LeadershipTransferStatus @default(PENDING)
+  createdAt    DateTime                 @default(now())
+  respondedAt  DateTime?
+  team         Team                     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  fromUser     User                     @relation("TransferSender", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser       User                     @relation("TransferRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
+}
+
+model Round1TeamLockRequest {
+  id          String                       @id @default(cuid())
+  protocolId   String
+  teamId       String
+  fromUserId   String
+  toUserId     String
+  status       Round1TeamLockRequestStatus @default(PENDING)
+  createdAt    DateTime                    @default(now())
+  respondedAt  DateTime?
+  team         Team                        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  fromUser     User                        @relation("Round1LockSender", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser       User                        @relation("Round1LockRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, protocolId])
+}
+
+model Round1TestBank {
+  id                  String                @id @default(cuid())
+  slug                String                @unique
+  bankType            Round1TestBankType
+  status              Round1BankStatus      @default(DRAFT)
+  titleEn             String
+  titleVi             String
+  descriptionEn       String
+  descriptionVi       String
+  questionPoolSize    Int
+  questionsPerAttempt Int
+  shuffleQuestions    Boolean               @default(true)
+  shuffleOptions      Boolean               @default(true)
+  durationMinutes     Int
+  wordLimit           Int?
+  publishedAt         DateTime?
+  questions           String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  submissions         Round1Submission[]
+}
+
+model Round1Submission {
+  id             String   @id @default(cuid())
+  bankId          String
+  teamId          String
+  userId          String
+  submittedAt     DateTime @default(now())
+  rightCount      Int
+  wrongCount      Int
+  score           Int
+  objectiveScore  Int
+  essayScore      Int?
+  totalScore      Int?
+  durationMinutes Int
+  answers         String?
+  bank            Round1TestBank @relation(fields: [bankId], references: [id], onDelete: Restrict)
+  team            Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId])
+  @@index([teamId, submittedAt])
+}
+
+model TeamSubmission {
+  id                 String                     @id @default(cuid())
+  teamId              String
+  round               SubmissionRound
+  version             Int
+  title               String
+  summary             String
+  resourceSource      TeamSubmissionResourceSource
+  resourceLabel       String
+  resourceUrl         String?
+  resourceStorageKey  String?
+  resourceMimeType    String?
+  resourceSizeBytes   Int?
+  submittedByUserId   String
+  submittedAt         DateTime                   @default(now())
+  team                Team                       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  submittedByUser     User                       @relation(fields: [submittedByUserId], references: [id], onDelete: Restrict)
+
+  @@unique([teamId, round, version])
+}
+
+model NewsPost {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  categoryEn     String
+  categoryVi     String
+  titleEn        String
+  titleVi        String
+  excerptEn      String
+  excerptVi      String
+  author         String
+  publishedAt    DateTime
+  readTime       String
+  coverLabelEn   String
+  coverLabelVi   String
+  coverImageSrc  String
+  coverImageAltEn String
+  coverImageAltVi String
+  highlights     String
+  content        String
+  tags           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model CmsEntry {
+  id         String   @id @default(cuid())
+  scope      String   @unique
+  payload    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Account {
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@id([identifier, token])
+}

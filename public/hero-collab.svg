@@ -1,0 +1,35 @@
+<svg width="760" height="560" viewBox="0 0 760 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="760" height="560" rx="36" fill="url(#bg)"/>
+  <rect x="42" y="42" width="676" height="476" rx="28" fill="#F8FBFF" fill-opacity="0.05" stroke="rgba(255,255,255,0.18)"/>
+  <circle cx="190" cy="182" r="78" fill="url(#orb1)"/>
+  <circle cx="564" cy="384" r="98" fill="url(#orb2)"/>
+  <path d="M184 252C226 287 279 320 350 320C421 320 469 290 520 240" stroke="rgba(255,255,255,0.26)" stroke-width="4" stroke-dasharray="10 12"/>
+  <path d="M220 168C268 184 318 198 384 198C450 198 500 184 548 160" stroke="rgba(255,255,255,0.24)" stroke-width="4" stroke-dasharray="10 12"/>
+  <rect x="98" y="100" width="210" height="162" rx="26" fill="#0D2038" stroke="rgba(255,255,255,0.1)"/>
+  <rect x="454" y="286" width="204" height="150" rx="26" fill="#0D2038" stroke="rgba(255,255,255,0.1)"/>
+  <circle cx="156" cy="156" r="28" fill="#57C7FF"/>
+  <circle cx="512" cy="342" r="28" fill="#FF8A4A"/>
+  <rect x="196" y="140" width="76" height="12" rx="6" fill="#F6FAFF"/>
+  <rect x="196" y="166" width="52" height="10" rx="5" fill="#A4B7CE" fill-opacity="0.5"/>
+  <rect x="128" y="208" width="150" height="10" rx="5" fill="#A4B7CE" fill-opacity="0.35"/>
+  <rect x="128" y="230" width="112" height="10" rx="5" fill="#A4B7CE" fill-opacity="0.35"/>
+  <rect x="552" y="326" width="76" height="12" rx="6" fill="#F6FAFF"/>
+  <rect x="552" y="352" width="52" height="10" rx="5" fill="#A4B7CE" fill-opacity="0.5"/>
+  <rect x="486" y="394" width="138" height="10" rx="5" fill="#A4B7CE" fill-opacity="0.35"/>
+  <rect x="486" y="416" width="96" height="10" rx="5" fill="#A4B7CE" fill-opacity="0.35"/>
+  <defs>
+    <linearGradient id="bg" x1="70" y1="44" x2="686" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0E2C4C"/>
+      <stop offset="0.55" stop-color="#132A46"/>
+      <stop offset="1" stop-color="#081221"/>
+    </linearGradient>
+    <radialGradient id="orb1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(190 182) rotate(90) scale(78)">
+      <stop stop-color="#57C7FF"/>
+      <stop offset="1" stop-color="#57C7FF" stop-opacity="0.04"/>
+    </radialGradient>
+    <radialGradient id="orb2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(564 384) rotate(90) scale(98)">
+      <stop stop-color="#FF8A4A"/>
+      <stop offset="1" stop-color="#FF8A4A" stop-opacity="0.04"/>
+    </radialGradient>
+  </defs>
+</svg>

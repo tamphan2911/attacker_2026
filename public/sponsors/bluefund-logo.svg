@@ -1,0 +1,7 @@
+<svg width="240" height="72" viewBox="0 0 240 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="72" rx="18" fill="#F7FBFF"/>
+  <path d="M35 18L46 36L35 54H22L33 36L22 18H35Z" fill="#1772D0"/>
+  <path d="M48 18L59 36L48 54H35L46 36L35 18H48Z" fill="#63D2FF"/>
+  <text x="78" y="34" fill="#0A1D34" font-family="Arial, sans-serif" font-size="22" font-weight="700">BlueFund</text>
+  <text x="78" y="52" fill="#4F6B88" font-family="Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="1.8">CAPITAL</text>
+</svg>

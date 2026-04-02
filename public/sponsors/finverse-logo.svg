@@ -1,0 +1,8 @@
+<svg width="240" height="72" viewBox="0 0 240 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="72" rx="18" fill="#F7FBFF"/>
+  <path d="M24 18H50L42 30H24V18Z" fill="#1772D0"/>
+  <path d="M24 34H44L36 46H24V34Z" fill="#63D2FF"/>
+  <path d="M24 50H58L50 62H24V50Z" fill="#0A1D34"/>
+  <text x="76" y="34" fill="#0A1D34" font-family="Arial, sans-serif" font-size="22" font-weight="700">Finverse</text>
+  <text x="76" y="52" fill="#4F6B88" font-family="Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="1.8">ECOSYSTEM</text>
+</svg>

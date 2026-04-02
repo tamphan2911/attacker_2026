@@ -1,36 +1,228 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Attacker 2026
 
-## Getting Started
+Attacker 2026 is a Next.js frontend prototype for a student fintech competition. This repository now also includes the first backend foundation for authentication, teams, Round 1 submissions, CMS storage, and admin-facing data models.
 
-First, run the development server:
+## Stack
+
+- Next.js 16
+- React 19
+- TypeScript
+- Prisma
+- SQLite for local development
+- NextAuth.js with credentials login and optional Google login
+
+## Environment
+
+Copy `.env.example` to `.env` and adjust values if needed.
+
+```bash
+cp .env.example .env
+```
+
+Required values:
+
+- `DATABASE_URL`
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
+
+Optional values:
+
+- `AUTH_GOOGLE_ID`
+- `AUTH_GOOGLE_SECRET`
+- `APP_STORAGE_ROOT`
+- `BOOTSTRAP_DEMO_DATA`
+
+## Install
+
+```bash
+npm install
+```
+
+## Database bootstrap
+
+Generate the Prisma client:
+
+```bash
+npm run prisma:generate
+```
+
+Create the local SQLite schema:
+
+```bash
+npm run db:push
+```
+
+Seed demo data:
+
+```bash
+npm run db:seed
+```
+
+Or run the full local setup sequence:
+
+```bash
+npm run prisma:generate
+npm run db:setup
+npm run db:seed
+```
+
+Important note:
+
+- `npm run db:push` and `npm run db:setup` currently recreate `prisma/dev.db` from the Prisma schema using `prisma migrate diff`.
+- This is fine for local bootstrap right now, but it is destructive for existing local data.
+
+## Run
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+App URL:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- [http://localhost:3000](http://localhost:3000)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Railway deployment
 
-## Learn More
+For the current codebase, the cheapest practical online test setup is a single Railway service with:
 
-To learn more about Next.js, take a look at the following resources:
+- Railway public domain (`*.up.railway.app`)
+- one persistent volume
+- SQLite stored on that volume
+- uploaded team submission files stored on that volume
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Recommended Railway env vars
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Set these in Railway:
 
-## Deploy on Vercel
+```bash
+DATABASE_URL="file:/data/sqlite/attacker.db"
+NEXTAUTH_URL="https://your-service.up.railway.app"
+NEXTAUTH_SECRET="replace-with-a-long-random-secret"
+APP_STORAGE_ROOT="/data"
+BOOTSTRAP_DEMO_DATA="true"
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Optional:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+AUTH_GOOGLE_ID=""
+AUTH_GOOGLE_SECRET=""
+```
+
+Important:
+
+- mount the Railway volume at `/data`
+- only leave `BOOTSTRAP_DEMO_DATA="true"` for the first boot if you want the demo dataset
+- after the database is initialized and seeded, set `BOOTSTRAP_DEMO_DATA="false"`
+
+### Railway commands
+
+Use these service commands:
+
+- Build command: `npm run build`
+- Start command: `npm run start:railway`
+
+The Railway start script now does this safely:
+
+1. creates persistent folders inside `APP_STORAGE_ROOT`
+2. runs `prisma db push` against the configured SQLite file
+3. optionally seeds demo data when the database is empty and `BOOTSTRAP_DEMO_DATA=true`
+4. starts Next.js on Railway's `PORT`
+
+### Health check
+
+Health endpoint:
+
+- `GET /api/health`
+
+### Persistent data paths
+
+With the recommended Railway setup:
+
+- SQLite DB: `/data/sqlite/attacker.db`
+- Uploaded team files: `/data/team-submissions`
+
+### Updating the live site later
+
+- code changes from this workspace only affect Railway after a new deploy
+- admin edits made on the live site affect the live database immediately
+- if you redeploy with the same Railway volume attached, the database and uploaded files remain
+
+## Demo credentials
+
+Backend seed currently creates these fixed demo accounts:
+
+- Admin: `admin / Aa@291189`
+- Moderator password: `Moderator@2026`
+- Student password: `Student@2026`
+
+The seeded student and moderator emails and IDs come from the demo content in [`/Users/tamphanhuy/Documents/attacker 2026/src/data/site-content.ts`](/Users/tamphanhuy/Documents/attacker%202026/src/data/site-content.ts).
+
+## Backend status
+
+This backend pass adds:
+
+- Prisma schema and local SQLite database
+- NextAuth credentials login by `email` or `loginId`
+- optional Google login when OAuth env vars are present
+- registration API
+- authenticated `me` API
+- server-side team business rules
+- Round 1 server-side submission validation
+- CMS/news persistence models for the next backend passes
+
+Current limitation:
+
+- The existing UI is still primarily driven by frontend demo state in [`/Users/tamphanhuy/Documents/attacker 2026/src/components/providers/site-state-provider.tsx`](/Users/tamphanhuy/Documents/attacker%202026/src/components/providers/site-state-provider.tsx).
+- The new backend APIs are in place, but the app is not fully migrated to consume them yet.
+
+## Current API routes
+
+Auth and account:
+
+- `POST /api/auth/register`
+- `GET|POST /api/auth/[...nextauth]`
+- `GET /api/me`
+
+Teams:
+
+- `POST /api/teams`
+- `POST /api/teams/[teamId]/invites`
+- `POST /api/invitations/[invitationId]/respond`
+- `POST /api/teams/current/leave`
+- `POST /api/teams/[teamId]/leadership-transfer`
+- `POST /api/leadership-transfer-requests/[requestId]/respond`
+- `POST /api/teams/[teamId]/round-1-lock`
+- `POST /api/round-1-lock-requests/[requestId]/respond`
+
+Round 1:
+
+- `POST /api/round-1/submissions`
+
+## Backend files
+
+Core backend files added in this pass:
+
+- [`/Users/tamphanhuy/Documents/attacker 2026/prisma/schema.prisma`](/Users/tamphanhuy/Documents/attacker%202026/prisma/schema.prisma)
+- [`/Users/tamphanhuy/Documents/attacker 2026/prisma/seed.ts`](/Users/tamphanhuy/Documents/attacker%202026/prisma/seed.ts)
+- [`/Users/tamphanhuy/Documents/attacker 2026/src/lib/db.ts`](/Users/tamphanhuy/Documents/attacker%202026/src/lib/db.ts)
+- [`/Users/tamphanhuy/Documents/attacker 2026/src/lib/auth.ts`](/Users/tamphanhuy/Documents/attacker%202026/src/lib/auth.ts)
+- [`/Users/tamphanhuy/Documents/attacker 2026/src/server/team-service.ts`](/Users/tamphanhuy/Documents/attacker%202026/src/server/team-service.ts)
+- [`/Users/tamphanhuy/Documents/attacker 2026/src/server/auth-helpers.ts`](/Users/tamphanhuy/Documents/attacker%202026/src/server/auth-helpers.ts)
+- [`/Users/tamphanhuy/Documents/attacker 2026/src/server/route-utils.ts`](/Users/tamphanhuy/Documents/attacker%202026/src/server/route-utils.ts)
+
+## Validation
+
+Current backend foundation passes:
+
+- `npm run lint`
+- `npm run build`
+
+## Suggested next steps
+
+The next backend pass should focus on one of these:
+
+1. Wire frontend auth and profile flows to NextAuth and `/api/me`.
+2. Replace local team state with the team APIs.
+3. Add admin CRUD APIs for users, teams, news, judges, sponsors, and Round 1 banks.
+4. Move file uploads to real storage instead of browser-local demo data.

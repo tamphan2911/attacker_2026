@@ -1,0 +1,30 @@
+<svg width="620" height="760" viewBox="0 0 620 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="620" height="760" rx="40" fill="url(#bg)"/>
+  <rect x="152" y="50" width="316" height="660" rx="42" fill="#081526" stroke="rgba(255,255,255,0.16)" stroke-width="6"/>
+  <rect x="232" y="74" width="156" height="18" rx="9" fill="#0F2743"/>
+  <rect x="180" y="128" width="260" height="146" rx="28" fill="url(#card1)"/>
+  <rect x="180" y="302" width="260" height="118" rx="28" fill="#0E2036" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="180" y="444" width="260" height="88" rx="28" fill="#0E2036" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="180" y="556" width="260" height="102" rx="28" fill="#0E2036" stroke="rgba(255,255,255,0.08)"/>
+  <rect x="208" y="170" width="110" height="14" rx="7" fill="#F7FBFF"/>
+  <rect x="208" y="198" width="84" height="10" rx="5" fill="#D2DEEB" fill-opacity="0.46"/>
+  <circle cx="378" cy="198" r="34" fill="rgba(255,255,255,0.18)"/>
+  <path d="M348 238C362 218 390 210 406 188" stroke="#F7FBFF" stroke-width="6" stroke-linecap="round"/>
+  <rect x="208" y="334" width="144" height="12" rx="6" fill="#57C7FF"/>
+  <rect x="208" y="358" width="188" height="10" rx="5" fill="#D2DEEB" fill-opacity="0.35"/>
+  <rect x="208" y="472" width="110" height="12" rx="6" fill="#1FE6B0"/>
+  <rect x="208" y="496" width="162" height="10" rx="5" fill="#D2DEEB" fill-opacity="0.35"/>
+  <rect x="208" y="586" width="136" height="12" rx="6" fill="#FF8A4A"/>
+  <rect x="208" y="610" width="174" height="10" rx="5" fill="#D2DEEB" fill-opacity="0.35"/>
+  <defs>
+    <linearGradient id="bg" x1="52" y1="40" x2="570" y2="722" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D2746"/>
+      <stop offset="1" stop-color="#06111E"/>
+    </linearGradient>
+    <linearGradient id="card1" x1="196" y1="140" x2="438" y2="264" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#59C8FF"/>
+      <stop offset="0.55" stop-color="#3E88FF"/>
+      <stop offset="1" stop-color="#133B73"/>
+    </linearGradient>
+  </defs>
+</svg>

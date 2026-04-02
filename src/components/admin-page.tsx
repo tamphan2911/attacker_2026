@@ -1,0 +1,729 @@
+"use client";
+
+import Link from "next/link";
+import {
+  ArrowRight,
+  Download,
+  FilePenLine,
+  FileQuestion,
+  LayoutDashboard,
+  Newspaper,
+  ShieldCheck,
+  TableProperties,
+  Trash2,
+  Users,
+  Users2,
+} from "lucide-react";
+import * as XLSX from "xlsx";
+
+import { ContentIndexSection } from "@/components/admin-content-editor";
+import { AdminNewsList } from "@/components/admin-news-manager";
+import { AdminRound1Manager } from "@/components/admin-round1-manager";
+import { TEAM_MIN_MEMBERS } from "@/data/site-content";
+import { getTeamCompetitionState, pickCompetitionStateLabel } from "@/lib/competition";
+import { formatDateLabel, getTeamForUser, pickText } from "@/lib/site";
+import { useSiteState } from "@/components/providers/site-state-provider";
+import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import type { Locale, LocalizedText } from "@/types/site";
+
+export type AdminSection = "overview" | "content" | "news" | "round1" | "users" | "teams" | "submissions";
+
+const adminSections: Array<{
+  id: AdminSection;
+  href: string;
+  icon: typeof LayoutDashboard;
+  label: LocalizedText;
+  description: LocalizedText;
+}> = [
+  {
+    id: "overview",
+    href: "/admin",
+    icon: LayoutDashboard,
+    label: { en: "Overview", vi: "Tong quan" },
+    description: {
+      en: "Restricted dashboard for admin and moderator accounts.",
+      vi: "Bang dieu khien gioi han cho tai khoan admin va moderator.",
+    },
+  },
+  {
+    id: "content",
+    href: "/admin/content",
+    icon: FilePenLine,
+    label: { en: "Content", vi: "Noi dung" },
+    description: {
+      en: "Adjust editable copy across the public pages.",
+      vi: "Dieu chinh phan noi dung co the sua tren cac trang cong khai.",
+    },
+  },
+  {
+    id: "news",
+    href: "/admin/news",
+    icon: Newspaper,
+    label: { en: "News", vi: "Tin tuc" },
+    description: {
+      en: "Create, edit, and manage newsroom articles.",
+      vi: "Tao, chinh sua va quan ly cac bai viet newsroom.",
+    },
+  },
+  {
+    id: "round1",
+    href: "/admin/round-1",
+    icon: FileQuestion,
+    label: { en: "Round 1 test", vi: "Bai thi Vong 1" },
+    description: {
+      en: "Review objective and essay banks plus team-grouped individual Round 1 results.",
+      vi: "Xem ngân hàng khách quan, ngân hàng tự luận và kết quả Vòng 1 cá nhân được nhóm theo đội.",
+    },
+  },
+  {
+    id: "users",
+    href: "/admin/users",
+    icon: Users,
+    label: { en: "Users", vi: "Nguoi dung" },
+    description: {
+      en: "List accounts and export participant data.",
+      vi: "Danh sach tai khoan va xuat du lieu thi sinh.",
+    },
+  },
+  {
+    id: "teams",
+    href: "/admin/teams",
+    icon: Users2,
+    label: { en: "Teams", vi: "Doi thi" },
+    description: {
+      en: "Review team composition and readiness.",
+      vi: "Xem cau truc doi va muc do san sang.",
+    },
+  },
+  {
+    id: "submissions",
+    href: "/admin/submissions",
+    icon: TableProperties,
+    label: { en: "Submissions", vi: "Bai nop" },
+    description: {
+      en: "Track version history and export the latest valid files.",
+      vi: "Theo doi lich su phien ban va xuat cac tep hop le moi nhat.",
+    },
+  },
+];
+
+function exportRowsToWorkbook(
+  fileName: string,
+  sheetName: string,
+  rows: Record<string, string | number>[],
+) {
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  XLSX.writeFile(workbook, fileName);
+}
+
+function AdminNav({
+  locale,
+  activeSection,
+}: {
+  locale: Locale;
+  activeSection: AdminSection;
+}) {
+  return (
+    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
+      {adminSections.map((section) => {
+        const Icon = section.icon;
+
+        return (
+          <Link key={section.id} href={section.href}>
+            <Surface className="group h-full px-5 py-5 transition hover:-translate-y-0.5 hover:bg-[var(--panel-strong)]">
+              <div className="flex items-start justify-between gap-4">
+                <div className="theme-brand-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[0_18px_40px_rgba(23,114,208,0.2)]">
+                  <Icon className="h-5 w-5" />
+                </div>
+                {activeSection === section.id ? (
+                  <StatusPill tone="success">
+                    {locale === "en" ? "Open" : "Dang mo"}
+                  </StatusPill>
+                ) : null}
+              </div>
+              <p className="theme-heading mt-5 text-xl font-semibold theme-text-strong">
+                {pickText(locale, section.label)}
+              </p>
+              <p className="mt-3 text-sm leading-7 theme-text-muted">
+                {pickText(locale, section.description)}
+              </p>
+            </Surface>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function AccessDenied() {
+  const { locale, currentUser } = useSiteState();
+
+  return (
+    <div className="space-y-8">
+      <SectionHeading
+        eyebrow={locale === "en" ? "Admin mode" : "Admin mode"}
+        title={
+          locale === "en"
+            ? "This route is restricted to admin and moderator accounts."
+            : "Route nay chi danh cho tai khoan admin va moderator."
+        }
+        description={
+          locale === "en"
+            ? currentUser.id
+              ? `The current signed-in account is ${currentUser.name} (${currentUser.role}). Sign in with an admin or moderator account to open /admin.`
+              : "You are not signed in. Sign in with an admin or moderator account to open /admin."
+            : currentUser.id
+              ? `Tài khoản đang đăng nhập hiện tại là ${currentUser.name} (${currentUser.role}). Hãy đăng nhập bằng tài khoản admin hoặc moderator để mở /admin.`
+              : "Bạn chưa đăng nhập. Hãy đăng nhập bằng tài khoản admin hoặc moderator để mở /admin."
+        }
+      />
+
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-lg font-semibold theme-text-strong">
+              {locale === "en" ? "Need the role switcher?" : "Can bo doi vai tro?"}
+            </p>
+            <p className="mt-2 text-sm leading-7 theme-text-muted">
+              {locale === "en"
+                ? "Use the normal sign-in page and log in with an admin or moderator account."
+                : "Hãy dùng trang đăng nhập thông thường và đăng nhập bằng tài khoản admin hoặc moderator."}
+            </p>
+          </div>
+          <Link
+            href="/auth"
+            className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+          >
+            {locale === "en" ? "Open sign in" : "Mở đăng nhập"}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </Surface>
+    </div>
+  );
+}
+
+function OverviewSection() {
+  const { locale, users, teams, submissions, currentUser } = useSiteState();
+  const eligibleTeams = teams.filter((team) => team.memberIds.length >= TEAM_MIN_MEMBERS);
+  const latestSubmissionCount = teams.filter((team) =>
+    submissions.some((submission) => submission.teamId === team.id),
+  ).length;
+
+  return (
+    <div className="space-y-8">
+      <SectionHeading
+        eyebrow={locale === "en" ? "Admin mode" : "Admin mode"}
+        title={
+          locale === "en"
+            ? "Restricted operations, content control, and export tools in one place."
+            : "Mot noi duy nhat cho van hanh gioi han, quan ly noi dung va cong cu xuat du lieu."
+        }
+        description={
+          locale === "en"
+            ? "This admin mode is restricted to admin and moderator accounts. It stays out of the public menu and is intended to be opened directly by link."
+            : "Admin mode này chỉ dành cho tài khoản admin và moderator. Khu vực này không nằm trong menu công khai và được mở trực tiếp bằng link."
+        }
+      />
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {[
+          {
+            label: locale === "en" ? "Signed-in role" : "Vai tro dang dung",
+            value: currentUser.role,
+          },
+          {
+            label: locale === "en" ? "Users" : "Nguoi dung",
+            value: users.length.toString(),
+          },
+          {
+            label: locale === "en" ? "Eligible teams" : "Doi du dieu kien",
+            value: eligibleTeams.length.toString(),
+          },
+          {
+            label: locale === "en" ? "Teams with submissions" : "Doi da nop bai",
+            value: latestSubmissionCount.toString(),
+          },
+        ].map((item) => (
+          <Surface key={item.label} className="px-5 py-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-sky-200/80">
+              {item.label}
+            </p>
+            <p className="mt-4 text-4xl font-semibold theme-text-strong">{item.value}</p>
+          </Surface>
+        ))}
+      </section>
+
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <SectionHeading
+          eyebrow={locale === "en" ? "Scope" : "Pham vi"}
+          title={
+            locale === "en"
+              ? "What is already covered in this admin prototype."
+              : "Nhung gi da duoc bao phu trong prototype admin nay."
+          }
+          description={
+            locale === "en"
+              ? "Content editing is wired into the public pages, and each operational table supports real `.xlsx` export from the browser."
+              : "Phan sua noi dung da duoc noi vao cac trang cong khai, va moi bang van hanh deu ho tro xuat `.xlsx` truc tiep tu trinh duyet."
+          }
+        />
+        <div className="mt-8 grid gap-4 lg:grid-cols-3">
+          {[
+            {
+              title: locale === "en" ? "Page content" : "Noi dung trang",
+              body:
+                locale === "en"
+                  ? "Update hero slides, page headings, and section copy across the main routes."
+                  : "Cap nhat hero slides, heading trang va copy cua cac section tren cac route chinh.",
+            },
+            {
+              title: locale === "en" ? "Participant data" : "Du lieu thi sinh",
+              body:
+                locale === "en"
+                  ? "Inspect users, teams, and submissions in table form before the backend phase begins."
+                  : "Kiem tra nguoi dung, doi thi va bai nop duoi dang bang truoc khi sang giai doan backend.",
+            },
+            {
+              title: locale === "en" ? "Excel exports" : "Xuat Excel",
+              body:
+                locale === "en"
+                  ? "Download `.xlsx` files for organizer review and offline reporting."
+                  : "Tai tep `.xlsx` de ban to chuc review va lap bao cao offline.",
+            },
+          ].map((item) => (
+            <div key={item.title} className="rounded-[1.75rem] border theme-border theme-panel px-4 py-4">
+              <p className="text-lg font-semibold theme-text-strong">{item.title}</p>
+              <p className="mt-3 text-sm leading-7 theme-text-muted">{item.body}</p>
+            </div>
+          ))}
+        </div>
+      </Surface>
+    </div>
+  );
+}
+
+function TableHeader({
+  title,
+  description,
+  exportLabel,
+  onExport,
+}: {
+  title: string;
+  description: string;
+  exportLabel: string;
+  onExport: () => void;
+}) {
+  return (
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="max-w-3xl">
+        <p className="theme-heading text-3xl font-semibold theme-text-strong">{title}</p>
+        <p className="mt-3 text-sm leading-7 theme-text-muted">{description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onExport}
+        className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+      >
+        <Download className="h-4 w-4" />
+        {exportLabel}
+      </button>
+    </div>
+  );
+}
+
+function UsersTableSection() {
+  const { locale, users, teams, deleteUserByAdmin } = useSiteState();
+
+  const rows = users.map((user) => {
+    const team = getTeamForUser(user.id, teams);
+    return {
+      id: user.id,
+      name: user.name,
+      studentId: user.studentId,
+      role: user.role,
+      email: user.email,
+      university: user.university,
+      major: user.major,
+      classYear: user.classYear,
+      team: team?.name ?? "",
+      providers: user.providers.join(", "),
+    };
+  });
+
+  return (
+    <div className="space-y-6">
+      <TableHeader
+        title={locale === "en" ? "Users" : "Nguoi dung"}
+        description={
+          locale === "en"
+            ? "Participant table with role, academic info, and current team membership."
+            : "Bảng thí sinh gồm vai trò, thông tin học tập và đội thi hiện tại."
+        }
+        exportLabel={locale === "en" ? "Export users.xlsx" : "Xuat users.xlsx"}
+        onExport={() => exportRowsToWorkbook("attacker-2026-users.xlsx", "Users", rows)}
+      />
+
+      <Surface className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
+              <tr>
+                {["Name", "Student ID", "Role", "Email", "University", "Major", "Year", "Team", "Action"].map((label) => (
+                  <th key={label} className="px-4 py-3 font-medium">
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => {
+                const team = getTeamForUser(user.id, teams);
+
+                return (
+                  <tr key={user.id} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4">
+                      <div>
+                        <Link href={`/admin/users/${user.id}`} className="font-semibold theme-accent">
+                          {user.name}
+                        </Link>
+                        <p className="mt-1 text-xs theme-text-soft">{user.id}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <p className="theme-text-body">{user.studentId}</p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <StatusPill tone={user.role === "student" ? "default" : "success"}>
+                        {user.role}
+                      </StatusPill>
+                    </td>
+                    <td className="px-4 py-4 theme-text-body">{user.email}</td>
+                    <td className="px-4 py-4 theme-text-body">{user.university}</td>
+                    <td className="px-4 py-4 theme-text-body">{user.major}</td>
+                    <td className="px-4 py-4 theme-text-body">{user.classYear}</td>
+                    <td className="px-4 py-4 theme-text-body">{team?.name ?? "-"}</td>
+                    <td className="px-4 py-4">
+                      <button
+                        type="button"
+                        disabled={user.id === "admin"}
+                        onClick={() => {
+                          const confirmed = window.confirm(
+                            locale === "en"
+                              ? `Delete ${user.name} from the admin dataset?`
+                              : `Xoa ${user.name} khoi bo du lieu admin?`,
+                          );
+
+                          if (confirmed) {
+                            deleteUserByAdmin(user.id);
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-3 py-2 text-xs font-semibold text-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        {locale === "en" ? "Delete" : "Xoa"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Surface>
+    </div>
+  );
+}
+
+function TeamsTableSection() {
+  const { locale, teams, users, deleteTeamByAdmin } = useSiteState();
+
+  const rows = teams.map((team) => {
+    const leader = users.find((user) => user.id === team.leaderId);
+    const members = team.memberIds
+      .map((memberId) => users.find((user) => user.id === memberId)?.name ?? memberId)
+      .join(", ");
+
+    return {
+      id: team.id,
+      team: team.name,
+      tag: team.tag,
+      leader: leader?.name ?? "",
+      memberCount: team.memberIds.length,
+      status: pickCompetitionStateLabel(locale, getTeamCompetitionState(team)),
+      stage: pickCompetitionStateLabel(locale, team.stage),
+      track: team.track,
+      createdAt: team.createdAt,
+      members,
+    };
+  });
+
+  return (
+    <div className="space-y-6">
+      <TableHeader
+        title={locale === "en" ? "Teams" : "Doi thi"}
+        description={
+          locale === "en"
+            ? "Review team leadership, membership count, readiness, and creation date."
+            : "Xem doi truong, so thanh vien, muc do san sang va ngay tao doi."
+        }
+        exportLabel={locale === "en" ? "Export teams.xlsx" : "Xuat teams.xlsx"}
+        onExport={() => exportRowsToWorkbook("attacker-2026-teams.xlsx", "Teams", rows)}
+      />
+
+      <Surface className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
+              <tr>
+                {["Team", "Tag", "Leader", "Members", "Status", "Stage", "Track", "Created", "Action"].map((label) => (
+                  <th key={label} className="px-4 py-3 font-medium">
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {teams.map((team) => {
+                const leader = users.find((user) => user.id === team.leaderId);
+                const status = getTeamCompetitionState(team);
+
+                return (
+                  <tr key={team.id} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4">
+                      <div>
+                        <Link href={`/admin/teams/${team.id}`} className="font-semibold theme-accent">
+                          {team.name}
+                        </Link>
+                        <p className="mt-1 text-xs theme-text-soft">{team.id}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 theme-text-body">{team.tag}</td>
+                    <td className="px-4 py-4 theme-text-body">{leader?.name ?? "-"}</td>
+                    <td className="px-4 py-4 theme-text-body">{team.memberIds.length}</td>
+                    <td className="px-4 py-4">
+                      <StatusPill tone={status === "not-eligible" ? "warning" : "success"}>
+                        {pickCompetitionStateLabel(locale, status)}
+                      </StatusPill>
+                    </td>
+                    <td className="px-4 py-4">
+                      <StatusPill>{pickCompetitionStateLabel(locale, team.stage)}</StatusPill>
+                    </td>
+                    <td className="px-4 py-4 theme-text-body">{team.track}</td>
+                    <td className="px-4 py-4 theme-text-body">
+                      {formatDateLabel(locale, team.createdAt)}
+                    </td>
+                    <td className="px-4 py-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const confirmed = window.confirm(
+                            locale === "en"
+                              ? `Delete team ${team.name} from the admin dataset?`
+                              : `Xoa doi ${team.name} khoi bo du lieu admin?`,
+                          );
+
+                          if (confirmed) {
+                            deleteTeamByAdmin(team.id);
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-3 py-2 text-xs font-semibold text-rose-100"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        {locale === "en" ? "Delete" : "Xoa"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Surface>
+    </div>
+  );
+}
+
+function SubmissionsTableSection() {
+  const { locale, submissions, teams, users } = useSiteState();
+
+  const latestByRound = new Set(
+    teams.flatMap((team) =>
+      ["round-2", "round-3"].flatMap((round) => {
+        const versions = submissions
+          .filter((submission) => submission.teamId === team.id && submission.round === round)
+          .map((submission) => submission.version);
+
+        if (versions.length === 0) {
+          return [];
+        }
+
+        return [`${team.id}:${round}:${Math.max(...versions)}`];
+      }),
+    ),
+  );
+
+  const rows = submissions
+    .slice()
+    .sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))
+    .map((submission) => {
+      const team = teams.find((item) => item.id === submission.teamId);
+      const author = users.find((item) => item.id === submission.submittedByUserId);
+      const isLatest = latestByRound.has(
+        `${submission.teamId}:${submission.round}:${submission.version}`,
+      );
+
+      return {
+        id: submission.id,
+        team: team?.name ?? submission.teamId,
+        round: submission.round,
+        version: submission.version,
+        isLatest: isLatest ? "valid latest" : "history only",
+        title: submission.title,
+        resourceSource: submission.resourceSource,
+        resourceLabel: submission.resourceLabel,
+        resourceUrl: submission.resourceUrl ?? "",
+        submittedBy: author?.name ?? submission.submittedByUserId,
+        submittedAt: submission.submittedAt,
+      };
+    });
+
+  return (
+    <div className="space-y-6">
+      <TableHeader
+        title={locale === "en" ? "Submissions" : "Bai nop"}
+        description={
+          locale === "en"
+            ? "All submission versions are preserved; only the latest version per team and round is marked as valid."
+            : "Tat ca phien ban bai nop duoc giu lai; chi phien ban moi nhat theo tung doi va tung vong duoc danh dau hop le."
+        }
+        exportLabel={locale === "en" ? "Export submissions.xlsx" : "Xuat submissions.xlsx"}
+        onExport={() =>
+          exportRowsToWorkbook("attacker-2026-submissions.xlsx", "Submissions", rows)
+        }
+      />
+
+      <Surface className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
+              <tr>
+                {["Team", "Round", "Version", "Status", "Title", "File", "Submitted by", "Submitted at"].map((label) => (
+                  <th key={label} className="px-4 py-3 font-medium">
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id} className="border-b theme-border last:border-b-0">
+                  <td className="px-4 py-4 theme-text-body">{row.team}</td>
+                  <td className="px-4 py-4 theme-text-body">{row.round}</td>
+                  <td className="px-4 py-4 theme-text-body">{row.version}</td>
+                  <td className="px-4 py-4">
+                    <StatusPill tone={row.isLatest === "valid latest" ? "success" : "default"}>
+                      {row.isLatest}
+                    </StatusPill>
+                  </td>
+                  <td className="px-4 py-4 theme-text-body">{row.title}</td>
+                  <td className="px-4 py-4">
+                    {row.resourceUrl ? (
+                      <a
+                        href={row.resourceUrl}
+                        target={row.resourceSource === "external" ? "_blank" : undefined}
+                        rel={row.resourceSource === "external" ? "noreferrer" : undefined}
+                        download={row.resourceSource === "upload" ? row.resourceLabel : undefined}
+                        className="theme-accent underline-offset-4 hover:underline"
+                      >
+                        {row.resourceLabel}
+                      </a>
+                    ) : (
+                      <div>
+                        <p className="theme-text-body">{row.resourceLabel}</p>
+                        <p className="mt-1 text-xs theme-text-soft">
+                          {locale === "en" ? "Stored upload" : "Tep tai len"}
+                        </p>
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 theme-text-body">{row.submittedBy}</td>
+                  <td className="px-4 py-4 theme-text-body">
+                    {formatDateLabel(locale, row.submittedAt)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Surface>
+    </div>
+  );
+}
+
+export function AdminShell({
+  section,
+  children,
+}: {
+  section: AdminSection;
+  children: React.ReactNode;
+}) {
+  const { locale, canAccessAdminMode } = useSiteState();
+
+  if (!canAccessAdminMode) {
+    return <AccessDenied />;
+  }
+
+  return (
+    <div className="space-y-10">
+      <Surface className="overflow-hidden px-6 py-6 md:px-8 md:py-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
+          <SectionHeading
+            eyebrow={locale === "en" ? "Restricted route" : "Route gioi han"}
+            title={locale === "en" ? "Attacker 2026 admin mode" : "Admin mode cua Attacker 2026"}
+            description={
+              locale === "en"
+                ? "Use the direct `/admin` link or its subroutes. This mode stays out of the public menu and is visible only to the correct signed-in roles."
+                : "Dùng link trực tiếp `/admin` hoặc các subroute của nó. Chế độ này nằm ngoài menu công khai và chỉ hiển thị cho đúng vai trò đã đăng nhập."
+            }
+          />
+          <div className="grid gap-3">
+            <div className="rounded-[1.75rem] border theme-border theme-panel px-4 py-4">
+              <div className="inline-flex rounded-2xl border theme-border-strong theme-panel-strong p-3">
+                <ShieldCheck className="h-5 w-5 text-cyan-300" />
+              </div>
+              <p className="mt-4 text-lg font-semibold theme-text-strong">
+                {locale === "en" ? "Protected admin area" : "Khu vực admin được bảo vệ"}
+              </p>
+              <p className="mt-3 text-sm leading-7 theme-text-muted">
+                {locale === "en"
+                  ? "Access is now gated by the signed-in backend account role."
+                  : "Quyền truy cập hiện đã được chặn theo vai trò của tài khoản backend đang đăng nhập."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </Surface>
+
+      <AdminNav locale={locale} activeSection={section} />
+
+      {children}
+    </div>
+  );
+}
+
+export function AdminPage({ section }: { section: AdminSection }) {
+  return (
+    <AdminShell section={section}>
+      {section === "overview" ? <OverviewSection /> : null}
+      {section === "content" ? <ContentIndexSection /> : null}
+      {section === "news" ? <AdminNewsList /> : null}
+      {section === "round1" ? <AdminRound1Manager /> : null}
+      {section === "users" ? <UsersTableSection /> : null}
+      {section === "teams" ? <TeamsTableSection /> : null}
+      {section === "submissions" ? <SubmissionsTableSection /> : null}
+    </AdminShell>
+  );
+}
