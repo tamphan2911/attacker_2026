@@ -239,8 +239,11 @@ export function HomePage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(255,255,255,0.18),transparent_24%),linear-gradient(180deg,rgba(7,18,35,0.18)_0%,rgba(7,18,35,0.62)_68%,rgba(7,18,35,0.84)_100%)]" />
 
           <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl flex-col items-center justify-center px-4 pb-16 pt-24 text-center text-white md:min-h-[640px] md:px-8">
-            <InfoKicker className="border-white/28 bg-white/14 text-white shadow-[0_18px_44px_rgba(7,18,35,0.22)] backdrop-blur-md">
-              {pickText(locale, currentSlide.eyebrow)}
+            <InfoKicker className="hero-kicker gap-2.5 rounded-full px-4 py-2 text-[0.78rem] font-medium normal-case tracking-[0.08em] shadow-[0_24px_56px_rgba(7,18,35,0.28)] backdrop-blur-xl md:px-5">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full border border-white/14 bg-white/12">
+                <Sparkles className="h-3.5 w-3.5 text-cyan-100" />
+              </span>
+              <span className="leading-none text-white/94">{pickText(locale, currentSlide.eyebrow)}</span>
             </InfoKicker>
             <h1 className="theme-heading mt-8 max-w-5xl text-4xl font-semibold leading-[1.06] md:text-6xl">
               {pickText(locale, currentSlide.title)}
