@@ -716,20 +716,20 @@ export function HomePage() {
         <Surface className="relative overflow-hidden px-0 py-0">
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-[linear-gradient(90deg,var(--shell-start),transparent)]" />
           <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-[linear-gradient(270deg,var(--shell-start),transparent)]" />
-          <div className="overflow-hidden py-5">
-            <div className="marquee-track flex w-max items-center gap-4 px-4 hover:[animation-play-state:paused] md:gap-5 md:px-6">
+          <div className="overflow-hidden py-6 md:py-7">
+            <div className="marquee-track flex w-max items-center gap-5 px-4 hover:[animation-play-state:paused] md:gap-6 md:px-6">
               {sponsorMarqueeItems.map((sponsor, index) => (
                 <div
                   key={`${sponsor.name}-${index}`}
-                  className="flex min-w-[180px] shrink-0 items-center justify-center rounded-[1.45rem] border theme-border bg-white px-5 py-4 shadow-[0_18px_38px_rgba(148,163,184,0.1)] md:min-w-[210px]"
+                  className="flex min-h-[108px] min-w-[210px] shrink-0 items-center justify-center rounded-[2rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,249,255,0.94))] px-6 py-5 shadow-[0_22px_44px_rgba(148,163,184,0.12)] md:min-h-[122px] md:min-w-[248px] md:px-7 md:py-6"
                   aria-hidden={index >= sponsorProfiles.length}
                 >
                   <Image
                     src={sponsor.logoSrc}
                     alt={sponsor.name}
-                    width={180}
-                    height={54}
-                    className="h-10 w-auto object-contain md:h-11"
+                    width={196}
+                    height={72}
+                    className="h-14 w-auto max-w-full object-contain md:h-16"
                   />
                 </div>
               ))}
