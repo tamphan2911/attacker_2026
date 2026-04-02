@@ -362,19 +362,11 @@ export function OrganizerPage() {
 
       <section className="space-y-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <SectionHeading
-            eyebrow={locale === "en" ? "Photo slider" : "Photo slider"}
-            title={
-              locale === "en"
-                ? "A more visual season gallery for Attacker."
-                : "Một thư viện mùa thi trực quan hơn cho Attacker."
-            }
-            description={
-              locale === "en"
-                ? "The slider rotates through representative moments of the competition. Click any image to open it full screen with supporting context."
-                : "Slider luân chuyển qua các khoảnh khắc tiêu biểu của cuộc thi. Bấm vào bất kỳ hình nào để mở toàn màn hình cùng phần mô tả đi kèm."
-            }
-          />
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] theme-eyebrow">
+              {locale === "en" ? "Photo slider" : "Photo slider"}
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             <button
               type="button"
