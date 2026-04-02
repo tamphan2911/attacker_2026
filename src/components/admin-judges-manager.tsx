@@ -14,6 +14,11 @@ import {
 
 import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
+import {
+  ADMIN_TABLE_PAGE_SIZE,
+  AdminTablePagination,
+  useAdminTablePagination,
+} from "@/components/admin-table-pagination";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import type { CompetitionRoundKey, JudgeProfile, Locale, LocalizedText } from "@/types/site";
@@ -523,6 +528,13 @@ export function AdminJudgesList() {
       })),
     [judges],
   );
+  const {
+    page,
+    setPage,
+    pageCount,
+    startIndex,
+    paginatedRows,
+  } = useAdminTablePagination(judges, ADMIN_TABLE_PAGE_SIZE);
 
   const handleCreateJudge = async () => {
     const payload = normalizeDraftForSave(addDraft);
@@ -624,6 +636,7 @@ export function AdminJudgesList() {
           <table className="min-w-full border-separate border-spacing-y-3">
             <thead>
               <tr className="text-left text-[0.72rem] font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                <th className="px-4 py-2">#</th>
                 <th className="px-4 py-2">{locale === "en" ? "Judge" : "Giám khảo"}</th>
                 <th className="px-4 py-2">{locale === "en" ? "Organization" : "Tổ chức"}</th>
                 <th className="px-4 py-2">{locale === "en" ? "Rounds" : "Vòng"}</th>
@@ -632,9 +645,12 @@ export function AdminJudgesList() {
               </tr>
             </thead>
             <tbody>
-              {judges.map((judge) => (
+              {paginatedRows.map((judge, index) => (
                 <tr key={judge.id} className="theme-panel-strong">
-                  <td className="rounded-l-[1.4rem] border-y border-l theme-border px-4 py-4">
+                  <td className="rounded-l-[1.4rem] border-y border-l theme-border px-4 py-4 text-xs font-semibold theme-text-soft">
+                    {startIndex + index + 1}
+                  </td>
+                  <td className="border-y theme-border px-4 py-4">
                     <div className="flex items-center gap-4">
                       <div
                         aria-hidden="true"
@@ -693,6 +709,14 @@ export function AdminJudgesList() {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          locale={locale}
+          page={page}
+          pageCount={pageCount}
+          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          totalRows={judges.length}
+          onPageChange={setPage}
+        />
       </Surface>
 
       {isAddOpen ? (

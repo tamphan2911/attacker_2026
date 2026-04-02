@@ -1,22 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
-  ArrowRight,
   Download,
   FilePenLine,
-  FileQuestion,
-  LayoutDashboard,
-  Medal,
-  Newspaper,
-  TableProperties,
   Trash2,
-  Users,
-  Users2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
+import {
+  ADMIN_TABLE_PAGE_SIZE,
+  AdminTablePagination,
+  useAdminTablePagination,
+} from "@/components/admin-table-pagination";
 import { ContentIndexSection } from "@/components/admin-content-editor";
 import { AdminJudgesList } from "@/components/admin-judges-manager";
 import { AdminNewsList } from "@/components/admin-news-manager";
@@ -25,101 +22,21 @@ import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-sc
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
 import { getAdminUserCompetitionStatus, pickAdminUserRoleLabel } from "@/lib/admin-users";
 import { getTeamCompetitionState, pickCompetitionStateLabel } from "@/lib/competition";
-import { formatDateLabel, getTeamForUser, pickText } from "@/lib/site";
+import { formatDateLabel, getTeamForUser } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
-import type { Locale, LocalizedText, UserProfile } from "@/types/site";
+import type { UserProfile } from "@/types/site";
 
 export type AdminSection = "overview" | "content" | "news" | "judges" | "round1" | "users" | "teams" | "submissions";
 
-const adminSections: Array<{
-  id: AdminSection;
-  href: string;
-  icon: typeof LayoutDashboard;
-  label: LocalizedText;
-  description: LocalizedText;
-}> = [
-  {
-    id: "overview",
-    href: "/admin",
-    icon: LayoutDashboard,
-    label: { en: "Overview", vi: "Tong quan" },
-    description: {
-      en: "Restricted dashboard for admin and moderator accounts.",
-      vi: "Bang dieu khien gioi han cho tai khoan admin va moderator.",
-    },
-  },
-  {
-    id: "content",
-    href: "/admin/content",
-    icon: FilePenLine,
-    label: { en: "Content", vi: "Noi dung" },
-    description: {
-      en: "Adjust editable copy across the public pages.",
-      vi: "Dieu chinh phan noi dung co the sua tren cac trang cong khai.",
-    },
-  },
-  {
-    id: "news",
-    href: "/admin/news",
-    icon: Newspaper,
-    label: { en: "News", vi: "Tin tuc" },
-    description: {
-      en: "Create, edit, and manage newsroom articles.",
-      vi: "Tao, chinh sua va quan ly cac bai viet newsroom.",
-    },
-  },
-  {
-    id: "judges",
-    href: "/admin/judges",
-    icon: Medal,
-    label: { en: "Judges", vi: "Giám khảo" },
-    description: {
-      en: "Manage judging profiles, round assignments, and the live public panel.",
-      vi: "Quản lý hồ sơ giám khảo, phân bổ theo vòng và hội đồng công khai.",
-    },
-  },
-  {
-    id: "round1",
-    href: "/admin/round-1",
-    icon: FileQuestion,
-    label: { en: "Round 1 test", vi: "Bài thi Vòng 1" },
-    description: {
-      en: "Review objective and essay banks plus team-grouped individual Round 1 results.",
-      vi: "Xem ngân hàng khách quan, ngân hàng tự luận và kết quả Vòng 1 cá nhân được nhóm theo đội.",
-    },
-  },
-  {
-    id: "users",
-    href: "/admin/users",
-    icon: Users,
-    label: { en: "Users", vi: "Nguoi dung" },
-    description: {
-      en: "List accounts and export participant data.",
-      vi: "Danh sach tai khoan va xuat du lieu thi sinh.",
-    },
-  },
-  {
-    id: "teams",
-    href: "/admin/teams",
-    icon: Users2,
-    label: { en: "Teams", vi: "Đội thi" },
-    description: {
-      en: "Review team composition and readiness.",
-      vi: "Xem cau truc doi va muc do san sang.",
-    },
-  },
-  {
-    id: "submissions",
-    href: "/admin/submissions",
-    icon: TableProperties,
-    label: { en: "Submissions", vi: "Bai nop" },
-    description: {
-      en: "Track version history and export the latest valid files.",
-      vi: "Theo doi lich su phien ban va xuat cac tep hop le moi nhat.",
-    },
-  },
-];
+export function AdminShell({
+  children,
+}: {
+  section?: AdminSection;
+  children: ReactNode;
+}) {
+  return <>{children}</>;
+}
 
 function exportRowsToWorkbook(
   fileName: string,
@@ -130,93 +47,6 @@ function exportRowsToWorkbook(
   const worksheet = XLSX.utils.json_to_sheet(rows);
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
   XLSX.writeFile(workbook, fileName);
-}
-
-function AdminNav({
-  locale,
-  activeSection,
-}: {
-  locale: Locale;
-  activeSection: AdminSection;
-}) {
-  return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-8">
-      {adminSections.map((section) => {
-        const Icon = section.icon;
-
-        return (
-          <Link key={section.id} href={section.href}>
-            <Surface className="group h-full px-5 py-5 transition hover:-translate-y-0.5 hover:bg-[var(--panel-strong)]">
-              <div className="flex items-start justify-between gap-4">
-                <div className="theme-brand-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[0_18px_40px_rgba(23,114,208,0.2)]">
-                  <Icon className="h-5 w-5" />
-                </div>
-                {activeSection === section.id ? (
-                  <StatusPill tone="success">
-                    {locale === "en" ? "Open" : "Đang mở"}
-                  </StatusPill>
-                ) : null}
-              </div>
-              <p className="theme-heading mt-5 text-xl font-semibold theme-text-strong">
-                {pickText(locale, section.label)}
-              </p>
-              <p className="mt-3 text-sm leading-7 theme-text-muted">
-                {pickText(locale, section.description)}
-              </p>
-            </Surface>
-          </Link>
-        );
-      })}
-    </div>
-  );
-}
-
-function AccessDenied() {
-  const { locale, currentUser } = useSiteState();
-
-  return (
-    <div className="space-y-8">
-      <SectionHeading
-        eyebrow={locale === "en" ? "Admin mode" : "Admin mode"}
-        title={
-          locale === "en"
-            ? "This route is restricted to admin and moderator accounts."
-            : "Route nay chi danh cho tai khoan admin va moderator."
-        }
-        description={
-          locale === "en"
-            ? currentUser.id
-              ? `The current signed-in account is ${currentUser.name} (${currentUser.role}). Sign in with an admin or moderator account to open /admin.`
-              : "You are not signed in. Sign in with an admin or moderator account to open /admin."
-            : currentUser.id
-              ? `Tài khoản đang đăng nhập hiện tại là ${currentUser.name} (${currentUser.role}). Hãy đăng nhập bằng tài khoản admin hoặc moderator để mở /admin.`
-              : "Bạn chưa đăng nhập. Hãy đăng nhập bằng tài khoản admin hoặc moderator để mở /admin."
-        }
-      />
-
-      <Surface className="px-6 py-6 md:px-8 md:py-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-lg font-semibold theme-text-strong">
-              {locale === "en" ? "Need the role switcher?" : "Can bo doi vai tro?"}
-            </p>
-            <p className="mt-2 text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "Use the normal sign-in page and log in with an admin or moderator account."
-                : "Hãy dùng trang đăng nhập thông thường và đăng nhập bằng tài khoản admin hoặc moderator."}
-            </p>
-          </div>
-          <Link
-            href="/auth"
-            className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-          >
-            {locale === "en" ? "Open sign in" : "Mở đăng nhập"}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </Surface>
-    </div>
-  );
 }
 
 function OverviewSection() {
@@ -486,6 +316,13 @@ function UsersTableSection() {
     team: row.teamName,
     providers: row.providers,
   }));
+  const {
+    page,
+    setPage,
+    pageCount,
+    startIndex,
+    paginatedRows,
+  } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -507,6 +344,7 @@ function UsersTableSection() {
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
                 {[
+                  "#",
                   locale === "en" ? "Name" : "Họ tên",
                   locale === "en" ? "Student ID" : "Mã sinh viên",
                   locale === "en" ? "Role" : "Vai trò",
@@ -525,6 +363,7 @@ function UsersTableSection() {
                 ))}
               </tr>
               <tr className="border-t theme-border bg-[var(--panel)]">
+                <th className="px-4 py-3" />
                 <th className="px-4 py-3">
                   <TableFilterField
                     value={filters.name}
@@ -607,9 +446,12 @@ function UsersTableSection() {
               </tr>
             </thead>
             <tbody>
-              {filteredRows.map((row) => {
+              {paginatedRows.map((row, index) => {
                 return (
                   <tr key={row.id} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4 text-xs font-semibold theme-text-soft">
+                      {startIndex + index + 1}
+                    </td>
                     <td className="px-4 py-4">
                       <div>
                         <Link href={`/admin/users/${row.id}/profile`} className="font-semibold theme-accent">
@@ -670,6 +512,14 @@ function UsersTableSection() {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          locale={locale}
+          page={page}
+          pageCount={pageCount}
+          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          totalRows={filteredRows.length}
+          onPageChange={setPage}
+        />
       </Surface>
     </div>
   );
@@ -691,6 +541,7 @@ function TeamsTableSection() {
       tag: team.tag,
       leader: leader?.name ?? "",
       memberCount: team.memberIds.length,
+      statusTone: getTeamCompetitionState(team) === "not-eligible" ? ("warning" as const) : ("success" as const),
       status: pickCompetitionStateLabel(locale, getTeamCompetitionState(team)),
       stage: pickCompetitionStateLabel(locale, team.stage),
       track: team.track,
@@ -698,6 +549,13 @@ function TeamsTableSection() {
       members,
     };
   });
+  const {
+    page,
+    setPage,
+    pageCount,
+    startIndex,
+    paginatedRows,
+  } = useAdminTablePagination(rows, ADMIN_TABLE_PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -718,7 +576,7 @@ function TeamsTableSection() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                {["Team", "Tag", "Leader", "Members", "Status", "Stage", "Track", "Created", "Action"].map((label) => (
+                {["#", "Team", "Tag", "Leader", "Members", "Status", "Stage", "Track", "Created", "Action"].map((label) => (
                   <th key={label} className="px-4 py-3 font-medium">
                     {label}
                   </th>
@@ -726,34 +584,34 @@ function TeamsTableSection() {
               </tr>
             </thead>
             <tbody>
-              {teams.map((team) => {
-                const leader = users.find((user) => user.id === team.leaderId);
-                const status = getTeamCompetitionState(team);
-
+              {paginatedRows.map((row, index) => {
                 return (
-                  <tr key={team.id} className="border-b theme-border last:border-b-0">
+                  <tr key={row.id} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4 text-xs font-semibold theme-text-soft">
+                      {startIndex + index + 1}
+                    </td>
                     <td className="px-4 py-4">
                       <div>
-                        <Link href={`/admin/teams/${team.id}`} className="font-semibold theme-accent">
-                          {team.name}
+                        <Link href={`/admin/teams/${row.id}`} className="font-semibold theme-accent">
+                          {row.team}
                         </Link>
-                        <p className="mt-1 text-xs theme-text-soft">{team.id}</p>
+                        <p className="mt-1 text-xs theme-text-soft">{row.id}</p>
                       </div>
                     </td>
-                    <td className="px-4 py-4 theme-text-body">{team.tag}</td>
-                    <td className="px-4 py-4 theme-text-body">{leader?.name ?? "-"}</td>
-                    <td className="px-4 py-4 theme-text-body">{team.memberIds.length}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.tag}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.leader || "-"}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.memberCount}</td>
                     <td className="px-4 py-4">
-                      <StatusPill tone={status === "not-eligible" ? "warning" : "success"}>
-                        {pickCompetitionStateLabel(locale, status)}
+                      <StatusPill tone={row.statusTone}>
+                        {row.status}
                       </StatusPill>
                     </td>
                     <td className="px-4 py-4">
-                      <StatusPill>{pickCompetitionStateLabel(locale, team.stage)}</StatusPill>
+                      <StatusPill>{row.stage}</StatusPill>
                     </td>
-                    <td className="px-4 py-4 theme-text-body">{team.track}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.track}</td>
                     <td className="px-4 py-4 theme-text-body">
-                      {formatDateLabel(locale, team.createdAt)}
+                      {formatDateLabel(locale, row.createdAt)}
                     </td>
                     <td className="px-4 py-4">
                       <button
@@ -761,12 +619,12 @@ function TeamsTableSection() {
                         onClick={() => {
                           const confirmed = window.confirm(
                             locale === "en"
-                              ? `Delete team ${team.name} from the admin dataset?`
-                              : `Xoa doi ${team.name} khoi bo du lieu admin?`,
+                              ? `Delete team ${row.team} from the admin dataset?`
+                              : `Xoa doi ${row.team} khoi bo du lieu admin?`,
                           );
 
                           if (confirmed) {
-                            deleteTeamByAdmin(team.id);
+                            deleteTeamByAdmin(row.id);
                           }
                         }}
                         className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-3 py-2 text-xs font-semibold text-rose-100"
@@ -781,6 +639,14 @@ function TeamsTableSection() {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          locale={locale}
+          page={page}
+          pageCount={pageCount}
+          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          totalRows={rows.length}
+          onPageChange={setPage}
+        />
       </Surface>
     </div>
   );
@@ -830,6 +696,13 @@ function SubmissionsTableSection() {
         submittedAt: submission.submittedAt,
       };
     });
+  const {
+    page,
+    setPage,
+    pageCount,
+    startIndex,
+    paginatedRows,
+  } = useAdminTablePagination(rows, ADMIN_TABLE_PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -852,7 +725,7 @@ function SubmissionsTableSection() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                {["Team", "Round", "Version", "Status", "Title", "File", "Submitted by", "Submitted at"].map((label) => (
+                {["#", "Team", "Round", "Version", "Status", "Title", "File", "Submitted by", "Submitted at"].map((label) => (
                   <th key={label} className="px-4 py-3 font-medium">
                     {label}
                   </th>
@@ -860,8 +733,9 @@ function SubmissionsTableSection() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {paginatedRows.map((row, index) => (
                 <tr key={row.id} className="border-b theme-border last:border-b-0">
+                  <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{startIndex + index + 1}</td>
                   <td className="px-4 py-4 theme-text-body">{row.team}</td>
                   <td className="px-4 py-4 theme-text-body">{row.round}</td>
                   <td className="px-4 py-4 theme-text-body">{row.version}</td>
@@ -900,36 +774,22 @@ function SubmissionsTableSection() {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          locale={locale}
+          page={page}
+          pageCount={pageCount}
+          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          totalRows={rows.length}
+          onPageChange={setPage}
+        />
       </Surface>
-    </div>
-  );
-}
-
-export function AdminShell({
-  section,
-  children,
-}: {
-  section: AdminSection;
-  children: React.ReactNode;
-}) {
-  const { locale, canAccessAdminMode } = useSiteState();
-
-  if (!canAccessAdminMode) {
-    return <AccessDenied />;
-  }
-
-  return (
-    <div className="space-y-10">
-      <AdminNav locale={locale} activeSection={section} />
-
-      {children}
     </div>
   );
 }
 
 export function AdminPage({ section }: { section: AdminSection }) {
   return (
-    <AdminShell section={section}>
+    <>
       {section === "overview" ? <OverviewSection /> : null}
       {section === "content" ? <ContentIndexSection /> : null}
       {section === "news" ? <AdminNewsList /> : null}
@@ -938,6 +798,6 @@ export function AdminPage({ section }: { section: AdminSection }) {
       {section === "users" ? <UsersTableSection /> : null}
       {section === "teams" ? <TeamsTableSection /> : null}
       {section === "submissions" ? <SubmissionsTableSection /> : null}
-    </AdminShell>
+    </>
   );
 }

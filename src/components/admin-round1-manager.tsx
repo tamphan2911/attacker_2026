@@ -18,6 +18,11 @@ import {
 import * as XLSX from "xlsx";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
+import {
+  ADMIN_TABLE_PAGE_SIZE,
+  AdminTablePagination,
+  useAdminTablePagination,
+} from "@/components/admin-table-pagination";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
@@ -563,6 +568,13 @@ export function AdminRound1Manager() {
   const submissionExportRows = buildSubmissionExportRows(teamGroups, round1TestBanks);
   const draftBankCount = round1TestBanks.filter((bank) => bank.status === "draft").length;
   const rankedTeamCount = teamGroups.filter((group) => group.rank).length;
+  const {
+    page,
+    setPage,
+    pageCount,
+    startIndex,
+    paginatedRows,
+  } = useAdminTablePagination(teamGroups, ADMIN_TABLE_PAGE_SIZE);
 
   return (
     <div className="space-y-8">
@@ -830,6 +842,7 @@ export function AdminRound1Manager() {
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
                 {[
+                  "#",
                   locale === "en" ? "Rank" : "Hang",
                   locale === "en" ? "Team" : "Đội",
                   locale === "en" ? "Completed" : "Da lam",
@@ -847,8 +860,9 @@ export function AdminRound1Manager() {
               </tr>
             </thead>
             <tbody>
-              {teamGroups.map((group) => (
+              {paginatedRows.map((group, index) => (
                 <tr key={group.team.id} className="border-b theme-border last:border-b-0">
+                  <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{startIndex + index + 1}</td>
                   <td className="px-4 py-4 theme-text-body">{group.rank ?? "-"}</td>
                   <td className="px-4 py-4">
                     <Link href={`/admin/teams/${group.team.id}`} className="font-semibold theme-accent">
@@ -918,6 +932,14 @@ export function AdminRound1Manager() {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          locale={locale}
+          page={page}
+          pageCount={pageCount}
+          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          totalRows={teamGroups.length}
+          onPageChange={setPage}
+        />
       </Surface>
     </div>
   );
@@ -927,6 +949,13 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
   const { locale, round1TestBanks } = useSiteState();
   useAdminTitleScroll();
   const bank = round1TestBanks.find((item) => item.id === bankId);
+  const {
+    page,
+    setPage,
+    pageCount,
+    startIndex,
+    paginatedRows,
+  } = useAdminTablePagination(bank?.questions ?? [], ADMIN_TABLE_PAGE_SIZE);
 
   if (!bank) {
     return (
@@ -1213,9 +1242,9 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
               </tr>
             </thead>
             <tbody>
-              {bank.questions.map((question, index) => (
+              {paginatedRows.map((question, index) => (
                 <tr key={question.id} className="border-b theme-border last:border-b-0">
-                  <td className="px-4 py-4 theme-text-body">{index + 1}</td>
+                  <td className="px-4 py-4 theme-text-body">{startIndex + index + 1}</td>
                   <td className="px-4 py-4">
                     <StatusPill>{pickRound1TypeLabel(locale, question.type)}</StatusPill>
                   </td>
@@ -1256,6 +1285,14 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          locale={locale}
+          page={page}
+          pageCount={pageCount}
+          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          totalRows={bank.questions.length}
+          onPageChange={setPage}
+        />
       </Surface>
     </div>
   );
@@ -1275,6 +1312,13 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
       return result;
     }, {}),
   );
+  const {
+    page,
+    setPage,
+    pageCount,
+    startIndex,
+    paginatedRows,
+  } = useAdminTablePagination(group?.memberRows ?? [], ADMIN_TABLE_PAGE_SIZE);
 
   if (!team || !group) {
     return (
@@ -1311,7 +1355,6 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
     reviewStatus: row.submission ? (isRound1EssayPending(row.submission) ? "Essay pending" : "Reviewed") : "",
     bank: row.submission ? bankTitleById.get(row.submission.bankId)?.en ?? row.submission.bankId : "",
   }));
-
   return (
     <div className="space-y-8">
       <Link href="/admin/round-1" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
@@ -1492,6 +1535,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
                 {[
+                  "#",
                   locale === "en" ? "Member" : "Thanh vien",
                   locale === "en" ? "Role" : "Vai tro",
                   locale === "en" ? "University / Major" : "Truong / Nganh",
@@ -1511,8 +1555,9 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
               </tr>
             </thead>
             <tbody>
-              {group.memberRows.map((row) => (
+              {paginatedRows.map((row, index) => (
                 <tr key={row.student.id} className="border-b theme-border last:border-b-0">
+                  <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{startIndex + index + 1}</td>
                   <td className="px-4 py-4">
                     <Link href={`/admin/users/${row.student.id}`} className="font-semibold theme-accent">
                       {row.student.name}
@@ -1627,6 +1672,14 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
             </tbody>
           </table>
         </div>
+        <AdminTablePagination
+          locale={locale}
+          page={page}
+          pageCount={pageCount}
+          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          totalRows={group.memberRows.length}
+          onPageChange={setPage}
+        />
       </Surface>
     </div>
   );
