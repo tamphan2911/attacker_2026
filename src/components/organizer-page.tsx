@@ -323,9 +323,14 @@ export function OrganizerPage() {
                     sizes="(min-width: 1280px) 220px, 100vw"
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.08),rgba(7,18,35,0.18),rgba(7,18,35,0.72))]" />
-                  <div className="absolute left-4 top-4 rounded-full border border-white/14 bg-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/86 backdrop-blur-md">
-                    {season.year}
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.08),rgba(7,18,35,0.24),rgba(7,18,35,0.84))]" />
+                  <div className="absolute left-4 top-4 rounded-[1.4rem] border border-white/18 bg-[rgba(6,20,38,0.78)] px-4 py-3 text-white shadow-[0_18px_44px_rgba(2,8,20,0.38)] backdrop-blur-md">
+                    <p className="text-[0.58rem] font-semibold uppercase tracking-[0.3em] text-cyan-100/76">
+                      {locale === "en" ? "Season" : "Mùa"}
+                    </p>
+                    <p className="mt-1 text-[1.7rem] font-semibold leading-none tracking-[-0.06em] text-white [text-shadow:0_6px_18px_rgba(2,8,20,0.44)]">
+                      {season.year}
+                    </p>
                   </div>
                 </div>
                 <div className="px-6 py-6 md:px-7 md:py-7">
