@@ -4,9 +4,7 @@ import Link from "next/link";
 import {
   ArrowRight,
   CalendarDays,
-  Clock3,
   Flag,
-  MapPin,
   Route,
   ShieldCheck,
 } from "lucide-react";
@@ -81,46 +79,12 @@ export function TimelinePage() {
 
   return (
     <div className="space-y-16 md:space-y-20">
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+      <section>
         <SectionHeading
           eyebrow={pickText(locale, pageContent.rules.timeline.eyebrow)}
           title={pickText(locale, pageContent.rules.timeline.title)}
           description={pickText(locale, pageContent.rules.timeline.description)}
         />
-
-        <Surface className="px-5 py-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-            {locale === "en" ? "How to read this page" : "Cách đọc trang này"}
-          </p>
-          <div className="mt-5 space-y-3">
-            {[
-              {
-                icon: <Clock3 className="h-4 w-4 text-sky-500" />,
-                text:
-                  locale === "en"
-                    ? "Each phase lists time, place, method, and a short operational note."
-                    : "Mỗi giai đoạn đều nêu thời gian, địa điểm, hình thức và ghi chú vận hành ngắn.",
-              },
-              {
-                icon: <MapPin className="h-4 w-4 text-emerald-500" />,
-                text:
-                  locale === "en"
-                    ? "Use the rule button inside each phase to jump to the matching rule block."
-                    : "Dùng nút thể lệ trong từng giai đoạn để nhảy đến đúng khối quy định tương ứng.",
-              },
-            ].map((item) => (
-              <div
-                key={item.text}
-                className="flex items-start gap-3 rounded-2xl border theme-border bg-white/76 px-4 py-3 text-sm leading-7 theme-text-body dark:bg-white/[0.05]"
-              >
-                <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border border-slate-900/8 bg-slate-950/[0.03] dark:border-white/10 dark:bg-white/[0.05]">
-                  {item.icon}
-                </span>
-                <span>{item.text}</span>
-              </div>
-            ))}
-          </div>
-        </Surface>
       </section>
 
       <section className="space-y-6">
