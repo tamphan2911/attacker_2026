@@ -8,7 +8,6 @@ import {
   ArrowLeft,
   ArrowRight,
   BookText,
-  CheckCircle2,
   Clock3,
   FileQuestion,
   Play,
@@ -320,6 +319,21 @@ export function Round1ExamPage() {
   const answeredCount = session
     ? session.questions.filter((question) => isRound1QuestionAnswered(question, session.answers[question.id])).length
     : 0;
+  const completionPercent = session ? Math.round((answeredCount / session.questions.length) * 100) : 0;
+  const objectiveAnsweredCount = session
+    ? session.questions
+        .slice(0, ROUND1_OBJECTIVE_TOTAL)
+        .filter((question) => isRound1QuestionAnswered(question, session.answers[question.id])).length
+    : 0;
+  const essayAnsweredCount = session
+    ? session.questions
+        .slice(ROUND1_OBJECTIVE_TOTAL)
+        .filter((question) => isRound1QuestionAnswered(question, session.answers[question.id])).length
+    : 0;
+  const currentQuestionPointValue =
+    currentQuestion?.type === "essay"
+      ? Math.round(ROUND1_ESSAY_MAX_SCORE / ROUND1_ESSAY_TOTAL)
+      : 2;
   const navigateToQuestion = (index: number) => {
     setSession((current) =>
       current
@@ -450,7 +464,7 @@ export function Round1ExamPage() {
             description={
               locale === "en"
                 ? `The team is currently marked as ${pickCompetitionStateLabel(locale, currentCompetitionState)}, so new Round 1 attempts are closed.`
-                : `Doi nay hien dang o trang thai ${pickCompetitionStateLabel(locale, currentCompetitionState)}, vi vay bai thi moi cua Vong 1 da dong.`
+                : `Đội này hiện đang ở trạng thái ${pickCompetitionStateLabel(locale, currentCompetitionState)}, vì vậy bài thi mới của Vòng 1 đã đóng.`
             }
           />
           <div className="mt-6 flex flex-wrap gap-3">
@@ -535,7 +549,7 @@ export function Round1ExamPage() {
           description={
             locale === "en"
               ? `Round 1 only opens for teams with at least ${TEAM_MIN_MEMBERS} members.`
-              : `Vong 1 chi mo cho cac doi co it nhat ${TEAM_MIN_MEMBERS} thanh vien.`
+              : `Vòng 1 chỉ mở cho các đội có ít nhất ${TEAM_MIN_MEMBERS} thành viên.`
           }
         />
         <div className="mt-6 flex flex-wrap gap-3">
@@ -560,40 +574,210 @@ export function Round1ExamPage() {
           {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
         </Link>
 
-        <SectionHeading
-          eyebrow="Round 1"
-          title={
-            locale === "en"
-              ? "Individual Round 1 exam with structured randomized delivery."
-              : "Bài thi cá nhân Vòng 1 với cơ chế random theo cấu trúc."
-          }
-          description={
-            locale === "en"
-              ? "Each student gets 36 objective questions generated from 6 topics and 2 essay questions at the end. The timer runs for 60 minutes, the attempt cannot be paused, and the same account cannot re-do the exam."
-              : "Mỗi thí sinh nhận 36 câu khách quan được tạo từ 6 chủ đề và 2 câu tự luận ở cuối đề. Đồng hồ chạy trong 60 phút, bài thi không thể tạm dừng và cùng một tài khoản không thể làm lại."
-          }
-        />
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <Surface className="overflow-hidden px-0 py-0">
+            <div className="border-b theme-border bg-[linear-gradient(135deg,rgba(8,47,73,0.18),rgba(23,114,208,0.14),rgba(14,165,233,0.08))] px-6 py-8 md:px-8 md:py-9">
+              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
+                {locale === "en" ? "Round 1 individual test" : "Bài thi cá nhân Vòng 1"}
+              </p>
+              <h1 className="theme-heading mt-4 max-w-4xl text-3xl font-semibold theme-text-strong md:text-[3rem] md:leading-[1.06]">
+                {locale === "en"
+                  ? "Structured randomized delivery with one official attempt per student."
+                  : "Bài thi ngẫu nhiên theo cấu trúc, mỗi sinh viên chỉ có một lượt chính thức."}
+              </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted md:text-base">
+                {locale === "en"
+                  ? "Each student receives 36 objective questions generated from 6 topics and 2 essay questions placed at the end. The timer runs for 60 minutes, the exam cannot be paused, and the result returns to Team Workspace after submission."
+                  : "Mỗi thí sinh nhận 36 câu khách quan được tạo từ 6 chủ đề và 2 câu tự luận luôn đặt ở cuối đề. Đồng hồ chạy trong 60 phút, bài thi không thể tạm dừng và kết quả sẽ quay về Không gian đội sau khi nộp."}
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <StatusPill>{`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
+                <StatusPill>{`${activeObjectiveBank.durationMinutes} ${locale === "en" ? "minutes" : "phút"}`}</StatusPill>
+                <StatusPill>{locale === "en" ? "One official attempt" : "1 lượt thi chính thức"}</StatusPill>
+                {round1Window ? <StatusPill>{formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate)}</StatusPill> : null}
+              </div>
+            </div>
+
+            <div className="grid gap-5 px-6 py-6 md:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(250px,0.82fr)]">
+              <div className="space-y-4">
+                {[
+                  {
+                    icon: <FileQuestion className="h-5 w-5 text-cyan-300" />,
+                    title:
+                      locale === "en"
+                        ? "Objective block"
+                        : "Khối khách quan",
+                    body:
+                      locale === "en"
+                        ? `${ROUND1_OBJECTIVE_TOTAL} questions: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} per topic across ${ROUND1_TOPIC_COUNT} topics, with 2 easy, 2 medium, and 2 hard questions in each topic.`
+                        : `${ROUND1_OBJECTIVE_TOTAL} câu: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu trên mỗi chủ đề trong ${ROUND1_TOPIC_COUNT} chủ đề, gồm 2 câu dễ, 2 câu trung bình và 2 câu khó cho từng chủ đề.`,
+                  },
+                  {
+                    icon: <BookText className="h-5 w-5 text-emerald-300" />,
+                    title:
+                      locale === "en"
+                        ? "Essay block"
+                        : "Khối tự luận",
+                    body:
+                      locale === "en"
+                        ? `${ROUND1_ESSAY_TOTAL} essay questions stay at the end of the paper. Each answer is limited to ${round1WordLimit} words and reviewed manually later.`
+                        : `${ROUND1_ESSAY_TOTAL} câu tự luận luôn nằm ở cuối đề. Mỗi câu trả lời giới hạn ${round1WordLimit} từ và sẽ được chấm thủ công sau đó.`,
+                  },
+                  {
+                    icon: <ShieldCheck className="h-5 w-5 text-amber-300" />,
+                    title:
+                      locale === "en"
+                        ? "Attempt policy"
+                        : "Quy định lượt thi",
+                    body:
+                      locale === "en"
+                        ? "Once started, the timer keeps running. Refreshing the page does not pause the exam, and the same student cannot reset or re-do the attempt."
+                        : "Khi đã bắt đầu, đồng hồ vẫn tiếp tục chạy. Tải lại trang không làm dừng bài thi và cùng một sinh viên không thể đặt lại hay làm lại lượt thi.",
+                  },
+                ].map((item) => (
+                  <div key={item.title} className="flex items-start gap-4 rounded-[1.6rem] border theme-border theme-panel px-5 py-5">
+                    <div className="theme-panel-strong rounded-[1.1rem] border theme-border p-3">
+                      {item.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-base font-semibold theme-text-strong">{item.title}</p>
+                      <p className="mt-2 text-sm leading-7 theme-text-muted">{item.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-[1.8rem] border theme-border theme-panel-subtle px-5 py-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-text-soft">
+                  {locale === "en" ? "Exam flow" : "Luồng làm bài"}
+                </p>
+                <div className="mt-5 space-y-4">
+                  {[
+                    {
+                      step: "01",
+                      title: locale === "en" ? "Enter with a locked team" : "Vào thi khi đội đã khóa",
+                      body:
+                        locale === "en"
+                          ? "Only team members in a locked Round 1 roster can open the exam."
+                          : "Chỉ thành viên thuộc đội đã khóa cho Vòng 1 mới có thể mở bài thi.",
+                    },
+                    {
+                      step: "02",
+                      title: locale === "en" ? "Navigate freely" : "Di chuyển tự do",
+                      body:
+                        locale === "en"
+                          ? "Use arrows or the question-number panel to answer in any order."
+                          : "Dùng mũi tên hoặc bảng số câu hỏi để làm bài theo bất kỳ thứ tự nào.",
+                    },
+                    {
+                      step: "03",
+                      title: locale === "en" ? "Submit once" : "Nộp một lần",
+                      body:
+                        locale === "en"
+                          ? "Objective score is shown immediately, while essay score stays pending moderator review."
+                          : "Điểm khách quan có ngay, còn điểm tự luận sẽ chờ moderator hoặc admin chấm.",
+                    },
+                  ].map((item) => (
+                    <div key={item.step} className="flex gap-4">
+                      <div className="theme-brand-gradient flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] text-sm font-semibold text-white">
+                        {item.step}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold theme-text-strong">{item.title}</p>
+                        <p className="mt-1 text-sm leading-7 theme-text-muted">{item.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Surface>
+
+          <Surface className="px-6 py-6 md:px-7 md:py-7">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
+              {locale === "en" ? "Ready to enter" : "Sẵn sàng vào thi"}
+            </p>
+            <div className="mt-5 rounded-[1.8rem] border theme-border theme-panel px-5 py-5">
+              <p className="text-lg font-semibold theme-text-strong">{currentUser.name}</p>
+              <p className="mt-2 text-sm theme-text-soft">
+                {currentTeam.name} · {currentUser.university}
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <StatusPill>{`#${currentTeam.tag}`}</StatusPill>
+                <StatusPill>{`${ROUND1_TOTAL_QUESTIONS} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <div className="rounded-[1.45rem] border theme-border theme-panel-subtle px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.2em] theme-text-soft">
+                  {locale === "en" ? "Objective scoring" : "Điểm khách quan"}
+                </p>
+                <p className="mt-3 text-2xl font-semibold theme-text-strong">
+                  {ROUND1_OBJECTIVE_MAX_SCORE}
+                </p>
+                <p className="mt-2 text-sm leading-7 theme-text-muted">
+                  {locale === "en"
+                    ? `${ROUND1_OBJECTIVE_TOTAL} questions x 2 points`
+                    : `${ROUND1_OBJECTIVE_TOTAL} câu x 2 điểm`}
+                </p>
+              </div>
+              <div className="rounded-[1.45rem] border theme-border theme-panel-subtle px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.2em] theme-text-soft">
+                  {locale === "en" ? "Essay scoring" : "Điểm tự luận"}
+                </p>
+                <p className="mt-3 text-2xl font-semibold theme-text-strong">
+                  {ROUND1_ESSAY_MAX_SCORE}
+                </p>
+                <p className="mt-2 text-sm leading-7 theme-text-muted">
+                  {locale === "en"
+                    ? `${ROUND1_ESSAY_TOTAL} questions reviewed later`
+                    : `${ROUND1_ESSAY_TOTAL} câu được chấm sau`}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={startExam}
+              className="theme-button-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[1.5rem] px-5 py-3.5 text-sm font-semibold"
+            >
+              <Play className="h-4 w-4" />
+              {locale === "en" ? "Start Round 1 exam" : "Bắt đầu bài thi Vòng 1"}
+            </button>
+            <p className="mt-4 text-sm leading-7 theme-text-muted">
+              {locale === "en"
+                ? "You have one official attempt only. If a technical problem appears after the exam starts, contact the organizer immediately."
+                : "Bạn chỉ có một lượt thi chính thức. Nếu có sự cố kỹ thuật sau khi bài thi bắt đầu, hãy liên hệ ban tổ chức ngay."}
+            </p>
+            <div className="mt-4 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
+              {locale === "en"
+                ? `Technical support: ${contactInfo.email} · ${contactInfo.phone}`
+                : `Hỗ trợ kỹ thuật: ${contactInfo.email} · ${contactInfo.phone}`}
+            </div>
+          </Surface>
+        </section>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {[
             {
               icon: <FileQuestion className="h-5 w-5 text-cyan-300" />,
-              label: locale === "en" ? "Objective bank" : "Bank khách quan",
+              label: locale === "en" ? "Objective bank" : "Ngân hàng khách quan",
               value: activeObjectiveBank.questionPoolSize.toString(),
             },
             {
               icon: <BookText className="h-5 w-5 text-emerald-300" />,
-              label: locale === "en" ? "Essay bank" : "Bank tự luận",
+              label: locale === "en" ? "Essay bank" : "Ngân hàng tự luận",
               value: activeEssayBank.questionPoolSize.toString(),
             },
             {
               icon: <Target className="h-5 w-5 text-orange-300" />,
-              label: locale === "en" ? "Paper structure" : "Cấu trúc đề",
-              value: `${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL}`,
+              label: locale === "en" ? "Total score" : "Tổng điểm",
+              value: ROUND1_TOTAL_MAX_SCORE.toString(),
             },
             {
               icon: <Clock3 className="h-5 w-5 text-amber-300" />,
-              label: locale === "en" ? "Time limit" : "Giới hạn thời gian",
+              label: locale === "en" ? "Time limit" : "Thời lượng",
               value: `${activeObjectiveBank.durationMinutes}m`,
             },
           ].map((item) => (
@@ -608,192 +792,74 @@ export function Round1ExamPage() {
             </Surface>
           ))}
         </section>
-
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <Surface className="px-6 py-6 md:px-8 md:py-8">
-            <p className="theme-heading text-2xl font-semibold theme-text-strong">
-              {locale === "en" ? "Before you start" : "Truoc khi bat dau"}
-            </p>
-            <div className="mt-6 space-y-4">
-              {[
-                locale === "en"
-                  ? `The paper contains ${ROUND1_OBJECTIVE_TOTAL} objective questions: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} questions from each of ${ROUND1_TOPIC_COUNT} topics.`
-                  : `Đề thi gồm ${ROUND1_OBJECTIVE_TOTAL} câu khách quan: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu trên mỗi chủ đề trong ${ROUND1_TOPIC_COUNT} chủ đề.`,
-                locale === "en"
-                  ? "Each topic contributes 2 easy, 2 medium, and 2 hard questions."
-                  : "Mỗi chủ đề đóng góp 2 câu dễ, 2 câu trung bình và 2 câu khó.",
-                locale === "en"
-                  ? `Each correct objective answer is worth 2 points, for a maximum of ${ROUND1_OBJECTIVE_MAX_SCORE} objective points.`
-                  : `Mỗi câu khách quan đúng được 2 điểm, tối đa ${ROUND1_OBJECTIVE_MAX_SCORE} điểm khách quan.`,
-                locale === "en"
-                  ? `The last ${ROUND1_ESSAY_TOTAL} questions are essay prompts with a ${round1WordLimit}-word limit per answer.`
-                  : `${ROUND1_ESSAY_TOTAL} câu cuối là câu tự luận với giới hạn ${round1WordLimit} từ cho mỗi câu trả lời.`,
-                locale === "en"
-                  ? `The 2 essay questions are manually reviewed later for a maximum of ${ROUND1_ESSAY_MAX_SCORE} points, so the final total reaches ${ROUND1_TOTAL_MAX_SCORE}.`
-                  : `2 câu tự luận sẽ được chấm thủ công sau đó với tối đa ${ROUND1_ESSAY_MAX_SCORE} điểm, để tổng điểm cuối cùng đạt ${ROUND1_TOTAL_MAX_SCORE}.`,
-                locale === "en"
-                  ? "Question order and answer-option order are both shuffled for the objective section."
-                  : "Thứ tự câu hỏi và thứ tự đáp án đều được đảo ở phần khách quan.",
-                locale === "en"
-                  ? "Once started, the exam keeps running. Refreshing the page does not pause the timer and the attempt cannot be reset."
-                  : "Khi đã bắt đầu, bài thi sẽ tiếp tục chạy. Tải lại trang không làm dừng đồng hồ và lượt thi không thể đặt lại.",
-                locale === "en"
-                  ? "Unanswered objective questions count as incorrect in this frontend prototype."
-                  : "Các câu khách quan chưa trả lời sẽ được tính là sai trong prototype frontend này.",
-                locale === "en"
-                  ? `If any technical issue appears, contact the organizer at ${contactInfo.email} or ${contactInfo.phone}.`
-                  : `Nếu có sự cố kỹ thuật, hãy liên hệ ban tổ chức qua ${contactInfo.email} hoặc ${contactInfo.phone}.`,
-              ].map((item) => (
-                <div key={item} className="flex items-start gap-3 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 text-emerald-300" />
-                  <p className="text-sm leading-7 theme-text-muted">{item}</p>
-                </div>
-              ))}
-            </div>
-          </Surface>
-
-          <Surface className="px-6 py-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
-              {locale === "en" ? "Ready to enter" : "San sang vao thi"}
-            </p>
-            <p className="mt-4 text-xl font-semibold theme-text-strong">
-              {currentUser.name}
-            </p>
-            <p className="mt-2 text-sm theme-text-soft">
-              {currentTeam.name} · {currentUser.university}
-            </p>
-            <p className="mt-3 text-sm theme-text-soft">
-              {locale === "en"
-                ? `Team ${currentTeam.tag} · ${ROUND1_TOTAL_QUESTIONS} questions total`
-                : `Đội ${currentTeam.tag} · tổng cộng ${ROUND1_TOTAL_QUESTIONS} câu`}
-            </p>
-            <p className="mt-3 text-sm leading-7 theme-text-soft">
-              {locale === "en"
-                ? "You have one official attempt only. After submission, the result is shown in Team Workspace."
-                : "Bạn chỉ có 1 lượt thi chính thức. Sau khi nộp, kết quả sẽ được hiển thị trong Không gian đội."}
-            </p>
-            <button
-              type="button"
-              onClick={startExam}
-              className="theme-button-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
-            >
-              <Play className="h-4 w-4" />
-              {locale === "en" ? "Start Round 1 exam" : "Bắt đầu bài thi Vòng 1"}
-            </button>
-          </Surface>
-        </section>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
+          <ArrowLeft className="h-4 w-4" />
+          {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
+        </Link>
+        <div className="flex flex-wrap gap-2">
+          <StatusPill>{`#${currentTeam.tag}`}</StatusPill>
+          <StatusPill>{`${answeredCount}/${session.questions.length} ${locale === "en" ? "answered" : "đã trả lời"}`}</StatusPill>
+          <StatusPill tone={currentQuestion?.type === "essay" ? "warning" : "default"}>
+            {currentQuestion?.type === "essay"
+              ? locale === "en"
+                ? "Essay section"
+                : "Phần tự luận"
+              : locale === "en"
+                ? "Objective section"
+                : "Phần khách quan"}
+          </StatusPill>
+        </div>
+      </div>
+
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
-                {locale === "en" ? "Round 1 in progress" : "Đang thi Vòng 1"}
-              </p>
-              <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.8rem]">
-                {locale === "en"
-                  ? `Question ${session.currentQuestionIndex + 1} of ${session.questions.length}`
-                  : `Cau ${session.currentQuestionIndex + 1} / ${session.questions.length}`}
-              </h1>
-              <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted">
-                {locale === "en"
-                  ? "One question appears at a time. Use the arrows or the question-number navigator to jump anywhere in the paper. Objective questions are shuffled, while the 2 essay questions stay at the end."
-                  : "Mỗi lần chỉ hiển thị 1 câu hỏi. Hãy dùng mũi tên hoặc bảng số câu hỏi để nhảy đến bất kỳ vị trí nào trong đề. Phần khách quan được đảo ngẫu nhiên, còn 2 câu tự luận luôn nằm ở cuối đề."}
-              </p>
+          <div className="border-b theme-border pb-6">
+            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
+              {locale === "en" ? "Round 1 in progress" : "Đang thi Vòng 1"}
+            </p>
+            <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <h1 className="theme-heading text-3xl font-semibold theme-text-strong md:text-[2.9rem]">
+                  {locale === "en"
+                    ? `Question ${session.currentQuestionIndex + 1} of ${session.questions.length}`
+                    : `Câu ${session.currentQuestionIndex + 1} / ${session.questions.length}`}
+                </h1>
+                <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted">
+                  {locale === "en"
+                    ? "One question appears at a time. Use the arrows or the question-number navigator to jump anywhere in the paper. Objective questions are shuffled, while the 2 essay questions stay at the end."
+                    : "Mỗi lần chỉ hiển thị 1 câu hỏi. Hãy dùng mũi tên hoặc bảng số câu hỏi để nhảy đến bất kỳ vị trí nào trong đề. Phần khách quan được đảo ngẫu nhiên, còn 2 câu tự luận luôn nằm ở cuối đề."}
+                </p>
+              </div>
+              <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
+                  {locale === "en" ? "Completion" : "Tiến độ"}
+                </p>
+                <p className="mt-3 text-3xl font-semibold theme-text-strong">{completionPercent}%</p>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <StatusPill>
-                {answeredCount}/{session.questions.length} {locale === "en" ? "answered" : "đã trả lời"}
-              </StatusPill>
-              <StatusPill tone={currentQuestion?.type === "essay" ? "warning" : "default"}>
-                {currentQuestion?.type === "essay"
-                  ? locale === "en"
-                    ? "Essay section"
-                    : "Phần tự luận"
-                  : locale === "en"
-                    ? "Objective section"
-                    : "Phần khách quan"}
-              </StatusPill>
+            <div className="mt-6">
+              <div className="h-2.5 overflow-hidden rounded-full bg-[rgba(23,114,208,0.08)]">
+                <div
+                  className="theme-brand-gradient h-full rounded-full transition-[width] duration-300"
+                  style={{ width: `${completionPercent}%` }}
+                />
+              </div>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] theme-text-soft">
+                <span>{locale === "en" ? "Objective block" : "Khối khách quan"} · {objectiveAnsweredCount}/{ROUND1_OBJECTIVE_TOTAL}</span>
+                <span>{locale === "en" ? "Essay block" : "Khối tự luận"} · {essayAnsweredCount}/{ROUND1_ESSAY_TOTAL}</span>
+              </div>
             </div>
           </div>
-        </Surface>
 
-        <div className="space-y-4 xl:sticky xl:top-28">
-          <Surface className="overflow-hidden px-6 py-6">
-            <div className={`rounded-[1.7rem] px-5 py-5 ${remainingSeconds <= 300 ? "bg-[linear-gradient(135deg,rgba(245,158,11,0.2),rgba(148,64,0,0.16))]" : "bg-[linear-gradient(135deg,rgba(23,114,208,0.2),rgba(8,47,73,0.18))]"}`}>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/72">
-                {locale === "en" ? "Time left" : "Thời gian còn lại"}
-              </p>
-              <p className="mt-4 font-mono text-5xl font-semibold tracking-[0.14em] text-white">
-                {formatRemainingTime(remainingSeconds)}
-              </p>
-              <p className="mt-4 text-sm leading-7 text-white/74">
-                {locale === "en"
-                  ? "The timer continues even if you refresh or navigate away. The attempt cannot be paused or restarted."
-                  : "Đồng hồ vẫn tiếp tục chạy ngay cả khi bạn tải lại trang hoặc rời khỏi đây. Lượt thi không thể tạm dừng hoặc bắt đầu lại."}
-              </p>
-            </div>
-          </Surface>
-
-          <Surface className="px-6 py-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
-              {locale === "en" ? "Exam summary" : "Tổng quan bài thi"}
-            </p>
-            <div className="mt-5 space-y-4">
-              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-sm theme-text-muted">
-                  {locale === "en" ? "Scoring model" : "Cách tính điểm"}
-                </p>
-                <p className="mt-3 text-sm leading-7 theme-text-muted">
-                  {locale === "en"
-                    ? `${ROUND1_OBJECTIVE_TOTAL} objective questions x 2 points = ${ROUND1_OBJECTIVE_MAX_SCORE}. Essay score is reviewed later for up to ${ROUND1_ESSAY_MAX_SCORE} points, so the final total reaches ${ROUND1_TOTAL_MAX_SCORE}.`
-                    : `${ROUND1_OBJECTIVE_TOTAL} câu khách quan x 2 điểm = ${ROUND1_OBJECTIVE_MAX_SCORE}. Điểm tự luận sẽ được chấm sau với tối đa ${ROUND1_ESSAY_MAX_SCORE} điểm, nên tổng cuối cùng đạt ${ROUND1_TOTAL_MAX_SCORE}.`}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-sm theme-text-muted">
-                  {locale === "en" ? "Technical support" : "Hỗ trợ kỹ thuật"}
-                </p>
-                <p className="mt-3 text-sm leading-7 theme-text-muted">
-                  {locale === "en"
-                    ? `If anything goes wrong, contact the organizer immediately at ${contactInfo.email} or ${contactInfo.phone}.`
-                    : `Nếu có sự cố, hãy liên hệ ban tổ chức ngay qua ${contactInfo.email} hoặc ${contactInfo.phone}.`}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  const confirmed = window.confirm(
-                    locale === "en"
-                      ? "Submit this Round 1 attempt now?"
-                      : "Bạn có muốn nộp bài Vòng 1 ngay bây giờ không?",
-                  );
-
-                  if (!confirmed) {
-                    return;
-                  }
-
-                  finalizeExam(session);
-                }}
-                className="theme-button-primary inline-flex w-full items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                {locale === "en" ? "Submit exam" : "Nộp bài thi"}
-              </button>
-            </div>
-          </Surface>
-        </div>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <Surface className="px-6 py-6 md:px-8 md:py-8">
           {currentQuestion ? (
-            <>
+            <div className="pt-6">
               <div className="flex flex-wrap items-center gap-3">
                 <StatusPill>{currentQuestion.topic}</StatusPill>
                 <StatusPill>{pickRound1TypeLabel(locale, currentQuestion.type)}</StatusPill>
@@ -804,9 +870,14 @@ export function Round1ExamPage() {
                       : currentQuestion.difficulty === "medium"
                         ? "success"
                         : "default"
-                  }
-                >
-                  {currentQuestion.difficulty}
+                    }
+                  >
+                    {currentQuestion.difficulty}
+                  </StatusPill>
+                <StatusPill tone={currentQuestion.type === "essay" ? "warning" : "success"}>
+                  {locale === "en"
+                    ? `${currentQuestionPointValue} points`
+                    : `${currentQuestionPointValue} điểm`}
                 </StatusPill>
               </div>
 
@@ -1059,79 +1130,149 @@ export function Round1ExamPage() {
                   {session.currentQuestionIndex === session.questions.length - 1
                     ? locale === "en"
                       ? "Review navigator"
-                      : "Xem bang dieu huong"
+                      : "Xem bảng điều hướng"
                     : locale === "en"
                       ? "Next question"
-                      : "Cau tiep"}
+                      : "Câu tiếp"}
                   <ArrowRight className="h-4 w-4" />
                 </button>
-              </div>
-            </>
-          ) : null}
-        </Surface>
-
-        <Surface className="px-6 py-6 xl:sticky xl:top-28 xl:self-start">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
-              {locale === "en" ? "Question navigator" : "Bảng điều hướng câu hỏi"}
-            </p>
-            <StatusPill>{answeredCount}</StatusPill>
-          </div>
-          <div className="mt-5 grid grid-cols-5 gap-2">
-            {session.questions.map((question, index) => {
-              const isCurrent = index === session.currentQuestionIndex;
-              const isAnswered = isRound1QuestionAnswered(question, session.answers[question.id]);
-
-              return (
-                <button
-                  key={question.id}
-                  type="button"
-                  onClick={() => navigateToQuestion(index)}
-                  className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
-                    isCurrent
-                      ? "border-[rgba(23,114,208,0.42)] bg-[rgba(23,114,208,0.14)] theme-text-strong"
-                      : isAnswered
-                        ? "border-emerald-300/24 bg-emerald-300/10 text-emerald-100"
-                        : "theme-border theme-panel theme-text-soft hover:bg-[rgba(23,114,208,0.05)]"
-                  }`}
-                >
-                  <span className="block">{index + 1}</span>
-                  {index >= ROUND1_OBJECTIVE_TOTAL ? (
-                    <span className="mt-1 block text-[0.62rem] uppercase tracking-[0.18em] theme-text-faint">
-                      {locale === "en" ? "Essay" : "TL"}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-5 space-y-2 text-xs theme-text-soft">
-            <p className="inline-flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-[rgba(23,114,208,0.65)]" />
-              {locale === "en" ? "Current question" : "Cau hien tai"}
-            </p>
-            <p className="inline-flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
-              {locale === "en" ? "Answered" : "Đã trả lời"}
-            </p>
-            <p className="inline-flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-white/30" />
-              {locale === "en" ? "Not answered yet" : "Chưa trả lời"}
-            </p>
-          </div>
-          {remainingSeconds <= 300 ? (
-            <div className="mt-5 rounded-[1.4rem] border border-amber-300/24 bg-amber-300/10 px-4 py-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-200" />
-                <p className="text-sm leading-6 text-amber-50">
-                  {locale === "en"
-                    ? "Less than 5 minutes remain. Unanswered questions will be counted as incorrect when the exam auto-submits."
-                    : "Còn dưới 5 phút. Các câu chưa trả lời sẽ bị tính là sai khi bài thi tự động nộp."}
-                </p>
               </div>
             </div>
           ) : null}
         </Surface>
+
+        <div className="space-y-4 xl:sticky xl:top-28 xl:self-start">
+          <Surface className="overflow-hidden px-6 py-6">
+            <div
+              className={`rounded-[1.8rem] px-5 py-5 ${
+                remainingSeconds <= 300
+                  ? "bg-[linear-gradient(135deg,rgba(245,158,11,0.24),rgba(148,64,0,0.18))]"
+                  : "bg-[linear-gradient(135deg,rgba(23,114,208,0.22),rgba(8,47,73,0.2))]"
+              }`}
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/72">
+                {locale === "en" ? "Time left" : "Thời gian còn lại"}
+              </p>
+              <p className="mt-4 font-mono text-5xl font-semibold tracking-[0.14em] text-white">
+                {formatRemainingTime(remainingSeconds)}
+              </p>
+              <p className="mt-4 text-sm leading-7 text-white/74">
+                {locale === "en"
+                  ? "The timer continues even if you refresh or navigate away. The attempt cannot be paused or restarted."
+                  : "Đồng hồ vẫn tiếp tục chạy ngay cả khi bạn tải lại trang hoặc rời khỏi đây. Lượt thi không thể tạm dừng hoặc bắt đầu lại."}
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
+                  {locale === "en" ? "Candidate" : "Thí sinh"}
+                </p>
+                <p className="mt-3 text-base font-semibold theme-text-strong">{currentUser.name}</p>
+                <p className="mt-2 text-sm theme-text-muted">{currentTeam.name}</p>
+              </div>
+              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+                <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
+                  {locale === "en" ? "Scoring model" : "Cách tính điểm"}
+                </p>
+                <p className="mt-3 text-sm leading-7 theme-text-muted">
+                  {locale === "en"
+                    ? `${ROUND1_OBJECTIVE_TOTAL} objective questions x 2 points, plus ${ROUND1_ESSAY_TOTAL} essay questions reviewed later.`
+                    : `${ROUND1_OBJECTIVE_TOTAL} câu khách quan x 2 điểm, cộng với ${ROUND1_ESSAY_TOTAL} câu tự luận được chấm sau.`}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const confirmed = window.confirm(
+                  locale === "en"
+                    ? "Submit this Round 1 attempt now?"
+                    : "Bạn có muốn nộp bài Vòng 1 ngay bây giờ không?",
+                );
+
+                if (!confirmed) {
+                  return;
+                }
+
+                finalizeExam(session);
+              }}
+              className="theme-button-primary mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[1.5rem] px-5 py-3.5 text-sm font-semibold"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              {locale === "en" ? "Submit exam" : "Nộp bài thi"}
+            </button>
+            <p className="mt-4 text-sm leading-7 theme-text-muted">
+              {locale === "en"
+                ? `If anything goes wrong, contact the organizer immediately at ${contactInfo.email} or ${contactInfo.phone}.`
+                : `Nếu có sự cố, hãy liên hệ ban tổ chức ngay qua ${contactInfo.email} hoặc ${contactInfo.phone}.`}
+            </p>
+          </Surface>
+
+          <Surface className="px-6 py-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
+                {locale === "en" ? "Question navigator" : "Bảng điều hướng câu hỏi"}
+              </p>
+              <StatusPill>{answeredCount}</StatusPill>
+            </div>
+            <div className="mt-5 grid grid-cols-5 gap-2">
+              {session.questions.map((question, index) => {
+                const isCurrent = index === session.currentQuestionIndex;
+                const isAnswered = isRound1QuestionAnswered(question, session.answers[question.id]);
+
+                return (
+                  <button
+                    key={question.id}
+                    type="button"
+                    onClick={() => navigateToQuestion(index)}
+                    className={`rounded-2xl border px-3 py-3 text-sm font-semibold transition ${
+                      isCurrent
+                        ? "border-[rgba(23,114,208,0.42)] bg-[rgba(23,114,208,0.14)] theme-text-strong"
+                        : isAnswered
+                          ? "border-emerald-300/24 bg-emerald-300/10 text-emerald-100"
+                          : "theme-border theme-panel theme-text-soft hover:bg-[rgba(23,114,208,0.05)]"
+                    }`}
+                  >
+                    <span className="block">{index + 1}</span>
+                    {index >= ROUND1_OBJECTIVE_TOTAL ? (
+                      <span className="mt-1 block text-[0.62rem] uppercase tracking-[0.18em] theme-text-faint">
+                        {locale === "en" ? "Essay" : "TL"}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-5 space-y-2 text-xs theme-text-soft">
+              <p className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-[rgba(23,114,208,0.65)]" />
+                {locale === "en" ? "Current question" : "Câu hiện tại"}
+              </p>
+              <p className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
+                {locale === "en" ? "Answered" : "Đã trả lời"}
+              </p>
+              <p className="inline-flex items-center gap-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-white/30" />
+                {locale === "en" ? "Not answered yet" : "Chưa trả lời"}
+              </p>
+            </div>
+            {remainingSeconds <= 300 ? (
+              <div className="mt-5 rounded-[1.4rem] border border-amber-300/24 bg-amber-300/10 px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-200" />
+                  <p className="text-sm leading-6 text-amber-50">
+                    {locale === "en"
+                      ? "Less than 5 minutes remain. Unanswered questions will be counted as incorrect when the exam auto-submits."
+                      : "Còn dưới 5 phút. Các câu chưa trả lời sẽ bị tính là sai khi bài thi tự động nộp."}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+          </Surface>
+        </div>
       </section>
     </div>
   );
