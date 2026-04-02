@@ -228,7 +228,7 @@ export function AuthPage() {
 
     const result = await signIn("credentials", {
       redirect: false,
-      login: registerForm.studentId.trim().toLowerCase(),
+      login: registerForm.email.trim().toLowerCase(),
       password: registerForm.password,
     });
 
@@ -239,7 +239,7 @@ export function AuthPage() {
           : "Tạo tài khoản thành công nhưng đăng nhập tự động thất bại. Vui lòng đăng nhập thủ công.",
       );
       setMode("signin");
-      setLoginId(registerForm.studentId.trim().toLowerCase());
+      setLoginId(registerForm.email.trim().toLowerCase());
       setPassword("");
       setIsBusy(false);
       return;
@@ -358,13 +358,16 @@ export function AuthPage() {
                 <div className="grid gap-4 xl:grid-cols-2">
                   <label className="space-y-2 xl:col-span-2">
                     <span className="text-sm theme-text-muted">
-                      {locale === "en" ? "Account ID" : "ID tài khoản"}
+                      {locale === "en" ? "Email or account ID" : "Email hoặc ID tài khoản"}
                     </span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <ShieldCheck className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
                         value={loginId}
                         onChange={(event) => setLoginId(event.target.value)}
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        autoComplete="username"
                         placeholder={locale === "en" ? "Email or account ID" : "Email hoặc ID tài khoản"}
                         className={authFieldClassName}
                       />
