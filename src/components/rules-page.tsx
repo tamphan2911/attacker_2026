@@ -34,29 +34,29 @@ import { formatDateRangeLabel, pickText } from "@/lib/site";
 
 const generalRuleIcons = [UsersRound, GraduationCap, Sparkles];
 const generalRuleIconClasses = [
-  "border-sky-500/20 bg-[linear-gradient(135deg,rgba(14,165,233,0.18),rgba(59,130,246,0.14))] text-sky-700 dark:text-sky-100",
-  "border-emerald-500/20 bg-[linear-gradient(135deg,rgba(16,185,129,0.18),rgba(52,211,153,0.12))] text-emerald-700 dark:text-emerald-100",
-  "border-violet-500/20 bg-[linear-gradient(135deg,rgba(124,58,237,0.18),rgba(168,85,247,0.12))] text-violet-700 dark:text-violet-100",
+  "border-sky-600/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.26),rgba(59,130,246,0.2))] text-sky-800 dark:text-sky-100",
+  "border-emerald-600/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.24),rgba(52,211,153,0.18))] text-emerald-800 dark:text-emerald-100",
+  "border-violet-600/24 bg-[linear-gradient(135deg,rgba(124,58,237,0.24),rgba(168,85,247,0.18))] text-violet-800 dark:text-violet-100",
 ] as const;
 const policyIcons = [Flag, ShieldAlert, NotebookPen, Medal];
 const policyIconClasses = [
-  "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-100",
-  "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-100",
-  "border-cyan-500/20 bg-cyan-500/10 text-cyan-700 dark:text-cyan-100",
-  "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100",
+  "border-rose-600/24 bg-rose-500/14 text-rose-800 dark:text-rose-100",
+  "border-amber-600/24 bg-amber-500/14 text-amber-800 dark:text-amber-100",
+  "border-cyan-600/24 bg-cyan-500/14 text-cyan-800 dark:text-cyan-100",
+  "border-emerald-600/24 bg-emerald-500/14 text-emerald-800 dark:text-emerald-100",
 ] as const;
 const quickPolicyItems = [
   {
     icon: UsersRound,
-    iconClass: "border-sky-500/18 bg-sky-500/12 text-sky-600 dark:text-sky-100",
+    iconClass: "border-sky-600/24 bg-sky-500/16 text-sky-800 dark:text-sky-100",
   },
   {
     icon: ShieldAlert,
-    iconClass: "border-amber-500/18 bg-amber-500/12 text-amber-600 dark:text-amber-100",
+    iconClass: "border-amber-600/24 bg-amber-500/16 text-amber-800 dark:text-amber-100",
   },
   {
     icon: Radar,
-    iconClass: "border-emerald-500/18 bg-emerald-500/12 text-emerald-600 dark:text-emerald-100",
+    iconClass: "border-emerald-600/24 bg-emerald-500/16 text-emerald-800 dark:text-emerald-100",
   },
 ] as const;
 
@@ -66,14 +66,14 @@ const roundRuleMeta = {
     icon: FileCheck2,
     statTone: "from-sky-500/18 via-cyan-400/10 to-white/0",
     iconClass:
-      "border-sky-500/22 bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.14))] text-sky-700 dark:text-sky-100",
+      "border-sky-600/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.24),rgba(59,130,246,0.2))] text-sky-800 dark:text-sky-100",
     chipClass:
-      "border-sky-500/22 bg-sky-500/[0.08] text-sky-700 dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
+      "border-sky-600/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.18),rgba(59,130,246,0.14))] text-sky-800 shadow-[0_12px_30px_rgba(14,165,233,0.08)] dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
     noteNumberClass:
       "bg-[linear-gradient(135deg,#0ea5e9,#2563eb)] text-white dark:bg-[linear-gradient(135deg,#38bdf8,#2563eb)]",
     deliverableIcon: Clock3,
     deliverableIconClass:
-      "border-sky-500/18 bg-sky-500/10 text-sky-600 dark:text-sky-100",
+      "border-sky-600/24 bg-sky-500/14 text-sky-800 dark:text-sky-100",
     focus: {
       en: "Round 1 is individual at paper level but ranked at team level.",
       vi: "Vòng 1 làm bài theo cá nhân nhưng xếp hạng ở cấp độ đội.",
@@ -98,14 +98,14 @@ const roundRuleMeta = {
     icon: BadgeCheck,
     statTone: "from-emerald-500/16 via-teal-400/10 to-white/0",
     iconClass:
-      "border-emerald-500/22 bg-[linear-gradient(135deg,rgba(16,185,129,0.16),rgba(52,211,153,0.14))] text-emerald-700 dark:text-emerald-100",
+      "border-emerald-600/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.24),rgba(52,211,153,0.2))] text-emerald-800 dark:text-emerald-100",
     chipClass:
-      "border-emerald-500/22 bg-emerald-500/[0.08] text-emerald-700 dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
+      "border-emerald-600/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.18),rgba(52,211,153,0.14))] text-emerald-800 shadow-[0_12px_30px_rgba(16,185,129,0.08)] dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
     noteNumberClass:
       "bg-[linear-gradient(135deg,#10b981,#059669)] text-white dark:bg-[linear-gradient(135deg,#34d399,#059669)]",
     deliverableIcon: NotebookPen,
     deliverableIconClass:
-      "border-emerald-500/18 bg-emerald-500/10 text-emerald-600 dark:text-emerald-100",
+      "border-emerald-600/24 bg-emerald-500/14 text-emerald-800 dark:text-emerald-100",
     focus: {
       en: "Round 2 is a judged report stage with versioned file submission.",
       vi: "Vòng 2 là giai đoạn chấm báo cáo với cơ chế nộp tệp theo phiên bản.",
@@ -130,14 +130,14 @@ const roundRuleMeta = {
     icon: Trophy,
     statTone: "from-amber-500/18 via-orange-400/10 to-white/0",
     iconClass:
-      "border-amber-500/22 bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(249,115,22,0.14))] text-amber-700 dark:text-amber-100",
+      "border-amber-600/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.24),rgba(249,115,22,0.2))] text-amber-800 dark:text-amber-100",
     chipClass:
-      "border-amber-500/22 bg-amber-500/[0.08] text-amber-700 dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
+      "border-amber-600/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.18),rgba(249,115,22,0.14))] text-amber-800 shadow-[0_12px_30px_rgba(245,158,11,0.08)] dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
     noteNumberClass:
       "bg-[linear-gradient(135deg,#f59e0b,#f97316)] text-white dark:bg-[linear-gradient(135deg,#fbbf24,#f97316)]",
     deliverableIcon: Orbit,
     deliverableIconClass:
-      "border-amber-500/18 bg-amber-500/10 text-amber-600 dark:text-amber-100",
+      "border-amber-600/24 bg-amber-500/14 text-amber-800 dark:text-amber-100",
     focus: {
       en: "The final is a live presentation and defense stage for the top 5 teams.",
       vi: "Vòng chung kết là giai đoạn thuyết trình và bảo vệ trực tiếp dành cho top 5 đội.",
@@ -198,7 +198,7 @@ export function RulesPage() {
               },
             ].map((item, index) => {
               const Icon = quickPolicyItems[index]?.icon ?? BadgeCheck;
-              const iconClass = quickPolicyItems[index]?.iconClass ?? "border-sky-500/18 bg-sky-500/10 text-sky-600 dark:text-sky-100";
+              const iconClass = quickPolicyItems[index]?.iconClass ?? "border-sky-600/24 bg-sky-500/14 text-sky-800 dark:text-sky-100";
 
               return (
               <div
