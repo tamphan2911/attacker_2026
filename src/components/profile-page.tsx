@@ -403,7 +403,7 @@ export function ProfilePage() {
             />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                {locale === "en" ? "Student profile" : "Hồ sơ sinh viên"}
+                {locale === "en" ? "User profile" : "Hồ sơ người dùng"}
               </p>
               <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.7rem]">
                 {currentUser.name}
