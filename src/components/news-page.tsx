@@ -2,16 +2,32 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 
 import { formatDateLabel, pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 
+const NEWS_PAGE_SIZE = 5;
+
+function cn(...values: Array<string | undefined | false>) {
+  return values.filter(Boolean).join(" ");
+}
+
+function buildVisiblePages(page: number, pageCount: number) {
+  if (pageCount <= 5) {
+    return Array.from({ length: pageCount }, (_, index) => index + 1);
+  }
+
+  const start = Math.max(1, Math.min(page - 2, pageCount - 4));
+  return Array.from({ length: 5 }, (_, index) => start + index);
+}
+
 export function NewsPage() {
   const { locale, newsPosts, pageContent } = useSiteState();
   const [query, setQuery] = useState("");
+  const [pageState, setPageState] = useState(1);
   const deferredQuery = useDeferredValue(query);
 
   const filteredPosts = useMemo(() => {
@@ -36,6 +52,15 @@ export function NewsPage() {
       return matchesQuery;
     });
   }, [deferredQuery, newsPosts]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredPosts.length / NEWS_PAGE_SIZE));
+  const page = Math.min(pageState, pageCount);
+  const visiblePages = buildVisiblePages(page, pageCount);
+
+  const paginatedPosts = useMemo(() => {
+    const startIndex = (page - 1) * NEWS_PAGE_SIZE;
+    return filteredPosts.slice(startIndex, startIndex + NEWS_PAGE_SIZE);
+  }, [filteredPosts, page]);
 
   if (newsPosts.length === 0) {
     return (
@@ -74,7 +99,10 @@ export function NewsPage() {
             </div>
             <input
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPageState(1);
+              }}
               placeholder={
                 locale === "en"
                   ? "Search article title, summary, category, or tag"
@@ -85,7 +113,10 @@ export function NewsPage() {
             {query ? (
               <button
                 type="button"
-                onClick={() => setQuery("")}
+                onClick={() => {
+                  setQuery("");
+                  setPageState(1);
+                }}
                 className="theme-news-search-clear rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] transition"
               >
                 {locale === "en" ? "Clear" : "Xóa"}
@@ -108,7 +139,7 @@ export function NewsPage() {
             </p>
           </Surface>
         ) : (
-          filteredPosts.map((post) => (
+          paginatedPosts.map((post) => (
             <Link key={post.slug} href={`/news/${post.slug}`}>
               <Surface className="group overflow-hidden px-0 py-0 transition hover:-translate-y-0.5 hover:border-sky-300/22 hover:bg-[var(--panel-strong)]">
                 <div className="grid gap-0 lg:grid-cols-[360px_minmax(0,1fr)]">
@@ -166,6 +197,84 @@ export function NewsPage() {
           ))
         )}
       </section>
+
+      {filteredPosts.length > NEWS_PAGE_SIZE ? (
+        <section>
+          <div className="flex flex-col gap-3 border-t theme-border pt-5 md:flex-row md:items-center md:justify-between">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] theme-text-soft">
+              {locale === "en"
+                ? `Showing ${(page - 1) * NEWS_PAGE_SIZE + 1}-${Math.min(page * NEWS_PAGE_SIZE, filteredPosts.length)} of ${filteredPosts.length}`
+                : `Hiển thị ${(page - 1) * NEWS_PAGE_SIZE + 1}-${Math.min(page * NEWS_PAGE_SIZE, filteredPosts.length)} / ${filteredPosts.length}`}
+            </p>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={page === 1}
+                onClick={() => setPageState((current) => Math.max(1, current - 1))}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border theme-border theme-panel text-sm font-semibold theme-text-strong transition disabled:cursor-not-allowed disabled:opacity-45"
+                aria-label={locale === "en" ? "Previous page" : "Trang trước"}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+
+              {visiblePages[0] > 1 ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setPageState(1)}
+                    className="inline-flex h-10 min-w-10 items-center justify-center rounded-full border theme-border theme-panel px-3 text-sm font-semibold theme-text-strong transition hover:bg-[var(--panel-strong)]"
+                  >
+                    1
+                  </button>
+                  {visiblePages[0] > 2 ? <span className="px-1 text-sm theme-text-soft">…</span> : null}
+                </>
+              ) : null}
+
+              {visiblePages.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPageState(value)}
+                  className={cn(
+                    "inline-flex h-10 min-w-10 items-center justify-center rounded-full border px-3 text-sm font-semibold transition",
+                    value === page
+                      ? "border-sky-300/26 bg-[linear-gradient(135deg,#0a1d34,#1772d0)] text-white shadow-[0_16px_34px_rgba(23,114,208,0.18)]"
+                      : "theme-border theme-panel theme-text-strong hover:bg-[var(--panel-strong)]",
+                  )}
+                >
+                  {value}
+                </button>
+              ))}
+
+              {visiblePages[visiblePages.length - 1] < pageCount ? (
+                <>
+                  {visiblePages[visiblePages.length - 1] < pageCount - 1 ? (
+                    <span className="px-1 text-sm theme-text-soft">…</span>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setPageState(pageCount)}
+                    className="inline-flex h-10 min-w-10 items-center justify-center rounded-full border theme-border theme-panel px-3 text-sm font-semibold theme-text-strong transition hover:bg-[var(--panel-strong)]"
+                  >
+                    {pageCount}
+                  </button>
+                </>
+              ) : null}
+
+              <button
+                type="button"
+                disabled={page === pageCount}
+                onClick={() => setPageState((current) => Math.min(pageCount, current + 1))}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border theme-border theme-panel text-sm font-semibold theme-text-strong transition disabled:cursor-not-allowed disabled:opacity-45"
+                aria-label={locale === "en" ? "Next page" : "Trang sau"}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
