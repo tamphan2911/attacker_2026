@@ -63,6 +63,7 @@ export function SiteHeader() {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [openDesktopDropdownHref, setOpenDesktopDropdownHref] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const isLoggedIn = Boolean(currentUser?.id);
   const isProfileRoute = pathname.startsWith("/profile");
@@ -175,6 +176,7 @@ export function SiteHeader() {
               const isActive =
                 isActiveRoute(item.href) ||
                 item.children?.some((child) => isActiveRoute(child.href));
+              const isDesktopDropdownOpen = openDesktopDropdownHref === item.href;
 
               return (
                 <div
@@ -185,6 +187,26 @@ export function SiteHeader() {
                       ? "text-[var(--text-strong)]"
                       : "theme-text-muted hover:text-[var(--text-strong)]",
                   )}
+                  onMouseEnter={() => {
+                    if (item.children) {
+                      setOpenDesktopDropdownHref(item.href);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    if (item.children) {
+                      setOpenDesktopDropdownHref((current) => (current === item.href ? null : current));
+                    }
+                  }}
+                  onFocusCapture={() => {
+                    if (item.children) {
+                      setOpenDesktopDropdownHref(item.href);
+                    }
+                  }}
+                  onBlurCapture={(event) => {
+                    if (item.children && !event.currentTarget.contains(event.relatedTarget as Node | null)) {
+                      setOpenDesktopDropdownHref((current) => (current === item.href ? null : current));
+                    }
+                  }}
                 >
                   <span
                     className={cn(
@@ -194,10 +216,19 @@ export function SiteHeader() {
                         : "bg-[rgba(23,114,208,0.08)] opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
                     )}
                   />
-                  <Link href={item.href} className="relative z-10 inline-flex items-center gap-1.5">
+                  <Link
+                    href={item.href}
+                    onClick={() => setOpenDesktopDropdownHref(null)}
+                    className="relative z-10 inline-flex items-center gap-1.5"
+                  >
                     <span>{pickText(locale, item.label)}</span>
                     {item.children ? (
-                      <ChevronDown className="h-3.5 w-3.5 transition group-hover:translate-y-0.5 group-focus-within:translate-y-0.5" />
+                      <ChevronDown
+                        className={cn(
+                          "h-3.5 w-3.5 transition",
+                          isDesktopDropdownOpen ? "translate-y-0.5" : "group-hover:translate-y-0.5 group-focus-within:translate-y-0.5",
+                        )}
+                      />
                     ) : null}
                   </Link>
                   <span
@@ -210,19 +241,25 @@ export function SiteHeader() {
                   />
 
                   {item.children ? (
-                    <div className="pointer-events-none absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 pt-3 opacity-0 transition duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+                    <div
+                      className={cn(
+                        "absolute left-1/2 top-full z-30 w-56 -translate-x-1/2 pt-3 transition duration-200",
+                        isDesktopDropdownOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+                      )}
+                    >
                       <div className="theme-card-shadow-soft theme-panel-strong rounded-[1.5rem] border theme-border p-2 backdrop-blur-xl">
                         {item.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          className={cn(
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setOpenDesktopDropdownHref(null)}
+                            className={cn(
                               "block rounded-[1rem] px-4 py-3 text-sm transition",
                               isActiveChildRoute(child.href)
                                 ? "bg-[rgba(23,114,208,0.08)] text-[var(--text-strong)]"
                                 : "theme-text-body hover:bg-[rgba(23,114,208,0.06)] hover:text-[var(--text-strong)]",
                             )}
-                        >
+                          >
                             {pickText(locale, child.label)}
                           </Link>
                         ))}
