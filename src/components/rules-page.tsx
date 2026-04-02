@@ -5,10 +5,17 @@ import {
   ArrowRight,
   BadgeCheck,
   CalendarDays,
+  CheckCircle2,
+  Clock3,
   FileCheck2,
   Flag,
+  GraduationCap,
   Medal,
+  NotebookPen,
+  Orbit,
+  Radar,
   ShieldAlert,
+  Sparkles,
   Trophy,
   UsersRound,
 } from "lucide-react";
@@ -25,14 +32,48 @@ import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 
-const generalRuleIcons = [UsersRound, ShieldAlert, BadgeCheck];
-const policyIcons = [Flag, ShieldAlert, FileCheck2, Medal];
+const generalRuleIcons = [UsersRound, GraduationCap, Sparkles];
+const generalRuleIconClasses = [
+  "border-sky-500/20 bg-[linear-gradient(135deg,rgba(14,165,233,0.18),rgba(59,130,246,0.14))] text-sky-700 dark:text-sky-100",
+  "border-emerald-500/20 bg-[linear-gradient(135deg,rgba(16,185,129,0.18),rgba(52,211,153,0.12))] text-emerald-700 dark:text-emerald-100",
+  "border-violet-500/20 bg-[linear-gradient(135deg,rgba(124,58,237,0.18),rgba(168,85,247,0.12))] text-violet-700 dark:text-violet-100",
+] as const;
+const policyIcons = [Flag, ShieldAlert, NotebookPen, Medal];
+const policyIconClasses = [
+  "border-rose-500/20 bg-rose-500/10 text-rose-700 dark:text-rose-100",
+  "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-100",
+  "border-cyan-500/20 bg-cyan-500/10 text-cyan-700 dark:text-cyan-100",
+  "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-100",
+] as const;
+const quickPolicyItems = [
+  {
+    icon: UsersRound,
+    iconClass: "border-sky-500/18 bg-sky-500/12 text-sky-600 dark:text-sky-100",
+  },
+  {
+    icon: ShieldAlert,
+    iconClass: "border-amber-500/18 bg-amber-500/12 text-amber-600 dark:text-amber-100",
+  },
+  {
+    icon: Radar,
+    iconClass: "border-emerald-500/18 bg-emerald-500/12 text-emerald-600 dark:text-emerald-100",
+  },
+] as const;
 
 const roundRuleMeta = {
   "01": {
     anchor: "round-1-rules",
     icon: FileCheck2,
     statTone: "from-sky-500/18 via-cyan-400/10 to-white/0",
+    iconClass:
+      "border-sky-500/22 bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.14))] text-sky-700 dark:text-sky-100",
+    chipClass:
+      "border-sky-500/22 bg-sky-500/[0.08] text-sky-700 dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
+    noteNumberClass:
+      "bg-[linear-gradient(135deg,#0ea5e9,#2563eb)] text-white dark:bg-[linear-gradient(135deg,#38bdf8,#2563eb)]",
+    deliverableIcon: Clock3,
+    deliverableIconClass:
+      "border-sky-500/18 bg-sky-500/10 text-sky-600 dark:text-sky-100",
     focus: {
       en: "Round 1 is individual at paper level but ranked at team level.",
       vi: "Vòng 1 làm bài theo cá nhân nhưng xếp hạng ở cấp độ đội.",
@@ -56,6 +97,15 @@ const roundRuleMeta = {
     anchor: "round-2-rules",
     icon: BadgeCheck,
     statTone: "from-emerald-500/16 via-teal-400/10 to-white/0",
+    iconClass:
+      "border-emerald-500/22 bg-[linear-gradient(135deg,rgba(16,185,129,0.16),rgba(52,211,153,0.14))] text-emerald-700 dark:text-emerald-100",
+    chipClass:
+      "border-emerald-500/22 bg-emerald-500/[0.08] text-emerald-700 dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
+    noteNumberClass:
+      "bg-[linear-gradient(135deg,#10b981,#059669)] text-white dark:bg-[linear-gradient(135deg,#34d399,#059669)]",
+    deliverableIcon: NotebookPen,
+    deliverableIconClass:
+      "border-emerald-500/18 bg-emerald-500/10 text-emerald-600 dark:text-emerald-100",
     focus: {
       en: "Round 2 is a judged report stage with versioned file submission.",
       vi: "Vòng 2 là giai đoạn chấm báo cáo với cơ chế nộp tệp theo phiên bản.",
@@ -79,6 +129,15 @@ const roundRuleMeta = {
     anchor: "round-3-rules",
     icon: Trophy,
     statTone: "from-amber-500/18 via-orange-400/10 to-white/0",
+    iconClass:
+      "border-amber-500/22 bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(249,115,22,0.14))] text-amber-700 dark:text-amber-100",
+    chipClass:
+      "border-amber-500/22 bg-amber-500/[0.08] text-amber-700 dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
+    noteNumberClass:
+      "bg-[linear-gradient(135deg,#f59e0b,#f97316)] text-white dark:bg-[linear-gradient(135deg,#fbbf24,#f97316)]",
+    deliverableIcon: Orbit,
+    deliverableIconClass:
+      "border-amber-500/18 bg-amber-500/10 text-amber-600 dark:text-amber-100",
     focus: {
       en: "The final is a live presentation and defense stage for the top 5 teams.",
       vi: "Vòng chung kết là giai đoạn thuyết trình và bảo vệ trực tiếp dành cho top 5 đội.",
@@ -112,7 +171,7 @@ export function RulesPage() {
           description={pickText(locale, pageContent.rules.header.description)}
         />
 
-        <Surface className="relative overflow-hidden px-5 py-5">
+        <Surface className="theme-rules-shell relative overflow-hidden px-5 py-5">
           <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(23,114,208,0),rgba(23,114,208,0.92),rgba(23,114,208,0))]" />
           <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
             {locale === "en" ? "Quick policy read" : "Đọc nhanh"}
@@ -120,44 +179,46 @@ export function RulesPage() {
           <div className="mt-5 space-y-3">
             {[
               {
-                icon: <UsersRound className="h-4 w-4 text-sky-500" />,
                 label:
                   locale === "en"
                     ? `${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} members are required for official Round 1 access`
                     : `Cần ${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} thành viên để vào Vòng 1 chính thức`,
               },
               {
-                icon: <ShieldAlert className="h-4 w-4 text-amber-500" />,
                 label:
                   locale === "en"
                     ? "Team lock must be approved by all members before Round 1 starts"
                     : "Khóa đội phải được toàn bộ thành viên đồng thuận trước khi bắt đầu Vòng 1",
               },
               {
-                icon: <Medal className="h-4 w-4 text-emerald-500" />,
                 label:
                   locale === "en"
                     ? "Progression is determined by team ranking at every stage"
                     : "Việc đi tiếp được quyết định theo xếp hạng đội ở từng giai đoạn",
               },
-            ].map((item) => (
+            ].map((item, index) => {
+              const Icon = quickPolicyItems[index]?.icon ?? BadgeCheck;
+              const iconClass = quickPolicyItems[index]?.iconClass ?? "border-sky-500/18 bg-sky-500/10 text-sky-600 dark:text-sky-100";
+
+              return (
               <div
                 key={item.label}
-                className="flex items-start gap-3 rounded-2xl border theme-border bg-white/70 px-4 py-3 text-sm leading-7 theme-text-body dark:bg-white/[0.05]"
+                className="theme-rules-note-card flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm leading-7 theme-text-body"
               >
-                <span className="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border border-sky-500/18 bg-sky-500/10">
-                  {item.icon}
+                <span className={`mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border ${iconClass}`}>
+                  <Icon className="h-4 w-4" />
                 </span>
                 <span>{item.label}</span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </Surface>
       </section>
 
       <section id="general-rules" className="scroll-mt-36 space-y-7">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
-          <Surface className="overflow-hidden px-6 py-6 md:px-7 md:py-7">
+          <Surface className="theme-rules-shell overflow-hidden px-6 py-6 md:px-7 md:py-7">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(23,114,208,0.14),transparent_52%)]" />
             <div className="relative">
               <SectionHeading
@@ -170,14 +231,15 @@ export function RulesPage() {
               <div className="mt-7 grid gap-4 md:grid-cols-3">
                 {audienceHighlights.map((item, index) => {
                   const Icon = generalRuleIcons[index] ?? Flag;
+                  const iconClass = generalRuleIconClasses[index] ?? generalRuleIconClasses[0];
 
                   return (
                     <div
                       key={item.title.en}
-                      className="rounded-[1.65rem] border theme-border bg-white/76 px-4 py-4 shadow-[0_16px_36px_rgba(148,163,184,0.08)] dark:bg-white/[0.05]"
+                      className="theme-rules-soft-panel rounded-[1.65rem] border px-4 py-4"
                     >
-                      <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-sky-500/18 bg-sky-500/10">
-                        <Icon className="h-4.5 w-4.5 text-sky-600 dark:text-sky-200" />
+                      <span className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl border ${iconClass}`}>
+                        <Icon className="h-4.5 w-4.5" />
                       </span>
                       <p className="mt-4 text-base font-semibold theme-text-strong">
                         {pickText(locale, item.title)}
@@ -192,22 +254,23 @@ export function RulesPage() {
             </div>
           </Surface>
 
-          <Surface className="px-6 py-6 md:px-7 md:py-7">
+          <Surface className="theme-rules-shell px-6 py-6 md:px-7 md:py-7">
             <p className="text-xs font-semibold uppercase tracking-[0.3em] theme-eyebrow">
               {locale === "en" ? "General policy checks" : "Điểm kiểm soát chung"}
             </p>
             <div className="mt-6 space-y-3">
               {ruleItems.map((item, index) => {
                 const Icon = policyIcons[index] ?? BadgeCheck;
+                const iconClass = policyIconClasses[index] ?? policyIconClasses[0];
 
                 return (
                   <div
                     key={item.title.en}
-                    className="rounded-[1.55rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.05]"
+                    className="theme-rules-note-card rounded-[1.55rem] border px-4 py-4"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-900/8 bg-slate-950/[0.03] dark:border-white/10 dark:bg-white/[0.04]">
-                        <Icon className="h-4 w-4 theme-text-strong" />
+                      <span className={`inline-flex h-9 w-9 items-center justify-center rounded-2xl border ${iconClass}`}>
+                        <Icon className="h-4 w-4" />
                       </span>
                       <p className="text-sm font-semibold uppercase tracking-[0.18em] theme-text-strong">
                         {pickText(locale, item.title)}
@@ -223,7 +286,7 @@ export function RulesPage() {
 
             <Link
               href="/competition/timeline#general-timeline"
-              className="mt-6 inline-flex items-center gap-2 rounded-full border border-sky-500/22 bg-sky-500/[0.08] px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-500/36 hover:bg-sky-500/[0.12] active:scale-[0.98] dark:text-sky-100"
+              className="mt-6 inline-flex items-center gap-2 rounded-full border border-sky-500/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(59,130,246,0.08))] px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-500/36 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.12))] active:scale-[0.98] dark:text-sky-100"
             >
               {locale === "en" ? "Open timeline overview" : "Mở lịch trình tổng quan"}
               <ArrowRight className="h-4 w-4" />
@@ -243,13 +306,13 @@ export function RulesPage() {
             <section
               key={round.id}
               id={meta.anchor}
-              className="scroll-mt-36 overflow-hidden rounded-[2rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(245,249,255,0.98))] px-5 py-6 shadow-[0_24px_60px_rgba(148,163,184,0.12)] dark:bg-[linear-gradient(180deg,rgba(11,23,42,0.96),rgba(7,16,31,0.98))] md:px-7 md:py-7"
+              className="theme-rules-round-shell scroll-mt-36 overflow-hidden rounded-[2rem] border px-5 py-6 md:px-7 md:py-7"
             >
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
                 <div>
                   <div className="flex flex-wrap items-center gap-3">
-                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-[1.2rem] border border-sky-500/18 bg-sky-500/10">
-                      <Icon className="h-5 w-5 text-sky-600 dark:text-sky-200" />
+                    <span className={`inline-flex h-11 w-11 items-center justify-center rounded-[1.2rem] border ${meta.iconClass}`}>
+                      <Icon className="h-5 w-5" />
                     </span>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
@@ -262,41 +325,50 @@ export function RulesPage() {
                   </div>
 
                   <div className="mt-5 flex flex-wrap gap-3">
-                    <span className="inline-flex items-center gap-2 rounded-full border theme-border bg-white/78 px-4 py-2 text-sm font-medium theme-text-body dark:bg-white/[0.05]">
-                      <CalendarDays className="h-4 w-4 text-sky-500" />
+                    <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium ${meta.chipClass}`}>
+                      <CalendarDays className="h-4 w-4" />
                       {roundWindow
                         ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate)
                         : pickText(locale, round.duration)}
                     </span>
-                    <span className="inline-flex max-w-xl items-start gap-2 rounded-[1.15rem] border theme-border bg-white/78 px-4 py-3 text-sm font-medium leading-6 theme-text-body dark:bg-white/[0.05]">
-                      <BadgeCheck className="h-4 w-4 text-emerald-500" />
+                    <span className={`inline-flex max-w-xl items-start gap-2 rounded-[1.15rem] border px-4 py-3 text-sm font-medium leading-6 ${meta.chipClass}`}>
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
                       {pickText(locale, meta.focus)}
                     </span>
                   </div>
 
-                  <div className="mt-6 rounded-[1.8rem] border theme-border bg-white/72 px-5 py-5 dark:bg-white/[0.05]">
+                  <div className="theme-rules-soft-panel mt-6 rounded-[1.8rem] border px-5 py-5">
                     <p className="text-sm leading-8 theme-text-body">{pickText(locale, round.description)}</p>
 
                     <div className="mt-5 grid gap-3 md:grid-cols-3">
-                      {round.deliverables.map((deliverable) => (
+                      {round.deliverables.map((deliverable, deliverableIndex) => {
+                        const DeliverableIcon = meta.deliverableIcon;
+
+                        return (
                         <div
                           key={deliverable.en}
-                          className={`rounded-[1.35rem] border theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.68))] px-4 py-4 dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))]`}
+                          className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
                         >
-                          <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-                            {locale === "en" ? "Deliverable" : "Đầu việc"}
-                          </p>
+                          <div className="flex items-center gap-2">
+                            <span className={`inline-flex h-8 w-8 items-center justify-center rounded-2xl border ${meta.deliverableIconClass}`}>
+                              <DeliverableIcon className="h-4 w-4" />
+                            </span>
+                            <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                              {locale === "en" ? `Deliverable ${deliverableIndex + 1}` : `Đầu việc ${deliverableIndex + 1}`}
+                            </p>
+                          </div>
                           <p className="mt-2 text-sm leading-7 theme-text-body">
                             {pickText(locale, deliverable)}
                           </p>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <Surface className="relative overflow-hidden px-5 py-5">
+                  <Surface className="theme-rules-shell relative overflow-hidden px-5 py-5">
                     <div
                       className={`absolute inset-x-0 top-0 h-20 bg-[linear-gradient(135deg,var(--tw-gradient-stops))] ${meta.statTone}`}
                     />
@@ -308,10 +380,10 @@ export function RulesPage() {
                         {meta.notes.map((note, index) => (
                           <div
                             key={note.en}
-                            className="rounded-[1.35rem] border theme-border bg-white/76 px-4 py-4 dark:bg-white/[0.05]"
+                            className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
                           >
                             <div className="flex items-center gap-3">
-                              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-950/[0.06] text-xs font-semibold theme-text-strong dark:bg-white/[0.08]">
+                              <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${meta.noteNumberClass}`}>
                                 {index + 1}
                               </span>
                               <p className="text-sm leading-7 theme-text-body">{pickText(locale, note)}</p>
@@ -324,7 +396,7 @@ export function RulesPage() {
 
                   <Link
                     href={`/competition/timeline#${roundKey}-timeline`}
-                    className="inline-flex w-full items-center justify-between rounded-[1.35rem] border border-sky-500/22 bg-sky-500/[0.08] px-4 py-3 text-sm font-semibold text-sky-700 transition hover:border-sky-500/34 hover:bg-sky-500/[0.12] active:scale-[0.99] dark:text-sky-100"
+                    className={`inline-flex w-full items-center justify-between rounded-[1.35rem] border px-4 py-3 text-sm font-semibold transition active:scale-[0.99] ${meta.chipClass}`}
                   >
                     <span>{locale === "en" ? "Open this round on timeline page" : "Mở giai đoạn này trên trang lịch trình"}</span>
                     <ArrowRight className="h-4 w-4" />
