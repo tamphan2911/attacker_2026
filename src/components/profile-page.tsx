@@ -487,12 +487,7 @@ export function ProfilePage() {
         <Surface className="px-6 py-6 md:px-8 md:py-8">
           <SectionHeading
             eyebrow={locale === "en" ? "Profile details" : "Chi tiết hồ sơ"}
-            title={locale === "en" ? "What the platform currently knows about you." : "Những thông tin hệ thống hiện đang ghi nhận về bạn."}
-            description={
-              locale === "en"
-                ? "This page is now the read-only overview. Use the edit route when you want to update the data shown here."
-                : "Trang này là lớp hiển thị tổng quan. Khi cần cập nhật dữ liệu, hãy chuyển sang trang chỉnh sửa riêng."
-            }
+            title={locale === "en" ? "Profile details" : "Chi tiết hồ sơ"}
           />
 
           <div className="mt-8 grid gap-4 md:grid-cols-2">
