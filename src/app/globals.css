@@ -264,6 +264,61 @@ body {
   background: rgba(255, 255, 255, 0.06);
 }
 
+:where(
+  button,
+  label.cursor-pointer,
+  summary,
+  a[href].theme-button-primary,
+  a[href].theme-button-secondary,
+  a[href][class*="rounded"]
+) {
+  transition:
+    transform 180ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    opacity 220ms ease,
+    filter 220ms ease;
+}
+
+@media (hover: hover) {
+  :where(
+      button:not(:disabled),
+      label.cursor-pointer,
+      summary,
+      a[href].theme-button-primary,
+      a[href].theme-button-secondary,
+      a[href][class*="rounded"]
+    ):hover {
+    transform: translateY(-1px);
+  }
+}
+
+:where(
+    button:not(:disabled),
+    label.cursor-pointer,
+    summary,
+    a[href].theme-button-primary,
+    a[href].theme-button-secondary,
+    a[href][class*="rounded"]
+  ):active {
+  transform: translateY(0) scale(0.985);
+}
+
+:where(
+    button:focus-visible,
+    summary:focus-visible,
+    a[href].theme-button-primary:focus-visible,
+    a[href].theme-button-secondary:focus-visible,
+    a[href][class*="rounded"]:focus-visible
+  ) {
+  outline: none;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--brand) 24%, transparent),
+    0 16px 38px var(--shadow-soft);
+}
+
 .theme-kicker {
   color: var(--brand-deep);
   border-color: rgba(23, 114, 208, 0.18);

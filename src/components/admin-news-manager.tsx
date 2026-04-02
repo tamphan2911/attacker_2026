@@ -339,6 +339,14 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
   const [editorMessage, setEditorMessage] = useState("");
   const [coverUploadMessage, setCoverUploadMessage] = useState("");
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const generatedSlug = useMemo(() => {
+    if (!draft) {
+      return "";
+    }
+
+    const sourceLabel = draft.title.vi.trim() || draft.title.en.trim() || draft.slug.trim();
+    return sourceLabel ? slugify(sourceLabel) : "";
+  }, [draft]);
 
   const isDirty = useMemo(() => {
     if (isCreateMode) {
@@ -439,7 +447,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
   const saveDraft = () => {
     setEditorMessage("");
 
-    const nextSlug = slugify(draft.slug || draft.title.en || draft.title.vi || `news-${Date.now()}`);
+    const nextSlug = generatedSlug || slugify(draft.slug || `news-${Date.now()}`);
     const nextPostBase: NewsPost = {
       ...draft,
       slug: nextSlug,
@@ -566,7 +574,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
           <button
             type="button"
             onClick={deleteCurrentPost}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-5 py-3 text-sm font-semibold text-rose-600 dark:text-rose-100"
+            className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-5 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-300/16 dark:text-rose-100"
           >
             <Trash2 className="h-4 w-4" />
             {isCreateMode
@@ -583,12 +591,58 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           <Surface className="px-6 py-6 md:px-8 md:py-8">
+            <div className="space-y-5">
+              <LocalizedFieldEditor
+                label="Title"
+                rows={3}
+                value={draft.title}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    current ? { ...current, title: { ...current.title, [language]: value } } : current,
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Category"
+                rows={2}
+                value={draft.category}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    current ? { ...current, category: { ...current.category, [language]: value } } : current,
+                  )
+                }
+              />
+            </div>
+
             <div className="grid gap-4 md:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-sm theme-text-muted">Slug</span>
+                <span className="text-sm theme-text-muted">
+                  {locale === "en" ? "Slug (auto generated)" : "Slug (tự tạo)"}
+                </span>
                 <input
-                  value={draft.slug}
-                  onChange={(event) => setDraft((current) => (current ? { ...current, slug: event.target.value } : current))}
+                  value={generatedSlug || (locale === "en" ? "Will be generated from the title" : "Sẽ được tạo từ tiêu đề")}
+                  readOnly
+                  className={`${fieldClassName} cursor-not-allowed opacity-90`}
+                />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm theme-text-muted">Tags</span>
+                <input
+                  value={draft.tags.join(", ")}
+                  onChange={(event) =>
+                    setDraft((current) =>
+                      current
+                        ? {
+                            ...current,
+                            tags: event.target.value
+                              .split(",")
+                              .map((item) => item.trim())
+                              .filter(Boolean),
+                          }
+                        : current,
+                    )
+                  }
+                  placeholder="launch, fintech, updates"
                   className={fieldClassName}
                 />
               </label>
@@ -686,50 +740,9 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                   ) : null}
                 </div>
               </label>
-              <label className="space-y-2 md:col-span-2">
-                <span className="text-sm theme-text-muted">Tags</span>
-                <input
-                  value={draft.tags.join(", ")}
-                  onChange={(event) =>
-                    setDraft((current) =>
-                      current
-                        ? {
-                            ...current,
-                            tags: event.target.value
-                              .split(",")
-                              .map((item) => item.trim())
-                              .filter(Boolean),
-                          }
-                        : current,
-                    )
-                  }
-                  placeholder="launch, fintech, updates"
-                  className={fieldClassName}
-                />
-              </label>
             </div>
 
             <div className="mt-6 space-y-5">
-              <LocalizedFieldEditor
-                label="Category"
-                rows={2}
-                value={draft.category}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    current ? { ...current, category: { ...current.category, [language]: value } } : current,
-                  )
-                }
-              />
-              <LocalizedFieldEditor
-                label="Title"
-                rows={3}
-                value={draft.title}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    current ? { ...current, title: { ...current.title, [language]: value } } : current,
-                  )
-                }
-              />
               <LocalizedFieldEditor
                 label="Excerpt"
                 rows={4}
