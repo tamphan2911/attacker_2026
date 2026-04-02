@@ -463,12 +463,12 @@ function UsersTableSection() {
                     <td className="px-4 py-4">
                       <p className="theme-text-body">{row.studentId}</p>
                     </td>
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 text-center">
                       <StatusPill tone={pickAdminRoleTone(row.role)}>
                         {row.roleLabel}
                       </StatusPill>
                     </td>
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 text-center">
                       <StatusPill tone={row.statusTone}>{row.statusLabel}</StatusPill>
                     </td>
                     <td className="px-4 py-4 theme-text-body">{row.email}</td>
@@ -601,12 +601,12 @@ function TeamsTableSection() {
                     <td className="px-4 py-4 theme-text-body">{row.tag}</td>
                     <td className="px-4 py-4 theme-text-body">{row.leader || "-"}</td>
                     <td className="px-4 py-4 theme-text-body">{row.memberCount}</td>
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 text-center">
                       <StatusPill tone={row.statusTone}>
                         {row.status}
                       </StatusPill>
                     </td>
-                    <td className="px-4 py-4">
+                    <td className="px-4 py-4 text-center">
                       <StatusPill>{row.stage}</StatusPill>
                     </td>
                     <td className="px-4 py-4 theme-text-body">{row.track}</td>
@@ -739,7 +739,7 @@ function SubmissionsTableSection() {
                   <td className="px-4 py-4 theme-text-body">{row.team}</td>
                   <td className="px-4 py-4 theme-text-body">{row.round}</td>
                   <td className="px-4 py-4 theme-text-body">{row.version}</td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <StatusPill tone={row.isLatest === "valid latest" ? "success" : "default"}>
                       {row.isLatest}
                     </StatusPill>

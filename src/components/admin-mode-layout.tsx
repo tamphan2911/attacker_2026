@@ -15,7 +15,7 @@ import {
 
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { SectionHeading, Surface } from "@/components/site-ui";
 import type { LocalizedText } from "@/types/site";
 
 function cn(...values: Array<string | undefined | false>) {
@@ -86,7 +86,7 @@ const adminNavGroups: Array<{
         label: { en: "Round 1", vi: "Vòng 1" },
         description: { en: "Banks, results, and review", vi: "Ngân hàng đề, kết quả và chấm điểm" },
         children: [
-          { href: "/admin/round-1", label: { en: "Bank summary", vi: "Tổng quan ngân hàng đề" } },
+          { href: "/admin/round-1", label: { en: "Round 1 test bank", vi: "Ngân hàng đề Vòng 1" } },
         ],
       },
       {
@@ -187,23 +187,27 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
     <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="xl:sticky xl:top-24 xl:self-start">
         <Surface className="overflow-hidden px-4 py-4 md:px-5">
-          <div className="rounded-[1.7rem] border theme-border bg-[linear-gradient(135deg,rgba(23,114,208,0.18),rgba(14,165,233,0.06),transparent)] px-4 py-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 dark:text-sky-200/80">
+          <div className="rounded-[1.7rem] border border-white/12 bg-[linear-gradient(135deg,#0b3158_0%,#105892_52%,#1772d0_100%)] px-4 py-5 text-white shadow-[0_24px_44px_rgba(11,49,88,0.22)]">
+            <p className="inline-flex items-center rounded-full border border-white/14 bg-white/12 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/88">
               {locale === "en" ? "Admin mode" : "Admin mode"}
             </p>
-            <p className="mt-3 text-xl font-semibold theme-text-strong">
+            <p className="mt-3 text-xl font-semibold text-white">
               {locale === "en" ? "Control center" : "Trung tâm điều phối"}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <StatusPill tone="success">{currentUser.role === "admin" ? "Admin" : "Moderator"}</StatusPill>
-              <StatusPill>{currentUser.name}</StatusPill>
+              <span className="inline-flex min-h-8 items-center justify-center rounded-full border border-white/14 bg-white/12 px-3 py-1 text-center text-xs font-medium text-white whitespace-nowrap">
+                {currentUser.role === "admin" ? "Admin" : "Moderator"}
+              </span>
+              <span className="inline-flex min-h-8 items-center justify-center rounded-full border border-white/14 bg-white/10 px-3 py-1 text-center text-xs font-medium text-white/92 whitespace-nowrap">
+                {currentUser.name}
+              </span>
             </div>
           </div>
 
           <div className="mt-5 space-y-5">
             {adminNavGroups.map((group) => (
               <div key={group.label.en} className="space-y-2">
-                <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
+                <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-muted">
                   {pickText(locale, group.label)}
                 </p>
                 <div className="space-y-1.5">
@@ -219,7 +223,7 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                             "group flex items-start gap-3 rounded-[1.25rem] px-3 py-3 transition",
                             active
                               ? "bg-[linear-gradient(135deg,rgba(10,29,52,0.98),rgba(23,114,208,0.94))] text-white shadow-[0_18px_34px_rgba(23,114,208,0.16)]"
-                              : "theme-text-body hover:bg-[rgba(23,114,208,0.06)] hover:text-[var(--text-strong)]",
+                              : "bg-white/36 text-[var(--text-strong)] hover:bg-[rgba(23,114,208,0.08)] hover:text-[var(--text-strong)] dark:bg-transparent",
                           )}
                         >
                           <div
@@ -227,14 +231,14 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                               "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border",
                               active
                                 ? "border-white/14 bg-white/10 text-white"
-                                : "theme-border theme-panel text-[var(--brand)]",
+                                : "theme-border theme-panel-strong text-[var(--brand)]",
                             )}
                           >
                             <Icon className="h-4.5 w-4.5" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-semibold">{pickText(locale, item.label)}</p>
-                            <p className={cn("mt-1 text-xs leading-5", active ? "text-white/72" : "theme-text-soft")}>
+                            <p className={cn("mt-1 text-xs leading-5", active ? "text-white/74" : "theme-text-muted")}>
                               {pickText(locale, item.description)}
                             </p>
                           </div>
@@ -251,8 +255,8 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                                   className={cn(
                                     "flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-medium transition",
                                     childActive
-                                      ? "bg-[rgba(23,114,208,0.08)] text-[var(--text-strong)]"
-                                      : "theme-text-soft hover:bg-[rgba(23,114,208,0.05)] hover:text-[var(--text-strong)]",
+                                      ? "bg-[rgba(23,114,208,0.1)] text-[var(--text-strong)]"
+                                      : "theme-text-body hover:bg-[rgba(23,114,208,0.06)] hover:text-[var(--text-strong)]",
                                   )}
                                 >
                                   <span

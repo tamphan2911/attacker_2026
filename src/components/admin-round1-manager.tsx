@@ -578,21 +578,14 @@ export function AdminRound1Manager() {
 
   return (
     <div className="space-y-8">
-      <SectionHeading
-        id={ADMIN_TITLE_ID}
-        className="scroll-mt-32"
-        eyebrow={locale === "en" ? "Admin / Round 1" : "Admin / Vòng 1"}
-        title={
-          locale === "en"
-            ? "Round 1 now stays focused on one bank summary and one team-result summary."
-            : "Vòng 1 giờ được tập trung vào một block tổng quan bank và một block tổng quan kết quả theo đội."
-        }
-        description={
-          locale === "en"
-            ? "Open the objective or essay bank detail page to review paper-generation settings, or open a team result page to inspect each member's Round 1 performance."
-            : "Mở trang chi tiết ngân hàng khách quan hoặc tự luận để xem cấu hình tạo đề, hoặc mở trang chi tiết kết quả đội để xem kết quả Vòng 1 của từng thành viên."
-        }
-      />
+      <div id={ADMIN_TITLE_ID} className="scroll-mt-32 space-y-2">
+        <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
+          {locale === "en" ? "Admin / Round 1" : "Admin / Vòng 1"}
+        </p>
+        <h1 className="theme-heading text-3xl font-semibold theme-text-strong md:text-[2.6rem]">
+          {locale === "en" ? "Round 1" : "Vòng 1"}
+        </h1>
+      </div>
 
       {activeObjectiveBank && activeEssayBank ? (
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -634,14 +627,9 @@ export function AdminRound1Manager() {
       {activeObjectiveBank && activeEssayBank ? (
         <Surface className="px-6 py-6 md:px-8 md:py-8">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-            <div className="max-w-3xl">
+            <div className="space-y-2">
               <p className="theme-heading text-3xl font-semibold theme-text-strong">
-                {locale === "en" ? "Test bank summary" : "Tong quan test bank"}
-              </p>
-              <p className="mt-3 text-sm leading-7 theme-text-muted">
-                {locale === "en"
-                  ? "This summary now separates the active objective bank from the active essay bank. Open either detail page to inspect the authored preview set and delivery configuration."
-                  : "Khối này tách riêng ngân hàng khách quan và ngân hàng tự luận đang active. Mở từng trang chi tiết để xem tập câu hỏi preview và cấu hình phát đề."}
+                {locale === "en" ? "Round 1 test bank" : "Ngân hàng đề Vòng 1"}
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -660,9 +648,9 @@ export function AdminRound1Manager() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-6 xl:grid-cols-2">
+          <div className="mt-8 space-y-6">
             {[activeObjectiveBank, activeEssayBank].map((bank) => (
-              <div key={bank.id} className="rounded-[1.75rem] border theme-border theme-panel-subtle px-5 py-5">
+              <div key={bank.id} className="rounded-[1.75rem] border theme-border theme-panel-subtle px-6 py-6">
                 <div className="flex flex-wrap items-center gap-3">
                   <StatusPill tone={bank.status === "active" ? "success" : "default"}>
                     {bank.status}
@@ -679,7 +667,7 @@ export function AdminRound1Manager() {
                   {pickText(locale, bank.description)}
                 </p>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-[1.5rem] border theme-border bg-white/5 px-4 py-4">
+                  <div className="rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
                       {locale === "en" ? "Pool size" : "Quy mô kho"}
                     </p>
@@ -687,7 +675,7 @@ export function AdminRound1Manager() {
                       {bank.questionPoolSize}
                     </p>
                   </div>
-                  <div className="rounded-[1.5rem] border theme-border bg-white/5 px-4 py-4">
+                  <div className="rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
                       {locale === "en" ? "Per paper" : "Mỗi đề"}
                     </p>
@@ -695,7 +683,7 @@ export function AdminRound1Manager() {
                       {bank.bankType === "objective" ? ROUND1_OBJECTIVE_TOTAL : ROUND1_ESSAY_TOTAL}
                     </p>
                   </div>
-                  <div className="rounded-[1.5rem] border theme-border bg-white/5 px-4 py-4">
+                  <div className="rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
                       {locale === "en" ? "Preview items" : "Câu preview"}
                     </p>
@@ -703,7 +691,7 @@ export function AdminRound1Manager() {
                       {bank.questions.length}
                     </p>
                   </div>
-                  <div className="rounded-[1.5rem] border theme-border bg-white/5 px-4 py-4">
+                  <div className="rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
                       {locale === "en" ? "Word limit" : "Giới hạn từ"}
                     </p>
@@ -809,14 +797,9 @@ export function AdminRound1Manager() {
 
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-3xl">
+          <div className="space-y-2">
             <p className="theme-heading text-3xl font-semibold theme-text-strong">
-              {locale === "en" ? "Team result summary" : "Tong quan ket qua theo doi"}
-            </p>
-            <p className="mt-3 text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "Each row summarizes one team. Click the team name to open its admin record, or open the detail result page to inspect every member's Round 1 performance."
-                : "Mỗi dòng tổng hợp một đội. Bấm tên đội để mở hồ sơ admin của đội, hoặc mở trang chi tiết kết quả để xem Vòng 1 của từng thành viên."}
+              {locale === "en" ? "Round 1 results" : "Kết quả Vòng 1"}
             </p>
           </div>
           <button

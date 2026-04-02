@@ -153,12 +153,12 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
+        "inline-flex min-h-8 items-center justify-center rounded-full border px-3 py-1 text-center text-xs font-medium whitespace-nowrap",
         tone === "default" && "theme-chip",
         tone === "success" &&
-          "border-emerald-300/20 bg-emerald-300/10 text-emerald-700 dark:text-emerald-100",
+          "border-emerald-500/24 bg-emerald-500/12 text-emerald-800 dark:border-emerald-300/22 dark:bg-emerald-300/12 dark:text-emerald-100",
         tone === "warning" &&
-          "border-amber-300/25 bg-amber-300/10 text-amber-700 dark:text-amber-100",
+          "border-amber-500/26 bg-amber-500/14 text-amber-800 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100",
       )}
     >
       {children}
