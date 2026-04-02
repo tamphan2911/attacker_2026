@@ -464,7 +464,7 @@ function buildSubmissionExportRows(
   );
 }
 
-function getStandingTone(group: TeamResultGroup): "default" | "success" | "warning" {
+function getStandingTone(group: TeamResultGroup): "info" | "success" | "warning" {
   if (group.team.memberIds.length < TEAM_MIN_MEMBERS) {
     return "warning";
   }
@@ -474,10 +474,10 @@ function getStandingTone(group: TeamResultGroup): "default" | "success" | "warni
       return "warning";
     }
 
-    return "default";
+    return "info";
   }
 
-  return group.rank <= 50 ? "success" : "default";
+  return group.rank <= 50 ? "success" : "info";
 }
 
 function getStandingLabel(locale: Locale, group: TeamResultGroup) {
@@ -858,13 +858,13 @@ export function AdminRound1Manager() {
                   <td className="px-4 py-4 theme-text-body">
                     {group.completedRows.length}/{group.memberRows.length}
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <StatusPill
                       tone={
                         group.averageObjectiveScore >= ROUND1_OBJECTIVE_MAX_SCORE * 0.8
                           ? "success"
                           : group.averageObjectiveScore > 0
-                            ? "default"
+                            ? "info"
                             : "warning"
                       }
                     >
@@ -880,7 +880,7 @@ export function AdminRound1Manager() {
                           : "Đang chờ"
                         : `${group.averageEssayScore.toFixed(2)} / ${ROUND1_ESSAY_MAX_SCORE}`}
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     {group.completedRows.length === 0 ? (
                       "--"
                     ) : group.hasPendingEssayReview ? (
@@ -888,7 +888,7 @@ export function AdminRound1Manager() {
                         {locale === "en" ? "Pending" : "Đang chờ"}
                       </StatusPill>
                     ) : (
-                      <StatusPill tone={group.averageTotalScore >= 80 ? "success" : group.averageTotalScore >= 65 ? "default" : "warning"}>
+                      <StatusPill tone={group.averageTotalScore >= 80 ? "success" : group.averageTotalScore >= 65 ? "info" : "warning"}>
                         {`${group.averageTotalScore.toFixed(2)} / ${ROUND1_TOTAL_MAX_SCORE}`}
                       </StatusPill>
                     )}
@@ -896,7 +896,7 @@ export function AdminRound1Manager() {
                   <td className="px-4 py-4 theme-text-body">
                     {group.latestSubmittedAt ? formatDateLabel(locale, group.latestSubmittedAt) : "--"}
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 text-center">
                     <StatusPill tone={getStandingTone(group)}>
                       {getStandingLabel(locale, group)}
                     </StatusPill>

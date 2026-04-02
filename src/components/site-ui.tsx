@@ -148,13 +148,15 @@ export function StatusPill({
   tone = "default",
 }: {
   children: ReactNode;
-  tone?: "default" | "success" | "warning";
+  tone?: "default" | "success" | "warning" | "info";
 }) {
   return (
     <span
       className={cn(
         "inline-flex min-h-8 items-center justify-center rounded-full border px-3 py-1 text-center text-xs font-medium whitespace-nowrap",
         tone === "default" && "theme-chip",
+        tone === "info" &&
+          "border-sky-500/24 bg-sky-500/12 text-sky-800 dark:border-sky-300/22 dark:bg-sky-300/14 dark:text-sky-100",
         tone === "success" &&
           "border-emerald-500/24 bg-emerald-500/12 text-emerald-800 dark:border-emerald-300/22 dark:bg-emerald-300/12 dark:text-emerald-100",
         tone === "warning" &&
