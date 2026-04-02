@@ -473,7 +473,7 @@ export function HomePage() {
                   </div>
                 </div>
 
-                <h1 className="theme-heading mt-4 max-w-3xl text-[1.82rem] font-semibold leading-[1.04] text-white [text-shadow:0_14px_34px_rgba(7,18,35,0.38)] md:text-[2.9rem]">
+                <h1 className="theme-heading mt-4 max-w-3xl text-[1.7rem] font-semibold leading-[1.04] text-white [text-shadow:0_14px_34px_rgba(7,18,35,0.38)] md:text-[2.78rem]">
                   {pickText(locale, currentHeroSlide.title)}
                 </h1>
                 <p className="mt-3.5 max-w-2xl text-[0.9rem] leading-7 text-white/80 [text-shadow:0_10px_24px_rgba(7,18,35,0.32)] md:text-[0.95rem]">
