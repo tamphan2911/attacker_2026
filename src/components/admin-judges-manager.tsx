@@ -221,6 +221,8 @@ function JudgeFormFields({
   onChange,
   compact = false,
   idEditable = true,
+  showIdField = true,
+  autoIdFromName = false,
   imageUploadMessage,
   imageUploadHelper,
   isUploadingImage = false,
@@ -231,6 +233,8 @@ function JudgeFormFields({
   onChange: (nextDraft: JudgeDraft) => void;
   compact?: boolean;
   idEditable?: boolean;
+  showIdField?: boolean;
+  autoIdFromName?: boolean;
   imageUploadMessage?: string;
   imageUploadHelper?: string;
   isUploadingImage?: boolean;
@@ -242,16 +246,6 @@ function JudgeFormFields({
         <div className="space-y-5">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-sm theme-text-muted">ID</span>
-              <input
-                value={draft.id}
-                onChange={(event) => onChange({ ...draft, id: slugify(event.target.value) })}
-                placeholder={locale === "en" ? "judge-round2-example" : "judge-round2-vi-du"}
-                className={`${fieldClassName} disabled:cursor-not-allowed disabled:opacity-70`}
-                disabled={!idEditable}
-              />
-            </label>
-            <label className="space-y-2">
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Full name" : "Họ tên"}
               </span>
@@ -261,12 +255,28 @@ function JudgeFormFields({
                   onChange({
                     ...draft,
                     name: event.target.value,
-                    id: idEditable && !draft.id ? slugify(event.target.value) : draft.id,
+                    id: autoIdFromName
+                      ? slugify(event.target.value)
+                      : idEditable && !draft.id
+                        ? slugify(event.target.value)
+                        : draft.id,
                   })
                 }
-                className={fieldClassName}
+                className={cn(fieldClassName, showIdField ? "" : "md:col-span-2")}
               />
             </label>
+            {showIdField ? (
+              <label className="space-y-2">
+                <span className="text-sm theme-text-muted">ID</span>
+                <input
+                  value={draft.id}
+                  onChange={(event) => onChange({ ...draft, id: slugify(event.target.value) })}
+                  placeholder={locale === "en" ? "judge-round2-example" : "judge-round2-vi-du"}
+                  className={`${fieldClassName} disabled:cursor-not-allowed disabled:opacity-70`}
+                  disabled={!idEditable}
+                />
+              </label>
+            ) : null}
             <label className="space-y-2 md:col-span-2">
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Image source" : "Đường dẫn hình ảnh"}
@@ -328,7 +338,7 @@ function JudgeFormFields({
           </div>
 
           <LocalizedFieldEditor
-            label={locale === "en" ? "Role" : "Vai trò"}
+            label={locale === "en" ? "Position" : "Chức vụ"}
             rows={2}
             value={draft.role}
             onChange={(language, nextValue) =>
@@ -408,7 +418,7 @@ function JudgeFormFields({
               {draft.name || (locale === "en" ? "Judge name" : "Tên giám khảo")}
             </p>
             <p className="mt-2 text-sm leading-7 theme-text-soft">
-              {pickText(locale, draft.role) || (locale === "en" ? "Role" : "Vai trò")} ·{" "}
+              {pickText(locale, draft.role) || (locale === "en" ? "Position" : "Chức vụ")} ·{" "}
               {draft.organization || (locale === "en" ? "Organization" : "Tổ chức")}
             </p>
           </div>
@@ -526,7 +536,14 @@ function AddJudgeModal({
           </div>
 
           <div className="mt-7">
-            <JudgeFormFields locale={locale} draft={draft} onChange={onChange} compact />
+            <JudgeFormFields
+              locale={locale}
+              draft={draft}
+              onChange={onChange}
+              compact
+              showIdField={false}
+              autoIdFromName
+            />
           </div>
 
           {validationMessage ? (
