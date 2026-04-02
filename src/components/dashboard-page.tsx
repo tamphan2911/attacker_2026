@@ -43,7 +43,6 @@ import { formatDateLabel, formatDateRangeLabel, getTeamForUser, pickText } from 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import {
   GradientAvatar,
-  SectionHeading,
   StatusPill,
   Surface,
 } from "@/components/site-ui";
@@ -140,15 +139,12 @@ export function DashboardPage() {
     round1Submissions,
     pageContent,
     authStatus,
-    currentUser,
     currentTeam,
     activeUserId,
     isAuthenticated,
     canAccessAdminMode,
-    signOutCurrentUser,
     createTeam,
     updateCurrentTeam,
-    updateActiveUserProfile,
     inviteUser,
     respondToInvitation,
     initiateRound1TeamLock,
@@ -160,7 +156,6 @@ export function DashboardPage() {
   } = useSiteState();
   const [teamForm, setTeamForm] = useState<TeamFormState>(() => createTeamFormState(currentTeam));
   const [teamAvatarError, setTeamAvatarError] = useState("");
-  const [userAvatarError, setUserAvatarError] = useState("");
   const [inviteSearch, setInviteSearch] = useState("");
   const [leadershipTargetId, setLeadershipTargetId] = useState("");
   const [submissionForms, setSubmissionForms] = useState<Record<SubmissionRound, SubmissionFormState>>({
@@ -175,10 +170,6 @@ export function DashboardPage() {
   useEffect(() => {
     setTeamAvatarError("");
   }, [currentTeam?.id]);
-
-  useEffect(() => {
-    setUserAvatarError("");
-  }, [activeUserId]);
 
   useEffect(() => {
     setLeadershipTargetId("");
@@ -373,32 +364,6 @@ export function DashboardPage() {
     }
   };
 
-  const handleUserAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-
-    if (!file) {
-      return;
-    }
-
-    if (file.size > MAX_AVATAR_FILE_BYTES) {
-      setUserAvatarError(
-        locale === "en"
-          ? `Avatar images must be ${formatFileSize(MAX_AVATAR_FILE_BYTES)} or smaller.`
-          : `Ảnh avatar phải có dung lượng ${formatFileSize(MAX_AVATAR_FILE_BYTES)} trở xuống.`,
-      );
-      return;
-    }
-
-    try {
-      const imageSrc = await readImageFileAsDataUrl(file);
-      setUserAvatarError("");
-      updateActiveUserProfile({ avatarImageSrc: imageSrc });
-    } catch {
-      // Ignore failed local previews in the frontend-only prototype.
-    }
-  };
-
   const handleSubmission = async (round: SubmissionRound) => {
     const form = submissionForms[round];
 
@@ -479,7 +444,7 @@ export function DashboardPage() {
     Boolean(currentTeam && currentTeam.round1LockStatus === "pending" && isLeader);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
       {hasActionInbox ? (
         <section className="space-y-4">
           <div className="rounded-[2rem] border border-sky-400/28 bg-[linear-gradient(135deg,rgba(24,92,188,0.18),rgba(14,165,233,0.08))] px-6 py-6 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl md:px-8">
@@ -761,191 +726,152 @@ export function DashboardPage() {
         </section>
       ) : null}
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section>
         <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
-            {locale === "en" ? "Team workspace" : "Không gian đội"}
-          </p>
-          <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.8rem]">
-            {currentTeam
-              ? currentTeam.name
-              : pickText(locale, pageContent.workspace.noTeamTitle)}
-          </h1>
-          <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted">
-            {currentTeam
-              ? pickText(locale, pageContent.workspace.teamDescription)
-              : pickText(locale, pageContent.workspace.noTeamDescription)}
-          </p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            <StatusPill
-              tone={currentCompetitionState === "not-eligible" ? "warning" : "success"}
-            >
-              {currentTeam
-                ? pickCompetitionStateLabel(locale, currentCompetitionState ?? "not-eligible")
-                : locale === "en"
-                  ? "No team yet"
-                  : "Chưa có đội"}
-            </StatusPill>
-            <StatusPill>{`${teamReadinessCount}/${TEAM_MAX_MEMBERS} ${locale === "en" ? "members" : "thành viên"}`}</StatusPill>
-            {currentTeam ? <StatusPill>{`${openSlots} ${locale === "en" ? "open slots" : "cho trong"}`}</StatusPill> : null}
-            {currentTeam ? (
-              <StatusPill
-                tone={
-                  currentTeam.round1LockStatus === "locked"
-                    ? "success"
-                    : currentTeam.round1LockStatus === "pending" || currentTeam.round1LockStatus === "declined"
-                      ? "warning"
-                      : "default"
-                }
-              >
-                {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
-              </StatusPill>
-            ) : null}
-            {currentTeam && competitionWindowLabel ? <StatusPill>{competitionWindowLabel}</StatusPill> : null}
-          </div>
-          {currentTeam ? (
-            <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-soft">
-              {competitionSummary}
-            </p>
-          ) : null}
-          {currentTeam ? (
-            <div className="mt-4 rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
-              {currentStageAlert}
-            </div>
-          ) : null}
-          {currentTeam ? (
-            <div className="mt-6 flex flex-wrap gap-3">
-              {currentRound1Submission || currentCompetitionState === "round-1" ? (
-                <Link
-                  href={
-                    currentRound1Submission
-                      ? "/dashboard#round1-result"
-                      : canStartRound1Exam
-                        ? "/round-1"
-                        : "/dashboard#round1-lock"
-                  }
-                  className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                  {currentRound1Submission
-                    ? locale === "en"
-                      ? "View Round 1 result"
-                      : "Xem kết quả Vòng 1"
-                    : canStartRound1Exam
-                      ? locale === "en"
-                        ? "Open Round 1 exam"
-                        : "Mở bài thi Vòng 1"
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="min-w-0">
+              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
+                {locale === "en" ? "Team workspace" : "Không gian đội"}
+              </p>
+              <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.8rem]">
+                {currentTeam ? currentTeam.name : pickText(locale, pageContent.workspace.noTeamTitle)}
+              </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted">
+                {currentTeam
+                  ? currentTeam.bio || pickText(locale, pageContent.workspace.teamDescription)
+                  : pickText(locale, pageContent.workspace.noTeamDescription)}
+              </p>
+              <div className="mt-6 flex flex-wrap gap-2">
+                <StatusPill tone={currentCompetitionState === "not-eligible" ? "warning" : "success"}>
+                  {currentTeam
+                    ? pickCompetitionStateLabel(locale, currentCompetitionState ?? "not-eligible")
                     : locale === "en"
-                      ? "Review team lock"
-                      : "Xem khóa đội"}
-                </Link>
-              ) : null}
-              <Link
-                href="/rules"
-                className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
-              >
-                {locale === "en" ? "Review rules" : "Xem thể lệ"}
-              </Link>
-            </div>
-          ) : null}
-        </Surface>
-
-        <Surface className="px-5 py-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Your profile" : "Hồ sơ của bạn"}
-          </p>
-          <div className="mt-5 space-y-4">
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <div className="flex items-start gap-4">
-                <GradientAvatar
-                  label={currentUser.name}
-                  tone={currentUser.avatarTone}
-                  imageSrc={currentUser.avatarImageSrc}
-                  className="h-16 w-16 text-lg"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold theme-text-strong">{currentUser.name}</p>
-                  <p className="mt-1 text-sm theme-text-soft">
-                    {`${locale === "en" ? "Student ID" : "MSSV"} · ${currentUser.studentId}`}
-                  </p>
-                  <p className="mt-2 text-sm theme-text-soft">{currentUser.university}</p>
-                  <p className="mt-2 text-xs theme-text-faint">{`${currentUser.major} · ${currentUser.classYear}`}</p>
-                </div>
-              </div>
-              <div className="mt-4 rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                  {locale === "en" ? "Bio" : "Giới thiệu"}
-                </p>
-                <p className="mt-3 text-sm leading-7 theme-text-muted">{currentUser.bio}</p>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border theme-border theme-panel-subtle px-4 py-2.5 text-sm font-semibold theme-text-strong">
-                  <Upload className="h-4 w-4" />
-                  {locale === "en" ? "Upload avatar" : "Tải avatar lên"}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => {
-                      void handleUserAvatarUpload(event);
-                    }}
-                    className="hidden"
-                  />
-                </label>
-                {currentUser.avatarImageSrc ? (
-                  <button
-                    type="button"
-                    onClick={() => updateActiveUserProfile({ avatarImageSrc: undefined })}
-                    className="rounded-2xl border theme-border theme-panel-subtle px-4 py-2.5 text-sm font-semibold theme-text-strong"
+                      ? "No team yet"
+                      : "Chưa có đội"}
+                </StatusPill>
+                <StatusPill>{`${teamReadinessCount}/${TEAM_MAX_MEMBERS} ${locale === "en" ? "members" : "thành viên"}`}</StatusPill>
+                {currentTeam ? <StatusPill>{`${openSlots} ${locale === "en" ? "open slots" : "chỗ trống"}`}</StatusPill> : null}
+                {currentTeam ? (
+                  <StatusPill
+                    tone={
+                      currentTeam.round1LockStatus === "locked"
+                        ? "success"
+                        : currentTeam.round1LockStatus === "pending" || currentTeam.round1LockStatus === "declined"
+                          ? "warning"
+                          : "default"
+                    }
                   >
-                    {locale === "en" ? "Remove photo" : "Gỡ ảnh"}
-                  </button>
+                    {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
+                  </StatusPill>
                 ) : null}
               </div>
-              {userAvatarError ? <p className="mt-3 text-xs leading-6 text-rose-300">{userAvatarError}</p> : null}
-              <p className="mt-3 text-xs leading-6 theme-text-faint">
-                {locale === "en"
-                  ? `This avatar appears in your team member card and invite lists. Maximum size ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`
-                  : `Avatar này sẽ hiện ở thẻ thành viên đội và danh sách lời mời. Dung lượng tối đa ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                {locale === "en" ? "Account actions" : "Tác vụ tài khoản"}
-              </p>
-              <div className="mt-4 space-y-3">
-                <Link
-                  href="/profile"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
-                >
-                  <ArrowRight className="h-4 w-4" />
+
+              {currentTeam ? (
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {currentRound1Submission || currentCompetitionState === "round-1" ? (
+                    <Link
+                      href={
+                        currentRound1Submission
+                          ? "/dashboard#round1-result"
+                          : canStartRound1Exam
+                            ? "/round-1"
+                            : "/dashboard#round1-lock"
+                      }
+                      className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                      {currentRound1Submission
+                        ? locale === "en"
+                          ? "View Round 1 result"
+                          : "Xem kết quả Vòng 1"
+                        : canStartRound1Exam
+                          ? locale === "en"
+                            ? "Open Round 1 exam"
+                            : "Mở bài thi Vòng 1"
+                          : locale === "en"
+                            ? "Review team lock"
+                            : "Xem khóa đội"}
+                    </Link>
+                  ) : null}
+                  <Link
+                    href="/profile"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+                  >
                     {locale === "en" ? "Open profile" : "Mở hồ sơ"}
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => void signOutCurrentUser()}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
-                >
-                  <LogOut className="h-4 w-4" />
-                  {locale === "en" ? "Sign out" : "Đăng xuất"}
-                </button>
-              </div>
+                  </Link>
+                  <Link
+                    href="/rules"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+                  >
+                    {locale === "en" ? "Review rules" : "Xem thể lệ"}
+                  </Link>
+                  {canAccessAdminMode ? (
+                    <Link
+                      href="/admin"
+                      className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+                    >
+                      Admin
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
-            {canAccessAdminMode ? (
-              <Link
-                href="/admin"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
-              >
-                <ArrowRight className="h-4 w-4" />
-                  {locale === "en" ? "Open admin mode" : "Mở admin mode"}
-              </Link>
-            ) : null}
+
+            <div className="grid gap-3">
+              <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-5 py-5">
+                <div className="flex items-start gap-4">
+                  {currentTeam ? (
+                    <GradientAvatar
+                      label={teamForm.name || currentTeam.name}
+                      tone={teamForm.avatarTone}
+                      imageSrc={teamForm.avatarImageSrc}
+                      className="h-16 w-16 rounded-[1.5rem] text-lg"
+                    />
+                  ) : (
+                    <div className="theme-brand-gradient flex h-16 w-16 items-center justify-center rounded-[1.5rem] text-lg font-semibold text-white">
+                      {teamReadinessCount}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "Current stage" : "Giai đoạn hiện tại"}
+                    </p>
+                    <p className="mt-3 text-lg font-semibold theme-text-strong">
+                      {currentTeam ? pickCompetitionStateLabel(locale, currentCompetitionState ?? currentTeam.stage) : "--"}
+                    </p>
+                    {competitionWindowLabel ? (
+                      <p className="mt-2 text-sm theme-text-soft">{competitionWindowLabel}</p>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
+              {currentTeam ? (
+                <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-5 py-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill>{currentTeam.tag}</StatusPill>
+                    <StatusPill tone={isLeader ? "success" : "default"}>
+                      {isLeader
+                        ? locale === "en"
+                          ? "Leader view"
+                          : "Góc nhìn đội trưởng"
+                        : locale === "en"
+                          ? "Member view"
+                          : "Góc nhìn thành viên"}
+                    </StatusPill>
+                  </div>
+                  <p className="mt-4 text-sm leading-7 theme-text-muted">{competitionSummary}</p>
+                  <p className="mt-3 text-sm leading-7 theme-text-soft">{currentStageAlert}</p>
+                </div>
+              ) : null}
+            </div>
           </div>
         </Surface>
       </section>
 
       {currentTeam ? (
         <>
-          <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+          <section className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
             <Surface className="px-6 py-6 md:px-8 md:py-8">
               <div className="flex flex-wrap items-start justify-between gap-5">
                 <div className="flex items-center gap-4">
@@ -1102,7 +1028,7 @@ export function DashboardPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                    {locale === "en" ? "Team members" : "Thành viên đội"}
+                    {locale === "en" ? "Roster & actions" : "Đội hình và thao tác"}
                   </p>
                   <p className="mt-3 text-2xl font-semibold theme-text-strong">
                     {currentTeamMembers.length} / {TEAM_MAX_MEMBERS}
@@ -1143,25 +1069,222 @@ export function DashboardPage() {
 
               <div className="mt-6 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-sm font-semibold theme-text-strong">
-                  {locale === "en" ? "Current competition stage" : "Giai doan hien tai"}
-                </p>
-                <p className="mt-2 text-sm leading-7 theme-text-muted">{competitionSummary}</p>
-                {competitionWindowLabel ? (
-                  <p className="mt-3 text-xs uppercase tracking-[0.22em] theme-text-faint">
-                    {competitionWindowLabel}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="mt-6 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-sm font-semibold theme-text-strong">
-                  {locale === "en" ? "Submission permission" : "Quyen nop bai"}
+                  {locale === "en" ? "Team actions" : "Thao tác của đội"}
                 </p>
                 <p className="mt-2 text-sm leading-7 theme-text-muted">
                   {locale === "en"
                     ? "Only the team leader can submit Round 2 reports and final-round files. Teams may submit unlimited versions, but only the latest version is valid."
                     : "Chỉ đội trưởng mới có thể nộp báo cáo Vòng 2 và tệp của vòng chung kết. Đội có thể nộp không giới hạn phiên bản, nhưng chỉ phiên bản mới nhất mới hợp lệ."}
                 </p>
+
+                <div className="mt-4 grid gap-3">
+                  <label className="block space-y-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Transfer leadership" : "Chuyển đội trưởng"}
+                    </span>
+                    <select
+                      disabled={!isLeader || Boolean(outgoingLeadershipTransfer) || teamRosterLocked}
+                      value={leadershipTargetId}
+                      onChange={(event) => setLeadershipTargetId(event.target.value)}
+                      className="w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none disabled:opacity-40"
+                    >
+                      <option value="" className="bg-slate-950">
+                        {locale === "en" ? "Select teammate" : "Chọn thành viên"}
+                      </option>
+                      {currentTeamMembers
+                        .filter((member) => member.id !== activeUserId)
+                        .map((member) => (
+                          <option key={member.id} value={member.id} className="bg-slate-950">
+                            {member.name}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      disabled={!isLeader || !leadershipTargetId || Boolean(outgoingLeadershipTransfer) || teamRosterLocked}
+                      onClick={() => {
+                        transferLeadership(leadershipTargetId);
+                        setLeadershipTargetId("");
+                      }}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Crown className="h-4 w-4" />
+                      {locale === "en" ? "Send leadership request" : "Gửi yêu cầu đội trưởng"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={teamRosterLocked}
+                      onClick={leaveCurrentTeam}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {locale === "en" ? "Leave current team" : "Rời đội hiện tại"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-[1.25rem] border theme-border bg-white/60 px-4 py-4 text-sm leading-7 theme-text-muted dark:bg-white/4">
+                  {teamRosterLocked
+                    ? currentTeam.round1LockStatus === "pending"
+                      ? locale === "en"
+                        ? "Roster changes are frozen while the Round 1 lock workflow is pending."
+                        : "Mọi thay đổi đội hình đang bị đóng băng trong khi quy trình khóa đội cho Vòng 1 còn chờ phản hồi."
+                      : locale === "en"
+                        ? "This team roster is already locked, so leadership transfer and leaving the team are no longer available."
+                        : "Đội hình của đội này đã bị khóa nên việc chuyển đội trưởng và rời đội đều không còn khả dụng."
+                    : isLeader
+                      ? locale === "en"
+                        ? "The leader must send a transfer request and wait for the selected member to accept before leaving."
+                        : "Đội trưởng phải gửi yêu cầu chuyển quyền và chờ thành viên được chọn chấp nhận trước khi rời đội."
+                      : locale === "en"
+                        ? "As a regular member, this account can leave immediately."
+                        : "Với vai trò thành viên thường, tài khoản này có thể rời đội ngay."}
+                </div>
+
+                {outgoingLeadershipTransfer ? (
+                  <div className="mt-4 rounded-[1.25rem] border theme-border bg-white/60 px-4 py-4 text-sm leading-7 theme-text-muted dark:bg-white/4">
+                    {locale === "en"
+                      ? `Waiting for ${users.find((user) => user.id === outgoingLeadershipTransfer.toUserId)?.name ?? "the selected member"} to accept the leadership transfer request.`
+                      : `Đang chờ ${users.find((user) => user.id === outgoingLeadershipTransfer.toUserId)?.name ?? "thành viên được chọn"} chấp nhận yêu cầu chuyển đội trưởng.`}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="mt-6 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold theme-text-strong">
+                      {locale === "en" ? "Invite teammates" : "Mời thành viên"}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 theme-text-muted">
+                      {teamRosterLocked
+                        ? currentTeam.round1LockStatus === "pending"
+                          ? locale === "en"
+                            ? "The Round 1 lock workflow is running, so invites are paused until every current member responds."
+                            : "Quy trình khóa đội cho Vòng 1 đang diễn ra nên việc mời thêm người tạm dừng cho tới khi toàn bộ thành viên hiện tại phản hồi."
+                          : locale === "en"
+                            ? "This roster is already locked, so the team can no longer invite additional members."
+                            : "Đội hình này đã được khóa nên đội không thể mời thêm thành viên mới nữa."
+                        : isTeamFull
+                          ? isLeader
+                            ? locale === "en"
+                              ? "Your team already has 5 members, so new invitations are disabled."
+                              : "Đội của bạn đã có 5 thành viên, vì vậy hệ thống đã tắt việc mời thêm người."
+                            : locale === "en"
+                              ? "This team already has 5 members, so the invite list is locked."
+                              : "Đội này đã có 5 thành viên, vì vậy danh sách mời đã bị khóa."
+                          : openSlots <= 0
+                            ? locale === "en"
+                              ? "All remaining slots are currently reserved by pending invites."
+                              : "Tất cả chỗ trống còn lại hiện đang được giữ bởi các lời mời đang chờ."
+                            : locale === "en"
+                              ? "Search across students who are not currently members of any team."
+                              : "Tìm trong danh sách sinh viên hiện chưa là thành viên của bất kỳ đội nào."}
+                    </p>
+                  </div>
+                  <StatusPill tone={teamRosterLocked || isTeamFull ? "warning" : "default"}>
+                    {teamRosterLocked
+                      ? locale === "en"
+                        ? "Roster locked"
+                        : "Đội hình đã khóa"
+                      : `${openSlots} ${locale === "en" ? "slots left" : "chỗ trống"}`}
+                  </StatusPill>
+                </div>
+
+                <label className="mt-4 block">
+                  <span className="sr-only">
+                    {locale === "en" ? "Search available students" : "Tìm sinh viên còn trống"}
+                  </span>
+                  <div className="flex items-center gap-3 rounded-2xl border theme-border theme-panel px-4 py-3">
+                    <Search className="h-4 w-4 theme-text-faint" />
+                    <input
+                      value={inviteSearch}
+                      disabled={isTeamFull || teamRosterLocked}
+                      onChange={(event) => setInviteSearch(event.target.value)}
+                      placeholder={locale === "en" ? "Search by name, email, university..." : "Tìm theo tên, email, trường..."}
+                      className="theme-placeholder w-full bg-transparent text-sm theme-text-strong outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                    />
+                  </div>
+                </label>
+
+                <div className="mt-4 max-h-[420px] space-y-3 overflow-y-auto pr-1">
+                  {filteredAvailableUsers.map((user) => {
+                    const alreadyInvited = sentInvitations.some((invitation) => invitation.toUserId === user.id);
+                    const canInvite = Boolean(
+                      isLeader && !alreadyInvited && openSlots > 0 && !isTeamFull && !teamRosterLocked,
+                    );
+
+                    return (
+                      <div
+                        key={user.id}
+                        className="flex flex-col gap-4 rounded-[1.35rem] border theme-border bg-white/60 px-4 py-4 dark:bg-white/4 md:flex-row md:items-center md:justify-between"
+                      >
+                        <div className="flex items-center gap-3">
+                          <GradientAvatar label={user.name} tone={user.avatarTone} imageSrc={user.avatarImageSrc} />
+                          <div>
+                            <p className="text-sm font-semibold theme-text-strong">{user.name}</p>
+                            <p className="text-xs theme-text-soft">{user.university}</p>
+                            <p className="mt-1 text-xs theme-text-faint">{user.major}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          disabled={!canInvite}
+                          onClick={() => inviteUser(user.id)}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          <UserPlus2 className="h-4 w-4" />
+                          {alreadyInvited
+                            ? locale === "en"
+                              ? "Invite pending"
+                              : "Đang chờ"
+                            : locale === "en"
+                              ? "Invite"
+                              : "Mời vào đội"}
+                        </button>
+                      </div>
+                    );
+                  })}
+
+                  {filteredAvailableUsers.length === 0 ? (
+                    <div className="rounded-[1.35rem] border theme-border bg-white/60 px-4 py-4 text-sm leading-7 theme-text-muted dark:bg-white/4">
+                      {teamRosterLocked
+                        ? locale === "en"
+                          ? "Roster changes are locked right now, so the invite list is intentionally disabled."
+                          : "Đội hình hiện đang bị khóa nên danh sách mời thêm thành viên đang được tắt có chủ đích."
+                        : inviteSearch.trim()
+                          ? locale === "en"
+                            ? "No available free-agent students match this search."
+                            : "Không có sinh viên chưa vào đội nào phù hợp với từ khóa tìm kiếm này."
+                          : locale === "en"
+                            ? "No free-agent students are available right now."
+                            : "Hiện không có sinh viên tự do nào để mời vào đội."}
+                    </div>
+                  ) : null}
+                </div>
+
+                {sentInvitations.length > 0 ? (
+                  <div className="mt-4 rounded-[1.25rem] border theme-border bg-white/60 px-4 py-4 dark:bg-white/4">
+                    <p className="text-sm font-semibold theme-text-strong">
+                      {locale === "en" ? "Pending sent invites" : "Lời mời đã gửi"}
+                    </p>
+                    <div className="mt-3 space-y-2">
+                      {sentInvitations.map((invitation) => {
+                        const targetUser = users.find((user) => user.id === invitation.toUserId);
+
+                        return (
+                          <div key={invitation.id} className="flex items-center gap-3 text-sm theme-text-muted">
+                            <MailPlus className="h-4 w-4 text-sky-200" />
+                            <span>{targetUser?.name ?? invitation.toUserId}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </Surface>
           </section>
@@ -1584,227 +1707,6 @@ export function DashboardPage() {
             </section>
           ) : null}
 
-          <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-            <Surface className="px-6 py-6 md:px-8 md:py-8">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                    {locale === "en" ? "Invite teammates" : "Mời thành viên"}
-                  </p>
-                  <p className="mt-4 text-2xl font-semibold theme-text-strong">
-                    {locale === "en"
-                      ? "Build the team around complementary skills."
-                      : "Xây dựng đội với các kỹ năng bổ trợ cho nhau."}
-                  </p>
-                </div>
-                <StatusPill>{`${openSlots} ${locale === "en" ? "slots left" : "cho trong"}`}</StatusPill>
-              </div>
-
-              <div className="mt-6 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-semibold theme-text-strong">
-                    {locale === "en" ? "Available students only" : "Chỉ hiện sinh viên chưa ở đội nào"}
-                  </p>
-                  {teamRosterLocked ? (
-                    <StatusPill tone="warning">
-                      {locale === "en" ? "Roster locked" : "Đội hình đã khóa"}
-                    </StatusPill>
-                  ) : isTeamFull ? (
-                    <StatusPill tone="warning">
-                      {locale === "en" ? "Team is full" : "Đội đã đủ thành viên"}
-                    </StatusPill>
-                  ) : null}
-                </div>
-                <p className="mt-2 text-sm leading-7 theme-text-muted">
-                  {teamRosterLocked
-                    ? currentTeam.round1LockStatus === "pending"
-                      ? locale === "en"
-                        ? "The Round 1 lock workflow is running, so invites are paused until every current member responds."
-                        : "Quy trình khóa đội cho Vòng 1 đang diễn ra nên việc mời thêm người tạm dừng cho tới khi toàn bộ thành viên hiện tại phản hồi."
-                      : locale === "en"
-                        ? "This roster is already locked, so the team can no longer invite additional members."
-                        : "Đội hình này đã được khóa nên đội không thể mời thêm thành viên mới nữa."
-                    : isTeamFull
-                    ? isLeader
-                      ? locale === "en"
-                        ? "Your team already has 5 members, so new invitations are disabled."
-                        : "Đội của bạn đã có 5 thành viên, vì vậy hệ thống đã tắt việc mời thêm người."
-                      : locale === "en"
-                        ? "This team already has 5 members, so the invite list is locked."
-                        : "Đội này đã có 5 thành viên, vì vậy danh sách mời đã bị khóa."
-                    : openSlots <= 0
-                      ? locale === "en"
-                        ? "All remaining slots are currently reserved by pending invites."
-                        : "Tất cả chỗ trống còn lại hiện đang được giữ bởi các lời mời đang chờ."
-                      : locale === "en"
-                        ? "Search across students who are not currently members of any team."
-                        : "Tìm trong danh sách sinh viên hiện chưa là thành viên của bất kỳ đội nào."}
-                </p>
-                <label className="mt-4 block">
-                  <span className="sr-only">
-                    {locale === "en" ? "Search available students" : "Tìm sinh viên còn trống"}
-                  </span>
-                  <div className="flex items-center gap-3 rounded-2xl border theme-border theme-panel px-4 py-3">
-                    <Search className="h-4 w-4 theme-text-faint" />
-                    <input
-                      value={inviteSearch}
-                      disabled={isTeamFull || teamRosterLocked}
-                      onChange={(event) => setInviteSearch(event.target.value)}
-                      placeholder={locale === "en" ? "Search by name, email, university..." : "Tìm theo tên, email, trường..."}
-                      className="theme-placeholder w-full bg-transparent text-sm theme-text-strong outline-none disabled:cursor-not-allowed disabled:opacity-60"
-                    />
-                  </div>
-                </label>
-              </div>
-
-              <div className="mt-6 space-y-3">
-                {filteredAvailableUsers.map((user) => {
-                  const alreadyInvited = sentInvitations.some((invitation) => invitation.toUserId === user.id);
-                  const canInvite = Boolean(isLeader && !alreadyInvited && openSlots > 0 && !isTeamFull && !teamRosterLocked);
-
-                  return (
-                    <div
-                      key={user.id}
-                      className="flex flex-col gap-4 rounded-[1.5rem] border theme-border theme-panel px-4 py-4 md:flex-row md:items-center md:justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <GradientAvatar label={user.name} tone={user.avatarTone} imageSrc={user.avatarImageSrc} />
-                        <div>
-                          <p className="text-sm font-semibold theme-text-strong">{user.name}</p>
-                          <p className="text-xs theme-text-soft">{user.university}</p>
-                          <p className="mt-1 text-xs theme-text-faint">{user.major}</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        disabled={!canInvite}
-                        onClick={() => inviteUser(user.id)}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        <UserPlus2 className="h-4 w-4" />
-                        {alreadyInvited
-                          ? locale === "en"
-                            ? "Invite pending"
-                            : "Đang chờ"
-                          : locale === "en"
-                            ? "Invite"
-                            : "Moi vao doi"}
-                      </button>
-                    </div>
-                  );
-                })}
-                {filteredAvailableUsers.length === 0 ? (
-                  <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
-                    {teamRosterLocked
-                      ? locale === "en"
-                        ? "Roster changes are locked right now, so the invite list is intentionally disabled."
-                        : "Đội hình hiện đang bị khóa nên danh sách mời thêm thành viên đang được tắt có chủ đích."
-                      : inviteSearch.trim()
-                      ? locale === "en"
-                        ? "No available free-agent students match this search."
-                        : "Không có sinh viên chưa vào đội nào phù hợp với từ khóa tìm kiếm này."
-                      : locale === "en"
-                        ? "No free-agent students are available right now."
-                        : "Hiện không có sinh viên tự do nào để mời vào đội."}
-                  </div>
-                ) : null}
-              </div>
-            </Surface>
-
-            <Surface className="px-6 py-6">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                {locale === "en" ? "Leader tools" : "Công cụ đội trưởng"}
-              </p>
-              <div className="mt-5 space-y-4">
-                <label className="block space-y-2">
-                  <span className="text-sm theme-text-muted">
-                    {locale === "en" ? "Transfer leadership" : "Chuyển đội trưởng"}
-                  </span>
-                  <select
-                    disabled={!isLeader || Boolean(outgoingLeadershipTransfer) || teamRosterLocked}
-                    value={leadershipTargetId}
-                    onChange={(event) => setLeadershipTargetId(event.target.value)}
-                    className="w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none disabled:opacity-40"
-                  >
-                    <option value="" className="bg-slate-950">
-                      {locale === "en" ? "Select teammate" : "Chọn thành viên"}
-                    </option>
-                    {currentTeamMembers
-                      .filter((member) => member.id !== activeUserId)
-                      .map((member) => (
-                        <option key={member.id} value={member.id} className="bg-slate-950">
-                          {member.name}
-                        </option>
-                      ))}
-                  </select>
-                </label>
-                <button
-                  type="button"
-                  disabled={!isLeader || !leadershipTargetId || Boolean(outgoingLeadershipTransfer) || teamRosterLocked}
-                  onClick={() => {
-                    transferLeadership(leadershipTargetId);
-                    setLeadershipTargetId("");
-                  }}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <Crown className="h-4 w-4" />
-                  {locale === "en" ? "Send leadership request" : "Gửi yêu cầu đội trưởng"}
-                </button>
-                <button
-                  type="button"
-                  disabled={teamRosterLocked}
-                  onClick={leaveCurrentTeam}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <LogOut className="h-4 w-4" />
-                  {locale === "en" ? "Leave current team" : "Rời đội hiện tại"}
-                </button>
-                <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
-                  {teamRosterLocked
-                    ? currentTeam.round1LockStatus === "pending"
-                      ? locale === "en"
-                        ? "Roster changes are frozen while the Round 1 lock workflow is pending."
-                        : "Mọi thay đổi đội hình đang bị đóng băng trong khi quy trình khóa đội cho Vòng 1 còn chờ phản hồi."
-                      : locale === "en"
-                        ? "This team roster is already locked, so leadership transfer and leaving the team are no longer available."
-                        : "Đội hình của đội này đã bị khóa nên việc chuyển đội trưởng và rời đội đều không còn khả dụng."
-                    : isLeader
-                    ? locale === "en"
-                      ? "The leader must send a transfer request and wait for the selected member to accept before leaving."
-                      : "Đội trưởng phải gửi yêu cầu chuyển quyền và chờ thành viên được chọn chấp nhận trước khi rời đội."
-                    : locale === "en"
-                      ? "As a regular member, this account can leave immediately."
-                      : "Với vai trò thành viên thường, tài khoản này có thể rời đội ngay."}
-                </div>
-                {outgoingLeadershipTransfer ? (
-                  <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
-                    {locale === "en"
-                      ? `Waiting for ${users.find((user) => user.id === outgoingLeadershipTransfer.toUserId)?.name ?? "the selected member"} to accept the leadership transfer request.`
-                      : `Đang chờ ${users.find((user) => user.id === outgoingLeadershipTransfer.toUserId)?.name ?? "thành viên được chọn"} chấp nhận yêu cầu chuyển đội trưởng.`}
-                  </div>
-                ) : null}
-                {sentInvitations.length > 0 ? (
-                  <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
-                    <p className="text-sm font-semibold theme-text-strong">
-                      {locale === "en" ? "Pending sent invites" : "Loi moi da gui"}
-                    </p>
-                    <div className="mt-3 space-y-2">
-                      {sentInvitations.map((invitation) => {
-                        const targetUser = users.find((user) => user.id === invitation.toUserId);
-
-                        return (
-                          <div key={invitation.id} className="flex items-center gap-3 text-sm theme-text-muted">
-                            <MailPlus className="h-4 w-4 text-sky-200" />
-                            <span>{targetUser?.name ?? invitation.toUserId}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </Surface>
-          </section>
         </>
       ) : (
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -1968,42 +1870,6 @@ export function DashboardPage() {
           </Surface>
         </section>
       )}
-
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <SectionHeading
-            eyebrow={locale === "en" ? "Team submission rules" : "Quy tac nop bai"}
-            title={
-              locale === "en"
-                ? "Unlimited versions are allowed, but only the latest one is valid."
-                : "Được phép nộp không giới hạn phiên bản, nhưng chỉ phiên bản mới nhất mới hợp lệ."
-            }
-            description={
-              locale === "en"
-                ? "The submission center above keeps the latest version in focus while preserving earlier versions for review history."
-                : "Khu submission bên trên giữ trọng tâm vào phiên bản mới nhất, đồng thời vẫn lưu các phiên bản trước để đối chiếu lịch sử."
-            }
-          />
-        </Surface>
-
-        <Surface className="px-6 py-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Next route" : "Route tiep theo"}
-          </p>
-          <p className="mt-4 text-2xl font-semibold theme-text-strong">
-            {locale === "en" ? "Check the competition page." : "Xem lai trang cuoc thi."}
-          </p>
-          <p className="mt-4 text-sm leading-7 theme-text-muted">
-            {locale === "en"
-              ? "That page now presents the reward tiers more distinctly and still keeps the larger competition intro block."
-              : "Trang do hien trinh bay cac hang muc giai thuong tach biet ro hon va van giu khoi intro lon cua cuoc thi."}
-          </p>
-          <Link href="/competition" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {locale === "en" ? "Open competition page" : "Mở trang cuộc thi"}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Surface>
-      </section>
     </div>
   );
 }
