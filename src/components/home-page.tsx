@@ -446,7 +446,7 @@ export function HomePage() {
             : "Trang chu duoc dieu chinh sat huong tham chieu hon, theo nhip dieu quen thuoc cua mot launch-site: hero slider, cot hinh anh lon, cac band noi dung tien ich, cap nhat moi nhat, proof points va footer ro rang hon."}
         </p>
         <Link href="/competition" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-          {locale === "en" ? "Go to competition details" : "Di den chi tiet cuoc thi"}
+          {locale === "en" ? "About Attacker" : "Giới thiệu Attacker"}
           <ArrowRight className="h-4 w-4" />
         </Link>
       </section>
