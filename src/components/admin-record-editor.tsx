@@ -118,7 +118,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
           <button
             type="button"
             onClick={() => setDraft(user)}
-            className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+            className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
           >
             {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
           </button>
@@ -134,7 +134,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             type="button"
             disabled={isLocked}
             onClick={handleDelete}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-5 py-3 text-sm font-semibold text-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2 className="h-4 w-4" />
             {locale === "en" ? "Delete user" : "Xoa nguoi dung"}
@@ -426,7 +426,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
           <button
             type="button"
             onClick={() => setDraft(team)}
-            className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+            className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
           >
             {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
           </button>
@@ -441,7 +441,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
           <button
             type="button"
             onClick={handleDelete}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-5 py-3 text-sm font-semibold text-rose-100"
+            className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
           >
             <Trash2 className="h-4 w-4" />
             {locale === "en" ? "Delete team" : "Xoa doi"}

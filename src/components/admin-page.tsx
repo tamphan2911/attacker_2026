@@ -479,7 +479,7 @@ function UsersTableSection() {
                     <td className="px-4 py-4">
                       <Link
                         href={`/admin/users/${row.id}`}
-                        className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-3 py-2 text-xs font-semibold theme-text-strong"
+                        className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold"
                       >
                         <FilePenLine className="h-3.5 w-3.5" />
                         {locale === "en" ? "Edit" : "Sửa"}
@@ -500,7 +500,7 @@ function UsersTableSection() {
                             deleteUserByAdmin(row.id);
                           }
                         }}
-                        className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-3 py-2 text-xs font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-rose-100"
+                        className="theme-button-danger inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         {locale === "en" ? "Delete" : "Xoa"}
@@ -627,7 +627,7 @@ function TeamsTableSection() {
                             deleteTeamByAdmin(row.id);
                           }
                         }}
-                        className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-3 py-2 text-xs font-semibold text-rose-100"
+                        className="theme-button-danger inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         {locale === "en" ? "Delete" : "Xoa"}

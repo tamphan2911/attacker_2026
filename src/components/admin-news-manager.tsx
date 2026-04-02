@@ -150,8 +150,8 @@ function IconToolButton({
       onClick={onClick}
       className={`group relative inline-flex h-10 w-10 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-45 ${
         tone === "danger"
-          ? "border-rose-300/20 bg-rose-300/10 text-rose-600 hover:bg-rose-300/16 dark:text-rose-100"
-          : "theme-border theme-panel theme-text-strong hover:bg-[var(--panel-strong)]"
+          ? "theme-button-danger"
+          : "theme-button-secondary"
       }`}
     >
       {children}
@@ -269,7 +269,7 @@ export function AdminNewsList() {
               <div className="flex gap-3">
                 <Link
                   href={`/admin/news/${post.slug}`}
-                  className="rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong"
+                  className="theme-button-secondary rounded-full px-4 py-2.5 text-sm font-semibold"
                 >
                   {locale === "en" ? "Edit" : "Sua"}
                 </Link>
@@ -286,7 +286,7 @@ export function AdminNewsList() {
                       deleteNewsPostByAdmin(post.slug);
                     }
                   }}
-                  className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-4 py-2.5 text-sm font-semibold text-rose-600 dark:text-rose-100"
+                  className="theme-button-danger inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
                 >
                   <Trash2 className="h-4 w-4" />
                   {locale === "en" ? "Delete" : "Xoa"}
@@ -559,7 +559,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
               setCoverUploadMessage("");
               setDraft(cloneNewsPost(sourceDraftPost ?? createEmptyNewsPost()));
             }}
-            className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+            className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
           >
             {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
           </button>
@@ -574,7 +574,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
           <button
             type="button"
             onClick={deleteCurrentPost}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-5 py-3 text-sm font-semibold text-rose-700 hover:bg-rose-300/16 dark:text-rose-100"
+            className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
           >
             <Trash2 className="h-4 w-4" />
             {isCreateMode

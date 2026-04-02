@@ -393,14 +393,14 @@ function JudgeDeleteDialog({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+            className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
           >
             {locale === "en" ? "Cancel" : "Hủy"}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-5 py-3 text-sm font-semibold text-rose-100"
+            className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
           >
             <Trash2 className="h-4 w-4" />
             {locale === "en" ? "Delete judge" : "Xóa giám khảo"}
@@ -467,7 +467,7 @@ function AddJudgeModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+              className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
             >
               {locale === "en" ? "Cancel" : "Hủy"}
             </button>
@@ -625,7 +625,7 @@ export function AdminJudgesList() {
               setAddValidationMessage("");
               setIsAddOpen(true);
             }}
-            className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong"
+            className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
           >
             <Plus className="h-4 w-4" />
             {locale === "en" ? "New judge" : "Giám khảo mới"}
@@ -689,7 +689,7 @@ export function AdminJudgesList() {
                     <div className="flex justify-end gap-2">
                       <Link
                         href={`/admin/judges/${judge.id}`}
-                        className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong"
+                        className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
                       >
                         <PencilLine className="h-4 w-4" />
                         {locale === "en" ? "Edit" : "Sửa"}
@@ -697,7 +697,7 @@ export function AdminJudgesList() {
                       <button
                         type="button"
                         onClick={() => setJudgePendingDelete(judge)}
-                        className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-4 py-2.5 text-sm font-semibold text-rose-100"
+                        className="theme-button-danger inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
                       >
                         <Trash2 className="h-4 w-4" />
                         {locale === "en" ? "Delete" : "Xóa"}
@@ -856,7 +856,7 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
               setValidationMessage("");
               setDraft(draftFromJudge(judge));
             }}
-            className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+            className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
           >
             {locale === "en" ? "Reset draft" : "Đặt lại bản nháp"}
           </button>
@@ -873,7 +873,7 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
           <button
             type="button"
             onClick={() => setShowDeleteDialog(true)}
-            className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-5 py-3 text-sm font-semibold text-rose-100"
+            className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
           >
             <Trash2 className="h-4 w-4" />
             {locale === "en" ? "Delete" : "Xóa"}
