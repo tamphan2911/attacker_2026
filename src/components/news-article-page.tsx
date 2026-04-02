@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { formatDateLabel, pickText } from "@/lib/site";
 import type { NewsPost } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { PageIntro, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 
 export function NewsArticlePage({ post }: { post: NewsPost }) {
   const { locale, newsPosts, pageContent } = useSiteState();
@@ -20,44 +20,71 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
         {locale === "en" ? "Back to newsroom" : "Quay lại newsroom"}
       </Link>
 
-      <PageIntro
-        eyebrow={pickText(locale, post.category)}
-        title={pickText(locale, post.title)}
-        description={pickText(locale, post.excerpt)}
-        aside={
-          <Surface className="px-5 py-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-              {locale === "en" ? "Article details" : "Chi tiết bài viết"}
+      <section className="theme-card-shadow-soft relative overflow-hidden rounded-[2rem] border">
+        <Image
+          src={post.coverImageSrc}
+          alt={pickText(locale, post.coverImageAlt)}
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(118deg,rgba(3,10,24,0.9)_0%,rgba(6,18,39,0.82)_38%,rgba(7,18,35,0.62)_68%,rgba(7,18,35,0.78)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.16),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(14,165,233,0.12),transparent_30%)]" />
+        <div className="relative grid gap-6 px-5 py-7 md:px-8 md:py-8 lg:grid-cols-[minmax(0,1fr)_290px] lg:items-end lg:px-10 lg:py-10">
+          <div className="max-w-3xl space-y-5 text-white">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-white/70">
+              {pickText(locale, post.category)}
             </p>
-            <div className="mt-5 space-y-3 text-sm theme-text-muted">
-              <p>{formatDateLabel(locale, post.publishedAt)}</p>
-              <p>{post.author}</p>
-              <p>{post.readTime}</p>
-            </div>
-          </Surface>
-        }
-      />
-
-      <Surface className="overflow-hidden px-0 py-0">
-        <div className="relative min-h-[320px] md:min-h-[420px]">
-          <Image
-            src={post.coverImageSrc}
-            alt={pickText(locale, post.coverImageAlt)}
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.06),rgba(7,18,35,0.14),rgba(7,18,35,0.58))]" />
-          <div className="absolute inset-x-0 bottom-0 px-6 py-6 text-white md:px-8 md:py-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/68">
-              {pickText(locale, post.coverLabel)}
-            </p>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/76">
+            <h1 className="theme-heading text-3xl font-semibold tracking-tight text-white md:text-[3.1rem] md:leading-[1.04]">
+              {pickText(locale, post.title)}
+            </h1>
+            <p className="max-w-2xl text-base leading-8 text-white/78 md:text-[1.05rem]">
               {pickText(locale, post.excerpt)}
             </p>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-white/68">
+              <span>{formatDateLabel(locale, post.publishedAt)}</span>
+              <span className="h-1 w-1 rounded-full bg-white/42" />
+              <span>{post.author}</span>
+              <span className="h-1 w-1 rounded-full bg-white/42" />
+              <span>{post.readTime}</span>
+            </div>
+          </div>
+
+          <div className="rounded-[1.7rem] border border-white/12 bg-[rgba(7,18,35,0.44)] p-5 shadow-[0_28px_60px_rgba(2,6,23,0.26)] backdrop-blur-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/64">
+              {locale === "en" ? "Article details" : "Chi tiết bài viết"}
+            </p>
+            <div className="mt-5 space-y-4">
+              <div>
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/42">
+                  {locale === "en" ? "Published" : "Ngày đăng"}
+                </p>
+                <p className="mt-2 text-sm text-white/82">{formatDateLabel(locale, post.publishedAt)}</p>
+              </div>
+              <div>
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/42">
+                  {locale === "en" ? "Author" : "Tác giả"}
+                </p>
+                <p className="mt-2 text-sm text-white/82">{post.author}</p>
+              </div>
+              <div>
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/42">
+                  {locale === "en" ? "Reading time" : "Thời lượng đọc"}
+                </p>
+                <p className="mt-2 text-sm text-white/82">{post.readTime}</p>
+              </div>
+              <div className="rounded-[1.35rem] border border-white/10 bg-white/6 px-4 py-4">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/42">
+                  {locale === "en" ? "Cover note" : "Ghi chú ảnh bìa"}
+                </p>
+                <p className="mt-2 text-sm leading-7 text-white/72">
+                  {pickText(locale, post.coverLabel)}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </Surface>
+      </section>
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="px-6 py-6 md:px-8 md:py-8">
