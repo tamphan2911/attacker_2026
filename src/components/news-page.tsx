@@ -68,8 +68,8 @@ export function NewsPage() {
             </p>
           </div>
 
-          <label className="group flex w-full max-w-[500px] items-center gap-3 rounded-[1.6rem] border border-slate-200/80 bg-white/92 px-4 py-3 shadow-[0_20px_50px_rgba(15,23,42,0.07)] transition focus-within:border-sky-300/60 focus-within:shadow-[0_26px_60px_rgba(23,114,208,0.12)] dark:border-white/10 dark:bg-[rgba(10,15,26,0.84)] dark:shadow-[0_24px_54px_rgba(2,6,23,0.34)]">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-50 text-[var(--brand)] transition group-focus-within:bg-sky-100 dark:bg-[rgba(23,114,208,0.16)] dark:text-sky-200">
+          <label className="theme-news-search group flex w-full max-w-[500px] items-center gap-3 rounded-[1.6rem] border px-4 py-3 transition">
+            <div className="theme-news-search-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition">
               <Search className="h-4 w-4" />
             </div>
             <input
@@ -80,13 +80,13 @@ export function NewsPage() {
                   ? "Search article title, summary, category, or tag"
                   : "Tìm theo tiêu đề, tóm tắt, chuyên mục hoặc thẻ"
               }
-              className="theme-placeholder min-w-0 flex-1 bg-transparent text-sm theme-text-strong outline-none md:text-[0.95rem]"
+              className="theme-news-search-input theme-placeholder min-w-0 flex-1 bg-transparent text-sm outline-none md:text-[0.95rem]"
             />
             {query ? (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="rounded-full border theme-border bg-transparent px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] theme-text-muted transition hover:border-sky-300/32 hover:text-[var(--text-strong)]"
+                className="theme-news-search-clear rounded-full border px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] transition"
               >
                 {locale === "en" ? "Clear" : "Xóa"}
               </button>
