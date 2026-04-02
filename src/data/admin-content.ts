@@ -21,7 +21,13 @@ interface EditorCardConfig<T extends string> {
   description: LocalizedText;
 }
 
-export const contentPageConfigs: EditorCardConfig<ContentPageId>[] = [
+type ContentPageConfig = EditorCardConfig<ContentPageId>;
+
+interface ContentTypeConfig extends EditorCardConfig<ContentTypeId> {
+  parentPageId: ContentPageId;
+}
+
+export const contentPageConfigs: ContentPageConfig[] = [
   {
     id: "home",
     href: "/admin/content/pages/home",
@@ -114,10 +120,11 @@ export const contentPageConfigs: EditorCardConfig<ContentPageId>[] = [
   },
 ];
 
-export const contentTypeConfigs: EditorCardConfig<ContentTypeId>[] = [
+export const contentTypeConfigs: ContentTypeConfig[] = [
   {
     id: "hero-slides",
     href: "/admin/content/types/hero-slides",
+    parentPageId: "home",
     label: { en: "Hero slides", vi: "Hero slides" },
     description: {
       en: "Manage homepage hero slide image paths and bilingual text.",
@@ -127,6 +134,7 @@ export const contentTypeConfigs: EditorCardConfig<ContentTypeId>[] = [
   {
     id: "auth-notes",
     href: "/admin/content/types/auth-notes",
+    parentPageId: "auth",
     label: { en: "Auth notes", vi: "Ghi chú auth" },
     description: {
       en: "Register and sign-in support text shown below the auth form.",
@@ -136,6 +144,7 @@ export const contentTypeConfigs: EditorCardConfig<ContentTypeId>[] = [
   {
     id: "workspace-states",
     href: "/admin/content/types/workspace-states",
+    parentPageId: "workspace",
     label: { en: "Workspace states", vi: "Trạng thái workspace" },
     description: {
       en: "No-team and existing-team state messages for the team workspace.",

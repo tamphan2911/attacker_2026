@@ -162,15 +162,31 @@ const contentPageMap = Object.fromEntries(
   contentPageConfigs.map((item) => [item.id, item]),
 ) as Record<ContentPageId, (typeof contentPageConfigs)[number]>;
 
+const contentTypeMap = Object.fromEntries(
+  contentTypeConfigs.map((item) => [item.id, item]),
+) as Record<ContentTypeId, (typeof contentTypeConfigs)[number]>;
+
+type ContentTreeChild =
+  | { kind: "page"; id: ContentPageId }
+  | { kind: "type"; id: ContentTypeId };
+
 const contentPageTree: Array<{
   id: ContentPageId;
-  children?: ContentPageId[];
+  children?: ContentTreeChild[];
 }> = [
-  { id: "home" },
-  { id: "competition", children: ["rules", "faq", "sponsors", "judges"] },
+  { id: "home", children: [{ kind: "type", id: "hero-slides" }] },
+  {
+    id: "competition",
+    children: [
+      { kind: "page", id: "rules" },
+      { kind: "page", id: "faq" },
+      { kind: "page", id: "sponsors" },
+      { kind: "page", id: "judges" },
+    ],
+  },
   { id: "news" },
-  { id: "auth" },
-  { id: "workspace" },
+  { id: "auth", children: [{ kind: "type", id: "auth-notes" }] },
+  { id: "workspace", children: [{ kind: "type", id: "workspace-states" }] },
   { id: "organizer" },
 ];
 
@@ -269,9 +285,15 @@ export function ContentIndexSection() {
 
                 {entry.children ? (
                   <div className="ml-[1.4rem] space-y-2 border-l theme-border pl-5">
-                    {entry.children.map((childId) => {
-                      const child = contentPageMap[childId];
-                      const ChildIcon = iconForPage(child.id);
+                    {entry.children.map((childEntry) => {
+                      const child =
+                        childEntry.kind === "page"
+                          ? contentPageMap[childEntry.id]
+                          : contentTypeMap[childEntry.id];
+                      const ChildIcon =
+                        childEntry.kind === "page"
+                          ? iconForPage(childEntry.id)
+                          : iconForType(childEntry.id);
 
                       return (
                         <Link key={child.id} href={child.href}>
@@ -280,9 +302,16 @@ export function ContentIndexSection() {
                               <ChildIcon className="h-4 w-4" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-base font-semibold theme-text-strong">
-                                {pickText(locale, child.label)}
-                              </p>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-base font-semibold theme-text-strong">
+                                  {pickText(locale, child.label)}
+                                </p>
+                                {childEntry.kind === "type" ? (
+                                  <span className="rounded-full border theme-border bg-white/70 px-2.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.18em] theme-text-soft dark:bg-white/8">
+                                    {locale === "en" ? "Content" : "Nội dung"}
+                                  </span>
+                                ) : null}
+                              </div>
                               <p className="mt-1 text-sm leading-6 theme-text-soft">
                                 {pickText(locale, child.description)}
                               </p>
@@ -297,33 +326,6 @@ export function ContentIndexSection() {
             );
           })}
         </Surface>
-      </section>
-
-      <section className="space-y-5">
-        <p className="theme-heading text-2xl font-semibold uppercase tracking-[0.16em] theme-text-strong md:text-[1.75rem]">
-          {locale === "en" ? "Content types" : "Loại nội dung"}
-        </p>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {contentTypeConfigs.map((item) => {
-            const Icon = iconForType(item.id);
-
-            return (
-              <Link key={item.id} href={item.href}>
-                <Surface className="group h-full px-5 py-5 transition hover:-translate-y-0.5 hover:bg-[var(--panel-strong)] md:px-6">
-                  <div className="theme-panel-strong flex h-14 w-14 items-center justify-center rounded-2xl border theme-border text-[var(--brand)] shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <p className="theme-heading mt-5 text-2xl font-semibold theme-text-strong">
-                    {pickText(locale, item.label)}
-                  </p>
-                  <p className="mt-3 text-sm leading-7 theme-text-muted">
-                    {pickText(locale, item.description)}
-                  </p>
-                </Surface>
-              </Link>
-            );
-          })}
-        </div>
       </section>
     </div>
   );
