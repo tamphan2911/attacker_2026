@@ -12,9 +12,7 @@ import {
   ChevronRight,
   Crown,
   GraduationCap,
-  LayoutDashboard,
   Medal,
-  Newspaper,
   Quote,
   ShieldCheck,
   Sparkles,
@@ -31,53 +29,7 @@ import {
 } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import {
-  SectionHeading,
-  Surface,
-} from "@/components/site-ui";
-
-const serviceItems = [
-  {
-    icon: TrendingUp,
-    title: {
-      en: "Competition information",
-      vi: "Thông tin cuộc thi",
-    },
-    description: {
-      en: "Clear public pages for rounds, rewards, rules, and timeline.",
-      vi: "Trang công khai rõ ràng cho vòng thi, giải thưởng, thể lệ và lịch trình.",
-    },
-  },
-  {
-    icon: Users2,
-    title: {
-      en: "Team formation logic",
-      vi: "Logic tạo đội",
-    },
-    description: {
-      en: "Students can create, invite, accept, leave, and transfer leadership within the defined rules.",
-      vi: "Sinh viên có thể tạo đội, mời, chấp nhận, rời đội và chuyển đội trưởng trong đúng quy tắc.",
-    },
-  },
-  {
-    icon: ShieldCheck,
-    title: {
-      en: "Organizer-ready control",
-      vi: "Sẵn sàng cho ban tổ chức",
-    },
-    description: {
-      en: "The prototype already reserves space for moderation, publishing, and participant oversight.",
-      vi: "Prototype đã dành sẵn không gian cho quản lý nội dung, đăng bài và theo dõi thí sinh.",
-    },
-  },
-];
-
-const platformIcons = {
-  "/competition": TrendingUp,
-  "/dashboard": LayoutDashboard,
-  "/news": Newspaper,
-  "/rules": ShieldCheck,
-};
+import { Surface } from "@/components/site-ui";
 
 const homepageRewardItems = [
   {
@@ -432,7 +384,7 @@ const testimonialQuoteClasses = [
 ] as const;
 
 export function HomePage() {
-  const { locale, newsPosts, pageContent } = useSiteState();
+  const { locale, pageContent } = useSiteState();
   const [activeSlide, setActiveSlide] = useState(0);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const heroSlides =
@@ -481,8 +433,6 @@ export function HomePage() {
       window.clearInterval(intervalId);
     };
   }, []);
-
-  const latestNews = newsPosts.slice(0, 3);
 
   return (
     <div className="space-y-24 pb-8">
@@ -907,203 +857,6 @@ export function HomePage() {
           {locale === "en" ? "About Attacker" : "Giới thiệu Attacker"}
           <ArrowRight className="h-4 w-4" />
         </Link>
-      </section>
-
-      <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen border-y theme-border theme-section-muted">
-        <div className="mx-auto max-w-7xl px-4 py-16 md:px-8">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {serviceItems.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <Surface key={item.title.en} className="px-6 py-7">
-                  <div className="theme-brand-gradient flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_18px_40px_rgba(23,114,208,0.2)]">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <p className="theme-heading mt-6 text-2xl font-semibold theme-text-strong">
-                    {pickText(locale, item.title)}
-                  </p>
-                  <p className="mt-4 text-sm leading-7 theme-text-muted">
-                    {pickText(locale, item.description)}
-                  </p>
-                </Surface>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <SectionHeading
-            eyebrow={pickText(locale, pageContent.home.news.eyebrow)}
-            title={pickText(locale, pageContent.home.news.title)}
-            description={pickText(locale, pageContent.home.news.description)}
-          />
-          <Link href="/news" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {locale === "en" ? "View all news" : "Xem tat ca tin tuc"}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        <div className="grid gap-6 lg:grid-cols-3">
-          {latestNews.map((post) => (
-            <Link key={post.slug} href={`/news/${post.slug}`} className="group block">
-              <Surface className="h-full overflow-hidden px-0 py-0">
-                <div className="h-48 bg-[linear-gradient(135deg,#0a1d34,#1772d0)] px-6 py-6 text-white">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/64">
-                    {pickText(locale, post.category)}
-                  </p>
-                  <p className="theme-heading mt-6 text-2xl font-semibold leading-[1.2]">
-                    {pickText(locale, post.coverLabel)}
-                  </p>
-                </div>
-                <div className="px-6 py-6">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                    {post.publishedAt}
-                  </p>
-                  <p className="theme-heading mt-4 text-xl font-semibold theme-text-strong">
-                    {pickText(locale, post.title)}
-                  </p>
-                  <p className="mt-3 text-sm leading-7 theme-text-muted">
-                    {pickText(locale, post.excerpt)}
-                  </p>
-                  <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-                    {locale === "en" ? "Read article" : "Doc bai viet"}
-                    <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-                  </div>
-                </div>
-              </Surface>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="theme-card-shadow-soft rounded-[2rem] border theme-border theme-panel-strong px-6 py-10 text-center md:px-12">
-        <p className="theme-heading mx-auto max-w-4xl text-2xl font-semibold leading-[1.5] theme-text-strong md:text-3xl">
-          {locale === "en"
-            ? '"A strong competition website does not just announce dates. It creates confidence in the quality of the challenge, the platform, and the people behind it."'
-            : '"Một website cuộc thi mạnh không chỉ để thông báo lịch. Nó tạo ra niềm tin vào chất lượng đề bài, nền tảng và đội ngũ phía sau."'}
-        </p>
-        <p className="mt-5 text-sm uppercase tracking-[0.26em] theme-text-soft">
-          {locale === "en" ? "Attacker 2026 frontend concept" : "Concept frontend Attacker 2026"}
-        </p>
-      </section>
-
-      <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden bg-[linear-gradient(135deg,#0a1d34,#0b4f87,#1772d0)]">
-        <div className="mx-auto max-w-7xl px-4 py-20 text-white md:px-8">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.34em] text-white/66">
-                {pickText(locale, pageContent.home.cta.eyebrow)}
-              </p>
-              <h2 className="theme-heading mt-4 max-w-3xl text-3xl font-semibold leading-[1.1] md:text-5xl">
-                {pickText(locale, pageContent.home.cta.title)}
-              </h2>
-              <p className="mt-5 max-w-2xl text-base leading-8 text-white/78 md:text-lg">
-                {pickText(locale, pageContent.home.cta.description)}
-              </p>
-
-              <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-                <Link
-                  href="/auth"
-                  className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:brightness-95"
-                >
-                  {locale === "en" ? "Open registration preview" : "Mở preview đăng ký"}
-                </Link>
-                <Link
-                  href="/news"
-                  className="inline-flex items-center justify-center rounded-full border border-white/18 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-                >
-                  {locale === "en" ? "Open newsroom" : "Mở newsroom"}
-                </Link>
-              </div>
-            </div>
-
-            <div className="rounded-[2rem] border border-white/14 bg-white/10 p-6 backdrop-blur-md">
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-white/64">
-                {locale === "en" ? "Newsletter style block" : "Khoi newsletter"}
-              </p>
-              <p className="theme-heading mt-4 text-2xl font-semibold">
-                {locale === "en"
-                  ? "Get updates on registration, clinics, and round progress."
-                  : "Nhận cập nhật về đăng ký, clinic và tiến độ các vòng thi."}
-              </p>
-              <div className="mt-6 space-y-4">
-                <input
-                  placeholder={locale === "en" ? "Email address" : "Dia chi email"}
-                  className="w-full rounded-full border border-white/16 bg-white/12 px-5 py-3.5 text-sm text-white outline-none placeholder:text-white/52"
-                />
-                <button
-                  type="button"
-                  className="w-full rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-slate-950 transition hover:brightness-95"
-                >
-                  {locale === "en" ? "Subscribe for updates" : "Đăng ký nhận cập nhật"}
-                </button>
-              </div>
-              <p className="mt-4 text-sm leading-7 text-white/68">
-                {locale === "en"
-                  ? "At this stage this is visual only, but it gives the site the same kind of utility footer/CTA behavior as the reference."
-                  : "Giai doan nay khoi nay chi mang tinh hinh anh, nhung no giup website co hanh vi footer/CTA huu ich gan voi ban tham chieu hon."}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <SectionHeading
-          eyebrow={pickText(locale, pageContent.home.destinations.eyebrow)}
-          title={pickText(locale, pageContent.home.destinations.title)}
-          description={pickText(locale, pageContent.home.destinations.description)}
-        />
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {[
-            {
-              href: "/competition",
-              label: locale === "en" ? "Competition" : "Cuoc thi",
-            },
-            {
-              href: "/rules",
-              label: locale === "en" ? "Rules" : "Thể lệ",
-            },
-            {
-              href: "/news",
-              label: locale === "en" ? "Newsroom" : "Newsroom",
-            },
-            {
-              href: "/dashboard",
-              label: locale === "en" ? "Team workspace" : "Không gian đội",
-            },
-            {
-              href: "/competition/judges",
-              label: locale === "en" ? "Judges" : "Giam khao",
-            },
-            {
-              href: "/competition/sponsors",
-              label: locale === "en" ? "Sponsors" : "Nha tai tro",
-            },
-          ].map((item) => {
-            const Icon = platformIcons[item.href as keyof typeof platformIcons] ?? Sparkles;
-
-            return (
-              <Link key={item.href} href={item.href}>
-                <Surface className="group px-5 py-5 transition hover:-translate-y-1 hover:bg-[var(--panel-strong)]">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="theme-brand-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[0_18px_40px_rgba(23,114,208,0.2)]">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <ArrowRight className="h-4 w-4 theme-text-faint transition group-hover:translate-x-0.5 group-hover:text-[var(--brand)]" />
-                  </div>
-                  <p className="theme-heading mt-5 text-xl font-semibold theme-text-strong">
-                    {item.label}
-                  </p>
-                </Surface>
-              </Link>
-            );
-          })}
-        </div>
       </section>
     </div>
   );
