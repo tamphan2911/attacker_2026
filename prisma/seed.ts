@@ -222,6 +222,7 @@ async function main() {
         name: user.name,
         role: mapUserRole(user.role),
         studentId: user.role === "student" ? user.studentId.toLowerCase() : user.studentId,
+        phoneNumber: user.phoneNumber || null,
         university: user.university,
         major: user.major,
         classYear: user.classYear,

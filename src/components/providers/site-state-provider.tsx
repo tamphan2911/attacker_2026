@@ -74,6 +74,7 @@ const GUEST_USER: UserProfile = {
   email: "",
   role: "student",
   studentId: "",
+  phoneNumber: "",
   university: "",
   major: "",
   classYear: "",
@@ -81,6 +82,13 @@ const GUEST_USER: UserProfile = {
   avatarTone: "from-sky-500 via-cyan-400 to-emerald-400",
   providers: [],
 };
+
+function normalizeUserProfile(user: UserProfile): UserProfile {
+  return {
+    ...user,
+    phoneNumber: user.phoneNumber ?? "",
+  };
+}
 
 interface WorkspaceApiPayload {
   currentUserId: string;
@@ -230,7 +238,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       setLocaleState(snapshot.locale);
       setThemeState(snapshot.theme ?? "light");
       setActiveUserIdState(snapshot.activeUserId);
-      setUsers(snapshot.users);
+      setUsers(snapshot.users.map(normalizeUserProfile));
       setTeams(snapshot.teams);
       setInvitations(snapshot.invitations);
       setLeadershipTransferRequests(
@@ -332,7 +340,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
 
     const payload = (await response.json()) as WorkspaceApiPayload;
     setActiveUserIdState(payload.currentUserId);
-    setUsers(payload.users);
+    setUsers(payload.users.map(normalizeUserProfile));
     setTeams(payload.teams);
     setInvitations(payload.invitations);
     setLeadershipTransferRequests(payload.leadershipTransferRequests);
@@ -788,6 +796,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
           name: payload.name ?? currentUser.name,
           email: payload.email ?? currentUser.email,
           studentId: payload.studentId ?? currentUser.studentId,
+          phoneNumber: payload.phoneNumber ?? currentUser.phoneNumber,
           university: payload.university ?? currentUser.university,
           major: payload.major ?? currentUser.major,
           classYear: payload.classYear ?? currentUser.classYear,
@@ -811,8 +820,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       const result = (await response.json()) as { user: UserProfile };
       setUsers((current) =>
         current.some((user) => user.id === result.user.id)
-          ? current.map((user) => (user.id === result.user.id ? result.user : user))
-          : [result.user, ...current],
+          ? current.map((user) => (user.id === result.user.id ? normalizeUserProfile(result.user) : user))
+          : [normalizeUserProfile(result.user), ...current],
       );
       pushToast(
         {
@@ -963,6 +972,17 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         {
           en: "Sign in before creating a team.",
           vi: "Hãy đăng nhập trước khi tạo đội.",
+        },
+        "warning",
+      );
+      return;
+    }
+
+    if (!currentUser.phoneNumber.trim()) {
+      pushToast(
+        {
+          en: "Add a phone number in your profile before creating a team.",
+          vi: "Hãy bổ sung số điện thoại trong hồ sơ trước khi tạo đội.",
         },
         "warning",
       );
@@ -1855,6 +1875,17 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     );
 
     if (!request || request.status !== "pending") {
+      return;
+    }
+
+    if (decision === "accept" && !currentUser.phoneNumber.trim()) {
+      pushToast(
+        {
+          en: "Add a phone number in your profile before accepting leadership.",
+          vi: "Hãy bổ sung số điện thoại trong hồ sơ trước khi nhận quyền đội trưởng.",
+        },
+        "warning",
+      );
       return;
     }
 

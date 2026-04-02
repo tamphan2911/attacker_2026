@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Mail, PencilLine, School, UserRound, Users2 } from "lucide-react";
+import { ArrowLeft, Mail, PencilLine, Phone, School, UserRound, Users2 } from "lucide-react";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -129,6 +129,14 @@ export function AdminUserProfileView({ userId }: { userId: string }) {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Phone number" : "Số điện thoại"}
+              </p>
+              <p className="mt-3 text-sm leading-7 theme-text-body">
+                {user.phoneNumber || (locale === "en" ? "No phone number yet" : "Chưa có số điện thoại")}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
                 {locale === "en" ? "University" : "Trường"}
               </p>
               <p className="mt-3 text-sm leading-7 theme-text-body">{user.university}</p>
@@ -152,6 +160,20 @@ export function AdminUserProfileView({ userId }: { userId: string }) {
                 {locale === "en" ? "Account email" : "Email tài khoản"}
               </p>
               <p className="mt-2 text-sm leading-7 theme-text-body">{user.email}</p>
+            </div>
+          </div>
+        </Surface>
+
+        <Surface className="px-6 py-6">
+          <div className="flex items-center gap-3">
+            <Phone className="h-5 w-5 text-sky-400" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Phone number" : "Số điện thoại"}
+              </p>
+              <p className="mt-2 text-sm leading-7 theme-text-body">
+                {user.phoneNumber || (locale === "en" ? "No phone number yet" : "Chưa có số điện thoại")}
+              </p>
             </div>
           </div>
         </Surface>
@@ -209,6 +231,12 @@ export function AdminUserProfileView({ userId }: { userId: string }) {
                 {locale === "en" ? "Student ID" : "Mã số sinh viên"}
               </p>
               <p className="mt-3 text-sm theme-text-body">{user.studentId || "--"}</p>
+            </div>
+            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Phone number" : "Số điện thoại"}
+              </p>
+              <p className="mt-3 text-sm theme-text-body">{user.phoneNumber || "--"}</p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">

@@ -300,6 +300,7 @@ export async function updateUserByAdmin(
 
   const nextEmail = payload.email?.trim().toLowerCase();
   const nextStudentId = payload.studentId?.trim().toLowerCase();
+  const nextPhoneNumber = payload.phoneNumber?.trim();
 
   if (nextEmail || nextStudentId) {
     const duplicate = await prisma.user.findFirst({
@@ -326,6 +327,7 @@ export async function updateUserByAdmin(
       role: payload.role ? mapUserRole(payload.role) : undefined,
       studentId: nextStudentId === undefined ? undefined : nextStudentId || null,
       loginId: nextStudentId || undefined,
+      phoneNumber: nextPhoneNumber === undefined ? undefined : nextPhoneNumber || null,
       university: payload.university?.trim(),
       major: payload.major?.trim(),
       classYear: payload.classYear?.trim(),

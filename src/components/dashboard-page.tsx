@@ -10,6 +10,7 @@ import {
   LockKeyhole,
   LogOut,
   MailPlus,
+  Phone,
   Search,
   ShieldCheck,
   Upload,
@@ -127,6 +128,37 @@ function readImageFileAsDataUrl(file: File) {
   });
 }
 
+function PhoneRequirementNotice({
+  title,
+  description,
+  actionLabel,
+}: {
+  title: string;
+  description: string;
+  actionLabel: string;
+}) {
+  return (
+    <div className="rounded-[1.45rem] border border-amber-300/30 bg-[linear-gradient(135deg,rgba(251,191,36,0.14),rgba(255,255,255,0.78))] px-4 py-4 shadow-[0_18px_38px_rgba(120,53,15,0.08)] dark:bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(15,23,42,0.74))]">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-400/18 text-amber-700 dark:text-amber-100">
+          <Phone className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold theme-text-strong">{title}</p>
+          <p className="mt-2 text-sm leading-7 theme-text-muted">{description}</p>
+          <Link
+            href="/profile/edit"
+            className="mt-3 inline-flex items-center gap-2 rounded-full border border-amber-400/35 bg-white/80 px-4 py-2 text-sm font-semibold text-amber-800 transition hover:bg-white dark:bg-white/8 dark:text-amber-100 dark:hover:bg-white/12"
+          >
+            {actionLabel}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardPage() {
   const {
     locale,
@@ -139,6 +171,7 @@ export function DashboardPage() {
     round1Submissions,
     pageContent,
     authStatus,
+    currentUser,
     currentTeam,
     activeUserId,
     isAuthenticated,
@@ -246,6 +279,7 @@ export function DashboardPage() {
   const isLeader = currentTeam?.leaderId === activeUserId;
   const teamReadinessCount = currentTeam?.memberIds.length ?? 0;
   const membersNeeded = Math.max(0, TEAM_MIN_MEMBERS - teamReadinessCount);
+  const hasProfilePhoneNumber = Boolean(currentUser.phoneNumber.trim());
   const currentCompetitionState = currentTeam ? getTeamCompetitionState(currentTeam) : undefined;
   const teamRosterLocked = Boolean(currentTeam && isTeamRosterLocked(currentTeam));
   const teamRound1Locked = Boolean(currentTeam && isTeamRound1Locked(currentTeam));
@@ -316,6 +350,10 @@ export function DashboardPage() {
   });
 
   const handleTeamSave = () => {
+    if (!currentTeam && !hasProfilePhoneNumber) {
+      return;
+    }
+
     if (currentTeam) {
       updateCurrentTeam({
         name: teamForm.name,
@@ -592,6 +630,7 @@ export function DashboardPage() {
               {incomingLeadershipTransfers.map((request) => {
                 const team = teams.find((item) => item.id === request.teamId);
                 const requester = users.find((user) => user.id === request.fromUserId);
+                const acceptLeadershipDisabled = !hasProfilePhoneNumber;
 
                 if (!team) {
                   return null;
@@ -617,11 +656,29 @@ export function DashboardPage() {
                             ? `${requester?.name ?? "The current leader"} wants to transfer leadership of ${team.name} to you.`
                             : `${requester?.name ?? "Đội trưởng hiện tại"} muốn chuyển quyền đội trưởng của ${team.name} cho bạn.`}
                         </p>
+                        {!hasProfilePhoneNumber ? (
+                          <div className="mt-4">
+                            <PhoneRequirementNotice
+                              title={
+                                locale === "en"
+                                  ? "Phone number required before accepting leadership"
+                                  : "Cần có số điện thoại trước khi nhận quyền đội trưởng"
+                              }
+                              description={
+                                locale === "en"
+                                  ? "Update your profile with a phone number first. The platform only lets members with a recorded phone number accept leadership transfer."
+                                  : "Hãy cập nhật hồ sơ với số điện thoại trước. Hệ thống chỉ cho phép thành viên đã có số điện thoại nhận quyền đội trưởng."
+                              }
+                              actionLabel={locale === "en" ? "Update profile" : "Cập nhật hồ sơ"}
+                            />
+                          </div>
+                        ) : null}
                         <div className="mt-4 flex flex-wrap gap-3">
                           <button
                             type="button"
+                            disabled={acceptLeadershipDisabled}
                             onClick={() => respondToLeadershipTransfer(request.id, "accept")}
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950"
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
                           >
                             <Crown className="h-4 w-4" />
                             {locale === "en" ? "Accept leadership" : "Chấp nhận đội trưởng"}
@@ -1714,6 +1771,19 @@ export function DashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
               {locale === "en" ? "Create team" : "Tạo đội"}
             </p>
+            {!hasProfilePhoneNumber ? (
+              <div className="mt-5">
+                <PhoneRequirementNotice
+                  title={locale === "en" ? "Add a phone number before creating a team" : "Hãy thêm số điện thoại trước khi tạo đội"}
+                  description={
+                    locale === "en"
+                      ? "Team creation is available only after the account profile has a phone number. Add it once, then come back to continue."
+                      : "Tính năng tạo đội chỉ mở khi hồ sơ tài khoản đã có số điện thoại. Hãy bổ sung một lần rồi quay lại tiếp tục."
+                  }
+                  actionLabel={locale === "en" ? "Open profile edit" : "Mở trang chỉnh sửa hồ sơ"}
+                />
+              </div>
+            ) : null}
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <label className="space-y-2">
                 <span className="text-sm theme-text-muted">{locale === "en" ? "Team name" : "Tên đội"}</span>
@@ -1800,8 +1870,9 @@ export function DashboardPage() {
             </div>
             <button
               type="button"
+              disabled={!hasProfilePhoneNumber}
               onClick={handleTeamSave}
-              className="theme-button-primary mt-6 w-full rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
+              className="theme-button-primary mt-6 w-full rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
               {locale === "en" ? "Create team" : "Tạo đội"}
             </button>

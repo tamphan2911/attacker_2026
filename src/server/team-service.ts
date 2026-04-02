@@ -100,6 +100,10 @@ export async function createTeamForUser(
     return fail(403, "Only student accounts can create teams.");
   }
 
+  if (!user.phoneNumber?.trim()) {
+    return fail(409, "Add a phone number to the profile before creating a team.");
+  }
+
   const existingMembership = await prisma.teamMember.findUnique({
     where: { userId },
   });
@@ -465,6 +469,15 @@ export async function respondToLeadershipTransfer(
   decision: "accept" | "decline",
 ): Promise<ServiceResult<{ teamId: string; status: string }>> {
   return prisma.$transaction(async (tx) => {
+    const actor = await tx.user.findUnique({
+      where: { id: actorId },
+      select: { id: true, phoneNumber: true },
+    });
+
+    if (!actor) {
+      return fail(404, "User not found.");
+    }
+
     const request = await tx.leadershipTransferRequest.findUnique({
       where: { id: requestId },
       include: {
@@ -505,6 +518,10 @@ export async function respondToLeadershipTransfer(
       });
 
       return ok({ teamId: declined.teamId, status: declined.status });
+    }
+
+    if (!actor.phoneNumber?.trim()) {
+      return fail(409, "Add a phone number to the profile before accepting leadership.");
     }
 
     await tx.team.update({

@@ -6,6 +6,7 @@ import {
   Building2,
   Mail,
   PencilLine,
+  Phone,
   School,
   Upload,
   UserRound,
@@ -23,6 +24,7 @@ interface ProfileFormState {
   name: string;
   email: string;
   studentId: string;
+  phoneNumber: string;
   university: string;
   major: string;
   classYear: string;
@@ -35,6 +37,7 @@ function createProfileFormState(user: ReturnType<typeof useSiteState>["currentUs
     name: user.name,
     email: user.email,
     studentId: user.studentId,
+    phoneNumber: user.phoneNumber,
     university: user.university,
     major: user.major,
     classYear: user.classYear,
@@ -162,6 +165,7 @@ function ProfileEditor({
       name: form.name,
       email: form.email,
       studentId: form.studentId,
+      phoneNumber: form.phoneNumber,
       university: form.university,
       major: form.major,
       classYear: form.classYear,
@@ -209,6 +213,16 @@ function ProfileEditor({
               <input
                 value={form.studentId}
                 onChange={(event) => setForm((current) => ({ ...current, studentId: event.target.value }))}
+                className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-sm theme-text-muted">{locale === "en" ? "Phone number" : "Số điện thoại"}</span>
+              <input
+                value={form.phoneNumber}
+                onChange={(event) => setForm((current) => ({ ...current, phoneNumber: event.target.value }))}
+                placeholder={locale === "en" ? "Optional contact number" : "Số liên hệ không bắt buộc"}
                 className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
               />
             </label>
@@ -286,6 +300,9 @@ function ProfileEditor({
                 <p className="mt-1 text-sm theme-text-soft">
                   {(form.studentId || currentUser.studentId) &&
                     `${locale === "en" ? "Student ID" : "MSSV"} · ${form.studentId || currentUser.studentId}`}
+                </p>
+                <p className="mt-2 text-sm theme-text-soft">
+                  {form.phoneNumber || currentUser.phoneNumber || (locale === "en" ? "No phone number yet" : "Chưa có số điện thoại")}
                 </p>
                 <p className="mt-2 text-sm theme-text-soft">{form.university || currentUser.university}</p>
                 <p className="mt-2 text-xs theme-text-faint">{`${form.major || currentUser.major} · ${form.classYear || currentUser.classYear}`}</p>
@@ -440,6 +457,9 @@ export function ProfilePage() {
                 {locale === "en" ? "Contact" : "Liên hệ"}
               </p>
               <p className="mt-3 text-sm leading-7 theme-text-body">{currentUser.email}</p>
+              <p className="mt-2 text-sm leading-7 theme-text-soft">
+                {currentUser.phoneNumber || (locale === "en" ? "No phone number yet" : "Chưa có số điện thoại")}
+              </p>
             </div>
           </div>
         </Surface>
@@ -454,6 +474,20 @@ export function ProfilePage() {
                 {locale === "en" ? "Account email" : "Email tài khoản"}
               </p>
               <p className="mt-2 text-sm leading-7 theme-text-body">{currentUser.email}</p>
+            </div>
+          </div>
+        </Surface>
+
+        <Surface className="px-6 py-6">
+          <div className="flex items-center gap-3">
+            <Phone className="h-5 w-5 text-sky-400" />
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Phone number" : "Số điện thoại"}
+              </p>
+              <p className="mt-2 text-sm leading-7 theme-text-body">
+                {currentUser.phoneNumber || (locale === "en" ? "No phone number yet" : "Chưa có số điện thoại")}
+              </p>
             </div>
           </div>
         </Surface>
@@ -502,6 +536,14 @@ export function ProfilePage() {
                 {locale === "en" ? "Student ID" : "Mã số sinh viên"}
               </p>
               <p className="mt-3 text-sm theme-text-body">{currentUser.studentId || "--"}</p>
+            </div>
+            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Phone number" : "Số điện thoại"}
+              </p>
+              <p className="mt-3 text-sm theme-text-body">
+                {currentUser.phoneNumber || "--"}
+              </p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">

@@ -9,6 +9,7 @@ const updateProfileSchema = z.object({
   name: z.string().trim().min(1),
   email: z.string().trim().email(),
   studentId: z.string().trim().optional().default(""),
+  phoneNumber: z.string().trim().max(20).optional().default(""),
   university: z.string().trim().min(1),
   major: z.string().trim().min(1),
   classYear: z.string().trim().min(1),
@@ -50,6 +51,7 @@ export async function PATCH(request: Request) {
 
   const normalizedStudentId = payload.data.studentId.trim().toLowerCase();
   const normalizedEmail = payload.data.email.trim().toLowerCase();
+  const normalizedPhoneNumber = payload.data.phoneNumber.trim();
 
   const duplicate = await prisma.user.findFirst({
     where: {
@@ -76,6 +78,7 @@ export async function PATCH(request: Request) {
       email: normalizedEmail,
       studentId: normalizedStudentId || null,
       loginId: normalizedStudentId || undefined,
+      phoneNumber: normalizedPhoneNumber || null,
       university: payload.data.university.trim(),
       major: payload.data.major.trim(),
       classYear: payload.data.classYear.trim(),

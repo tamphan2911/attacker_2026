@@ -187,6 +187,18 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
+                {locale === "en" ? "Phone number" : "Số điện thoại"}
+              </span>
+              <input
+                value={draft.phoneNumber}
+                onChange={(event) =>
+                  setDraft((current) => (current ? { ...current, phoneNumber: event.target.value } : current))
+                }
+                className={fieldClassName}
+              />
+            </label>
+            <label className="space-y-2">
+              <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Role" : "Vai tro"}
               </span>
               <select

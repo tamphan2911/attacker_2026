@@ -90,6 +90,7 @@ model User {
   name            String
   role            UserRole  @default(STUDENT)
   studentId       String?   @unique
+  phoneNumber     String?
   university      String    @default("")
   major           String    @default("")
   classYear       String    @default("")

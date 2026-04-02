@@ -195,6 +195,7 @@ export interface UserProfile {
   email: string;
   role: UserRole;
   studentId: string;
+  phoneNumber: string;
   university: string;
   major: string;
   classYear: string;

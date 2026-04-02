@@ -184,6 +184,7 @@ export function serializeUser(user: UserWithAccounts): UserProfile {
     email: user.email,
     role: mapUserRole(user.role),
     studentId: user.studentId ?? "",
+    phoneNumber: user.phoneNumber ?? "",
     university: user.university,
     major: user.major,
     classYear: user.classYear,
