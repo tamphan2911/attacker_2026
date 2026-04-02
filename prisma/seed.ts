@@ -7,6 +7,7 @@ import {
   Round1QuestionType,
   Round1TeamLockRequestStatus,
   Round1TestBankType,
+  ForumThreadCategory,
   SubmissionRound,
   TeamInvitationStatus,
   TeamRound1LockStatus,
@@ -35,6 +36,85 @@ const prisma = new PrismaClient();
 
 const DEFAULT_STUDENT_PASSWORD = "Student@2026";
 const DEFAULT_MODERATOR_PASSWORD = "Moderator@2026";
+
+const forumSeedThreads = [
+  {
+    slug: "looking-for-product-and-data-partner",
+    authorId: "u6",
+    title: "Looking for a product or data teammate for Round 1 preparation",
+    summary:
+      "I already have a finance-heavy base and want one teammate who thinks clearly about product flow or data storytelling.",
+    body:
+      "I am from UEL and currently preparing for the team-lock stage. I am most comfortable with finance logic and presentation structure, so I am looking for someone who can strengthen the product or analytics side. If you are serious about joining and can commit to the first round timeline, reply here.",
+    category: ForumThreadCategory.LOOKING_FOR_TEAM,
+    university: "University of Economics and Law",
+    preferredRoles: ["Product", "Data analysis", "Presentation"],
+    contactNote: "Reply in-thread first. I usually check messages after 19:00.",
+    createdAt: "2026-03-20T09:00:00+07:00",
+    lastActivityAt: "2026-03-21T10:15:00+07:00",
+  },
+  {
+    slug: "neo-ledger-needs-one-more-frontend-member",
+    authorId: "u1",
+    title: "Neo Ledger needs one more frontend-minded member",
+    summary:
+      "Our team already covers finance and PM work. We want one more member who can help with interface thinking and deck polish.",
+    body:
+      "We are aiming for a polished entry and need someone who can think visually, wire ideas quickly, and help the team communicate clearly in later rounds. Prior competition experience is welcome but not required. What matters most is reliability and willingness to work closely with the team.",
+    category: ForumThreadCategory.TEAM_LOOKING_FOR_MEMBERS,
+    university: "University of Economics and Law",
+    preferredRoles: ["Frontend", "UI/UX", "Pitch deck"],
+    contactNote: "Tell us your availability and your strongest skill in the reply.",
+    createdAt: "2026-03-18T14:30:00+07:00",
+    lastActivityAt: "2026-03-22T08:45:00+07:00",
+  },
+  {
+    slug: "how-are-people-balancing-finance-and-product-roles",
+    authorId: "u4",
+    title: "How are people balancing finance and product roles in one student team?",
+    summary:
+      "Curious how teams divide ownership when nobody wants to be stuck in only one narrow function.",
+    body:
+      "I think many student teams struggle because everyone wants to help with everything, which sounds good but often slows the team down. If your team has found a workable structure between finance, product, data, and presentation, share how you split the work.",
+    category: ForumThreadCategory.GENERAL_DISCUSSION,
+    university: "UEH University",
+    preferredRoles: ["Operations", "Team process"],
+    contactNote: "",
+    createdAt: "2026-03-16T11:10:00+07:00",
+    lastActivityAt: "2026-03-19T16:00:00+07:00",
+  },
+] as const;
+
+const forumSeedReplies = [
+  {
+    threadSlug: "looking-for-product-and-data-partner",
+    authorId: "u5",
+    body:
+      "I can help on the product side and I am comfortable turning technical ideas into simpler user flows. I am from FTU HCMC and can join evening calls during weekdays.",
+    createdAt: "2026-03-20T20:10:00+07:00",
+  },
+  {
+    threadSlug: "neo-ledger-needs-one-more-frontend-member",
+    authorId: "u3",
+    body:
+      "I am strongest in visual structure and presentation polish, but I can also support the team with early UI mocks if needed. Weekend collaboration is easiest for me.",
+    createdAt: "2026-03-21T09:20:00+07:00",
+  },
+  {
+    threadSlug: "neo-ledger-needs-one-more-frontend-member",
+    authorId: "u2",
+    body:
+      "Not applying directly, but one suggestion: ask candidates how they explain product logic, not only whether they can design slides. It helps later in the final defense.",
+    createdAt: "2026-03-22T08:45:00+07:00",
+  },
+  {
+    threadSlug: "how-are-people-balancing-finance-and-product-roles",
+    authorId: "u7",
+    body:
+      "Our best split last year was one person on finance logic, one on product framing, one on deck/storyline, and everyone reviewing the final narrative together.",
+    createdAt: "2026-03-19T16:00:00+07:00",
+  },
+] as const;
 
 function parseDate(value?: string | null) {
   if (!value) {
@@ -187,6 +267,8 @@ async function main() {
   await prisma.session.deleteMany();
   await prisma.verificationToken.deleteMany();
   await prisma.userActionToken.deleteMany();
+  await prisma.forumReply.deleteMany();
+  await prisma.forumThread.deleteMany();
   await prisma.round1Submission.deleteMany();
   await prisma.round1TestBank.deleteMany();
   await prisma.round1TeamLockRequest.deleteMany();
@@ -400,6 +482,44 @@ async function main() {
         highlights: JSON.stringify(post.highlights),
         content: JSON.stringify(post.content),
         tags: JSON.stringify(post.tags),
+      },
+    });
+  }
+
+  for (const thread of forumSeedThreads) {
+    await prisma.forumThread.create({
+      data: {
+        slug: thread.slug,
+        authorId: thread.authorId,
+        title: thread.title,
+        summary: thread.summary,
+        body: thread.body,
+        category: thread.category,
+        university: thread.university,
+        preferredRoles: JSON.stringify(thread.preferredRoles),
+        contactNote: thread.contactNote,
+        createdAt: parseDate(thread.createdAt) ?? new Date(),
+        lastActivityAt: parseDate(thread.lastActivityAt) ?? new Date(),
+      },
+    });
+  }
+
+  for (const reply of forumSeedReplies) {
+    const thread = await prisma.forumThread.findUnique({
+      where: { slug: reply.threadSlug },
+      select: { id: true },
+    });
+
+    if (!thread) {
+      continue;
+    }
+
+    await prisma.forumReply.create({
+      data: {
+        threadId: thread.id,
+        authorId: reply.authorId,
+        body: reply.body,
+        createdAt: parseDate(reply.createdAt) ?? new Date(),
       },
     });
   }

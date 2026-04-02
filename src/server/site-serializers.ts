@@ -20,9 +20,16 @@ import {
   type TeamSubmission,
   type User,
   type LeadershipTransferRequest,
+  ForumThreadCategory,
+  ForumThreadStatus,
+  type ForumReply,
+  type ForumThread,
 } from "@prisma/client";
 
 import type {
+  ForumAuthor,
+  ForumReply as AppForumReply,
+  ForumThread as AppForumThread,
   Round1Question,
   Round1Submission as AppRound1Submission,
   Round1TeamLockRequest as AppRound1TeamLockRequest,
@@ -165,6 +172,22 @@ function mapBankType(type: Round1TestBankType): AppRound1TestBank["bankType"] {
   return type === Round1TestBankType.ESSAY ? "essay" : "objective";
 }
 
+function mapForumCategory(category: ForumThreadCategory): AppForumThread["category"] {
+  switch (category) {
+    case ForumThreadCategory.TEAM_LOOKING_FOR_MEMBERS:
+      return "team-looking-for-members";
+    case ForumThreadCategory.GENERAL_DISCUSSION:
+      return "general-discussion";
+    case ForumThreadCategory.LOOKING_FOR_TEAM:
+    default:
+      return "looking-for-team";
+  }
+}
+
+function mapForumStatus(status: ForumThreadStatus): AppForumThread["status"] {
+  return status === ForumThreadStatus.CLOSED ? "closed" : "open";
+}
+
 export function serializeUser(user: UserWithAccounts): UserProfile {
   const providerSet = new Set<"email" | "google">();
 
@@ -193,6 +216,67 @@ export function serializeUser(user: UserWithAccounts): UserProfile {
     avatarTone: user.avatarTone,
     avatarImageSrc: user.avatarImageSrc ?? undefined,
     providers: Array.from(providerSet),
+  };
+}
+
+function serializeForumAuthor(
+  user: Pick<User, "id" | "name" | "role" | "university" | "avatarTone" | "avatarImageSrc">,
+): ForumAuthor {
+  return {
+    id: user.id,
+    name: user.name,
+    role: mapUserRole(user.role),
+    university: user.university,
+    avatarTone: user.avatarTone,
+    avatarImageSrc: user.avatarImageSrc ?? undefined,
+  };
+}
+
+export function serializeForumReply(
+  reply: ForumReply & {
+    author: Pick<User, "id" | "name" | "role" | "university" | "avatarTone" | "avatarImageSrc">;
+  },
+): AppForumReply {
+  return {
+    id: reply.id,
+    threadId: reply.threadId,
+    body: reply.body,
+    createdAt: reply.createdAt.toISOString(),
+    updatedAt: reply.updatedAt.toISOString(),
+    author: serializeForumAuthor(reply.author),
+  };
+}
+
+export function serializeForumThread(
+  thread: ForumThread & {
+    author: Pick<User, "id" | "name" | "role" | "university" | "avatarTone" | "avatarImageSrc">;
+    replies?: Array<
+      ForumReply & {
+        author: Pick<User, "id" | "name" | "role" | "university" | "avatarTone" | "avatarImageSrc">;
+      }
+    >;
+    _count?: {
+      replies: number;
+    };
+  },
+): AppForumThread {
+  return {
+    id: thread.id,
+    slug: thread.slug,
+    title: thread.title,
+    summary: thread.summary,
+    body: thread.body,
+    category: mapForumCategory(thread.category),
+    status: mapForumStatus(thread.status),
+    university: thread.university,
+    preferredRoles: JSON.parse(thread.preferredRoles || "[]") as string[],
+    contactNote: thread.contactNote,
+    createdAt: thread.createdAt.toISOString(),
+    updatedAt: thread.updatedAt.toISOString(),
+    lastActivityAt: thread.lastActivityAt.toISOString(),
+    replyCount: thread._count?.replies ?? thread.replies?.length ?? 0,
+    author: serializeForumAuthor(thread.author),
+    replies: thread.replies?.map(serializeForumReply),
   };
 }
 

@@ -98,6 +98,50 @@ export interface TestimonialItem {
   quote: LocalizedText;
 }
 
+export type ForumThreadCategory =
+  | "looking-for-team"
+  | "team-looking-for-members"
+  | "general-discussion";
+
+export type ForumThreadStatus = "open" | "closed";
+
+export interface ForumAuthor {
+  id: string;
+  name: string;
+  university: string;
+  role: UserRole;
+  avatarTone: string;
+  avatarImageSrc?: string;
+}
+
+export interface ForumReply {
+  id: string;
+  threadId: string;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+  author: ForumAuthor;
+}
+
+export interface ForumThread {
+  id: string;
+  slug: string;
+  title: string;
+  summary: string;
+  body: string;
+  category: ForumThreadCategory;
+  status: ForumThreadStatus;
+  university: string;
+  preferredRoles: string[];
+  contactNote: string;
+  createdAt: string;
+  updatedAt: string;
+  lastActivityAt: string;
+  replyCount: number;
+  author: ForumAuthor;
+  replies?: ForumReply[];
+}
+
 export type NewsContentBlock =
   | {
       type: "paragraph";

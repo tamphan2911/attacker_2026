@@ -87,6 +87,17 @@ enum UserActionTokenType {
   RESET_PASSWORD
 }
 
+enum ForumThreadCategory {
+  LOOKING_FOR_TEAM
+  TEAM_LOOKING_FOR_MEMBERS
+  GENERAL_DISCUSSION
+}
+
+enum ForumThreadStatus {
+  OPEN
+  CLOSED
+}
+
 model User {
   id              String    @id @default(cuid())
   loginId         String    @unique @default(cuid())
@@ -119,6 +130,8 @@ model User {
   round1Submissions Round1Submission[]
   teamSubmissions TeamSubmission[]
   actionTokens    UserActionToken[]
+  forumThreads    ForumThread[] @relation("ForumThreadAuthor")
+  forumReplies    ForumReply[]  @relation("ForumReplyAuthor")
 }
 
 model UserActionToken {
@@ -304,6 +317,42 @@ model NewsPost {
   tags           String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model ForumThread {
+  id               String              @id @default(cuid())
+  slug             String              @unique
+  authorId         String
+  title            String
+  summary          String
+  body             String
+  category         ForumThreadCategory
+  status           ForumThreadStatus   @default(OPEN)
+  university       String
+  preferredRoles   String              @default("[]")
+  contactNote      String              @default("")
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  lastActivityAt   DateTime            @default(now())
+  author           User                @relation("ForumThreadAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  replies          ForumReply[]
+
+  @@index([category, status, lastActivityAt])
+  @@index([authorId, createdAt])
+}
+
+model ForumReply {
+  id         String      @id @default(cuid())
+  threadId    String
+  authorId    String
+  body        String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  thread      ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author      User        @relation("ForumReplyAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+  @@index([authorId, createdAt])
 }
 
 model CmsEntry {
