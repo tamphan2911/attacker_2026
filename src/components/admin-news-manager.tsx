@@ -726,8 +726,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
         </div>
       </div>
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6">
+      <section className="space-y-6">
           <Surface className="px-6 py-6 md:px-8 md:py-8">
             <div className="space-y-5">
               <LocalizedFieldEditor
@@ -1310,55 +1309,6 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
               ))}
             </div>
           </Surface>
-        </div>
-
-        <div className="space-y-4">
-          <Surface className="px-6 py-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-700 dark:text-sky-200/80">
-              {locale === "en" ? "Publish preview" : "Preview đăng bài"}
-            </p>
-            <p className="mt-4 text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "After saving, the article appears on the homepage news section, the newsroom list, the organizer page counters, and its public detail URL."
-                : "Sau khi lưu, bài viết sẽ xuất hiện ở section tin tức trên trang chủ, danh sách newsroom, bộ đếm ở trang organizer và URL chi tiết công khai của bài."}
-            </p>
-            <div className="mt-5 rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
-              <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">URL</p>
-              <p className="mt-2 text-sm font-semibold theme-text-strong">
-                /news/{generatedSlug || slugify(draft.title.en || draft.title.vi || "news-article")}
-              </p>
-            </div>
-          </Surface>
-
-          <Surface className="px-6 py-6">
-            <div className="flex items-center gap-3">
-              <Newspaper className="h-5 w-5 text-cyan-300" />
-              <p className="text-lg font-semibold theme-text-strong">
-                {locale === "en" ? "Article status" : "Trạng thái bài viết"}
-              </p>
-            </div>
-            <div className="mt-5 space-y-3">
-              <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                  {locale === "en" ? "Blocks" : "Số khối"}
-                </p>
-                <p className="mt-2 text-2xl font-semibold theme-text-strong">{draft.content.length}</p>
-              </div>
-              <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                  {locale === "en" ? "Highlights" : "Số điểm nhấn"}
-                </p>
-                <p className="mt-2 text-2xl font-semibold theme-text-strong">{draft.highlights.length}</p>
-              </div>
-              <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">Tags</p>
-                <p className="mt-2 text-sm theme-text-soft">
-                  {draft.tags.length > 0 ? draft.tags.join(", ") : "-"}
-                </p>
-              </div>
-            </div>
-          </Surface>
-        </div>
       </section>
     </div>
   );
