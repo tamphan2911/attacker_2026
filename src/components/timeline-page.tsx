@@ -98,8 +98,8 @@ export function TimelinePage() {
               id={phase.anchor}
               className="scroll-mt-36 rounded-[2rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(245,249,255,0.98))] px-5 py-6 shadow-[0_22px_55px_rgba(148,163,184,0.12)] dark:bg-[linear-gradient(180deg,rgba(11,23,42,0.96),rgba(7,16,31,0.98))] md:px-7 md:py-7"
             >
-              <div className="grid gap-6 xl:grid-cols-[290px_minmax(0,1fr)]">
-                <div className="space-y-4">
+              <div className="grid gap-6 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
+                <div className="space-y-4 xl:sticky xl:top-32 xl:self-start">
                   <div className="inline-flex h-12 w-12 items-center justify-center rounded-[1.25rem] border border-sky-500/18 bg-sky-500/10">
                     <Icon className="h-5 w-5 text-sky-600 dark:text-sky-200" />
                   </div>
