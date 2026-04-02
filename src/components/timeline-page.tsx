@@ -11,7 +11,7 @@ import {
 
 import { timelineItems } from "@/data/site-content";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { SectionHeading, Surface } from "@/components/site-ui";
+import { Surface } from "@/components/site-ui";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 import type { CompetitionRoundKey } from "@/types/site";
 
@@ -102,18 +102,10 @@ const timelinePhaseMeta: Array<{
 ];
 
 export function TimelinePage() {
-  const { locale, pageContent } = useSiteState();
+  const { locale } = useSiteState();
 
   return (
     <div className="space-y-16 md:space-y-20">
-      <section>
-        <SectionHeading
-          eyebrow={pickText(locale, pageContent.rules.timeline.eyebrow)}
-          title={pickText(locale, pageContent.rules.timeline.title)}
-          description={pickText(locale, pageContent.rules.timeline.description)}
-        />
-      </section>
-
       <section className="space-y-6">
         {timelinePhaseMeta.map((phase) => {
           const items = timelineItems.filter((item) => item.phase === phase.phase);
