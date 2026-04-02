@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
+import { getCurrentDbUser, hasAdminRole } from "@/server/auth-helpers";
 import { readSystemEmailTemplates, saveSystemEmailTemplates } from "@/server/system-email-templates";
 
 export async function GET() {
   const user = await getCurrentDbUser();
-  if (!user || !hasElevatedRole(user.role)) {
-    return NextResponse.json({ error: "Admin or moderator access required." }, { status: 403 });
+  if (!user || !hasAdminRole(user.role)) {
+    return NextResponse.json({ error: "Admin access required." }, { status: 403 });
   }
 
   return NextResponse.json(
@@ -17,8 +17,8 @@ export async function GET() {
 
 export async function PUT(request: Request) {
   const user = await getCurrentDbUser();
-  if (!user || !hasElevatedRole(user.role)) {
-    return NextResponse.json({ error: "Admin or moderator access required." }, { status: 403 });
+  if (!user || !hasAdminRole(user.role)) {
+    return NextResponse.json({ error: "Admin access required." }, { status: 403 });
   }
 
   const payload = await request.json().catch(() => null);

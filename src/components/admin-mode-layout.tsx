@@ -28,6 +28,7 @@ type AdminNavItem = {
   icon: typeof LayoutDashboard;
   label: LocalizedText;
   description: LocalizedText;
+  adminOnly?: boolean;
   children?: Array<{ href: string; label: LocalizedText }>;
 };
 
@@ -105,6 +106,7 @@ const adminNavGroups: Array<{
         icon: Mail,
         label: { en: "Email templates", vi: "Mẫu email" },
         description: { en: "Activation and password-reset email copy", vi: "Nội dung email kích hoạt và đặt lại mật khẩu" },
+        adminOnly: true,
         children: [
           { href: "/admin/email-templates", label: { en: "System email templates", vi: "Mẫu email hệ thống" } },
         ],
@@ -227,7 +229,9 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                   {pickText(locale, group.label)}
                 </p>
                 <div className="space-y-1.5">
-                  {group.items.map((item) => {
+                  {group.items
+                    .filter((item) => !item.adminOnly || currentUser.role === "admin")
+                    .map((item) => {
                     const active =
                       isActiveRoute(pathname, item.href) ||
                       item.children?.some((child) => isActiveRoute(pathname, child.href));
