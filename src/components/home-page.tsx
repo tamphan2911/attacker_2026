@@ -486,7 +486,7 @@ export function HomePage() {
 
   return (
     <div className="space-y-24 pb-8">
-      <section className="relative left-1/2 right-1/2 -mx-[50vw] w-screen overflow-hidden">
+      <section className="relative left-1/2 right-1/2 -mx-[50vw] -mt-6 w-screen overflow-hidden md:-mt-8">
         <div className="relative min-h-[500px] md:min-h-[560px]">
           {heroDeck.map((slide, index) => (
             <div
@@ -509,9 +509,9 @@ export function HomePage() {
 
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_9%,rgba(255,255,255,0.14),transparent_22%),linear-gradient(180deg,rgba(7,18,35,0.14)_0%,rgba(7,18,35,0.44)_62%,rgba(7,18,35,0.72)_100%)]" />
 
-          <div className="relative z-10 mx-auto flex min-h-[500px] max-w-7xl items-center px-4 pb-14 pt-22 text-white md:min-h-[560px] md:px-8">
-            <div className="grid w-full gap-5 lg:grid-cols-[minmax(0,0.96fr)_320px] lg:items-end">
-              <div className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(8,20,38,0.48),rgba(8,20,38,0.16))] px-5 py-5 shadow-[0_26px_58px_rgba(7,18,35,0.2)] backdrop-blur-lg md:px-6 md:py-6">
+          <div className="relative z-10 mx-auto flex min-h-[500px] max-w-7xl items-center px-4 pb-14 pt-20 text-white md:min-h-[560px] md:px-8 md:pt-22">
+            <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,0.92fr)_296px] lg:items-end">
+              <div className="max-w-3xl md:pr-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <span className="inline-flex items-center rounded-full border border-white/12 bg-[rgba(255,255,255,0.08)] px-3 py-1.5 text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-white/82">
                     {pickText(locale, currentHeroSlide.eyebrow)}
@@ -523,10 +523,10 @@ export function HomePage() {
                   </div>
                 </div>
 
-                <h1 className="theme-heading mt-4 max-w-3xl text-[1.88rem] font-semibold leading-[1.04] md:text-[3.02rem]">
+                <h1 className="theme-heading mt-4 max-w-3xl text-[1.82rem] font-semibold leading-[1.04] text-white [text-shadow:0_14px_34px_rgba(7,18,35,0.38)] md:text-[2.9rem]">
                   {pickText(locale, currentHeroSlide.title)}
                 </h1>
-                <p className="mt-3.5 max-w-2xl text-[0.94rem] leading-7 text-white/76 md:text-[0.98rem]">
+                <p className="mt-3.5 max-w-2xl text-[0.9rem] leading-7 text-white/80 [text-shadow:0_10px_24px_rgba(7,18,35,0.32)] md:text-[0.95rem]">
                   {pickText(locale, currentHeroSlide.description)}
                 </p>
 
@@ -534,7 +534,7 @@ export function HomePage() {
                   {currentHeroSlide.highlights.map((item) => (
                     <div
                       key={item.en}
-                      className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.08)] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-white/84 shadow-[0_12px_28px_rgba(7,18,35,0.1)]"
+                      className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-1.5 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-white/86 shadow-[0_10px_22px_rgba(7,18,35,0.1)] backdrop-blur-sm"
                     >
                       {pickText(locale, item)}
                     </div>
@@ -558,29 +558,29 @@ export function HomePage() {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="grid gap-2.5 sm:grid-cols-3 lg:grid-cols-1">
                 {currentHeroSlide.cards.map((item, index) => {
                   const Icon = item.icon;
 
                   return (
                     <div
                       key={item.label.en}
-                      className="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.11),rgba(255,255,255,0.05))] px-4 py-3.5 shadow-[0_18px_40px_rgba(7,18,35,0.14)] backdrop-blur-lg"
+                      className="rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-3.5 py-3 shadow-[0_14px_30px_rgba(7,18,35,0.12)] backdrop-blur-md"
                     >
                       <div className="flex items-start gap-3">
                         <div
-                          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.05rem] border border-white/12 ${heroCardIconClasses[index % heroCardIconClasses.length]}`}
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border border-white/12 ${heroCardIconClasses[index % heroCardIconClasses.length]}`}
                         >
-                          <Icon className="h-5 w-5" />
+                          <Icon className="h-4.5 w-4.5" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-white/60">
                             {pickText(locale, item.label)}
                           </p>
-                          <p className="mt-1 text-[0.96rem] font-semibold text-white">
+                          <p className="mt-1 text-[0.9rem] font-semibold text-white">
                             {pickText(locale, item.value)}
                           </p>
-                          <p className="mt-1.5 text-[0.82rem] leading-6 text-white/74">
+                          <p className="mt-1.5 text-[0.78rem] leading-5.5 text-white/76">
                             {pickText(locale, item.note)}
                           </p>
                         </div>
