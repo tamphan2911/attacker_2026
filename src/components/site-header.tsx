@@ -5,15 +5,17 @@ import { usePathname } from "next/navigation";
 import {
   ChevronDown,
   Globe2,
+  LogOut,
   Mail,
   Menu,
   MoonStar,
   PhoneCall,
   Sparkles,
   SunMedium,
+  UserRound,
   X,
 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 import { contactInfo } from "@/data/site-content";
 import { pickText } from "@/lib/site";
@@ -57,11 +59,26 @@ const primaryNavItems: Array<{
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { locale, theme, currentUser, setLocale, setTheme } = useSiteState();
+  const { locale, theme, currentUser, setLocale, setTheme, signOutCurrentUser } = useSiteState();
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const isLoggedIn = Boolean(currentUser?.id);
-  const isProfileRoute = pathname === "/profile";
+  const isProfileRoute = pathname.startsWith("/profile");
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!profileMenuRef.current?.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
 
   const toggleLocale = () => {
     const nextLocale = locale === "en" ? "vi" : "en";
@@ -240,24 +257,74 @@ export function SiteHeader() {
               {isPending ? <span className="theme-text-soft text-xs">...</span> : null}
             </button>
             {isLoggedIn ? (
-              <Link
-                href="/profile"
-                aria-label={locale === "en" ? "Open profile" : "Mở hồ sơ"}
-                title={locale === "en" ? "Open profile" : "Mở hồ sơ"}
-                className={cn(
-                  "inline-flex items-center justify-center rounded-full p-0.5 transition hover:-translate-y-0.5",
-                  isProfileRoute
-                    ? "bg-[linear-gradient(135deg,rgba(23,114,208,0.92),rgba(14,165,233,0.86))] shadow-[0_12px_32px_rgba(14,165,233,0.24)]"
-                    : "border border-white/10 bg-white/20 hover:border-sky-300/26 hover:bg-white/28",
-                )}
-              >
-                <GradientAvatar
-                  label={currentUser.name}
-                  tone={currentUser.avatarTone}
-                  imageSrc={currentUser.avatarImageSrc}
-                  className="h-10 w-10 rounded-full border border-white/65 bg-slate-900 text-xs"
-                />
-              </Link>
+              <div ref={profileMenuRef} className="relative">
+                <button
+                  type="button"
+                  aria-label={locale === "en" ? "Open profile menu" : "Mở menu hồ sơ"}
+                  aria-haspopup="menu"
+                  aria-expanded={isProfileMenuOpen}
+                  onClick={() => setIsProfileMenuOpen((current) => !current)}
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-full p-0.5 transition hover:-translate-y-0.5",
+                    isProfileRoute || isProfileMenuOpen
+                      ? "bg-[linear-gradient(135deg,rgba(23,114,208,0.92),rgba(14,165,233,0.86))] shadow-[0_12px_32px_rgba(14,165,233,0.24)]"
+                      : "border border-white/10 bg-white/20 hover:border-sky-300/26 hover:bg-white/28",
+                  )}
+                >
+                  <GradientAvatar
+                    label={currentUser.name}
+                    tone={currentUser.avatarTone}
+                    imageSrc={currentUser.avatarImageSrc}
+                    className="h-10 w-10 rounded-full border border-white/65 bg-slate-900 text-xs"
+                  />
+                </button>
+
+                {isProfileMenuOpen ? (
+                  <div
+                    role="menu"
+                    className="theme-card-shadow-soft theme-panel-strong absolute right-0 top-full z-40 mt-3 w-64 rounded-[1.6rem] border theme-border p-2 backdrop-blur-xl"
+                  >
+                    <div className="rounded-[1.2rem] border theme-border bg-[rgba(255,255,255,0.46)] px-4 py-4 dark:bg-[rgba(8,15,30,0.54)]">
+                      <div className="flex items-center gap-3">
+                        <GradientAvatar
+                          label={currentUser.name}
+                          tone={currentUser.avatarTone}
+                          imageSrc={currentUser.avatarImageSrc}
+                          className="h-11 w-11 rounded-full text-xs"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold theme-text-strong">{currentUser.name}</p>
+                          <p className="truncate text-xs theme-text-soft">{currentUser.email}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 grid gap-1">
+                      <Link
+                        href="/profile"
+                        role="menuitem"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                        className="inline-flex items-center gap-3 rounded-[1rem] px-4 py-3 text-sm font-medium theme-text-body transition hover:bg-[rgba(23,114,208,0.08)] hover:text-[var(--text-strong)]"
+                      >
+                        <UserRound className="h-4 w-4 text-sky-400" />
+                        <span>{locale === "en" ? "Profile" : "Hồ sơ"}</span>
+                      </Link>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          void signOutCurrentUser();
+                        }}
+                        className="inline-flex items-center gap-3 rounded-[1rem] px-4 py-3 text-left text-sm font-medium theme-text-body transition hover:bg-[rgba(23,114,208,0.08)] hover:text-[var(--text-strong)]"
+                      >
+                        <LogOut className="h-4 w-4 text-sky-400" />
+                        <span>{locale === "en" ? "Log out" : "Đăng xuất"}</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             ) : (
               <Link href="/auth" className="theme-button-primary rounded-full px-5 py-2.5 text-sm font-semibold transition hover:brightness-110">
                 {locale === "en" ? "Join today" : "Tham gia ngay"}
@@ -309,7 +376,7 @@ export function SiteHeader() {
                   ) : null}
                 </div>
               ))}
-              <div className="grid gap-3 pt-2 sm:grid-cols-3">
+              <div className={cn("grid gap-3 pt-2", isLoggedIn ? "sm:grid-cols-4" : "sm:grid-cols-3")}>
                 <button
                   type="button"
                   onClick={toggleTheme}
@@ -331,24 +398,37 @@ export function SiteHeader() {
                   {locale === "en" ? "Chuyển sang Tiếng Việt" : "Switch to English"}
                 </button>
                 {isLoggedIn ? (
-                  <Link
-                    href="/profile"
-                    onClick={() => setIsOpen(false)}
-                    className={cn(
-                      "inline-flex items-center justify-center gap-3 rounded-2xl border px-4 py-3 text-center text-sm font-semibold",
-                      isProfileRoute
-                        ? "theme-button-primary"
-                        : "theme-panel-strong theme-text-strong",
-                    )}
-                  >
-                    <GradientAvatar
-                      label={currentUser.name}
-                      tone={currentUser.avatarTone}
-                      imageSrc={currentUser.avatarImageSrc}
-                      className="h-7 w-7 rounded-full text-[10px]"
-                    />
-                    <span>{locale === "en" ? "My profile" : "Hồ sơ của tôi"}</span>
-                  </Link>
+                  <>
+                    <Link
+                      href="/profile"
+                      onClick={() => setIsOpen(false)}
+                      className={cn(
+                        "inline-flex items-center justify-center gap-3 rounded-2xl border px-4 py-3 text-center text-sm font-semibold",
+                        isProfileRoute
+                          ? "theme-button-primary"
+                          : "theme-panel-strong theme-text-strong",
+                      )}
+                    >
+                      <GradientAvatar
+                        label={currentUser.name}
+                        tone={currentUser.avatarTone}
+                        imageSrc={currentUser.avatarImageSrc}
+                        className="h-7 w-7 rounded-full text-[10px]"
+                      />
+                      <span>{locale === "en" ? "Profile" : "Hồ sơ"}</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsOpen(false);
+                        void signOutCurrentUser();
+                      }}
+                      className="theme-panel-strong theme-text-strong inline-flex items-center justify-center gap-3 rounded-2xl border px-4 py-3 text-center text-sm font-semibold"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>{locale === "en" ? "Log out" : "Đăng xuất"}</span>
+                    </button>
+                  </>
                 ) : (
                   <Link
                     href="/auth"

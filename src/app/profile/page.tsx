@@ -4,7 +4,7 @@ import { ProfilePage } from "@/components/profile-page";
 
 export const metadata: Metadata = {
   title: "Profile",
-  description: "Edit the current account profile for the Attacker 2026 frontend prototype.",
+  description: "View the current account profile for the Attacker 2026 platform.",
 };
 
 export default function Page() {

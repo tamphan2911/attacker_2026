@@ -238,7 +238,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
   if (!draft) {
     return (
       <NewsNotFound
-        title={locale === "en" ? "Article not found." : "Khong tim thay bai viet."}
+        title={locale === "en" ? "Article not found." : "Không tìm thấy bài viết."}
         description={
           locale === "en"
             ? "This article may have been deleted from the current backend dataset."
@@ -321,7 +321,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
     <div className="space-y-8">
       <Link href="/admin/news" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
         <ArrowLeft className="h-4 w-4" />
-        {locale === "en" ? "Back to news" : "Quay lai danh sach tin"}
+        {locale === "en" ? "Back to news" : "Quay lại danh sách tin"}
       </Link>
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -331,7 +331,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
             isCreateMode
               ? locale === "en"
                 ? "Create a new news article"
-                : "Tao bai viet moi"
+                : "Tạo bài viết mới"
               : pickText(locale, draft.title) || (locale === "en" ? "Edit article" : "Chinh sua bai viet")
           }
           description={
@@ -354,7 +354,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
             onClick={saveDraft}
             className="theme-button-primary rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {locale === "en" ? "Save article" : "Luu bai viet"}
+            {locale === "en" ? "Save article" : "Lưu bài viết"}
           </button>
           <button
             type="button"
@@ -587,7 +587,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                 <p className="mt-2 text-sm theme-text-soft">
                   {locale === "en"
                     ? "Mix paragraph and image blocks to build the article body."
-                    : "Ket hop paragraph va image blocks de tao than bai viet."}
+                    : "Kết hợp paragraph và image blocks để tạo thân bài viết."}
                 </p>
               </div>
               <div className="flex gap-3">
@@ -787,12 +787,12 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
         <div className="space-y-4">
           <Surface className="px-6 py-6">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-              {locale === "en" ? "Publish preview" : "Preview dang bai"}
+              {locale === "en" ? "Publish preview" : "Preview đăng bài"}
             </p>
             <p className="mt-4 text-sm leading-7 theme-text-muted">
               {locale === "en"
                 ? "After saving, the article appears on the homepage news section, the newsroom list, the organizer page counters, and its public detail URL."
-                : "Sau khi luu, bai viet se xuat hien o section tin tuc tren trang chu, danh sach newsroom, bo dem o trang organizer va URL chi tiet cong khai cua bai."}
+                : "Sau khi lưu, bài viết sẽ xuất hiện ở section tin tức trên trang chủ, danh sách newsroom, bộ đếm ở trang organizer và URL chi tiết công khai của bài."}
             </p>
             <div className="mt-5 rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">URL</p>

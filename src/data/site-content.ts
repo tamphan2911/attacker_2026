@@ -59,12 +59,12 @@ export const competitionRoundWindows: CompetitionRoundWindow[] = [
   },
   {
     round: "round-2",
-    title: { en: "Round 2 report submission", vi: "Vong 2 nop bao cao" },
+    title: { en: "Round 2 report submission", vi: "Vòng 2 nộp báo cáo" },
     ...round2Window,
   },
   {
     round: "round-3",
-    title: { en: "Final round presentation", vi: "Vong chung ket thuyet trinh" },
+    title: { en: "Final round presentation", vi: "Vòng chung kết thuyết trình" },
     ...round3Window,
   },
 ];
@@ -824,7 +824,7 @@ export const judgeProfiles: JudgeProfile[] = [
     rounds: ["round-3"],
   },
   {
-    name: "Dang Ngoc Anh",
+    name: "Đặng Ngọc Anh",
     imageSrc: "/judges/tran-hoang-minh.svg",
     role: {
       en: "Chief transformation officer",

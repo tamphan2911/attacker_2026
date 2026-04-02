@@ -27,7 +27,7 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
         aside={
           <Surface className="px-5 py-5">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-              {locale === "en" ? "Article details" : "Chi tiet bai viet"}
+              {locale === "en" ? "Article details" : "Chi tiết bài viết"}
             </p>
             <div className="mt-5 space-y-3 text-sm theme-text-muted">
               <p>{formatDateLabel(locale, post.publishedAt)}</p>
@@ -131,11 +131,11 @@ export function NewsArticleRoute({ slug }: { slug: string }) {
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
           eyebrow={locale === "en" ? "Newsroom" : "Newsroom"}
-          title={locale === "en" ? "Loading article..." : "Dang tai bai viet..."}
+          title={locale === "en" ? "Loading article..." : "Đang tải bài viết..."}
           description={
             locale === "en"
               ? "Waiting for the local site dataset to hydrate."
-              : "Dang cho bo du lieu cuc bo cua website duoc tai xong."
+              : "Đang chờ bộ dữ liệu cục bộ của website được tải xong."
           }
         />
       </Surface>

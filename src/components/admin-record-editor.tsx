@@ -56,14 +56,14 @@ export function AdminUserEditor({ userId }: { userId: string }) {
   if (!user || !draft) {
     return (
       <NotFoundState
-        title={locale === "en" ? "User record not found." : "Khong tim thay nguoi dung."}
+        title={locale === "en" ? "User record not found." : "Không tìm thấy người dùng."}
         description={
           locale === "en"
             ? "This user may have been deleted from the current backend dataset."
             : "Người dùng này có thể đã bị xóa khỏi dữ liệu backend hiện tại."
         }
         href="/admin/users"
-        actionLabel={locale === "en" ? "Back to users" : "Quay lai danh sach nguoi dung"}
+        actionLabel={locale === "en" ? "Back to users" : "Quay lại danh sách người dùng"}
       />
     );
   }
@@ -91,7 +91,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
     <div className="space-y-8">
       <Link href="/admin/users" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
         <ArrowLeft className="h-4 w-4" />
-        {locale === "en" ? "Back to users" : "Quay lai danh sach nguoi dung"}
+        {locale === "en" ? "Back to users" : "Quay lại danh sách người dùng"}
       </Link>
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -293,7 +293,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Current team" : "Doi hien tai"}
+                {locale === "en" ? "Current team" : "Đội hiện tại"}
               </p>
               {team ? (
                 <Link href={`/admin/teams/${team.id}`} className="mt-2 inline-flex text-sm font-semibold theme-accent">
@@ -349,14 +349,14 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
   if (!team || !draft) {
     return (
       <NotFoundState
-        title={locale === "en" ? "Team record not found." : "Khong tim thay doi thi."}
+        title={locale === "en" ? "Team record not found." : "Không tìm thấy đội thi."}
         description={
           locale === "en"
             ? "This team may have been deleted from the current backend dataset."
             : "Đội thi này có thể đã bị xóa khỏi dữ liệu backend hiện tại."
         }
         href="/admin/teams"
-        actionLabel={locale === "en" ? "Back to teams" : "Quay lai danh sach doi"}
+        actionLabel={locale === "en" ? "Back to teams" : "Quay lại danh sách đội"}
       />
     );
   }
@@ -384,17 +384,17 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
     <div className="space-y-8">
       <Link href="/admin/teams" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
         <ArrowLeft className="h-4 w-4" />
-        {locale === "en" ? "Back to teams" : "Quay lai danh sach doi"}
+        {locale === "en" ? "Back to teams" : "Quay lại danh sách đội"}
       </Link>
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
-          eyebrow={locale === "en" ? "Admin / Teams / Edit" : "Admin / Doi thi / Chinh sua"}
+          eyebrow={locale === "en" ? "Admin / Teams / Edit" : "Admin / Đội thi / Chỉnh sửa"}
           title={draft.name}
           description={
             locale === "en"
               ? "Edit the main team record fields and leadership assignment."
-              : "Chinh sua cac truong chinh cua doi va phan cong doi truong."
+              : "Chỉnh sửa các trường chính của đội và phân công đội trưởng."
           }
         />
         <div className="flex gap-3">
@@ -441,7 +441,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
           <div className="grid gap-4 md:grid-cols-2">
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Team name" : "Ten doi"}
+                {locale === "en" ? "Team name" : "Tên đội"}
               </span>
               <input
                 value={draft.name}
@@ -469,7 +469,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Leader" : "Doi truong"}
+                {locale === "en" ? "Leader" : "Đội trưởng"}
               </span>
               <select
                 value={draft.leaderId}
@@ -496,9 +496,9 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
                 }
                 className={fieldClassName}
               >
-                <option value="round-1">{locale === "en" ? "Round 1" : "Vong 1"}</option>
-                <option value="round-2">{locale === "en" ? "Round 2" : "Vong 2"}</option>
-                <option value="round-3">{locale === "en" ? "Round 3" : "Vong 3"}</option>
+                <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
+                <option value="round-2">{locale === "en" ? "Round 2" : "Vòng 2"}</option>
+                <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
               </select>
             </label>
             <label className="space-y-2 md:col-span-2">

@@ -42,14 +42,14 @@ export function FaqPage() {
                 label:
                   locale === "en"
                     ? "A leader must transfer leadership before leaving"
-                    : "Doi truong phai chuyen quyen truoc khi roi doi",
+                    : "Đội trưởng phải chuyển quyền trước khi rời đội",
               },
               {
                 icon: <CircleHelp className="h-4 w-4 text-orange-300" />,
                 label:
                   locale === "en"
                     ? "Round 1 ranks teams by average member score"
-                    : "Vong 1 xep hang doi theo diem trung binh thanh vien",
+                    : "Vòng 1 xếp hạng đội theo điểm trung bình thành viên",
               },
             ].map((item) => (
               <div
@@ -87,7 +87,7 @@ export function FaqPage() {
             title={
               locale === "en"
                 ? "Read the full rules and timeline next."
-                : "Xem tiep trang the le va lich trinh day du."
+                : "Xem tiếp trang thể lệ và lịch trình đầy đủ."
             }
             description={
               locale === "en"
@@ -102,12 +102,12 @@ export function FaqPage() {
             {locale === "en" ? "Next subsection" : "Sub-section tiep theo"}
           </p>
           <p className="mt-4 text-2xl font-semibold theme-text-strong">
-            {locale === "en" ? "Open Rules & Timeline." : "Mo The le va Lich trinh."}
+            {locale === "en" ? "Open Rules & Timeline." : "Mở Thể lệ và Lịch trình."}
           </p>
           <p className="mt-4 text-sm leading-7 theme-text-muted">
             {locale === "en"
               ? "Use the structured rules page when you want the full stage flow, eligibility policy, and graphical timeline."
-              : "Hay mo trang the le co cau truc khi ban muon xem day du lo trinh cac vong, dieu kien va timeline do hoa."}
+              : "Hãy mở trang thể lệ có cấu trúc khi bạn muốn xem đầy đủ lộ trình các vòng, điều kiện và timeline đồ họa."}
           </p>
           <Link href="/rules" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
             {locale === "en" ? "Open rules page" : "Mo trang the le"}

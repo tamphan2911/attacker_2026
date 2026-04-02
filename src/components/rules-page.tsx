@@ -72,14 +72,14 @@ export function RulesPage() {
                 label:
                   locale === "en"
                     ? "Leader must transfer before leaving"
-                    : "Doi truong phai chuyen quyen truoc khi roi doi",
+                    : "Đội trưởng phải chuyển quyền trước khi rời đội",
               },
               {
                 icon: <CalendarDays className="h-4 w-4 text-emerald-300" />,
                 label:
                   locale === "en"
                     ? "Round 1 ranks teams by average member score"
-                    : "Vong 1 xep hang doi theo diem trung binh thanh vien",
+                    : "Vòng 1 xếp hạng đội theo điểm trung bình thành viên",
               },
             ].map((item) => (
               <div

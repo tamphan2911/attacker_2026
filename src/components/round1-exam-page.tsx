@@ -398,19 +398,19 @@ export function Round1ExamPage() {
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
           eyebrow="Round 1"
-          title={locale === "en" ? "This route is only for student accounts." : "Route nay chi danh cho tai khoan sinh vien."}
+          title={locale === "en" ? "This route is only for student accounts." : "Route này chỉ dành cho tài khoản sinh viên."}
           description={
             locale === "en"
               ? "Admin and moderator accounts should review Round 1 from the restricted admin mode instead."
-              : "Tai khoan admin va moderator nen xem Vong 1 tu admin mode gioi han."
+              : "Tài khoản admin và moderator nên xem Vòng 1 từ admin mode giới hạn."
           }
         />
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/dashboard" className="theme-button-primary rounded-full px-5 py-3 text-sm font-semibold">
-            {locale === "en" ? "Open Team Workspace" : "Mo Khong gian doi"}
+            {locale === "en" ? "Open Team Workspace" : "Mở Không gian đội"}
           </Link>
           <Link href="/admin/round-1" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
-            {locale === "en" ? "Open Round 1 admin" : "Mo admin Vong 1"}
+            {locale === "en" ? "Open Round 1 admin" : "Mở admin Vòng 1"}
           </Link>
         </div>
       </Surface>
@@ -422,15 +422,15 @@ export function Round1ExamPage() {
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
           eyebrow="Round 1"
-          title={locale === "en" ? "Join a team before taking Round 1." : "Hay vao mot doi truoc khi thi Vong 1."}
+          title={locale === "en" ? "Join a team before taking Round 1." : "Hãy vào một đội trước khi thi Vòng 1."}
           description={
             locale === "en"
               ? "Round 1 is an individual exam, but only members or leaders of a team can enter it."
-              : "Vong 1 la bai thi ca nhan, nhung chi thanh vien hoac doi truong cua mot doi moi duoc tham gia."
+              : "Vòng 1 là bài thi cá nhân, nhưng chỉ thành viên hoặc đội trưởng của một đội mới được tham gia."
           }
         />
         <Link href="/dashboard" className="theme-button-primary mt-6 inline-flex rounded-full px-5 py-3 text-sm font-semibold">
-          {locale === "en" ? "Go to Team Workspace" : "Den Khong gian doi"}
+          {locale === "en" ? "Go to Team Workspace" : "Đến Không gian đội"}
         </Link>
       </Surface>
     );
@@ -445,7 +445,7 @@ export function Round1ExamPage() {
             title={
               locale === "en"
                 ? "This team is no longer competing in Round 1."
-                : "Doi nay khong con thi dau o Vong 1 nua."
+                : "Đội này không còn thi đấu ở Vòng 1 nữa."
             }
             description={
               locale === "en"
@@ -456,7 +456,7 @@ export function Round1ExamPage() {
           <div className="mt-6 flex flex-wrap gap-3">
             <StatusPill tone="success">{pickCompetitionStateLabel(locale, currentCompetitionState)}</StatusPill>
             <Link href="/dashboard" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
-              {locale === "en" ? "Back to Team Workspace" : "Quay lai Khong gian doi"}
+              {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
             </Link>
           </div>
         </Surface>
@@ -471,12 +471,12 @@ export function Round1ExamPage() {
             title={
               locale === "en"
                 ? "Round 1 is finished."
-                : "Vong 1 da ket thuc."
+                : "Vòng 1 đã kết thúc."
             }
             description={
               locale === "en"
                 ? "The individual qualifier window has closed, so new Round 1 attempts are no longer accepted."
-                : "Khung thoi gian cua bai thi ca nhan da dong, vi vay he thong khong nhan them bai Vong 1 moi."
+                : "Khung thời gian của bài thi cá nhân đã đóng, vì vậy hệ thống không nhận thêm bài Vòng 1 mới."
             }
           />
           <div className="mt-6 flex flex-wrap gap-3">
@@ -486,7 +486,7 @@ export function Round1ExamPage() {
               </StatusPill>
             ) : null}
             <Link href="/dashboard" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
-              {locale === "en" ? "Back to Team Workspace" : "Quay lai Khong gian doi"}
+              {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
             </Link>
           </div>
         </Surface>
@@ -530,7 +530,7 @@ export function Round1ExamPage() {
           title={
             locale === "en"
               ? "This team is not eligible for Round 1 yet."
-              : "Doi nay chua du dieu kien vao Vong 1."
+              : "Đội này chưa đủ điều kiện vào Vòng 1."
           }
           description={
             locale === "en"
@@ -545,7 +545,7 @@ export function Round1ExamPage() {
               : `${currentTeam.memberIds.length}/${TEAM_MIN_MEMBERS} thanh vien bat buoc`}
           </StatusPill>
           <Link href="/dashboard" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
-            {locale === "en" ? "Invite more members" : "Moi them thanh vien"}
+            {locale === "en" ? "Invite more members" : "Mời thêm thành viên"}
           </Link>
         </div>
       </Surface>
@@ -557,7 +557,7 @@ export function Round1ExamPage() {
       <div className="space-y-8">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
           <ArrowLeft className="h-4 w-4" />
-          {locale === "en" ? "Back to Team Workspace" : "Quay lai Khong gian doi"}
+          {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
         </Link>
 
         <SectionHeading
@@ -678,7 +678,7 @@ export function Round1ExamPage() {
               className="theme-button-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
             >
               <Play className="h-4 w-4" />
-              {locale === "en" ? "Start Round 1 exam" : "Bat dau bai thi Vong 1"}
+              {locale === "en" ? "Start Round 1 exam" : "Bắt đầu bài thi Vòng 1"}
             </button>
           </Surface>
         </section>
@@ -693,7 +693,7 @@ export function Round1ExamPage() {
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
-                {locale === "en" ? "Round 1 in progress" : "Dang thi Vong 1"}
+                {locale === "en" ? "Round 1 in progress" : "Đang thi Vòng 1"}
               </p>
               <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.8rem]">
                 {locale === "en"
@@ -864,7 +864,7 @@ export function Round1ExamPage() {
                   <p className="text-sm leading-7 theme-text-soft">
                     {locale === "en"
                       ? "Select all answers you believe are correct."
-                      : "Hay chon tat ca dap an ban cho la dung."}
+                      : "Hãy chọn tất cả đáp án bạn cho là đúng."}
                   </p>
                   {currentQuestion.options.map((option) => {
                     const selectedOptionIds = currentResponse?.selectedOptionIds ?? [];
@@ -930,7 +930,7 @@ export function Round1ExamPage() {
                   <p className="text-sm leading-7 theme-text-soft">
                     {locale === "en"
                       ? "Match each item on the left with the most suitable item on the right."
-                      : "Hay noi moi muc ben trai voi muc phu hop nhat o ben phai."}
+                      : "Hãy nối mỗi mục bên trái với mục phù hợp nhất ở bên phải."}
                   </p>
                   {currentQuestion.pairingItems.map((item) => (
                     <div
@@ -947,7 +947,7 @@ export function Round1ExamPage() {
                           </p>
                           <label className="mt-4 block space-y-2">
                             <span className="text-xs uppercase tracking-[0.18em] theme-text-soft">
-                              {locale === "en" ? "Select a match" : "Chon cap phu hop"}
+                              {locale === "en" ? "Select a match" : "Chọn cặp phù hợp"}
                             </span>
                             <select
                               value={currentResponse?.pairingMatches?.[item.id] ?? ""}
@@ -972,7 +972,7 @@ export function Round1ExamPage() {
                               className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
                             >
                               <option value="">
-                                {locale === "en" ? "Choose one option" : "Chon mot lua chon"}
+                                {locale === "en" ? "Choose one option" : "Chọn một lựa chọn"}
                               </option>
                               {(currentQuestion.options ?? []).map((option) => (
                                 <option key={option.id} value={option.id}>
@@ -1126,7 +1126,7 @@ export function Round1ExamPage() {
                 <p className="text-sm leading-6 text-amber-50">
                   {locale === "en"
                     ? "Less than 5 minutes remain. Unanswered questions will be counted as incorrect when the exam auto-submits."
-                    : "Con duoi 5 phut. Cac cau chua tra loi se bi tinh la sai khi bai thi tu dong nop."}
+                    : "Còn dưới 5 phút. Các câu chưa trả lời sẽ bị tính là sai khi bài thi tự động nộp."}
                 </p>
               </div>
             </div>

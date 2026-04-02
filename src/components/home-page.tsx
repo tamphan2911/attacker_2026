@@ -44,40 +44,40 @@ const featureCards: Array<{
 }> = [
   {
     image: "/theme-feature-1.jpg",
-    label: { en: "Competition structure", vi: "Cau truc cuoc thi" },
+    label: { en: "Competition structure", vi: "Cấu trúc cuộc thi" },
     title: {
       en: "Rounds, rewards, and the challenge narrative in one place.",
-      vi: "Vong thi, giai thuong va cau chuyen de bai trong mot trang thong nhat.",
+      vi: "Vòng thi, giải thưởng và câu chuyện đề bài trong một trang thống nhất.",
     },
     description: {
       en: "Public-facing information is presented like a serious event launch, not a campus bulletin.",
-      vi: "Thong tin cong khai duoc trinh bay nhu mot su kien chuyen nghiep, khong phai bang thong bao hoc duong.",
+      vi: "Thông tin công khai được trình bày như một sự kiện chuyên nghiệp, không phải bảng thông báo học đường.",
     },
     href: "/competition",
   },
   {
     image: "/theme-feature-2.jpg",
-    label: { en: "Team workspace", vi: "Khong gian doi" },
+    label: { en: "Team workspace", vi: "Không gian đội" },
     title: {
       en: "Students can manage invitations and membership rules directly.",
-      vi: "Sinh vien co the tu quan ly loi moi va cac quy tac thanh vien.",
+      vi: "Sinh viên có thể tự quản lý lời mời và các quy tắc thành viên.",
     },
     description: {
       en: "One user, one team at a time. Leaders stay protected until transfer is complete.",
-      vi: "Moi nguoi chi o mot doi tai mot thoi diem. Doi truong duoc bao toan cho den khi chuyen giao xong.",
+      vi: "Mỗi người chỉ ở một đội tại một thời điểm. Đội trưởng được bảo toàn cho đến khi chuyển giao xong.",
     },
     href: "/dashboard",
   },
   {
     image: "/theme-hero-1.jpg",
-    label: { en: "Organizer preview", vi: "Preview ban to chuc" },
+    label: { en: "Organizer preview", vi: "Preview ban tổ chức" },
     title: {
       en: "News, rounds, and participant oversight already have a frontend home.",
-      vi: "Tin tuc, cac vong thi va viec theo doi thi sinh da co mot giao dien rieng cho frontend.",
+      vi: "Tin tức, các vòng thi và việc theo dõi thí sinh đã có một giao diện riêng cho frontend.",
     },
     description: {
       en: "This reduces redesign work later when the real admin tools are connected.",
-      vi: "Dieu nay giam bot cong viec thiet ke lai khi ket noi cac cong cu quan tri thuc te.",
+      vi: "Điều này giảm bớt công việc thiết kế lại khi kết nối các công cụ quản trị thực tế.",
     },
     href: "/organizer",
   },
@@ -88,33 +88,33 @@ const serviceItems = [
     icon: TrendingUp,
     title: {
       en: "Competition information",
-      vi: "Thong tin cuoc thi",
+      vi: "Thông tin cuộc thi",
     },
     description: {
       en: "Clear public pages for rounds, rewards, rules, and timeline.",
-      vi: "Trang cong khai ro rang cho vong thi, giai thuong, the le va lich trinh.",
+      vi: "Trang công khai rõ ràng cho vòng thi, giải thưởng, thể lệ và lịch trình.",
     },
   },
   {
     icon: Users2,
     title: {
       en: "Team formation logic",
-      vi: "Logic tao doi",
+      vi: "Logic tạo đội",
     },
     description: {
       en: "Students can create, invite, accept, leave, and transfer leadership within the defined rules.",
-      vi: "Sinh vien co the tao doi, moi, chap nhan, roi doi va chuyen doi truong trong dung quy tac.",
+      vi: "Sinh viên có thể tạo đội, mời, chấp nhận, rời đội và chuyển đội trưởng trong đúng quy tắc.",
     },
   },
   {
     icon: ShieldCheck,
     title: {
       en: "Organizer-ready control",
-      vi: "San sang cho ban to chuc",
+      vi: "Sẵn sàng cho ban tổ chức",
     },
     description: {
       en: "The prototype already reserves space for moderation, publishing, and participant oversight.",
-      vi: "Prototype da danh san khong gian cho quan ly noi dung, dang bai va theo doi thi sinh.",
+      vi: "Prototype đã dành sẵn không gian cho quản lý nội dung, đăng bài và theo dõi thí sinh.",
     },
   },
 ];
@@ -128,48 +128,48 @@ const platformIcons = {
 
 const homepageRewardItems = [
   {
-    rank: { en: "1st place", vi: "Hang 1" },
-    title: { en: "Champion", vi: "Quan quan" },
+    rank: { en: "1st place", vi: "Hạng 1" },
+    title: { en: "Champion", vi: "Quán quân" },
     amount: { en: "30,000,000 VND", vi: "30.000.000 VND" },
     note: {
       en: "Awarded to the team with the highest final-round score.",
-      vi: "Trao cho doi co diem cao nhat o vong chung ket.",
+      vi: "Trao cho đội có điểm cao nhất ở vòng chung kết.",
     },
     icon: Crown,
     iconClass: "bg-[linear-gradient(135deg,#f59e0b,#facc15)] text-slate-950",
     borderClass: "border-amber-300/24 bg-white/14",
   },
   {
-    rank: { en: "2nd place", vi: "Hang 2" },
-    title: { en: "Runner-up", vi: "A quan" },
+    rank: { en: "2nd place", vi: "Hạng 2" },
+    title: { en: "Runner-up", vi: "Á quân" },
     amount: { en: "15,000,000 VND", vi: "15.000.000 VND" },
     note: {
       en: "Awarded to the team with the second-highest final-round score.",
-      vi: "Trao cho doi co diem cao thu hai o vong chung ket.",
+      vi: "Trao cho đội có điểm cao thứ hai ở vòng chung kết.",
     },
     icon: Medal,
     iconClass: "bg-[linear-gradient(135deg,#e2e8f0,#cbd5e1)] text-slate-950",
     borderClass: "border-white/14 bg-white/10",
   },
   {
-    rank: { en: "3rd place", vi: "Hang 3" },
-    title: { en: "Third place", vi: "Quy quan" },
+    rank: { en: "3rd place", vi: "Hạng 3" },
+    title: { en: "Third place", vi: "Quý quân" },
     amount: { en: "10,000,000 VND", vi: "10.000.000 VND" },
     note: {
       en: "Awarded to the team with the third-highest final-round score.",
-      vi: "Trao cho doi co diem cao thu ba o vong chung ket.",
+      vi: "Trao cho đội có điểm cao thứ ba ở vòng chung kết.",
     },
     icon: Award,
     iconClass: "bg-[linear-gradient(135deg,#fb923c,#f97316)] text-white",
     borderClass: "border-white/14 bg-white/10",
   },
   {
-    rank: { en: "4th place", vi: "Hang 4" },
-    title: { en: "Two finalist teams", vi: "Hai doi dong hang 4" },
+    rank: { en: "4th place", vi: "Hạng 4" },
+    title: { en: "Two finalist teams", vi: "Hai đội đồng hạng 4" },
     amount: { en: "2 x 5,000,000 VND", vi: "2 x 5.000.000 VND" },
     note: {
       en: "The remaining two finalists each receive the fourth-place award.",
-      vi: "Hai doi con lai trong top 5 chung ket moi doi nhan giai hang 4.",
+      vi: "Hai đội còn lại trong top 5 chung kết, mỗi đội nhận giải hạng 4.",
     },
     icon: Star,
     iconClass: "bg-[linear-gradient(135deg,#38bdf8,#14b8a6)] text-white",
@@ -179,11 +179,11 @@ const homepageRewardItems = [
 
 const homepageEmergingReward = {
   eyebrow: { en: "Side recognition", vi: "Danh hieu bo sung" },
-  title: { en: "Emerging Teams", vi: "Doi tiem nang" },
-  amount: { en: "Top 10 teams", vi: "Top 10 doi" },
+  title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
+  amount: { en: "Top 10 teams", vi: "Top 10 đội" },
   note: {
     en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
-    vi: "Cac doi xep ngay sau top 5 o Vong 2 nhan danh hieu, giay chung nhan va cac co hoi dong hanh tu doi tac.",
+    vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
   },
 } as const;
 
@@ -306,7 +306,7 @@ export function HomePage() {
             <p className="mt-5 max-w-3xl text-base leading-8 text-white/74">
               {locale === "en"
                 ? "The main awards are separated by final ranking from 1st to 4th, while Emerging Teams stay in their own smaller recognition block after Round 2."
-                : "Cac giai chinh duoc tach ro theo thu hang chung ket tu hang 1 den hang 4, trong khi Doi tiem nang nam o mot block rieng nho hon sau Vong 2."}
+                : "Các giải chính được tách rõ theo thứ hạng chung kết từ hạng 1 đến hạng 4, trong khi Đội tiềm năng nằm ở một block riêng nhỏ hơn sau Vòng 2."}
             </p>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -372,9 +372,9 @@ export function HomePage() {
               </p>
               <div className="mt-5 space-y-3">
                 {[
-                  locale === "en" ? "Round 1 selects the top 50 teams." : "Vong 1 chon ra top 50 doi.",
-                  locale === "en" ? "Round 2 selects the top 5 finalists." : "Vong 2 chon ra top 5 doi chung ket.",
-                  locale === "en" ? "The next 10 teams are named Emerging Teams." : "10 doi tiep theo duoc goi ten la Doi tiem nang.",
+                  locale === "en" ? "Round 1 selects the top 50 teams." : "Vòng 1 chọn ra top 50 đội.",
+                  locale === "en" ? "Round 2 selects the top 5 finalists." : "Vòng 2 chọn ra top 5 đội chung kết.",
+                  locale === "en" ? "The next 10 teams are named Emerging Teams." : "10 đội tiếp theo được gọi tên là Đội tiềm năng.",
                 ].map((item) => (
                   <div
                     key={item}
@@ -385,7 +385,7 @@ export function HomePage() {
                 ))}
               </div>
               <Link href="/competition" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200">
-                {locale === "en" ? "Open full competition page" : "Mo trang cuoc thi day du"}
+                {locale === "en" ? "Open full competition page" : "Mở trang cuộc thi đầy đủ"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -519,7 +519,7 @@ export function HomePage() {
         <p className="theme-heading mx-auto max-w-4xl text-2xl font-semibold leading-[1.5] theme-text-strong md:text-3xl">
           {locale === "en"
             ? '"A strong competition website does not just announce dates. It creates confidence in the quality of the challenge, the platform, and the people behind it."'
-            : '"Mot website cuoc thi manh khong chi de thong bao lich. No tao ra niem tin vao chat luong de bai, nen tang va doi ngu phia sau."'}
+            : '"Một website cuộc thi mạnh không chỉ để thông báo lịch. Nó tạo ra niềm tin vào chất lượng đề bài, nền tảng và đội ngũ phía sau."'}
         </p>
         <p className="mt-5 text-sm uppercase tracking-[0.26em] theme-text-soft">
           {locale === "en" ? "Attacker 2026 frontend concept" : "Concept frontend Attacker 2026"}
@@ -542,7 +542,7 @@ export function HomePage() {
             </p>
           </div>
           <Link href="/competition/sponsors" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {locale === "en" ? "Open sponsors page" : "Mo trang nha tai tro"}
+            {locale === "en" ? "Open sponsors page" : "Mở trang nhà tài trợ"}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -606,13 +606,13 @@ export function HomePage() {
                   href="/auth"
                   className="inline-flex items-center justify-center rounded-full bg-white px-6 py-3.5 text-sm font-semibold text-slate-950 transition hover:brightness-95"
                 >
-                  {locale === "en" ? "Open registration preview" : "Mo preview dang ky"}
+                  {locale === "en" ? "Open registration preview" : "Mở preview đăng ký"}
                 </Link>
                 <Link
                   href="/news"
                   className="inline-flex items-center justify-center rounded-full border border-white/18 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
                 >
-                  {locale === "en" ? "Open newsroom" : "Mo newsroom"}
+                  {locale === "en" ? "Open newsroom" : "Mở newsroom"}
                 </Link>
               </div>
             </div>
@@ -624,7 +624,7 @@ export function HomePage() {
               <p className="theme-heading mt-4 text-2xl font-semibold">
                 {locale === "en"
                   ? "Get updates on registration, clinics, and round progress."
-                  : "Nhan cap nhat ve dang ky, clinic va tien do cac vong thi."}
+                  : "Nhận cập nhật về đăng ký, clinic và tiến độ các vòng thi."}
               </p>
               <div className="mt-6 space-y-4">
                 <input
@@ -635,7 +635,7 @@ export function HomePage() {
                   type="button"
                   className="w-full rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-slate-950 transition hover:brightness-95"
                 >
-                  {locale === "en" ? "Subscribe for updates" : "Dang ky nhan cap nhat"}
+                  {locale === "en" ? "Subscribe for updates" : "Đăng ký nhận cập nhật"}
                 </button>
               </div>
               <p className="mt-4 text-sm leading-7 text-white/68">
@@ -664,7 +664,7 @@ export function HomePage() {
               },
               {
                 href: "/rules",
-                label: locale === "en" ? "Rules & Timeline" : "The le va lich trinh",
+                label: locale === "en" ? "Rules & Timeline" : "Thể lệ và lịch trình",
               },
               {
                 href: "/news",
@@ -672,7 +672,7 @@ export function HomePage() {
               },
               {
                 href: "/dashboard",
-                label: locale === "en" ? "Team workspace" : "Khong gian doi",
+                label: locale === "en" ? "Team workspace" : "Không gian đội",
               },
               {
                 href: "/competition/judges",

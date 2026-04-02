@@ -38,7 +38,7 @@ export function CompetitionPage() {
                 },
                 {
                   icon: <Trophy className="h-4 w-4 text-orange-300" />,
-                  label: locale === "en" ? "Judge-scored final stages" : "Cac vong sau do giam khao cham diem",
+                  label: locale === "en" ? "Judge-scored final stages" : "Các vòng sau do giám khảo chấm điểm",
                 },
               ].map((item) => (
                 <div
@@ -130,7 +130,7 @@ export function CompetitionPage() {
         <div className="grid gap-4 xl:grid-cols-3">
           {[
             {
-              title: locale === "en" ? "Round 1 access" : "Quyen vao Vong 1",
+              title: locale === "en" ? "Round 1 access" : "Quyền vào Vòng 1",
               body:
                 locale === "en"
                   ? "A user must already belong to a team of at least 3 members before taking the individual Round 1 paper."
@@ -148,7 +148,7 @@ export function CompetitionPage() {
               body:
                 locale === "en"
                   ? "Round 2 sends the top 5 teams to the final and recognizes the next 10 teams as Emerging Teams."
-                  : "Vong 2 dua top 5 doi vao chung ket va ghi nhan 10 doi tiep theo la Doi tiem nang.",
+                  : "Vòng 2 đưa top 5 đội vào chung kết và ghi nhận 10 đội tiếp theo là Đội tiềm năng.",
             },
           ].map((item, index) => (
             <Surface key={item.title} className="px-6 py-6">
@@ -252,7 +252,7 @@ export function CompetitionPage() {
                 body:
                   locale === "en"
                     ? "User pain points, product logic, and usability storytelling."
-                    : "Noi dau nguoi dung, logic san pham va cach ke chuyen ve trai nghiem.",
+                    : "Nỗi đau người dùng, logic sản phẩm và cách kể chuyện về trải nghiệm.",
               },
               {
                 title: locale === "en" ? "Venture & Growth" : "Dau tu va Tang truong",
@@ -275,18 +275,18 @@ export function CompetitionPage() {
             {locale === "en" ? "Next route" : "Route tiep theo"}
           </p>
           <p className="mt-4 text-2xl font-semibold theme-text-strong">
-            {locale === "en" ? "Review the rules and timeline." : "Xem the le va lich trinh."}
+            {locale === "en" ? "Review the rules and timeline." : "Xem thể lệ và lịch trình."}
           </p>
           <p className="mt-4 text-sm leading-7 theme-text-muted">
             {locale === "en"
               ? "The companion page clarifies team eligibility, deadlines, and FAQ logic before the registration flow."
-              : "Trang di kem lam ro dieu kien doi thi, han chot va FAQ truoc khi nguoi dung vao quy trinh dang ky."}
+              : "Trang đi kèm làm rõ điều kiện đội thi, hạn chót và FAQ trước khi người dùng vào quy trình đăng ký."}
           </p>
           <Link
             href="/rules"
             className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"
           >
-            {locale === "en" ? "Open rules page" : "Mo trang the le"}
+            {locale === "en" ? "Open rules page" : "Mở trang thể lệ"}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </Surface>

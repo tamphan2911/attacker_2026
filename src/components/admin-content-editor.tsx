@@ -175,7 +175,7 @@ function EditorTopBar({
         className="inline-flex items-center gap-2 text-sm font-semibold theme-accent"
       >
         <ArrowLeft className="h-4 w-4" />
-        {locale === "en" ? "Back to content hub" : "Quay lai trung tam noi dung"}
+        {locale === "en" ? "Back to content hub" : "Quay lại trung tâm nội dung"}
       </Link>
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
@@ -212,7 +212,7 @@ export function ContentIndexSection() {
         title={
           locale === "en"
             ? "Choose a page or a content type to edit."
-            : "Chon mot trang hoac mot loai noi dung de chinh sua."
+            : "Chọn một trang hoặc một loại nội dung để chỉnh sửa."
         }
         description={
           locale === "en"

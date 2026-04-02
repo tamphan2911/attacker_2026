@@ -476,19 +476,19 @@ function getStandingTone(group: TeamResultGroup): "default" | "success" | "warni
 
 function getStandingLabel(locale: Locale, group: TeamResultGroup) {
   if (group.team.memberIds.length < TEAM_MIN_MEMBERS) {
-    return locale === "en" ? "Below minimum size" : "Chua du so thanh vien";
+    return locale === "en" ? "Below minimum size" : "Chưa đủ số thành viên";
   }
 
   if (group.completedRows.length === 0) {
-    return locale === "en" ? "Awaiting attempts" : "Dang cho bai lam";
+    return locale === "en" ? "Awaiting attempts" : "Đang chờ bài làm";
   }
 
   if (group.completedRows.length < group.memberRows.length) {
-    return locale === "en" ? "In progress" : "Dang dien ra";
+    return locale === "en" ? "In progress" : "Đang diễn ra";
   }
 
   if (group.hasPendingEssayReview) {
-    return locale === "en" ? "Essay review pending" : "Dang cho cham tu luan";
+    return locale === "en" ? "Essay review pending" : "Đang chờ chấm tự luận";
   }
 
   if ((group.rank ?? Number.POSITIVE_INFINITY) <= 50) {
@@ -559,11 +559,11 @@ export function AdminRound1Manager() {
   return (
     <div className="space-y-8">
       <SectionHeading
-        eyebrow={locale === "en" ? "Admin / Round 1" : "Admin / Vong 1"}
+        eyebrow={locale === "en" ? "Admin / Round 1" : "Admin / Vòng 1"}
         title={
           locale === "en"
             ? "Round 1 now stays focused on one bank summary and one team-result summary."
-            : "Vong 1 gio duoc tap trung vao mot block tong quan bank va mot block tong quan ket qua theo doi."
+            : "Vòng 1 giờ được tập trung vào một block tổng quan bank và một block tổng quan kết quả theo đội."
         }
         description={
           locale === "en"
@@ -602,7 +602,7 @@ export function AdminRound1Manager() {
           />
           <MetricCard
             icon={<Trophy className="h-5 w-5 text-amber-300" />}
-            label={locale === "en" ? "Ranked teams" : "Doi da xep hang"}
+            label={locale === "en" ? "Ranked teams" : "Đội đã xếp hạng"}
             value={rankedTeamCount.toString()}
             note={locale === "en" ? "Ordered by current average score" : "Sap xep theo diem trung binh hien tai"}
           />
@@ -774,11 +774,11 @@ export function AdminRound1Manager() {
         </Surface>
       ) : (
         <NotFoundState
-          title={locale === "en" ? "No Round 1 bank configured yet." : "Chua co bank Vong 1 nao duoc cau hinh."}
+          title={locale === "en" ? "No Round 1 bank configured yet." : "Chưa có bank Vòng 1 nào được cấu hình."}
           description={
             locale === "en"
               ? "Seed or create a bank first before reviewing Round 1 delivery settings."
-              : "Hay seed hoac tao bank truoc khi xem cau hinh phat de Vong 1."
+              : "Hãy seed hoặc tạo bank trước khi xem cấu hình phát đề Vòng 1."
           }
           href="/admin"
           actionLabel={locale === "en" ? "Back to admin" : "Quay lai admin"}
@@ -794,7 +794,7 @@ export function AdminRound1Manager() {
             <p className="mt-3 text-sm leading-7 theme-text-muted">
               {locale === "en"
                 ? "Each row summarizes one team. Click the team name to open its admin record, or open the detail result page to inspect every member's Round 1 performance."
-                : "Moi dong tong hop mot doi. Bam ten doi de mo ho so admin cua doi, hoac mo trang chi tiet ket qua de xem Vong 1 cua tung thanh vien."}
+                : "Mỗi dòng tổng hợp một đội. Bấm tên đội để mở hồ sơ admin của đội, hoặc mở trang chi tiết kết quả để xem Vòng 1 của từng thành viên."}
             </p>
           </div>
           <button
@@ -821,14 +821,14 @@ export function AdminRound1Manager() {
               <tr>
                 {[
                   locale === "en" ? "Rank" : "Hang",
-                  locale === "en" ? "Team" : "Doi",
+                  locale === "en" ? "Team" : "Đội",
                   locale === "en" ? "Completed" : "Da lam",
                   locale === "en" ? "Objective avg" : "TB khach quan",
                   locale === "en" ? "Essay avg" : "TB tu luan",
                   locale === "en" ? "Total avg" : "TB tong",
                   locale === "en" ? "Latest activity" : "Cap nhat gan nhat",
                   locale === "en" ? "Standing" : "Trang thai",
-                  locale === "en" ? "Detail" : "Chi tiet",
+                  locale === "en" ? "Detail" : "Chi tiết",
                 ].map((label) => (
                   <th key={label} className="px-4 py-3 font-medium">
                     {label}
@@ -870,7 +870,7 @@ export function AdminRound1Manager() {
                       : group.hasPendingEssayReview
                         ? locale === "en"
                           ? "Pending"
-                          : "Dang cho"
+                          : "Đang chờ"
                         : `${group.averageEssayScore.toFixed(2)} / ${ROUND1_ESSAY_MAX_SCORE}`}
                   </td>
                   <td className="px-4 py-4">
@@ -878,7 +878,7 @@ export function AdminRound1Manager() {
                       "--"
                     ) : group.hasPendingEssayReview ? (
                       <StatusPill tone="warning">
-                        {locale === "en" ? "Pending" : "Dang cho"}
+                        {locale === "en" ? "Pending" : "Đang chờ"}
                       </StatusPill>
                     ) : (
                       <StatusPill tone={group.averageTotalScore >= 80 ? "success" : group.averageTotalScore >= 65 ? "default" : "warning"}>

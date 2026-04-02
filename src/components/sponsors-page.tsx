@@ -146,7 +146,7 @@ export function SponsorsPage() {
 
         <Surface className="px-6 py-6">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Next subsection" : "Sub-section tiep theo"}
+            {locale === "en" ? "Next subsection" : "Phần tiếp theo"}
           </p>
           <p className="mt-4 text-2xl font-semibold theme-text-strong">
             {locale === "en" ? "Meet the judges." : "Gặp hội đồng giám khảo."}

@@ -359,7 +359,7 @@ export function DashboardPage() {
       setTeamAvatarError(
         locale === "en"
           ? `Avatar images must be ${formatFileSize(MAX_AVATAR_FILE_BYTES)} or smaller.`
-          : `Anh avatar phai co dung luong ${formatFileSize(MAX_AVATAR_FILE_BYTES)} tro xuong.`,
+          : `Ảnh avatar phải có dung lượng ${formatFileSize(MAX_AVATAR_FILE_BYTES)} trở xuống.`,
       );
       return;
     }
@@ -385,7 +385,7 @@ export function DashboardPage() {
       setUserAvatarError(
         locale === "en"
           ? `Avatar images must be ${formatFileSize(MAX_AVATAR_FILE_BYTES)} or smaller.`
-          : `Anh avatar phai co dung luong ${formatFileSize(MAX_AVATAR_FILE_BYTES)} tro xuong.`,
+          : `Ảnh avatar phải có dung lượng ${formatFileSize(MAX_AVATAR_FILE_BYTES)} trở xuống.`,
       );
       return;
     }
@@ -449,26 +449,26 @@ export function DashboardPage() {
       : currentTeam.stage === "round-1" && round1Finished
         ? locale === "en"
           ? "Round 1 is finished. Team members can no longer submit the individual qualifier."
-          : "Vong 1 da ket thuc. Thanh vien doi khong con the nop bai thi ca nhan nua."
+          : "Vòng 1 đã kết thúc. Thành viên đội không còn thể nộp bài thi cá nhân nữa."
         : currentTeam.stage === "round-2" && round2Finished
           ? locale === "en"
             ? "Round 2 is finished. The team leader can no longer submit Round 2 reports."
-            : "Vong 2 da ket thuc. Doi truong khong con the nop bao cao Vong 2 nua."
+            : "Vòng 2 đã kết thúc. Đội trưởng không còn thể nộp báo cáo Vòng 2 nữa."
           : currentTeam.stage === "round-3" && round3Finished
             ? locale === "en"
               ? "Round 3 is finished. Final-round submissions are now closed."
-              : "Vong 3 da ket thuc. He thong da dong viec nop bai cua vong chung ket."
+              : "Vòng 3 đã kết thúc. Hệ thống đã đóng việc nộp bài của vòng chung kết."
             : currentTeam.stage === "round-1"
               ? locale === "en"
                 ? "Round 1 progression is based on the team-average score of individual member results."
-                : "Viec di tiep o Vong 1 duoc tinh theo diem trung binh doi tu ket qua ca nhan cua tung thanh vien."
+                : "Việc đi tiếp ở Vòng 1 được tính theo điểm trung bình đội từ kết quả cá nhân của từng thành viên."
               : currentTeam.stage === "round-2"
                 ? locale === "en"
                   ? "This team passed Round 1 and is now in the judge-scored Round 2 submission stage."
-                  : "Doi nay da qua Vong 1 va dang o giai doan nop bao cao Vong 2 duoc giam khao cham diem."
+                  : "Đội này đã qua Vòng 1 và đang ở giai đoạn nộp báo cáo Vòng 2 để giám khảo chấm điểm."
                 : locale === "en"
                   ? "This team passed Round 2 and is now in the final presentation round."
-                  : "Doi nay da qua Vong 2 va hien dang o vong chung ket thuyet trinh."
+                  : "Đội này đã qua Vòng 2 và hiện đang ở vòng chung kết thuyết trình."
     : "";
   const hasActionInbox =
     incomingInvitations.length > 0 ||
@@ -522,7 +522,7 @@ export function DashboardPage() {
                             {isTargetTeamFull
                               ? locale === "en"
                                 ? "Team full"
-                                : "Doi da du"
+                                : "Đội đã đủ"
                               : isTargetTeamLocked
                                 ? locale === "en"
                                   ? "Roster locked"
@@ -545,7 +545,7 @@ export function DashboardPage() {
                                 : `${team.name} đã đóng đội hình cho Vòng 1 nên lời mời này không còn dùng để vào đội nữa.`
                             : locale === "en"
                               ? `${inviter?.name ?? "A team leader"} invited you to join ${team.name}.`
-                              : `${inviter?.name ?? "Mot doi truong"} da moi ban vao doi ${team.name}.`}
+                              : `${inviter?.name ?? "Một đội trưởng"} đã mời bạn vào đội ${team.name}.`}
                         </p>
                         <div className="mt-4 flex flex-wrap gap-3">
                           <button
@@ -643,14 +643,14 @@ export function DashboardPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <StatusPill tone="warning">{locale === "en" ? "Leadership request" : "Yeu cau doi truong"}</StatusPill>
+                          <StatusPill tone="warning">{locale === "en" ? "Leadership request" : "Yêu cầu đội trưởng"}</StatusPill>
                           <StatusPill>{formatDateLabel(locale, request.createdAt)}</StatusPill>
                         </div>
                         <p className="mt-4 text-lg font-semibold theme-text-strong">{team.name}</p>
                         <p className="mt-2 text-sm leading-7 theme-text-muted">
                           {locale === "en"
                             ? `${requester?.name ?? "The current leader"} wants to transfer leadership of ${team.name} to you.`
-                            : `${requester?.name ?? "Doi truong hien tai"} muon chuyen quyen doi truong cua ${team.name} cho ban.`}
+                            : `${requester?.name ?? "Đội trưởng hiện tại"} muốn chuyển quyền đội trưởng của ${team.name} cho bạn.`}
                         </p>
                         <div className="mt-4 flex flex-wrap gap-3">
                           <button
@@ -659,7 +659,7 @@ export function DashboardPage() {
                             className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950"
                           >
                             <Crown className="h-4 w-4" />
-                            {locale === "en" ? "Accept leadership" : "Chap nhan doi truong"}
+                            {locale === "en" ? "Accept leadership" : "Chấp nhận đội trưởng"}
                           </button>
                           <button
                             type="button"
@@ -683,11 +683,11 @@ export function DashboardPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <StatusPill>{locale === "en" ? "Awaiting response" : "Dang cho phan hoi"}</StatusPill>
+                        <StatusPill>{locale === "en" ? "Awaiting response" : "Đang chờ phản hồi"}</StatusPill>
                         <StatusPill>{formatDateLabel(locale, outgoingLeadershipTransfer.createdAt)}</StatusPill>
                       </div>
                       <p className="mt-4 text-lg font-semibold theme-text-strong">
-                        {locale === "en" ? "Leadership transfer request sent" : "Da gui yeu cau chuyen doi truong"}
+                        {locale === "en" ? "Leadership transfer request sent" : "Đã gửi yêu cầu chuyển đội trưởng"}
                       </p>
                       <p className="mt-2 text-sm leading-7 theme-text-muted">
                         {locale === "en"
@@ -764,7 +764,7 @@ export function DashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="px-6 py-6 md:px-8 md:py-8">
           <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
-            {locale === "en" ? "Team workspace" : "Khong gian doi"}
+            {locale === "en" ? "Team workspace" : "Không gian đội"}
           </p>
           <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.8rem]">
             {currentTeam
@@ -784,9 +784,9 @@ export function DashboardPage() {
                 ? pickCompetitionStateLabel(locale, currentCompetitionState ?? "not-eligible")
                 : locale === "en"
                   ? "No team yet"
-                  : "Chua co doi"}
+                  : "Chưa có đội"}
             </StatusPill>
-            <StatusPill>{`${teamReadinessCount}/${TEAM_MAX_MEMBERS} ${locale === "en" ? "members" : "thanh vien"}`}</StatusPill>
+            <StatusPill>{`${teamReadinessCount}/${TEAM_MAX_MEMBERS} ${locale === "en" ? "members" : "thành viên"}`}</StatusPill>
             {currentTeam ? <StatusPill>{`${openSlots} ${locale === "en" ? "open slots" : "cho trong"}`}</StatusPill> : null}
             {currentTeam ? (
               <StatusPill
@@ -830,11 +830,11 @@ export function DashboardPage() {
                   {currentRound1Submission
                     ? locale === "en"
                       ? "View Round 1 result"
-                      : "Xem ket qua Vong 1"
+                      : "Xem kết quả Vòng 1"
                     : canStartRound1Exam
                       ? locale === "en"
                         ? "Open Round 1 exam"
-                        : "Mo bai thi Vong 1"
+                        : "Mở bài thi Vòng 1"
                     : locale === "en"
                       ? "Review team lock"
                       : "Xem khóa đội"}
@@ -844,7 +844,7 @@ export function DashboardPage() {
                 href="/rules"
                 className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
               >
-                {locale === "en" ? "Review rules" : "Xem the le"}
+                {locale === "en" ? "Review rules" : "Xem thể lệ"}
               </Link>
             </div>
           ) : null}
@@ -852,7 +852,7 @@ export function DashboardPage() {
 
         <Surface className="px-5 py-5">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Your profile" : "Ho so cua ban"}
+            {locale === "en" ? "Your profile" : "Hồ sơ của bạn"}
           </p>
           <div className="mt-5 space-y-4">
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
@@ -881,7 +881,7 @@ export function DashboardPage() {
               <div className="mt-4 flex flex-wrap gap-3">
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border theme-border theme-panel-subtle px-4 py-2.5 text-sm font-semibold theme-text-strong">
                   <Upload className="h-4 w-4" />
-                  {locale === "en" ? "Upload avatar" : "Tai avatar len"}
+                  {locale === "en" ? "Upload avatar" : "Tải avatar lên"}
                   <input
                     type="file"
                     accept="image/*"
@@ -897,7 +897,7 @@ export function DashboardPage() {
                     onClick={() => updateActiveUserProfile({ avatarImageSrc: undefined })}
                     className="rounded-2xl border theme-border theme-panel-subtle px-4 py-2.5 text-sm font-semibold theme-text-strong"
                   >
-                    {locale === "en" ? "Remove photo" : "Bo anh"}
+                    {locale === "en" ? "Remove photo" : "Gỡ ảnh"}
                   </button>
                 ) : null}
               </div>
@@ -905,7 +905,7 @@ export function DashboardPage() {
               <p className="mt-3 text-xs leading-6 theme-text-faint">
                 {locale === "en"
                   ? `This avatar appears in your team member card and invite lists. Maximum size ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`
-                  : `Avatar nay se hien o the thanh vien doi va danh sach loi moi. Dung luong toi da ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
+                  : `Avatar này sẽ hiện ở thẻ thành viên đội và danh sách lời mời. Dung lượng tối đa ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
               </p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
@@ -918,7 +918,7 @@ export function DashboardPage() {
                   className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
                 >
                   <ArrowRight className="h-4 w-4" />
-                  {locale === "en" ? "Open profile" : "Mở hồ sơ"}
+                    {locale === "en" ? "Open profile" : "Mở hồ sơ"}
                 </Link>
                 <button
                   type="button"
@@ -936,7 +936,7 @@ export function DashboardPage() {
                 className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
               >
                 <ArrowRight className="h-4 w-4" />
-                {locale === "en" ? "Open admin mode" : "Mo admin mode"}
+                  {locale === "en" ? "Open admin mode" : "Mở admin mode"}
               </Link>
             ) : null}
           </div>
@@ -957,7 +957,7 @@ export function DashboardPage() {
                   />
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                      {locale === "en" ? "Team identity" : "Nhan dien doi"}
+                      {locale === "en" ? "Team identity" : "Nhận diện đội"}
                     </p>
                     <p className="theme-heading mt-3 text-3xl font-semibold theme-text-strong">
                       {currentTeam.name}
@@ -974,17 +974,17 @@ export function DashboardPage() {
                     {isLeader
                       ? locale === "en"
                         ? "You are the leader"
-                        : "Ban la doi truong"
+                        : "Bạn là đội trưởng"
                       : locale === "en"
                         ? "Member view"
-                        : "Goc nhin thanh vien"}
+                        : "Góc nhìn thành viên"}
                   </StatusPill>
                 </div>
               </div>
 
               <div className="mt-8 grid gap-4 md:grid-cols-2">
                 <label className="space-y-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Team name" : "Ten doi"}</span>
+                  <span className="text-sm theme-text-muted">{locale === "en" ? "Team name" : "Tên đội"}</span>
                   <input
                     value={teamForm.name}
                     disabled={!isLeader}
@@ -993,7 +993,7 @@ export function DashboardPage() {
                   />
                 </label>
                 <label className="space-y-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Team tag" : "Ma doi"}</span>
+                  <span className="text-sm theme-text-muted">{locale === "en" ? "Team tag" : "Mã đội"}</span>
                   <input
                     value={teamForm.tag}
                     disabled={!isLeader}
@@ -1007,7 +1007,7 @@ export function DashboardPage() {
                   />
                 </label>
                 <label className="space-y-2 md:col-span-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Track" : "Huong thi"}</span>
+                  <span className="text-sm theme-text-muted">{locale === "en" ? "Track" : "Hướng thi"}</span>
                   <input
                     value={teamForm.track}
                     disabled={!isLeader}
@@ -1016,7 +1016,7 @@ export function DashboardPage() {
                   />
                 </label>
                 <label className="space-y-2 md:col-span-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Team bio" : "Bio cua doi"}</span>
+                  <span className="text-sm theme-text-muted">{locale === "en" ? "Team bio" : "Bio của đội"}</span>
                   <textarea
                     value={teamForm.bio}
                     rows={5}
@@ -1028,13 +1028,13 @@ export function DashboardPage() {
               </div>
 
               <div className="mt-6">
-                <p className="text-sm theme-text-muted">{locale === "en" ? "Team avatar" : "Avatar doi"}</p>
+                <p className="text-sm theme-text-muted">{locale === "en" ? "Team avatar" : "Avatar đội"}</p>
                 <div className="mt-3 flex flex-wrap gap-3">
                   <label
                     className={`inline-flex items-center gap-2 rounded-2xl border theme-border theme-panel-subtle px-4 py-2.5 text-sm font-semibold theme-text-strong ${isLeader ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
                   >
                     <Upload className="h-4 w-4" />
-                    {locale === "en" ? "Upload team photo" : "Tai anh doi len"}
+                    {locale === "en" ? "Upload team photo" : "Tải ảnh đội lên"}
                     <input
                       type="file"
                       accept="image/*"
@@ -1052,7 +1052,7 @@ export function DashboardPage() {
                       onClick={() => setTeamForm((current) => ({ ...current, avatarImageSrc: undefined }))}
                       className="rounded-2xl border theme-border theme-panel-subtle px-4 py-2.5 text-sm font-semibold theme-text-strong disabled:opacity-60"
                     >
-                      {locale === "en" ? "Remove photo" : "Bo anh"}
+                      {locale === "en" ? "Remove photo" : "Gỡ ảnh"}
                     </button>
                   ) : null}
                 </div>
@@ -1060,7 +1060,7 @@ export function DashboardPage() {
                 <p className="mt-3 text-xs leading-6 theme-text-faint">
                   {locale === "en"
                     ? `Uploaded team photos override the gradient. The selected tone remains as the fallback. Maximum size ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`
-                    : `Anh doi tai len se uu tien hien thi thay cho gradient. Tone da chon van duoc dung lam phuong an du phong. Dung luong toi da ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
+                    : `Ảnh đội tải lên sẽ hiển thị độc lập với avatar đội trưởng. Nếu chưa có ảnh, hệ thống dùng gradient và tông màu đã chọn làm phương án dự phòng. Dung lượng tối đa ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-3">
                   {avatarTones.map((tone) => (
@@ -1084,16 +1084,16 @@ export function DashboardPage() {
                   onClick={handleTeamSave}
                   className="theme-button-primary rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold disabled:opacity-60"
                 >
-                  {locale === "en" ? "Save team profile" : "Luu ho so doi"}
+                  {locale === "en" ? "Save team profile" : "Lưu hồ sơ đội"}
                 </button>
                 <p className="self-center text-sm theme-text-soft">
                   {isLeader
                     ? locale === "en"
                       ? "Only the leader can edit and submit."
-                      : "Chi doi truong moi co the sua va nop."
+                      : "Chỉ đội trưởng mới có thể sửa và nộp."
                     : locale === "en"
                       ? "This account can review but not edit team submissions."
-                      : "Tai khoan nay co the xem nhung khong the sua submission cua doi."}
+                      : "Tài khoản này có thể xem nhưng không thể sửa submission của đội."}
                 </p>
               </div>
             </Surface>
@@ -1102,7 +1102,7 @@ export function DashboardPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                    {locale === "en" ? "Team members" : "Thanh vien doi"}
+                    {locale === "en" ? "Team members" : "Thành viên đội"}
                   </p>
                   <p className="mt-3 text-2xl font-semibold theme-text-strong">
                     {currentTeamMembers.length} / {TEAM_MAX_MEMBERS}
@@ -1132,10 +1132,10 @@ export function DashboardPage() {
                       {member.id === currentTeam.leaderId
                         ? locale === "en"
                           ? "Leader"
-                          : "Doi truong"
+                          : "Đội trưởng"
                         : locale === "en"
                           ? "Member"
-                          : "Thanh vien"}
+                          : "Thành viên"}
                     </StatusPill>
                   </div>
                 ))}
@@ -1160,7 +1160,7 @@ export function DashboardPage() {
                 <p className="mt-2 text-sm leading-7 theme-text-muted">
                   {locale === "en"
                     ? "Only the team leader can submit Round 2 reports and final-round files. Teams may submit unlimited versions, but only the latest version is valid."
-                    : "Chi doi truong moi co the nop bao cao Vong 2 va tep cua vong chung ket. Doi co the nop khong gioi han phien ban, nhung chi phien ban moi nhat moi hop le."}
+                    : "Chỉ đội trưởng mới có thể nộp báo cáo Vòng 2 và tệp của vòng chung kết. Đội có thể nộp không giới hạn phiên bản, nhưng chỉ phiên bản mới nhất mới hợp lệ."}
                 </p>
               </div>
             </Surface>
@@ -1589,12 +1589,12 @@ export function DashboardPage() {
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                    {locale === "en" ? "Invite teammates" : "Moi thanh vien"}
+                    {locale === "en" ? "Invite teammates" : "Mời thành viên"}
                   </p>
                   <p className="mt-4 text-2xl font-semibold theme-text-strong">
                     {locale === "en"
                       ? "Build the team around complementary skills."
-                      : "Xay dung doi voi cac ky nang bo tro cho nhau."}
+                      : "Xây dựng đội với các kỹ năng bổ trợ cho nhau."}
                   </p>
                 </div>
                 <StatusPill>{`${openSlots} ${locale === "en" ? "slots left" : "cho trong"}`}</StatusPill>
@@ -1603,7 +1603,7 @@ export function DashboardPage() {
               <div className="mt-6 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm font-semibold theme-text-strong">
-                    {locale === "en" ? "Available students only" : "Chi hien sinh vien chua o doi nao"}
+                    {locale === "en" ? "Available students only" : "Chỉ hiện sinh viên chưa ở đội nào"}
                   </p>
                   {teamRosterLocked ? (
                     <StatusPill tone="warning">
@@ -1611,7 +1611,7 @@ export function DashboardPage() {
                     </StatusPill>
                   ) : isTeamFull ? (
                     <StatusPill tone="warning">
-                      {locale === "en" ? "Team is full" : "Doi da du thanh vien"}
+                      {locale === "en" ? "Team is full" : "Đội đã đủ thành viên"}
                     </StatusPill>
                   ) : null}
                 </div>
@@ -1628,21 +1628,21 @@ export function DashboardPage() {
                     ? isLeader
                       ? locale === "en"
                         ? "Your team already has 5 members, so new invitations are disabled."
-                        : "Doi cua ban da co 5 thanh vien, vi vay he thong da tat viec moi them nguoi."
+                        : "Đội của bạn đã có 5 thành viên, vì vậy hệ thống đã tắt việc mời thêm người."
                       : locale === "en"
                         ? "This team already has 5 members, so the invite list is locked."
-                        : "Doi nay da co 5 thanh vien, vi vay danh sach moi da bi khoa."
+                        : "Đội này đã có 5 thành viên, vì vậy danh sách mời đã bị khóa."
                     : openSlots <= 0
                       ? locale === "en"
                         ? "All remaining slots are currently reserved by pending invites."
-                        : "Tat ca cho trong con lai hien dang duoc giu boi cac loi moi dang cho."
+                        : "Tất cả chỗ trống còn lại hiện đang được giữ bởi các lời mời đang chờ."
                       : locale === "en"
                         ? "Search across students who are not currently members of any team."
-                        : "Tim trong danh sach sinh vien hien chua la thanh vien cua bat ky doi nao."}
+                        : "Tìm trong danh sách sinh viên hiện chưa là thành viên của bất kỳ đội nào."}
                 </p>
                 <label className="mt-4 block">
                   <span className="sr-only">
-                    {locale === "en" ? "Search available students" : "Tim sinh vien co san"}
+                    {locale === "en" ? "Search available students" : "Tìm sinh viên còn trống"}
                   </span>
                   <div className="flex items-center gap-3 rounded-2xl border theme-border theme-panel px-4 py-3">
                     <Search className="h-4 w-4 theme-text-faint" />
@@ -1650,7 +1650,7 @@ export function DashboardPage() {
                       value={inviteSearch}
                       disabled={isTeamFull || teamRosterLocked}
                       onChange={(event) => setInviteSearch(event.target.value)}
-                      placeholder={locale === "en" ? "Search by name, email, university..." : "Tim theo ten, email, truong..."}
+                      placeholder={locale === "en" ? "Search by name, email, university..." : "Tìm theo tên, email, trường..."}
                       className="theme-placeholder w-full bg-transparent text-sm theme-text-strong outline-none disabled:cursor-not-allowed disabled:opacity-60"
                     />
                   </div>
@@ -1685,7 +1685,7 @@ export function DashboardPage() {
                         {alreadyInvited
                           ? locale === "en"
                             ? "Invite pending"
-                            : "Dang cho"
+                            : "Đang chờ"
                           : locale === "en"
                             ? "Invite"
                             : "Moi vao doi"}
@@ -1702,10 +1702,10 @@ export function DashboardPage() {
                       : inviteSearch.trim()
                       ? locale === "en"
                         ? "No available free-agent students match this search."
-                        : "Khong co sinh vien chua vao doi nao phu hop voi tu khoa tim kiem nay."
+                        : "Không có sinh viên chưa vào đội nào phù hợp với từ khóa tìm kiếm này."
                       : locale === "en"
                         ? "No free-agent students are available right now."
-                        : "Hien khong co sinh vien tu do nao de moi vao doi."}
+                        : "Hiện không có sinh viên tự do nào để mời vào đội."}
                   </div>
                 ) : null}
               </div>
@@ -1713,12 +1713,12 @@ export function DashboardPage() {
 
             <Surface className="px-6 py-6">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                {locale === "en" ? "Leader tools" : "Cong cu doi truong"}
+                {locale === "en" ? "Leader tools" : "Công cụ đội trưởng"}
               </p>
               <div className="mt-5 space-y-4">
                 <label className="block space-y-2">
                   <span className="text-sm theme-text-muted">
-                    {locale === "en" ? "Transfer leadership" : "Chuyen doi truong"}
+                    {locale === "en" ? "Transfer leadership" : "Chuyển đội trưởng"}
                   </span>
                   <select
                     disabled={!isLeader || Boolean(outgoingLeadershipTransfer) || teamRosterLocked}
@@ -1727,7 +1727,7 @@ export function DashboardPage() {
                     className="w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none disabled:opacity-40"
                   >
                     <option value="" className="bg-slate-950">
-                      {locale === "en" ? "Select teammate" : "Chon thanh vien"}
+                      {locale === "en" ? "Select teammate" : "Chọn thành viên"}
                     </option>
                     {currentTeamMembers
                       .filter((member) => member.id !== activeUserId)
@@ -1748,7 +1748,7 @@ export function DashboardPage() {
                   className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Crown className="h-4 w-4" />
-                  {locale === "en" ? "Send leadership request" : "Gui yeu cau doi truong"}
+                  {locale === "en" ? "Send leadership request" : "Gửi yêu cầu đội trưởng"}
                 </button>
                 <button
                   type="button"
@@ -1757,7 +1757,7 @@ export function DashboardPage() {
                   className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <LogOut className="h-4 w-4" />
-                  {locale === "en" ? "Leave current team" : "Roi doi hien tai"}
+                  {locale === "en" ? "Leave current team" : "Rời đội hiện tại"}
                 </button>
                 <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
                   {teamRosterLocked
@@ -1771,16 +1771,16 @@ export function DashboardPage() {
                     : isLeader
                     ? locale === "en"
                       ? "The leader must send a transfer request and wait for the selected member to accept before leaving."
-                      : "Doi truong phai gui yeu cau chuyen quyen va cho thanh vien duoc chon chap nhan truoc khi roi doi."
+                      : "Đội trưởng phải gửi yêu cầu chuyển quyền và chờ thành viên được chọn chấp nhận trước khi rời đội."
                     : locale === "en"
                       ? "As a regular member, this account can leave immediately."
-                      : "Voi vai tro thanh vien thuong, tai khoan nay co the roi doi ngay."}
+                      : "Với vai trò thành viên thường, tài khoản này có thể rời đội ngay."}
                 </div>
                 {outgoingLeadershipTransfer ? (
                   <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
                     {locale === "en"
                       ? `Waiting for ${users.find((user) => user.id === outgoingLeadershipTransfer.toUserId)?.name ?? "the selected member"} to accept the leadership transfer request.`
-                      : `Dang cho ${users.find((user) => user.id === outgoingLeadershipTransfer.toUserId)?.name ?? "thanh vien duoc chon"} chap nhan yeu cau chuyen doi truong.`}
+                      : `Đang chờ ${users.find((user) => user.id === outgoingLeadershipTransfer.toUserId)?.name ?? "thành viên được chọn"} chấp nhận yêu cầu chuyển đội trưởng.`}
                   </div>
                 ) : null}
                 {sentInvitations.length > 0 ? (
@@ -1810,11 +1810,11 @@ export function DashboardPage() {
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <Surface className="px-6 py-6 md:px-8 md:py-8">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-              {locale === "en" ? "Create team" : "Tao doi"}
+              {locale === "en" ? "Create team" : "Tạo đội"}
             </p>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
               <label className="space-y-2">
-                <span className="text-sm theme-text-muted">{locale === "en" ? "Team name" : "Ten doi"}</span>
+                <span className="text-sm theme-text-muted">{locale === "en" ? "Team name" : "Tên đội"}</span>
                 <input
                   value={teamForm.name}
                   onChange={(event) => setTeamForm((current) => ({ ...current, name: event.target.value }))}
@@ -1822,7 +1822,7 @@ export function DashboardPage() {
                 />
               </label>
               <label className="space-y-2">
-                <span className="text-sm theme-text-muted">{locale === "en" ? "Team tag" : "Ma doi"}</span>
+                <span className="text-sm theme-text-muted">{locale === "en" ? "Team tag" : "Mã đội"}</span>
                 <input
                   value={teamForm.tag}
                   onChange={(event) =>
@@ -1835,7 +1835,7 @@ export function DashboardPage() {
                 />
               </label>
               <label className="space-y-2 md:col-span-2">
-                <span className="text-sm theme-text-muted">{locale === "en" ? "Track" : "Huong thi"}</span>
+                <span className="text-sm theme-text-muted">{locale === "en" ? "Track" : "Hướng thi"}</span>
                 <input
                   value={teamForm.track}
                   onChange={(event) => setTeamForm((current) => ({ ...current, track: event.target.value }))}
@@ -1843,7 +1843,7 @@ export function DashboardPage() {
                 />
               </label>
               <label className="space-y-2 md:col-span-2">
-                <span className="text-sm theme-text-muted">{locale === "en" ? "Team bio" : "Bio cua doi"}</span>
+                <span className="text-sm theme-text-muted">{locale === "en" ? "Team bio" : "Bio của đội"}</span>
                 <textarea
                   value={teamForm.bio}
                   rows={5}
@@ -1853,11 +1853,11 @@ export function DashboardPage() {
               </label>
             </div>
             <div className="mt-6">
-              <p className="text-sm theme-text-muted">{locale === "en" ? "Team avatar" : "Avatar doi"}</p>
+              <p className="text-sm theme-text-muted">{locale === "en" ? "Team avatar" : "Avatar đội"}</p>
               <div className="mt-3 flex flex-wrap gap-3">
                 <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl border theme-border theme-panel-subtle px-4 py-2.5 text-sm font-semibold theme-text-strong">
                   <Upload className="h-4 w-4" />
-                  {locale === "en" ? "Upload team photo" : "Tai anh doi len"}
+                  {locale === "en" ? "Upload team photo" : "Tải ảnh đội lên"}
                   <input
                     type="file"
                     accept="image/*"
@@ -1873,15 +1873,15 @@ export function DashboardPage() {
                     onClick={() => setTeamForm((current) => ({ ...current, avatarImageSrc: undefined }))}
                     className="rounded-2xl border theme-border theme-panel-subtle px-4 py-2.5 text-sm font-semibold theme-text-strong"
                   >
-                    {locale === "en" ? "Remove photo" : "Bo anh"}
+                    {locale === "en" ? "Remove photo" : "Gỡ ảnh"}
                   </button>
                 ) : null}
               </div>
               {teamAvatarError ? <p className="mt-3 text-xs leading-6 text-rose-300">{teamAvatarError}</p> : null}
               <p className="mt-3 text-xs leading-6 theme-text-faint">
                 {locale === "en"
-                  ? `You are the initial leader, so the uploaded photo becomes the default team avatar after creation. Maximum size ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`
-                  : `Ban la doi truong ban dau, vi vay anh tai len se tro thanh avatar mac dinh cua doi sau khi tao. Dung luong toi da ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
+                  ? `The team avatar is independent from the leader avatar. If no image is uploaded, the team keeps its own gradient identity. Maximum size ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`
+                  : `Avatar đội được tách riêng khỏi avatar đội trưởng. Nếu chưa tải ảnh, đội sẽ dùng nhận diện gradient riêng của mình. Dung lượng tối đa ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
               </p>
               <div className="mt-3 flex flex-wrap gap-3">
                 {avatarTones.map((tone) => (
@@ -1901,7 +1901,7 @@ export function DashboardPage() {
               onClick={handleTeamSave}
               className="theme-button-primary mt-6 w-full rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
             >
-              {locale === "en" ? "Create team" : "Tao doi"}
+              {locale === "en" ? "Create team" : "Tạo đội"}
             </button>
           </Surface>
 
@@ -1932,10 +1932,10 @@ export function DashboardPage() {
                         {isTargetTeamFull
                           ? locale === "en"
                             ? "This team is now full. If you try to accept, the invitation will expire and you will not enter the team."
-                            : "Doi nay hien da du thanh vien. Neu ban thu chap nhan, loi moi se het hieu luc va ban se khong vao duoc doi."
+                            : "Đội này hiện đã đủ thành viên. Nếu bạn thử chấp nhận, lời mời sẽ hết hiệu lực và bạn sẽ không vào được đội."
                           : locale === "en"
                             ? "Accepting works only if this account is not already in another team."
-                            : "Chi co the chap nhan neu tai khoan nay hien khong o doi nao khac."}
+                            : "Chỉ có thể chấp nhận nếu tài khoản này hiện không ở đội nào khác."}
                       </p>
                       <div className="mt-4 flex gap-3">
                         <button
@@ -1961,7 +1961,7 @@ export function DashboardPage() {
                 <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
                   {locale === "en"
                     ? "No invitations yet. Create your team or switch preview users to test invite behavior."
-                    : "Chua co loi moi nao. Hay tao doi hoac doi tai khoan preview de kiem tra hanh vi loi moi."}
+                    : "Chưa có lời mời nào. Hãy tạo đội hoặc đổi tài khoản preview để kiểm tra hành vi lời mời."}
                 </div>
               )}
             </div>
@@ -1976,12 +1976,12 @@ export function DashboardPage() {
             title={
               locale === "en"
                 ? "Unlimited versions are allowed, but only the latest one is valid."
-                : "Duoc phep nop khong gioi han phien ban, nhung chi phien ban moi nhat moi hop le."
+                : "Được phép nộp không giới hạn phiên bản, nhưng chỉ phiên bản mới nhất mới hợp lệ."
             }
             description={
               locale === "en"
                 ? "The submission center above keeps the latest version in focus while preserving earlier versions for review history."
-                : "Khu submission ben tren giu trong tam vao phien ban moi nhat dong thoi van luu cac phien ban truoc de doi chieu lich su."
+                : "Khu submission bên trên giữ trọng tâm vào phiên bản mới nhất, đồng thời vẫn lưu các phiên bản trước để đối chiếu lịch sử."
             }
           />
         </Surface>
@@ -1999,7 +1999,7 @@ export function DashboardPage() {
               : "Trang do hien trinh bay cac hang muc giai thuong tach biet ro hon va van giu khoi intro lon cua cuoc thi."}
           </p>
           <Link href="/competition" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {locale === "en" ? "Open competition page" : "Mo trang cuoc thi"}
+            {locale === "en" ? "Open competition page" : "Mở trang cuộc thi"}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </Surface>
@@ -2039,10 +2039,10 @@ function SubmissionRoundCard({
     round === "round-2"
       ? locale === "en"
         ? "Round 2 report submission"
-        : "Nop bao cao Vong 2"
+        : "Nộp báo cáo Vòng 2"
       : locale === "en"
         ? "Final round submission"
-        : "Nop bai vong chung ket";
+        : "Nộp bài vòng chung kết";
   const roundWindow = getCompetitionRoundWindow(round);
   const roundWindowLabel = roundWindow
     ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate)
@@ -2059,25 +2059,25 @@ function SubmissionRoundCard({
       : isCurrentRound
         ? locale === "en"
           ? `Currently competing in ${pickRoundLabel(locale, round)}`
-          : `Dang thi dau ${pickRoundLabel(locale, round)}`
+          : `Đang thi đấu ${pickRoundLabel(locale, round)}`
         : latestSubmission
           ? locale === "en"
             ? `Latest v${latestSubmission.version} valid`
             : `v${latestSubmission.version} moi nhat hop le`
           : locale === "en"
             ? "No submission yet"
-            : "Chua co bai nop";
+            : "Chưa có bài nộp";
   const lockMessage = isRoundFinished
     ? locale === "en"
       ? `${pickRoundLabel(locale, round)} is finished. You can no longer submit new versions for this round.`
-      : `${pickRoundLabel(locale, round)} da ket thuc. Ban khong con the nop phien ban moi cho vong nay.`
+      : `${pickRoundLabel(locale, round)} đã kết thúc. Bạn không còn thể nộp phiên bản mới cho vòng này.`
     : hasPassedRound
       ? locale === "en"
         ? `This team has already advanced past ${pickRoundLabel(locale, round)}. Submission history stays visible, but this round is no longer active.`
-        : `Doi nay da vuot qua ${pickRoundLabel(locale, round)}. Lich su nop bai van duoc giu lai, nhung vong nay khong con dang hoat dong.`
+        : `Đội này đã vượt qua ${pickRoundLabel(locale, round)}. Lịch sử nộp bài vẫn được giữ lại, nhưng vòng này không còn đang hoạt động.`
       : locale === "en"
         ? "Only the team leader can submit a new version for this round."
-        : "Chi doi truong moi co the nop phien ban moi cho vong nay.";
+        : "Chỉ đội trưởng mới có thể nộp phiên bản mới cho vòng này.";
 
   const latestSubmissionHref = latestSubmission
     ? latestSubmission.resourceUrl
@@ -2146,7 +2146,7 @@ function SubmissionRoundCard({
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-5 py-5 text-sm leading-7 theme-text-muted">
               {locale === "en"
                 ? "No report has been submitted for this round yet."
-                : "Chua co bao cao nao duoc nop cho vong nay."}
+                : "Chưa có báo cáo nào được nộp cho vòng này."}
             </div>
           )}
 
@@ -2230,10 +2230,10 @@ function SubmissionRoundCard({
                       ? form.resourceFile.name
                       : locale === "en"
                         ? "Choose a PDF or RAR file"
-                        : "Chon tep PDF hoac RAR"}
+                        : "Chọn tệp PDF hoặc RAR"}
                   </span>
                   <span className="rounded-full border theme-border px-3 py-1 text-xs font-semibold theme-text-soft">
-                    {locale === "en" ? "Browse" : "Chon tep"}
+                    {locale === "en" ? "Browse" : "Chọn tệp"}
                   </span>
                   <input
                     type="file"

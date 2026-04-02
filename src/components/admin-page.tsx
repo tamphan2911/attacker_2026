@@ -69,7 +69,7 @@ const adminSections: Array<{
     id: "round1",
     href: "/admin/round-1",
     icon: FileQuestion,
-    label: { en: "Round 1 test", vi: "Bai thi Vong 1" },
+    label: { en: "Round 1 test", vi: "Bài thi Vòng 1" },
     description: {
       en: "Review objective and essay banks plus team-grouped individual Round 1 results.",
       vi: "Xem ngân hàng khách quan, ngân hàng tự luận và kết quả Vòng 1 cá nhân được nhóm theo đội.",
@@ -89,7 +89,7 @@ const adminSections: Array<{
     id: "teams",
     href: "/admin/teams",
     icon: Users2,
-    label: { en: "Teams", vi: "Doi thi" },
+    label: { en: "Teams", vi: "Đội thi" },
     description: {
       en: "Review team composition and readiness.",
       vi: "Xem cau truc doi va muc do san sang.",
@@ -139,7 +139,7 @@ function AdminNav({
                 </div>
                 {activeSection === section.id ? (
                   <StatusPill tone="success">
-                    {locale === "en" ? "Open" : "Dang mo"}
+                    {locale === "en" ? "Open" : "Đang mở"}
                   </StatusPill>
                 ) : null}
               </div>
@@ -239,11 +239,11 @@ function OverviewSection() {
             value: users.length.toString(),
           },
           {
-            label: locale === "en" ? "Eligible teams" : "Doi du dieu kien",
+            label: locale === "en" ? "Eligible teams" : "Đội đủ điều kiện",
             value: eligibleTeams.length.toString(),
           },
           {
-            label: locale === "en" ? "Teams with submissions" : "Doi da nop bai",
+            label: locale === "en" ? "Teams with submissions" : "Đội đã nộp bài",
             value: latestSubmissionCount.toString(),
           },
         ].map((item) => (
@@ -463,11 +463,11 @@ function TeamsTableSection() {
   return (
     <div className="space-y-6">
       <TableHeader
-        title={locale === "en" ? "Teams" : "Doi thi"}
+        title={locale === "en" ? "Teams" : "Đội thi"}
         description={
           locale === "en"
             ? "Review team leadership, membership count, readiness, and creation date."
-            : "Xem doi truong, so thanh vien, muc do san sang va ngay tao doi."
+            : "Xem đội trưởng, số thành viên, mức độ sẵn sàng và ngày tạo đội."
         }
         exportLabel={locale === "en" ? "Export teams.xlsx" : "Xuat teams.xlsx"}
         onExport={() => exportRowsToWorkbook("attacker-2026-teams.xlsx", "Teams", rows)}
@@ -682,7 +682,7 @@ export function AdminShell({
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
           <SectionHeading
             eyebrow={locale === "en" ? "Restricted route" : "Route gioi han"}
-            title={locale === "en" ? "Attacker 2026 admin mode" : "Admin mode cua Attacker 2026"}
+            title={locale === "en" ? "Attacker 2026 admin mode" : "Admin mode của Attacker 2026"}
             description={
               locale === "en"
                 ? "Use the direct `/admin` link or its subroutes. This mode stays out of the public menu and is visible only to the correct signed-in roles."

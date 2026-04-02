@@ -419,7 +419,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     pushToast(
       {
         en: "Demo state reset to the default preview.",
-        vi: "Da dat lai du lieu demo ve trang thai mac dinh.",
+        vi: "Đã đặt lại dữ liệu demo về trạng thái mặc định.",
       },
       "info",
     );
@@ -681,7 +681,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only admin and moderator accounts can edit users here.",
-          vi: "Chi tai khoan admin va moderator moi co the sua nguoi dung tai day.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể sửa người dùng tại đây.",
         },
         "warning",
       );
@@ -692,7 +692,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "The fixed admin demo account is locked and cannot be edited.",
-          vi: "Tai khoan admin demo co dinh da bi khoa va khong the chinh sua.",
+          vi: "Tài khoản admin demo cố định đã bị khóa và không thể chỉnh sửa.",
         },
         "warning",
       );
@@ -739,7 +739,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only admin and moderator accounts can delete users here.",
-          vi: "Chi tai khoan admin va moderator moi co the xoa nguoi dung tai day.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể xóa người dùng tại đây.",
         },
         "warning",
       );
@@ -750,7 +750,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "The fixed admin demo account cannot be deleted.",
-          vi: "Tai khoan admin demo co dinh khong the bi xoa.",
+          vi: "Tài khoản admin demo cố định không thể bị xóa.",
         },
         "warning",
       );
@@ -761,7 +761,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "You cannot delete the currently active preview account.",
-          vi: "Ban khong the xoa tai khoan preview dang duoc su dung.",
+          vi: "Bạn không thể xóa tài khoản preview đang được sử dụng.",
         },
         "warning",
       );
@@ -857,7 +857,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only the current team leader can edit team settings.",
-          vi: "Chi doi truong hien tai moi co the sua thong tin doi.",
+          vi: "Chỉ đội trưởng hiện tại mới có thể sửa thông tin đội.",
         },
         "warning",
       );
@@ -915,7 +915,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only admin and moderator accounts can edit teams here.",
-          vi: "Chi tai khoan admin va moderator moi co the sua doi thi tai day.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể sửa đội thi tại đây.",
         },
         "warning",
       );
@@ -931,7 +931,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "The selected leader must already be a member of the team.",
-          vi: "Doi truong duoc chon phai la thanh vien hien huu cua doi.",
+          vi: "Đội trưởng được chọn phải là thành viên hiện hữu của đội.",
         },
         "warning",
       );
@@ -978,7 +978,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only admin and moderator accounts can delete teams here.",
-          vi: "Chi tai khoan admin va moderator moi co the xoa doi thi tai day.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể xóa đội thi tại đây.",
         },
         "warning",
       );
@@ -1025,7 +1025,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only admin and moderator accounts can edit Round 1 questions here.",
-          vi: "Chi tai khoan admin va moderator moi co the sua cau hoi Vong 1 tai day.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể sửa câu hỏi Vòng 1 tại đây.",
         },
         "warning",
       );
@@ -1051,7 +1051,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Each configured option must include both EN and VI text.",
-          vi: "Moi lua chon duoc cau hinh phai co noi dung ca EN va VI.",
+          vi: "Mỗi lựa chọn được cấu hình phải có nội dung cả EN và VI.",
         },
         "warning",
       );
@@ -1063,7 +1063,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         pushToast(
           {
             en: "True/False and single-choice questions need at least 2 options and exactly 1 correct answer.",
-            vi: "Cau Dung/Sai va mot dap an can it nhat 2 lua chon va dung 1 dap an dung.",
+            vi: "Câu Đúng/Sai và một đáp án cần ít nhất 2 lựa chọn và đúng 1 đáp án đúng.",
           },
           "warning",
         );
@@ -1080,7 +1080,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         pushToast(
           {
             en: "Multiple-choice questions need at least 2 correct answers selected from the configured options.",
-            vi: "Cau nhieu dap an can it nhat 2 dap an dung nam trong cac lua chon da cau hinh.",
+            vi: "Câu nhiều đáp án cần ít nhất 2 đáp án đúng nằm trong các lựa chọn đã cấu hình.",
           },
           "warning",
         );
@@ -1333,7 +1333,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Create or join a team before sending invitations.",
-          vi: "Hay tao hoac tham gia doi truoc khi gui loi moi.",
+          vi: "Hãy tạo hoặc tham gia đội trước khi gửi lời mời.",
         },
         "warning",
       );
@@ -1344,7 +1344,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only student accounts can receive team invitations.",
-          vi: "Chi tai khoan sinh vien moi co the nhan loi moi vao doi.",
+          vi: "Chỉ tài khoản sinh viên mới có thể nhận lời mời vào đội.",
         },
         "warning",
       );
@@ -1355,7 +1355,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only the team leader can invite new members.",
-          vi: "Chi doi truong moi co the moi thanh vien moi.",
+          vi: "Chỉ đội trưởng mới có thể mời thành viên mới.",
         },
         "warning",
       );
@@ -1383,7 +1383,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "That student is already in this team.",
-          vi: "Sinh vien nay da o trong doi.",
+          vi: "Sinh viên này đã ở trong đội.",
         },
         "warning",
       );
@@ -1394,7 +1394,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "That student is already in another team.",
-          vi: "Sinh vien nay da o mot doi khac.",
+          vi: "Sinh viên này đã ở một đội khác.",
         },
         "warning",
       );
@@ -1406,7 +1406,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "You cannot send more invites because the team is at max capacity.",
-          vi: "Ban khong the gui them loi moi vi doi da dat gioi han toi da.",
+          vi: "Bạn không thể gửi thêm lời mời vì đội đã đạt giới hạn tối đa.",
         },
         "warning",
       );
@@ -1424,7 +1424,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "There is already a pending invitation for this student.",
-          vi: "Da ton tai mot loi moi dang cho cho sinh vien nay.",
+          vi: "Đã tồn tại một lời mời đang chờ cho sinh viên này.",
         },
         "warning",
       );
@@ -1559,8 +1559,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
             ? "The leader cannot leave until the pending leadership transfer is accepted."
             : "The leader cannot leave until leadership is transferred.",
           vi: pendingTransfer
-            ? "Doi truong khong the roi doi cho den khi yeu cau chuyen quyen lanh dao duoc chap nhan."
-            : "Doi truong khong the roi doi cho den khi da chuyen quyen lanh dao.",
+            ? "Đội trưởng không thể rời đội cho đến khi yêu cầu chuyển quyền lãnh đạo được chấp nhận."
+            : "Đội trưởng không thể rời đội cho đến khi đã chuyển quyền lãnh đạo.",
         },
         "warning",
       );
@@ -1605,7 +1605,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only the current leader can transfer leadership.",
-          vi: "Chi doi truong hien tai moi co the chuyen quyen lanh dao.",
+          vi: "Chỉ đội trưởng hiện tại mới có thể chuyển quyền lãnh đạo.",
         },
         "warning",
       );
@@ -1633,7 +1633,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Choose another existing team member as the next leader.",
-          vi: "Hay chon mot thanh vien hien huu khac lam doi truong tiep theo.",
+          vi: "Hãy chọn một thành viên hiện hữu khác làm đội trưởng tiếp theo.",
         },
         "warning",
       );
@@ -1648,7 +1648,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "There is already a pending leadership transfer request for this team.",
-          vi: "Da co mot yeu cau chuyen quyen doi truong dang cho cho doi nay.",
+          vi: "Đã có một yêu cầu chuyển quyền đội trưởng đang chờ cho đội này.",
         },
         "warning",
       );
@@ -1809,7 +1809,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Join a team before taking the Round 1 test.",
-          vi: "Hay vao mot doi truoc khi lam bai thi Vong 1.",
+          vi: "Hãy vào một đội trước khi làm bài thi Vòng 1.",
         },
         "warning",
       );
@@ -1826,8 +1826,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
               : `This team is currently marked as ${pickCompetitionStateLabel("en", competitionState)} and cannot enter Round 1.`,
           vi:
             competitionState === "not-eligible"
-              ? "Doi nay chua du dieu kien. Hay dat it nhat 3 thanh vien truoc."
-              : `Doi nay hien dang o trang thai ${pickCompetitionStateLabel("vi", competitionState)} va khong the vao Vong 1.`,
+              ? "Đội này chưa đủ điều kiện. Hãy đạt ít nhất 3 thành viên trước."
+              : `Đội này hiện đang ở trạng thái ${pickCompetitionStateLabel("vi", competitionState)} và không thể vào Vòng 1.`,
         },
         "warning",
       );
@@ -1838,7 +1838,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: `This team is currently in ${pickCompetitionStateLabel("en", team.stage)} and can no longer submit Round 1.`,
-          vi: `Doi nay hien dang o ${pickCompetitionStateLabel("vi", team.stage)} va khong con the nop Vong 1.`,
+          vi: `Đội này hiện đang ở ${pickCompetitionStateLabel("vi", team.stage)} và không thể nộp Vòng 1 nữa.`,
         },
         "warning",
       );
@@ -1860,7 +1860,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Round 1 is finished. New Round 1 submissions are closed.",
-          vi: "Vong 1 da ket thuc. He thong da dong viec nop bai Vong 1 moi.",
+          vi: "Vòng 1 đã kết thúc. Hệ thống đã đóng việc nộp bài Vòng 1 mới.",
         },
         "warning",
       );
@@ -1871,7 +1871,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only student accounts can submit Round 1 attempts.",
-          vi: "Chi tai khoan sinh vien moi co the nop bai Vong 1.",
+          vi: "Chỉ tài khoản sinh viên mới có thể nộp bài Vòng 1.",
         },
         "warning",
       );
@@ -1882,7 +1882,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "This account has already submitted its Round 1 attempt.",
-          vi: "Tai khoan nay da nop bai Vong 1 roi.",
+          vi: "Tài khoản này đã nộp bài Vòng 1 rồi.",
         },
         "warning",
       );
@@ -1936,7 +1936,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Join or create a team before submitting reports.",
-          vi: "Hay tham gia hoac tao doi truoc khi nop bao cao.",
+          vi: "Hãy tham gia hoặc tạo đội trước khi nộp báo cáo.",
         },
         "warning",
       );
@@ -1947,7 +1947,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Only the team leader can submit a report for the team.",
-          vi: "Chi doi truong moi co the nop bao cao cho doi.",
+          vi: "Chỉ đội trưởng mới có thể nộp báo cáo cho đội.",
         },
         "warning",
       );
@@ -1965,8 +1965,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
               : `This team is currently in ${pickCompetitionStateLabel("en", team.stage)}. ${pickRoundLabel("en", requiredStage)} submissions are no longer active.`,
           vi:
             team.stage === "round-1"
-              ? `Doi nay chua vao ${pickRoundLabel("vi", requiredStage)}.`
-              : `Doi nay hien dang o ${pickCompetitionStateLabel("vi", team.stage)}. Submission cho ${pickRoundLabel("vi", requiredStage)} khong con dang hoat dong.`,
+              ? `Đội này chưa vào ${pickRoundLabel("vi", requiredStage)}.`
+              : `Đội này hiện đang ở ${pickCompetitionStateLabel("vi", team.stage)}. Submission cho ${pickRoundLabel("vi", requiredStage)} không còn đang hoạt động.`,
         },
         "warning",
       );
@@ -1977,7 +1977,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: `${pickRoundLabel("en", requiredStage)} is finished. New submissions are closed.`,
-          vi: `${pickRoundLabel("vi", requiredStage)} da ket thuc. He thong da dong viec nop bai moi.`,
+          vi: `${pickRoundLabel("vi", requiredStage)} đã kết thúc. Hệ thống đã đóng việc nộp bài mới.`,
         },
         "warning",
       );
@@ -1988,7 +1988,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       pushToast(
         {
           en: "Add a submission title before uploading.",
-          vi: "Hay nhap tieu de truoc khi tai tep len.",
+          vi: "Hãy nhập tiêu đề trước khi tải tệp lên.",
         },
         "warning",
       );
@@ -2058,7 +2058,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     pushToast(
       {
         en: `Submitted version ${result.version ?? "new"} for ${payload.round === "round-2" ? "Round 2" : "Round 3"}. The latest version is now the valid one.`,
-        vi: `Da nop phien ban ${result.version ?? "moi"} cho ${payload.round === "round-2" ? "Vong 2" : "Vong 3"}. Phien ban moi nhat hien la phien ban hop le.`,
+        vi: `Đã nộp phiên bản ${result.version ?? "mới"} cho ${payload.round === "round-2" ? "Vòng 2" : "Vòng 3"}. Phiên bản mới nhất hiện là phiên bản hợp lệ.`,
       },
       "success",
     );
