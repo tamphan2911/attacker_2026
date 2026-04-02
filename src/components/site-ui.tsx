@@ -155,8 +155,10 @@ export function StatusPill({
       className={cn(
         "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
         tone === "default" && "theme-chip",
-        tone === "success" && "border-emerald-300/20 bg-emerald-300/10 text-emerald-100",
-        tone === "warning" && "border-amber-300/25 bg-amber-300/10 text-amber-100",
+        tone === "success" &&
+          "border-emerald-300/20 bg-emerald-300/10 text-emerald-700 dark:text-emerald-100",
+        tone === "warning" &&
+          "border-amber-300/25 bg-amber-300/10 text-amber-700 dark:text-amber-100",
       )}
     >
       {children}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import {
   ArrowRight,
   Download,
@@ -22,11 +23,12 @@ import { AdminNewsList } from "@/components/admin-news-manager";
 import { AdminRound1Manager } from "@/components/admin-round1-manager";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
+import { getAdminUserCompetitionStatus, pickAdminUserRoleLabel } from "@/lib/admin-users";
 import { getTeamCompetitionState, pickCompetitionStateLabel } from "@/lib/competition";
 import { formatDateLabel, getTeamForUser, pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
-import type { Locale, LocalizedText } from "@/types/site";
+import type { Locale, LocalizedText, UserProfile } from "@/types/site";
 
 export type AdminSection = "overview" | "content" | "news" | "judges" | "round1" | "users" | "teams" | "submissions";
 
@@ -351,25 +353,139 @@ function TableHeader({
   );
 }
 
+function tableFilterValueMatches(value: string, filterValue: string) {
+  if (!filterValue) {
+    return true;
+  }
+
+  return value.toLowerCase().includes(filterValue.trim().toLowerCase());
+}
+
+function TableFilterField({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (nextValue: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <input
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      className="theme-placeholder w-full rounded-xl border theme-border theme-panel-subtle px-3 py-2 text-xs theme-text-body outline-none"
+    />
+  );
+}
+
+function pickAdminRoleTone(role: UserProfile["role"]) {
+  if (role === "student") {
+    return "default" as const;
+  }
+
+  return "success" as const;
+}
+
 function UsersTableSection() {
   const { locale, users, teams, deleteUserByAdmin } = useSiteState();
   useAdminTitleScroll();
-
-  const rows = users.map((user) => {
-    const team = getTeamForUser(user.id, teams);
-    return {
-      id: user.id,
-      name: user.name,
-      studentId: user.studentId,
-      role: user.role,
-      email: user.email,
-      university: user.university,
-      major: user.major,
-      classYear: user.classYear,
-      team: team?.name ?? "",
-      providers: user.providers.join(", "),
-    };
+  const [filters, setFilters] = useState({
+    name: "",
+    studentId: "",
+    role: "all",
+    status: "all",
+    email: "",
+    university: "",
+    major: "",
+    classYear: "",
+    team: "",
   });
+
+  const userRows = useMemo(
+    () =>
+      users.map((user) => {
+        const team = getTeamForUser(user.id, teams);
+        const status = getAdminUserCompetitionStatus(locale, user, team);
+
+        return {
+          id: user.id,
+          name: user.name,
+          studentId: user.studentId,
+          role: user.role,
+          roleLabel: pickAdminUserRoleLabel(locale, user.role),
+          statusKey: status.key,
+          statusLabel: status.label,
+          statusTone: status.tone,
+          email: user.email,
+          university: user.university,
+          major: user.major,
+          classYear: user.classYear,
+          teamName: team?.name ?? "",
+          providers: user.providers.join(", "),
+        };
+      }),
+    [locale, teams, users],
+  );
+
+  const filteredRows = useMemo(
+    () =>
+      userRows.filter((row) => {
+        if (!tableFilterValueMatches(row.name, filters.name)) {
+          return false;
+        }
+
+        if (!tableFilterValueMatches(row.studentId, filters.studentId)) {
+          return false;
+        }
+
+        if (filters.role !== "all" && row.role !== filters.role) {
+          return false;
+        }
+
+        if (filters.status !== "all" && row.statusKey !== filters.status) {
+          return false;
+        }
+
+        if (!tableFilterValueMatches(row.email, filters.email)) {
+          return false;
+        }
+
+        if (!tableFilterValueMatches(row.university, filters.university)) {
+          return false;
+        }
+
+        if (!tableFilterValueMatches(row.major, filters.major)) {
+          return false;
+        }
+
+        if (!tableFilterValueMatches(row.classYear, filters.classYear)) {
+          return false;
+        }
+
+        if (!tableFilterValueMatches(row.teamName, filters.team)) {
+          return false;
+        }
+
+        return true;
+      }),
+    [filters, userRows],
+  );
+
+  const rows = filteredRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    studentId: row.studentId,
+    role: row.roleLabel,
+    status: row.statusLabel,
+    email: row.email,
+    university: row.university,
+    major: row.major,
+    classYear: row.classYear,
+    team: row.teamName,
+    providers: row.providers,
+  }));
 
   return (
     <div className="space-y-6">
@@ -378,8 +494,8 @@ function UsersTableSection() {
         title={locale === "en" ? "Users" : "Nguoi dung"}
         description={
           locale === "en"
-            ? "Participant table with role, academic info, and current team membership."
-            : "Bảng thí sinh gồm vai trò, thông tin học tập và đội thi hiện tại."
+            ? "Participant table with role, current competition status, academic info, and per-column filters."
+            : "Bảng thí sinh gồm vai trò, trạng thái thi đấu, thông tin học tập và bộ lọc theo từng cột."
         }
         exportLabel={locale === "en" ? "Export users.xlsx" : "Xuat users.xlsx"}
         onExport={() => exportRowsToWorkbook("attacker-2026-users.xlsx", "Users", rows)}
@@ -390,56 +506,159 @@ function UsersTableSection() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                {["Name", "Student ID", "Role", "Email", "University", "Major", "Year", "Team", "Action"].map((label) => (
+                {[
+                  locale === "en" ? "Name" : "Họ tên",
+                  locale === "en" ? "Student ID" : "Mã sinh viên",
+                  locale === "en" ? "Role" : "Vai trò",
+                  locale === "en" ? "Status" : "Trạng thái",
+                  "Email",
+                  locale === "en" ? "University" : "Trường",
+                  locale === "en" ? "Major" : "Chuyên ngành",
+                  locale === "en" ? "Year" : "Năm học",
+                  locale === "en" ? "Team" : "Đội thi",
+                  locale === "en" ? "Edit" : "Chỉnh sửa",
+                  locale === "en" ? "Delete" : "Xóa",
+                ].map((label) => (
                   <th key={label} className="px-4 py-3 font-medium">
                     {label}
                   </th>
                 ))}
               </tr>
+              <tr className="border-t theme-border bg-[var(--panel)]">
+                <th className="px-4 py-3">
+                  <TableFilterField
+                    value={filters.name}
+                    onChange={(value) => setFilters((current) => ({ ...current, name: value }))}
+                    placeholder={locale === "en" ? "Filter name" : "Lọc họ tên"}
+                  />
+                </th>
+                <th className="px-4 py-3">
+                  <TableFilterField
+                    value={filters.studentId}
+                    onChange={(value) => setFilters((current) => ({ ...current, studentId: value }))}
+                    placeholder={locale === "en" ? "Filter ID" : "Lọc MSSV"}
+                  />
+                </th>
+                <th className="px-4 py-3">
+                  <select
+                    value={filters.role}
+                    onChange={(event) => setFilters((current) => ({ ...current, role: event.target.value }))}
+                    className="w-full rounded-xl border theme-border theme-panel-subtle px-3 py-2 text-xs theme-text-body outline-none"
+                  >
+                    <option value="all">{locale === "en" ? "All roles" : "Tất cả vai trò"}</option>
+                    <option value="student">{locale === "en" ? "Participant" : "Thí sinh"}</option>
+                    <option value="moderator">{locale === "en" ? "Moderator" : "Điều phối viên"}</option>
+                    <option value="admin">{locale === "en" ? "Administrator" : "Quản trị viên"}</option>
+                  </select>
+                </th>
+                <th className="px-4 py-3">
+                  <select
+                    value={filters.status}
+                    onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
+                    className="w-full rounded-xl border theme-border theme-panel-subtle px-3 py-2 text-xs theme-text-body outline-none"
+                  >
+                    <option value="all">{locale === "en" ? "All statuses" : "Tất cả trạng thái"}</option>
+                    <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
+                    <option value="round-2">{locale === "en" ? "Round 2" : "Vòng 2"}</option>
+                    <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
+                    <option value="finished">{locale === "en" ? "Finished" : "Hoàn thành"}</option>
+                    <option value="stopped">{locale === "en" ? "Stopped" : "Dừng"}</option>
+                    <option value="moderator">{locale === "en" ? "Moderation" : "Điều phối"}</option>
+                    <option value="admin">{locale === "en" ? "Administration" : "Điều hành"}</option>
+                  </select>
+                </th>
+                <th className="px-4 py-3">
+                  <TableFilterField
+                    value={filters.email}
+                    onChange={(value) => setFilters((current) => ({ ...current, email: value }))}
+                    placeholder={locale === "en" ? "Filter email" : "Lọc email"}
+                  />
+                </th>
+                <th className="px-4 py-3">
+                  <TableFilterField
+                    value={filters.university}
+                    onChange={(value) => setFilters((current) => ({ ...current, university: value }))}
+                    placeholder={locale === "en" ? "Filter university" : "Lọc trường"}
+                  />
+                </th>
+                <th className="px-4 py-3">
+                  <TableFilterField
+                    value={filters.major}
+                    onChange={(value) => setFilters((current) => ({ ...current, major: value }))}
+                    placeholder={locale === "en" ? "Filter major" : "Lọc ngành"}
+                  />
+                </th>
+                <th className="px-4 py-3">
+                  <TableFilterField
+                    value={filters.classYear}
+                    onChange={(value) => setFilters((current) => ({ ...current, classYear: value }))}
+                    placeholder={locale === "en" ? "Filter year" : "Lọc năm học"}
+                  />
+                </th>
+                <th className="px-4 py-3">
+                  <TableFilterField
+                    value={filters.team}
+                    onChange={(value) => setFilters((current) => ({ ...current, team: value }))}
+                    placeholder={locale === "en" ? "Filter team" : "Lọc đội thi"}
+                  />
+                </th>
+                <th className="px-4 py-3" />
+                <th className="px-4 py-3" />
+              </tr>
             </thead>
             <tbody>
-              {users.map((user) => {
-                const team = getTeamForUser(user.id, teams);
-
+              {filteredRows.map((row) => {
                 return (
-                  <tr key={user.id} className="border-b theme-border last:border-b-0">
+                  <tr key={row.id} className="border-b theme-border last:border-b-0">
                     <td className="px-4 py-4">
                       <div>
-                        <Link href={`/admin/users/${user.id}`} className="font-semibold theme-accent">
-                          {user.name}
+                        <Link href={`/admin/users/${row.id}/profile`} className="font-semibold theme-accent">
+                          {row.name}
                         </Link>
-                        <p className="mt-1 text-xs theme-text-soft">{user.id}</p>
+                        <p className="mt-1 text-xs theme-text-soft">{row.id}</p>
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <p className="theme-text-body">{user.studentId}</p>
+                      <p className="theme-text-body">{row.studentId}</p>
                     </td>
                     <td className="px-4 py-4">
-                      <StatusPill tone={user.role === "student" ? "default" : "success"}>
-                        {user.role}
+                      <StatusPill tone={pickAdminRoleTone(row.role)}>
+                        {row.roleLabel}
                       </StatusPill>
                     </td>
-                    <td className="px-4 py-4 theme-text-body">{user.email}</td>
-                    <td className="px-4 py-4 theme-text-body">{user.university}</td>
-                    <td className="px-4 py-4 theme-text-body">{user.major}</td>
-                    <td className="px-4 py-4 theme-text-body">{user.classYear}</td>
-                    <td className="px-4 py-4 theme-text-body">{team?.name ?? "-"}</td>
+                    <td className="px-4 py-4">
+                      <StatusPill tone={row.statusTone}>{row.statusLabel}</StatusPill>
+                    </td>
+                    <td className="px-4 py-4 theme-text-body">{row.email}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.university}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.major}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.classYear}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.teamName || "-"}</td>
+                    <td className="px-4 py-4">
+                      <Link
+                        href={`/admin/users/${row.id}`}
+                        className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-3 py-2 text-xs font-semibold theme-text-strong"
+                      >
+                        <FilePenLine className="h-3.5 w-3.5" />
+                        {locale === "en" ? "Edit" : "Sửa"}
+                      </Link>
+                    </td>
                     <td className="px-4 py-4">
                       <button
                         type="button"
-                        disabled={user.id === "admin"}
+                        disabled={row.id === "admin"}
                         onClick={() => {
                           const confirmed = window.confirm(
                             locale === "en"
-                              ? `Delete ${user.name} from the admin dataset?`
-                              : `Xoa ${user.name} khoi bo du lieu admin?`,
+                              ? `Delete ${row.name} from the admin dataset?`
+                              : `Xoa ${row.name} khoi bo du lieu admin?`,
                           );
 
                           if (confirmed) {
-                            deleteUserByAdmin(user.id);
+                            deleteUserByAdmin(row.id);
                           }
                         }}
-                        className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-3 py-2 text-xs font-semibold text-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-full border border-rose-300/24 bg-rose-300/10 px-3 py-2 text-xs font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-rose-100"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                         {locale === "en" ? "Delete" : "Xoa"}
