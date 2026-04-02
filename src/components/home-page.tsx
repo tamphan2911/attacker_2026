@@ -368,15 +368,6 @@ const heroCardIconClasses = [
   "bg-[linear-gradient(135deg,rgba(251,191,36,0.98),rgba(249,115,22,0.96))] text-slate-950 shadow-[0_14px_32px_rgba(249,115,22,0.24)]",
 ] as const;
 
-const metricIconClasses = [
-  "bg-[linear-gradient(135deg,#0ea5e9,#2563eb)] text-white",
-  "bg-[linear-gradient(135deg,#06b6d4,#14b8a6)] text-white",
-  "bg-[linear-gradient(135deg,#f59e0b,#f97316)] text-slate-950",
-  "bg-[linear-gradient(135deg,#8b5cf6,#7c3aed)] text-white",
-] as const;
-
-const metricIcons = [ShieldCheck, Users2, TrendingUp, Medal] as const;
-
 const testimonialQuoteClasses = [
   "text-[#7c3aed] bg-[rgba(124,58,237,0.1)]",
   "text-[#ec4899] bg-[rgba(236,72,153,0.1)]",
@@ -559,19 +550,12 @@ export function HomePage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {homeMetrics.map((item, index) => {
-          const Icon = metricIcons[index % metricIcons.length];
-
+        {homeMetrics.map((item) => {
           return (
           <div
             key={item.value + item.label.en}
             className="theme-home-metric-card rounded-[1.7rem] border px-5 py-5 text-center"
           >
-            <div
-              className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl shadow-[0_14px_30px_rgba(14,37,66,0.12)] ${metricIconClasses[index % metricIconClasses.length]}`}
-            >
-              <Icon className="h-5 w-5" />
-            </div>
             <p className="theme-heading text-4xl font-semibold theme-text-strong">{item.value}</p>
             <p className="mt-3 text-sm font-medium uppercase tracking-[0.22em] theme-eyebrow">
               {pickText(locale, item.label)}
