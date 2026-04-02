@@ -260,7 +260,7 @@ export function SiteHeader() {
                         isDesktopDropdownOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
                       )}
                     >
-                      <div className="theme-card-shadow-soft theme-panel-strong rounded-[1.5rem] border theme-border p-2 backdrop-blur-xl">
+                      <div className="theme-card-shadow-soft theme-nav-dropdown rounded-[1.5rem] border theme-border p-2 backdrop-blur-xl">
                         {item.children.map((child) => (
                           <Link
                             key={child.href}
