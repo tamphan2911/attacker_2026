@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight, CircleHelp, ShieldCheck, UsersRound } from "lucide-react";
+import { CircleHelp, ShieldCheck, UsersRound } from "lucide-react";
 
 import {
   TEAM_MAX_MEMBERS,
@@ -78,42 +77,6 @@ export function FaqPage() {
             </p>
           </Surface>
         ))}
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <SectionHeading
-            eyebrow={locale === "en" ? "Related page" : "Trang lien quan"}
-            title={
-              locale === "en"
-                ? "Read the full rules and timeline next."
-                : "Xem tiếp trang thể lệ và lịch trình đầy đủ."
-            }
-            description={
-              locale === "en"
-                ? "The FAQ answers repeated questions quickly, while the rules page keeps the official structure and progression logic."
-                : "FAQ giúp trả lời nhanh các câu hỏi lặp lại, trong khi trang thể lệ vẫn giữ cấu trúc chính thức và logic đi tiếp."
-            }
-          />
-        </Surface>
-
-        <Surface className="px-6 py-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Next subsection" : "Tiểu mục tiếp theo"}
-          </p>
-          <p className="mt-4 text-2xl font-semibold theme-text-strong">
-            {locale === "en" ? "Open Rules." : "Mở Thể lệ."}
-          </p>
-          <p className="mt-4 text-sm leading-7 theme-text-muted">
-            {locale === "en"
-              ? "Use the structured rules page when you want the official stage logic, eligibility policy, and round-specific guidance."
-              : "Hãy mở trang thể lệ có cấu trúc khi bạn muốn xem logic chính thức của từng vòng, điều kiện và hướng dẫn chi tiết."}
-          </p>
-          <Link href="/rules" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {locale === "en" ? "Open rules page" : "Mo trang the le"}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Surface>
       </section>
     </div>
   );
