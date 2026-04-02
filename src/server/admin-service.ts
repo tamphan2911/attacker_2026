@@ -465,6 +465,7 @@ export async function createModeratorAccountByAdmin(payload: {
     data: {
       loginId,
       email: generatedEmail,
+      emailVerifiedAt: new Date(),
       passwordHash,
       name,
       role: UserRole.MODERATOR,

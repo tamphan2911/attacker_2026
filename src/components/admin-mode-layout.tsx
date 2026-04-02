@@ -6,6 +6,7 @@ import {
   FilePenLine,
   FileQuestion,
   LayoutDashboard,
+  Mail,
   Medal,
   Newspaper,
   TableProperties,
@@ -106,6 +107,15 @@ const adminNavGroups: Array<{
         description: { en: "Teams and roster status", vi: "Đội thi và trạng thái đội hình" },
         children: [
           { href: "/admin/teams", label: { en: "Team list", vi: "Danh sách đội thi" } },
+        ],
+      },
+      {
+        href: "/admin/email-templates",
+        icon: Mail,
+        label: { en: "Email templates", vi: "Mẫu email" },
+        description: { en: "Activation and password-reset email copy", vi: "Nội dung email kích hoạt và đặt lại mật khẩu" },
+        children: [
+          { href: "/admin/email-templates", label: { en: "System email templates", vi: "Mẫu email hệ thống" } },
         ],
       },
     ],

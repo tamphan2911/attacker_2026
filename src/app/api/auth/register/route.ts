@@ -4,6 +4,7 @@ import { hash } from "bcryptjs";
 import { z } from "zod";
 
 import { prisma } from "@/lib/db";
+import { sendAccountActivationEmail } from "@/server/auth-email";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1),
@@ -12,8 +13,9 @@ const registerSchema = z.object({
   university: z.string().trim().min(1),
   major: z.string().trim().min(1),
   classYear: z.string().trim().min(1),
-  bio: z.string().trim().min(1).max(600),
+  bio: z.string().trim().max(600).optional().default(""),
   password: z.string().min(8),
+  locale: z.enum(["en", "vi"]).optional().default("vi"),
 });
 
 export async function POST(request: Request) {
@@ -70,5 +72,19 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json(user, { status: 201 });
+  const mailResult = await sendAccountActivationEmail({
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    locale: payload.data.locale,
+  });
+
+  return NextResponse.json(
+    {
+      ...user,
+      activationRequired: true,
+      emailDeliveryMode: mailResult.mode,
+    },
+    { status: 201 },
+  );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import {
@@ -66,6 +67,8 @@ export function AuthPage() {
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [signinMessage, setSigninMessage] = useState<string | null>(null);
+  const [signinActionHref, setSigninActionHref] = useState<string | null>(null);
+  const [signinActionLabel, setSigninActionLabel] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [registerForm, setRegisterForm] = useState({
     name: "",
@@ -172,6 +175,24 @@ export function AuthPage() {
     });
 
     if (result?.error) {
+      if (result.error === "EMAIL_NOT_VERIFIED") {
+        setSigninActionHref(
+          `/auth/check-email?intent=activation${
+            loginId.includes("@") ? `&email=${encodeURIComponent(loginId.trim().toLowerCase())}` : ""
+          }`,
+        );
+        setSigninActionLabel(
+          locale === "en" ? "Open activation help" : "Mở hướng dẫn kích hoạt",
+        );
+        setSigninMessage(
+          locale === "en"
+            ? "This account is not active yet. Please open the activation email first."
+            : "Tài khoản này chưa được kích hoạt. Vui lòng mở email kích hoạt trước.",
+        );
+        setIsBusy(false);
+        return;
+      }
+
       setSigninMessage(
         locale === "en"
           ? "Invalid credentials. Please check your account ID or password."
@@ -202,6 +223,8 @@ export function AuthPage() {
 
     setIsBusy(true);
     setSigninMessage(null);
+    setSigninActionHref(null);
+    setSigninActionLabel(null);
 
     const { confirmPassword, ...registerPayload } = registerForm;
     void confirmPassword;
@@ -212,7 +235,7 @@ export function AuthPage() {
         "Content-Type": "application/json",
       },
       credentials: "same-origin",
-      body: JSON.stringify(registerPayload),
+      body: JSON.stringify({ ...registerPayload, locale }),
     });
 
     if (!response.ok) {
@@ -226,37 +249,22 @@ export function AuthPage() {
       return;
     }
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      login: registerForm.email.trim().toLowerCase(),
-      password: registerForm.password,
-    });
+    const payload = (await response.json()) as {
+      email?: string;
+      emailDeliveryMode?: "smtp" | "log";
+    };
 
-    if (result?.error) {
-      setSigninMessage(
-        locale === "en"
-          ? "Account created, but automatic sign-in failed. Please sign in manually."
-          : "Tạo tài khoản thành công nhưng đăng nhập tự động thất bại. Vui lòng đăng nhập thủ công.",
-      );
-      setMode("signin");
-      setLoginId(registerForm.email.trim().toLowerCase());
-      setPassword("");
-      setIsBusy(false);
-      return;
-    }
-
-    setSigninMessage(
-      locale === "en"
-        ? "Account created successfully. Redirecting..."
-        : "Tạo tài khoản thành công. Đang chuyển hướng...",
-    );
-    await resolvePostAuthRedirect();
     setIsBusy(false);
+    router.push(
+      `/auth/check-email?intent=activation&email=${encodeURIComponent(payload.email ?? registerForm.email.trim().toLowerCase())}&delivery=${encodeURIComponent(payload.emailDeliveryMode ?? "smtp")}`,
+    );
   };
 
   const toggleMode = (nextMode: "signin" | "register") => {
     setMode(nextMode);
     setSigninMessage(null);
+    setSigninActionHref(null);
+    setSigninActionLabel(null);
     setIsUniversityMenuOpen(false);
   };
 
@@ -370,6 +378,7 @@ export function AuthPage() {
                         autoComplete="username"
                         placeholder={locale === "en" ? "Email or account ID" : "Email hoặc ID tài khoản"}
                         className={authFieldClassName}
+                        required
                       />
                     </div>
                   </label>
@@ -384,9 +393,19 @@ export function AuthPage() {
                         onChange={(event) => setPassword(event.target.value)}
                         placeholder={locale === "en" ? "Enter password" : "Nhập mật khẩu"}
                         className={authFieldClassName}
+                        required
                       />
                     </div>
                   </label>
+                </div>
+
+                <div className="flex justify-end">
+                  <Link
+                    href="/auth/reset-password"
+                    className="text-sm font-medium theme-accent transition hover:opacity-80"
+                  >
+                    {locale === "en" ? "Forgot password?" : "Quên mật khẩu?"}
+                  </Link>
                 </div>
 
                 <button
@@ -415,6 +434,7 @@ export function AuthPage() {
                         onChange={handleRegisterFieldChange("name")}
                         placeholder={locale === "en" ? "Nguyen Van A" : "Nguyễn Văn A"}
                         className={authFieldClassName}
+                        required
                       />
                     </div>
                   </label>
@@ -428,6 +448,7 @@ export function AuthPage() {
                         onChange={handleRegisterFieldChange("email")}
                         placeholder="you@example.com"
                         className={authFieldClassName}
+                        required
                       />
                     </div>
                   </label>
@@ -443,6 +464,7 @@ export function AuthPage() {
                           onFocus={() => setIsUniversityMenuOpen(true)}
                           placeholder={locale === "en" ? "Choose or type your university" : "Chọn hoặc nhập tên trường"}
                           className={authFieldClassName}
+                          required
                         />
                         <button
                           type="button"
@@ -513,6 +535,7 @@ export function AuthPage() {
                         onChange={handleRegisterFieldChange("major")}
                         placeholder={locale === "en" ? "Finance, Banking, Data..." : "Tài chính, Ngân hàng, Dữ liệu..."}
                         className={authFieldClassName}
+                        required
                       />
                     </div>
                   </label>
@@ -526,6 +549,7 @@ export function AuthPage() {
                         onChange={handleRegisterFieldChange("studentId")}
                         placeholder={locale === "en" ? "Student ID" : "Mã số sinh viên"}
                         className={authFieldClassName}
+                        required
                       />
                     </div>
                   </label>
@@ -539,12 +563,15 @@ export function AuthPage() {
                         onChange={handleRegisterFieldChange("classYear")}
                         placeholder={locale === "en" ? "K24, 2026..." : "K24, 2026..."}
                         className={authFieldClassName}
+                        required
                       />
                     </div>
                   </label>
 
                   <label className="space-y-2 xl:col-span-2">
-                    <span className="text-sm theme-text-muted">{locale === "en" ? "Bio" : "Giới thiệu"}</span>
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Bio (optional)" : "Giới thiệu (không bắt buộc)"}
+                    </span>
                     <textarea
                       rows={4}
                       value={registerForm.bio}
@@ -566,6 +593,7 @@ export function AuthPage() {
                         onChange={handleRegisterFieldChange("password")}
                         placeholder={locale === "en" ? "Enter password" : "Nhập mật khẩu"}
                         className={authFieldClassName}
+                        required
                       />
                     </div>
                   </label>
@@ -582,6 +610,7 @@ export function AuthPage() {
                         onChange={handleRegisterFieldChange("confirmPassword")}
                         placeholder={locale === "en" ? "Re-enter password" : "Nhập lại mật khẩu"}
                         className={authFieldClassName}
+                        required
                       />
                     </div>
                   </label>
@@ -604,7 +633,17 @@ export function AuthPage() {
             )}
 
             {signinMessage ? (
-              <p className="text-center text-sm theme-text-soft">{signinMessage}</p>
+              <div className="space-y-3 text-center">
+                <p className="text-sm theme-text-soft">{signinMessage}</p>
+                {signinActionHref && signinActionLabel ? (
+                  <Link
+                    href={signinActionHref}
+                    className="inline-flex items-center gap-2 rounded-full border border-sky-500/22 bg-sky-500/[0.08] px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-500/34 hover:bg-sky-500/[0.12] active:scale-[0.98] dark:text-sky-100"
+                  >
+                    {signinActionLabel}
+                  </Link>
+                ) : null}
+              </div>
             ) : null}
 
             <p className="text-center text-sm theme-text-soft">

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { UserActionTokenType } from "@prisma/client";
 import { compare } from "bcryptjs";
 import { z } from "zod";
 
@@ -43,6 +44,26 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        if (!user.emailVerifiedAt) {
+          const pendingVerification = await prisma.userActionToken.findFirst({
+            where: {
+              userId: user.id,
+              type: UserActionTokenType.VERIFY_EMAIL,
+              consumedAt: null,
+            },
+            select: { id: true },
+          });
+
+          if (!pendingVerification) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { emailVerifiedAt: new Date() },
+            });
+          } else {
+            throw new Error("EMAIL_NOT_VERIFIED");
+          }
+        }
+
         const passwordMatches = await compare(parsed.data.password, user.passwordHash);
         if (!passwordMatches) {
           return null;
@@ -68,6 +89,18 @@ export const authOptions: NextAuthOptions = {
       : []),
   ],
   callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === "google" && user.id) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            emailVerifiedAt: new Date(),
+          },
+        });
+      }
+
+      return true;
+    },
     async jwt({ token, user }) {
       if (user) {
         token.role = user.role ?? token.role;

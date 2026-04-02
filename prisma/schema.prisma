@@ -82,10 +82,16 @@ enum TeamSubmissionResourceSource {
   UPLOAD
 }
 
+enum UserActionTokenType {
+  VERIFY_EMAIL
+  RESET_PASSWORD
+}
+
 model User {
   id              String    @id @default(cuid())
   loginId         String    @unique @default(cuid())
   email           String    @unique
+  emailVerifiedAt DateTime?
   passwordHash    String?
   name            String
   role            UserRole  @default(STUDENT)
@@ -112,6 +118,22 @@ model User {
   receivedLockRequests Round1TeamLockRequest[] @relation("Round1LockRecipient")
   round1Submissions Round1Submission[]
   teamSubmissions TeamSubmission[]
+  actionTokens    UserActionToken[]
+}
+
+model UserActionToken {
+  id         String            @id @default(cuid())
+  userId      String
+  email       String
+  type        UserActionTokenType
+  tokenHash   String            @unique
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime          @default(now())
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, createdAt])
+  @@index([email, type, createdAt])
 }
 
 model Team {

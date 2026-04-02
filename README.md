@@ -29,6 +29,12 @@ Optional values:
 
 - `AUTH_GOOGLE_ID`
 - `AUTH_GOOGLE_SECRET`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE`
+- `SMTP_USER`
+- `SMTP_PASSWORD`
+- `SMTP_FROM`
 - `APP_STORAGE_ROOT`
 - `BOOTSTRAP_DEMO_DATA`
 
@@ -107,6 +113,12 @@ Optional:
 ```bash
 AUTH_GOOGLE_ID=""
 AUTH_GOOGLE_SECRET=""
+SMTP_HOST=""
+SMTP_PORT="587"
+SMTP_SECURE="false"
+SMTP_USER=""
+SMTP_PASSWORD=""
+SMTP_FROM="Attacker 2026 <no-reply@example.com>"
 ```
 
 Important:
@@ -164,6 +176,8 @@ This backend pass adds:
 
 - Prisma schema and local SQLite database
 - NextAuth credentials login by `email` or `loginId`
+- email activation for email/password registrations
+- password-reset flow with secure email links
 - optional Google login when OAuth env vars are present
 - registration API
 - authenticated `me` API
@@ -181,6 +195,10 @@ Current limitation:
 Auth and account:
 
 - `POST /api/auth/register`
+- `POST /api/auth/activate`
+- `POST /api/auth/resend-activation`
+- `POST /api/auth/request-password-reset`
+- `POST /api/auth/reset-password`
 - `GET|POST /api/auth/[...nextauth]`
 - `GET /api/me`
 

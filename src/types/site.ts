@@ -217,6 +217,21 @@ export interface EditableSectionCopy {
   description: LocalizedText;
 }
 
+export interface SystemEmailTemplate {
+  subject: LocalizedText;
+  preview: LocalizedText;
+  headline: LocalizedText;
+  intro: LocalizedText;
+  actionLabel: LocalizedText;
+  actionHint: LocalizedText;
+  footer: LocalizedText;
+}
+
+export interface SystemEmailTemplates {
+  activation: SystemEmailTemplate;
+  passwordReset: SystemEmailTemplate;
+}
+
 export interface EditableHeroSlide {
   id: string;
   image: string;

@@ -186,6 +186,7 @@ async function main() {
   await prisma.account.deleteMany();
   await prisma.session.deleteMany();
   await prisma.verificationToken.deleteMany();
+  await prisma.userActionToken.deleteMany();
   await prisma.round1Submission.deleteMany();
   await prisma.round1TestBank.deleteMany();
   await prisma.round1TeamLockRequest.deleteMany();
@@ -213,6 +214,7 @@ async function main() {
         id: user.id,
         loginId,
         email: user.email.toLowerCase(),
+        emailVerifiedAt: new Date(),
         passwordHash:
           user.role === "admin"
             ? adminPasswordHash
