@@ -14,24 +14,6 @@ export function NewsPage() {
   const [query, setQuery] = useState("");
   const deferredQuery = useDeferredValue(query);
 
-  const suggestedTerms = useMemo(() => {
-    const terms: string[] = [];
-
-    for (const post of newsPosts) {
-      const term = pickText(locale, post.category);
-
-      if (!terms.includes(term)) {
-        terms.push(term);
-      }
-
-      if (terms.length === 4) {
-        break;
-      }
-    }
-
-    return terms;
-  }, [locale, newsPosts]);
-
   const filteredPosts = useMemo(() => {
     const normalizedQuery = deferredQuery.trim().toLowerCase();
 
@@ -73,50 +55,47 @@ export function NewsPage() {
 
   return (
     <div className="space-y-10">
-      <section className="space-y-4">
+      <section className="space-y-5">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
-            {pickText(locale, pageContent.news.latest.eyebrow)}
-          </p>
+          <div className="space-y-1">
+            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
+              {pickText(locale, pageContent.news.latest.eyebrow)}
+            </p>
+            <p className="text-sm theme-text-soft">
+              {locale === "en"
+                ? `${filteredPosts.length} editorial updates`
+                : `${filteredPosts.length} cập nhật`}
+            </p>
+          </div>
 
-          <label className="flex w-full max-w-[520px] items-center gap-3 rounded-full border theme-border bg-[rgba(255,255,255,0.78)] px-4 py-2.5 shadow-[0_14px_38px_rgba(15,23,42,0.06)] backdrop-blur-xl dark:bg-[rgba(10,15,26,0.52)]">
-            <Search className="h-4 w-4 theme-accent" />
+          <label className="group flex w-full max-w-[500px] items-center gap-3 rounded-[1.6rem] border border-slate-200/80 bg-white/92 px-4 py-3 shadow-[0_20px_50px_rgba(15,23,42,0.07)] transition focus-within:border-sky-300/60 focus-within:shadow-[0_26px_60px_rgba(23,114,208,0.12)] dark:border-white/10 dark:bg-[rgba(10,15,26,0.84)] dark:shadow-[0_24px_54px_rgba(2,6,23,0.34)]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-50 text-[var(--brand)] transition group-focus-within:bg-sky-100 dark:bg-[rgba(23,114,208,0.16)] dark:text-sky-200">
+              <Search className="h-4 w-4" />
+            </div>
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder={locale === "en" ? "Search title, excerpt, category, or tag" : "Tìm tiêu đề, mô tả, chuyên mục hoặc tag"}
-              className="theme-placeholder w-full bg-transparent text-sm theme-text-strong outline-none"
+              placeholder={
+                locale === "en"
+                  ? "Search article title, summary, category, or tag"
+                  : "Tìm theo tiêu đề, tóm tắt, chuyên mục hoặc thẻ"
+              }
+              className="theme-placeholder min-w-0 flex-1 bg-transparent text-sm theme-text-strong outline-none md:text-[0.95rem]"
             />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="rounded-full border theme-border bg-transparent px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] theme-text-muted transition hover:border-sky-300/32 hover:text-[var(--text-strong)]"
+              >
+                {locale === "en" ? "Clear" : "Xóa"}
+              </button>
+            ) : null}
           </label>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <span className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] theme-text-soft">
-            {locale === "en" ? "Suggested" : "Gợi ý"}
-          </span>
-          {suggestedTerms.map((term) => (
-            <button
-              key={term}
-              type="button"
-              onClick={() => setQuery(term)}
-              className="rounded-full border theme-border bg-[rgba(255,255,255,0.72)] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-text-muted transition hover:border-sky-300/24 hover:text-[var(--text-strong)] dark:bg-[rgba(10,15,26,0.38)]"
-            >
-              {term}
-            </button>
-          ))}
-          {query ? (
-            <button
-              type="button"
-              onClick={() => setQuery("")}
-              className="rounded-full border theme-border bg-transparent px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-text-faint transition hover:text-[var(--text-strong)]"
-            >
-              {locale === "en" ? "Clear" : "Xóa"}
-            </button>
-          ) : null}
         </div>
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-6">
         {filteredPosts.length === 0 ? (
           <Surface className="px-6 py-6 md:px-8 md:py-8">
             <p className="theme-heading text-2xl font-semibold theme-text-strong">
@@ -124,8 +103,8 @@ export function NewsPage() {
             </p>
             <p className="mt-3 text-sm leading-7 theme-text-muted">
               {locale === "en"
-                ? "Try another keyword or clear the current suggestion."
-                : "Hãy thử từ khóa khác hoặc xóa gợi ý hiện tại."}
+                ? "Try another keyword or clear the current search."
+                : "Hãy thử từ khóa khác hoặc xóa cụm tìm kiếm hiện tại."}
             </p>
           </Surface>
         ) : (

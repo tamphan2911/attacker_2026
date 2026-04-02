@@ -22,9 +22,14 @@ import {
   type ContentTypeId,
 } from "@/data/admin-content";
 import { pickText } from "@/lib/site";
+import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import type { Locale, LocalizedText, SitePageContent } from "@/types/site";
+
+function cn(...values: Array<string | undefined | false>) {
+  return values.filter(Boolean).join(" ");
+}
 
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
@@ -76,6 +81,7 @@ function CopySectionEditor({
   title,
   section,
   onChange,
+  className,
 }: {
   title: string;
   section: {
@@ -84,9 +90,10 @@ function CopySectionEditor({
     description: LocalizedText;
   };
   onChange: (field: "eyebrow" | "title" | "description", locale: Locale, value: string) => void;
+  className?: string;
 }) {
   return (
-    <Surface className="space-y-5 px-5 py-5">
+    <Surface className={cn("space-y-5 px-5 py-5", className)}>
       <div>
         <p className="text-sm font-semibold theme-text-strong">{title}</p>
         <p className="mt-2 text-sm theme-text-soft">
@@ -151,6 +158,22 @@ function iconForType(typeId: ContentTypeId) {
   }
 }
 
+const contentPageMap = Object.fromEntries(
+  contentPageConfigs.map((item) => [item.id, item]),
+) as Record<ContentPageId, (typeof contentPageConfigs)[number]>;
+
+const contentPageTree: Array<{
+  id: ContentPageId;
+  children?: ContentPageId[];
+}> = [
+  { id: "home" },
+  { id: "competition", children: ["rules", "faq", "sponsors", "judges"] },
+  { id: "news" },
+  { id: "auth" },
+  { id: "workspace" },
+  { id: "organizer" },
+];
+
 function EditorTopBar({
   eyebrow,
   title,
@@ -179,7 +202,13 @@ function EditorTopBar({
       </Link>
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <SectionHeading eyebrow={eyebrow} title={title} description={description} />
+        <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
+          eyebrow={eyebrow}
+          title={title}
+          description={description}
+        />
         <div className="flex gap-3">
           <button
             type="button"
@@ -204,79 +233,87 @@ function EditorTopBar({
 
 export function ContentIndexSection() {
   const { locale } = useSiteState();
+  useAdminTitleScroll();
 
   return (
     <div className="space-y-8">
-      <SectionHeading
-        eyebrow={locale === "en" ? "Admin / Content" : "Admin / Noi dung"}
-        title={
-          locale === "en"
-            ? "Choose a page or a content type to edit."
-            : "Chọn một trang hoặc một loại nội dung để chỉnh sửa."
-        }
-        description={
-          locale === "en"
-            ? "The content area is now split into lighter editors so organizers can open only the page or content type they need."
-            : "Khu vuc noi dung gio duoc tach thanh nhung editor gon hon de ban to chuc chi can mo dung trang hoac loai noi dung minh can."
-        }
-      />
-
       <section className="space-y-5">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Pages" : "Trang"}
-          </p>
-          <p className="mt-3 text-sm leading-7 theme-text-muted">
-            {locale === "en"
-              ? "Open one page at a time to edit only the copy used by that page."
-              : "Mo tung trang rieng de chi sua noi dung dang duoc su dung boi trang do."}
-          </p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {contentPageConfigs.map((item) => {
+        <p
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32 theme-heading text-2xl font-semibold uppercase tracking-[0.16em] theme-text-strong md:text-[1.75rem]"
+        >
+          {locale === "en" ? "Pages" : "Trang"}
+        </p>
+        <Surface className="space-y-4 px-5 py-5 md:px-6">
+          {contentPageTree.map((entry) => {
+            const item = contentPageMap[entry.id];
             const Icon = iconForPage(item.id);
 
             return (
-              <Link key={item.id} href={item.href}>
-                <Surface className="group h-full px-5 py-5 transition hover:-translate-y-0.5 hover:bg-[var(--panel-strong)]">
-                  <div className="theme-brand-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[0_18px_40px_rgba(23,114,208,0.2)]">
-                    <Icon className="h-5 w-5" />
+              <div key={entry.id} className="space-y-3">
+                <Link href={item.href}>
+                  <div className="group flex items-start gap-4 rounded-[1.4rem] px-3 py-3 transition hover:bg-[rgba(23,114,208,0.06)]">
+                    <div className="theme-brand-gradient flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_16px_34px_rgba(23,114,208,0.18)]">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="theme-heading text-xl font-semibold theme-text-strong">
+                        {pickText(locale, item.label)}
+                      </p>
+                      <p className="mt-1 text-sm leading-7 theme-text-muted">
+                        {pickText(locale, item.description)}
+                      </p>
+                    </div>
                   </div>
-                  <p className="theme-heading mt-5 text-xl font-semibold theme-text-strong">
-                    {pickText(locale, item.label)}
-                  </p>
-                  <p className="mt-3 text-sm leading-7 theme-text-muted">
-                    {pickText(locale, item.description)}
-                  </p>
-                </Surface>
-              </Link>
+                </Link>
+
+                {entry.children ? (
+                  <div className="ml-[1.4rem] space-y-2 border-l theme-border pl-5">
+                    {entry.children.map((childId) => {
+                      const child = contentPageMap[childId];
+                      const ChildIcon = iconForPage(child.id);
+
+                      return (
+                        <Link key={child.id} href={child.href}>
+                          <div className="group flex items-start gap-3 rounded-[1.2rem] px-3 py-3 transition hover:bg-[rgba(23,114,208,0.05)]">
+                            <div className="theme-panel-strong flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border theme-border text-[var(--brand)]">
+                              <ChildIcon className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-base font-semibold theme-text-strong">
+                                {pickText(locale, child.label)}
+                              </p>
+                              <p className="mt-1 text-sm leading-6 theme-text-soft">
+                                {pickText(locale, child.description)}
+                              </p>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
             );
           })}
-        </div>
+        </Surface>
       </section>
 
       <section className="space-y-5">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Content types" : "Loai noi dung"}
-          </p>
-          <p className="mt-3 text-sm leading-7 theme-text-muted">
-            {locale === "en"
-              ? "Use separate editors for reusable blocks such as slides and state-based support copy."
-              : "Dung editor rieng cho cac khoi co the tai su dung nhu slides va copy ho tro theo trang thai."}
-          </p>
-        </div>
+        <p className="theme-heading text-2xl font-semibold uppercase tracking-[0.16em] theme-text-strong md:text-[1.75rem]">
+          {locale === "en" ? "Content types" : "Loại nội dung"}
+        </p>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {contentTypeConfigs.map((item) => {
             const Icon = iconForType(item.id);
 
             return (
               <Link key={item.id} href={item.href}>
-                <Surface className="group h-full px-5 py-5 transition hover:-translate-y-0.5 hover:bg-[var(--panel-strong)]">
-                  <div className="theme-panel-strong flex h-12 w-12 items-center justify-center rounded-2xl border theme-border text-[var(--brand)] shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
+                <Surface className="group h-full px-5 py-5 transition hover:-translate-y-0.5 hover:bg-[var(--panel-strong)] md:px-6">
+                  <div className="theme-panel-strong flex h-14 w-14 items-center justify-center rounded-2xl border theme-border text-[var(--brand)] shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
                     <Icon className="h-5 w-5" />
                   </div>
-                  <p className="theme-heading mt-5 text-xl font-semibold theme-text-strong">
+                  <p className="theme-heading mt-5 text-2xl font-semibold theme-text-strong">
                     {pickText(locale, item.label)}
                   </p>
                   <p className="mt-3 text-sm leading-7 theme-text-muted">
@@ -294,6 +331,7 @@ export function ContentIndexSection() {
 
 export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   const { locale, pageContent, savePageContent } = useSiteState();
+  useAdminTitleScroll();
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
 
   useEffect(() => {
@@ -318,7 +356,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
         onSave={() => savePageContent(draft)}
       />
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className={cn("grid gap-4", pageId === "auth" ? "xl:grid-cols-1" : "xl:grid-cols-2")}>
         {pageId === "home" ? (
           <>
             <CopySectionEditor
@@ -565,6 +603,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
           <CopySectionEditor
             title="Auth / Header"
             section={draft.auth.header}
+            className="px-6 py-6 md:px-7 md:py-7"
             onChange={(field, language, value) =>
               setDraft((current) =>
                 updateDraftContent(current, (next) => {
@@ -633,6 +672,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
 
 export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
   const { locale, pageContent, savePageContent } = useSiteState();
+  useAdminTitleScroll();
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
 
   useEffect(() => {
@@ -738,7 +778,7 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
       ) : null}
 
       {typeId === "auth-notes" ? (
-        <Surface className="space-y-5 px-5 py-5">
+        <Surface className="space-y-5 px-6 py-6 md:px-7 md:py-7">
           <p className="text-lg font-semibold theme-text-strong">Auth notes</p>
           <LocalizedFieldEditor
             label="Register note"

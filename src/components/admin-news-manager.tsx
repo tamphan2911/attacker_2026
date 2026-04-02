@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, ImagePlus, Newspaper, Plus, Trash2 } from "lucide-react";
 
 import { pickText } from "@/lib/site";
+import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import type { Locale, LocalizedText, NewsContentBlock, NewsPost } from "@/types/site";
@@ -94,7 +95,13 @@ function LocalizedFieldEditor({
 function NewsNotFound({ title, description }: { title: string; description: string }) {
   return (
     <Surface className="px-6 py-6 md:px-8 md:py-8">
-      <SectionHeading eyebrow="Admin / News" title={title} description={description} />
+      <SectionHeading
+        id={ADMIN_TITLE_ID}
+        className="scroll-mt-32"
+        eyebrow="Admin / News"
+        title={title}
+        description={description}
+      />
       <Link href="/admin/news" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
         <ArrowLeft className="h-4 w-4" />
         Back to news
@@ -105,11 +112,14 @@ function NewsNotFound({ title, description }: { title: string; description: stri
 
 export function AdminNewsList() {
   const { locale, newsPosts, deleteNewsPostByAdmin } = useSiteState();
+  useAdminTitleScroll();
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
           eyebrow={locale === "en" ? "Admin / News" : "Admin / Tin tuc"}
           title={
             locale === "en"
@@ -192,11 +202,14 @@ export function AdminNewsList() {
 
 export function AdminNewsEditor({ slug }: { slug: string }) {
   const { hasHydrated } = useSiteState();
+  useAdminTitleScroll();
 
   if (!hasHydrated && slug !== "new") {
     return (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
           eyebrow="Admin / News"
           title="Loading article..."
           description="Waiting for the local admin dataset to hydrate before opening the editor."
@@ -326,6 +339,8 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
           eyebrow={locale === "en" ? "Admin / News / Editor" : "Admin / Tin tuc / Editor"}
           title={
             isCreateMode

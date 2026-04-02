@@ -42,14 +42,25 @@ export function SectionHeading({
   title,
   description,
   align = "left",
+  id,
+  className,
 }: {
   eyebrow: string;
   title: string;
   description?: string;
   align?: "left" | "center";
+  id?: string;
+  className?: string;
 }) {
   return (
-    <div className={cn("max-w-3xl space-y-4", align === "center" && "mx-auto text-center")}>
+    <div
+      id={id}
+      className={cn(
+        "max-w-3xl space-y-4",
+        align === "center" && "mx-auto text-center",
+        className,
+      )}
+    >
       <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">{eyebrow}</p>
       <h2 className="theme-heading theme-text-strong text-3xl font-semibold tracking-tight md:text-[2.85rem] md:leading-[1.06]">
         {title}

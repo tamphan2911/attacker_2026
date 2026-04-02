@@ -8,6 +8,7 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 import { DEMO_ADMIN_LOGIN_ID, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import { pickCompetitionStateDescription, pickCompetitionStateLabel } from "@/lib/competition";
 import { formatDateLabel, getTeamForUser } from "@/lib/site";
+import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import type { CompetitionStage, TeamProfile, UserProfile, UserRole } from "@/types/site";
@@ -28,7 +29,13 @@ function NotFoundState({
 }) {
   return (
     <Surface className="px-6 py-6 md:px-8 md:py-8">
-      <SectionHeading eyebrow="Admin" title={title} description={description} />
+      <SectionHeading
+        id={ADMIN_TITLE_ID}
+        className="scroll-mt-32"
+        eyebrow="Admin"
+        title={title}
+        description={description}
+      />
       <Link href={href} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
         <ArrowLeft className="h-4 w-4" />
         {actionLabel}
@@ -40,6 +47,7 @@ function NotFoundState({
 export function AdminUserEditor({ userId }: { userId: string }) {
   const router = useRouter();
   const { locale, users, teams, updateUserByAdmin, deleteUserByAdmin } = useSiteState();
+  useAdminTitleScroll();
   const user = users.find((item) => item.id === userId);
   const team = user ? getTeamForUser(user.id, teams) : undefined;
   const [draft, setDraft] = useState<UserProfile | null>(user ?? null);
@@ -96,6 +104,8 @@ export function AdminUserEditor({ userId }: { userId: string }) {
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
           eyebrow={locale === "en" ? "Admin / Users / Edit" : "Admin / Nguoi dung / Chinh sua"}
           title={draft.name}
           description={
@@ -335,6 +345,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
 export function AdminTeamEditor({ teamId }: { teamId: string }) {
   const router = useRouter();
   const { locale, teams, users, updateTeamByAdmin, deleteTeamByAdmin } = useSiteState();
+  useAdminTitleScroll();
   const team = teams.find((item) => item.id === teamId);
   const [draft, setDraft] = useState<TeamProfile | null>(team ?? null);
 
@@ -389,6 +400,8 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
           eyebrow={locale === "en" ? "Admin / Teams / Edit" : "Admin / Đội thi / Chỉnh sửa"}
           title={draft.name}
           description={

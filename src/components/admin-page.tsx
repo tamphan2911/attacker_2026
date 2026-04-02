@@ -8,7 +8,6 @@ import {
   FileQuestion,
   LayoutDashboard,
   Newspaper,
-  ShieldCheck,
   TableProperties,
   Trash2,
   Users,
@@ -19,6 +18,7 @@ import * as XLSX from "xlsx";
 import { ContentIndexSection } from "@/components/admin-content-editor";
 import { AdminNewsList } from "@/components/admin-news-manager";
 import { AdminRound1Manager } from "@/components/admin-round1-manager";
+import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
 import { getTeamCompetitionState, pickCompetitionStateLabel } from "@/lib/competition";
 import { formatDateLabel, getTeamForUser, pickText } from "@/lib/site";
@@ -306,18 +306,23 @@ function OverviewSection() {
 }
 
 function TableHeader({
+  id,
   title,
   description,
   exportLabel,
   onExport,
 }: {
+  id?: string;
   title: string;
   description: string;
   exportLabel: string;
   onExport: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div
+      id={id}
+      className="scroll-mt-32 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"
+    >
       <div className="max-w-3xl">
         <p className="theme-heading text-3xl font-semibold theme-text-strong">{title}</p>
         <p className="mt-3 text-sm leading-7 theme-text-muted">{description}</p>
@@ -336,6 +341,7 @@ function TableHeader({
 
 function UsersTableSection() {
   const { locale, users, teams, deleteUserByAdmin } = useSiteState();
+  useAdminTitleScroll();
 
   const rows = users.map((user) => {
     const team = getTeamForUser(user.id, teams);
@@ -356,6 +362,7 @@ function UsersTableSection() {
   return (
     <div className="space-y-6">
       <TableHeader
+        id={ADMIN_TITLE_ID}
         title={locale === "en" ? "Users" : "Nguoi dung"}
         description={
           locale === "en"
@@ -439,6 +446,7 @@ function UsersTableSection() {
 
 function TeamsTableSection() {
   const { locale, teams, users, deleteTeamByAdmin } = useSiteState();
+  useAdminTitleScroll();
 
   const rows = teams.map((team) => {
     const leader = users.find((user) => user.id === team.leaderId);
@@ -463,6 +471,7 @@ function TeamsTableSection() {
   return (
     <div className="space-y-6">
       <TableHeader
+        id={ADMIN_TITLE_ID}
         title={locale === "en" ? "Teams" : "Đội thi"}
         description={
           locale === "en"
@@ -548,6 +557,7 @@ function TeamsTableSection() {
 
 function SubmissionsTableSection() {
   const { locale, submissions, teams, users } = useSiteState();
+  useAdminTitleScroll();
 
   const latestByRound = new Set(
     teams.flatMap((team) =>
@@ -593,6 +603,7 @@ function SubmissionsTableSection() {
   return (
     <div className="space-y-6">
       <TableHeader
+        id={ADMIN_TITLE_ID}
         title={locale === "en" ? "Submissions" : "Bai nop"}
         description={
           locale === "en"
@@ -678,35 +689,6 @@ export function AdminShell({
 
   return (
     <div className="space-y-10">
-      <Surface className="overflow-hidden px-6 py-6 md:px-8 md:py-8">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
-          <SectionHeading
-            eyebrow={locale === "en" ? "Restricted route" : "Route gioi han"}
-            title={locale === "en" ? "Attacker 2026 admin mode" : "Admin mode của Attacker 2026"}
-            description={
-              locale === "en"
-                ? "Use the direct `/admin` link or its subroutes. This mode stays out of the public menu and is visible only to the correct signed-in roles."
-                : "Dùng link trực tiếp `/admin` hoặc các subroute của nó. Chế độ này nằm ngoài menu công khai và chỉ hiển thị cho đúng vai trò đã đăng nhập."
-            }
-          />
-          <div className="grid gap-3">
-            <div className="rounded-[1.75rem] border theme-border theme-panel px-4 py-4">
-              <div className="inline-flex rounded-2xl border theme-border-strong theme-panel-strong p-3">
-                <ShieldCheck className="h-5 w-5 text-cyan-300" />
-              </div>
-              <p className="mt-4 text-lg font-semibold theme-text-strong">
-                {locale === "en" ? "Protected admin area" : "Khu vực admin được bảo vệ"}
-              </p>
-              <p className="mt-3 text-sm leading-7 theme-text-muted">
-                {locale === "en"
-                  ? "Access is now gated by the signed-in backend account role."
-                  : "Quyền truy cập hiện đã được chặn theo vai trò của tài khoản backend đang đăng nhập."}
-              </p>
-            </div>
-          </div>
-        </div>
-      </Surface>
-
       <AdminNav locale={locale} activeSection={section} />
 
       {children}

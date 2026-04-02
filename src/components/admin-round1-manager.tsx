@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
+import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
@@ -536,7 +537,13 @@ function NotFoundState({
 }) {
   return (
     <Surface className="px-6 py-6 md:px-8 md:py-8">
-      <SectionHeading eyebrow="Admin / Round 1" title={title} description={description} />
+      <SectionHeading
+        id={ADMIN_TITLE_ID}
+        className="scroll-mt-32"
+        eyebrow="Admin / Round 1"
+        title={title}
+        description={description}
+      />
       <Link href={href} className="mt-6 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
         <ArrowLeft className="h-4 w-4" />
         {actionLabel}
@@ -547,6 +554,7 @@ function NotFoundState({
 
 export function AdminRound1Manager() {
   const { locale, round1Submissions, round1TestBanks, teams, users } = useSiteState();
+  useAdminTitleScroll();
 
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
@@ -559,6 +567,8 @@ export function AdminRound1Manager() {
   return (
     <div className="space-y-8">
       <SectionHeading
+        id={ADMIN_TITLE_ID}
+        className="scroll-mt-32"
         eyebrow={locale === "en" ? "Admin / Round 1" : "Admin / Vòng 1"}
         title={
           locale === "en"
@@ -915,6 +925,7 @@ export function AdminRound1Manager() {
 
 export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
   const { locale, round1TestBanks } = useSiteState();
+  useAdminTitleScroll();
   const bank = round1TestBanks.find((item) => item.id === bankId);
 
   if (!bank) {
@@ -952,6 +963,8 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
           eyebrow={locale === "en" ? "Admin / Round 1 / Test bank" : "Admin / Vong 1 / Test bank"}
           title={pickText(locale, bank.title)}
           description={
@@ -1250,6 +1263,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
 
 export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
   const { locale, round1Submissions, round1TestBanks, teams, users, updateRound1EssayScoreByAdmin } = useSiteState();
+  useAdminTitleScroll();
   const team = teams.find((item) => item.id === teamId);
   const teamGroups = buildTeamResultGroups(round1Submissions, teams, users);
   const group = teamGroups.find((item) => item.team.id === teamId);
@@ -1307,6 +1321,8 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
           eyebrow={locale === "en" ? "Admin / Round 1 / Team result" : "Admin / Vong 1 / Ket qua doi"}
           title={`${group.team.name} · ${group.team.tag}`}
           description={
@@ -1618,11 +1634,14 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
 
 export function AdminRound1QuestionEditor({ bankId, questionId }: { bankId: string; questionId: string }) {
   const { hasHydrated } = useSiteState();
+  useAdminTitleScroll();
 
   if (!hasHydrated) {
     return (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
           eyebrow="Admin / Round 1 / Question"
           title="Loading question..."
           description="Waiting for the local admin dataset to hydrate before opening the question editor."
@@ -1685,6 +1704,8 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
           eyebrow={locale === "en" ? "Admin / Round 1 / Edit question" : "Admin / Vong 1 / Sua cau hoi"}
           title={
             locale === "en"
