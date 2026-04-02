@@ -8,10 +8,12 @@ import { compare } from "bcryptjs";
 import { z } from "zod";
 
 import { prisma } from "@/lib/db";
+import { verifyTurnstileToken } from "@/server/turnstile";
 
 const credentialsSchema = z.object({
   login: z.string().trim().min(1),
   password: z.string().min(1),
+  turnstileToken: z.string().trim().min(1),
 });
 
 export const authOptions: NextAuthOptions = {
@@ -27,10 +29,26 @@ export const authOptions: NextAuthOptions = {
         login: { label: "Email or account ID", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(rawCredentials) {
+      async authorize(rawCredentials, request) {
         const parsed = credentialsSchema.safeParse(rawCredentials);
         if (!parsed.success) {
           return null;
+        }
+
+        const forwardedForHeader = request.headers?.["x-forwarded-for"];
+        const remoteIp = Array.isArray(forwardedForHeader)
+          ? forwardedForHeader[0]
+          : typeof forwardedForHeader === "string"
+            ? forwardedForHeader.split(",")[0]?.trim()
+            : undefined;
+
+        const turnstileVerification = await verifyTurnstileToken({
+          token: parsed.data.turnstileToken,
+          action: "sign_in",
+          remoteIp,
+        });
+        if (!turnstileVerification.success) {
+          throw new Error("CAPTCHA_FAILED");
         }
 
         const login = parsed.data.login.trim().toLowerCase();

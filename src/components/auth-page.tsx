@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 import {
   Building2,
   CalendarDays,
@@ -19,6 +20,28 @@ import { pickText } from "@/lib/site";
 import type { LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
+
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (
+        container: HTMLElement,
+        options: {
+          sitekey: string;
+          theme?: "light" | "dark" | "auto";
+          action?: string;
+          callback?: (token: string) => void;
+          "expired-callback"?: () => void;
+          "error-callback"?: () => void;
+        },
+      ) => string;
+      reset: (widgetId?: string) => void;
+      remove?: (widgetId?: string) => void;
+    };
+  }
+}
 
 const popularVietnamUniversities: LocalizedText[] = [
   { en: "University of Economics and Law (VNU-HCM)", vi: "Đại học Kinh tế - Luật (ĐHQG TP.HCM)" },
@@ -62,10 +85,12 @@ const authTextareaClassName =
 
 export function AuthPage() {
   const router = useRouter();
-  const { authStatus, canAccessAdminMode, isAuthenticated, locale, pageContent } = useSiteState();
+  const { authStatus, canAccessAdminMode, isAuthenticated, locale, pageContent, theme } = useSiteState();
   const [mode, setMode] = useState<"signin" | "register">("register");
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [isTurnstileReady, setIsTurnstileReady] = useState(false);
   const [signinMessage, setSigninMessage] = useState<string | null>(null);
   const [signinActionHref, setSigninActionHref] = useState<string | null>(null);
   const [signinActionLabel, setSigninActionLabel] = useState<string | null>(null);
@@ -83,6 +108,8 @@ export function AuthPage() {
   });
   const [isUniversityMenuOpen, setIsUniversityMenuOpen] = useState(false);
   const universityMenuRef = useRef<HTMLDivElement | null>(null);
+  const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
+  const turnstileWidgetIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
@@ -104,6 +131,51 @@ export function AuthPage() {
 
     router.replace(canAccessAdminMode ? "/admin" : "/dashboard");
   }, [canAccessAdminMode, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (mode !== "signin" || !isTurnstileReady || !turnstileContainerRef.current || !window.turnstile) {
+      return;
+    }
+
+    if (turnstileWidgetIdRef.current && window.turnstile.remove) {
+      window.turnstile.remove(turnstileWidgetIdRef.current);
+      turnstileWidgetIdRef.current = null;
+    }
+
+    turnstileContainerRef.current.innerHTML = "";
+
+    turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: theme === "dark" ? "dark" : "light",
+      action: "sign_in",
+      callback: (token) => {
+        setTurnstileToken(token);
+        setSigninMessage(null);
+        setSigninActionHref(null);
+        setSigninActionLabel(null);
+      },
+      "expired-callback": () => {
+        setTurnstileToken("");
+        setSigninActionHref(null);
+        setSigninActionLabel(null);
+        setSigninMessage(
+          locale === "en"
+            ? "The security check expired. Please confirm it again before signing in."
+            : "Mã xác minh bảo mật đã hết hạn. Vui lòng xác nhận lại trước khi đăng nhập.",
+        );
+      },
+      "error-callback": () => {
+        setTurnstileToken("");
+        setSigninActionHref(null);
+        setSigninActionLabel(null);
+        setSigninMessage(
+          locale === "en"
+            ? "The security check could not load. Please refresh and try again."
+            : "Khối xác minh bảo mật không tải được. Vui lòng tải lại trang và thử lại.",
+        );
+      },
+    });
+  }, [isTurnstileReady, locale, mode, theme]);
 
   const handleRegisterFieldChange =
     (field: keyof typeof registerForm) =>
@@ -164,17 +236,47 @@ export function AuthPage() {
     router.refresh();
   };
 
+  const resetTurnstileWidget = () => {
+    setTurnstileToken("");
+    if (turnstileWidgetIdRef.current && window.turnstile) {
+      window.turnstile.reset(turnstileWidgetIdRef.current);
+    }
+  };
+
   const handleSignIn = async () => {
+    if (!turnstileToken) {
+      setSigninMessage(
+        locale === "en"
+          ? "Please complete the security check before signing in."
+          : "Vui lòng hoàn tất bước xác minh bảo mật trước khi đăng nhập.",
+      );
+      return;
+    }
+
     setIsBusy(true);
     setSigninMessage(null);
+    setSigninActionHref(null);
+    setSigninActionLabel(null);
 
     const result = await signIn("credentials", {
       redirect: false,
       login: loginId.trim(),
       password,
+      turnstileToken,
     });
 
     if (result?.error) {
+      resetTurnstileWidget();
+      if (result.error === "CAPTCHA_FAILED") {
+        setSigninMessage(
+          locale === "en"
+            ? "Security verification failed. Please try the CAPTCHA again."
+            : "Xác minh bảo mật không thành công. Vui lòng thử lại CAPTCHA.",
+        );
+        setIsBusy(false);
+        return;
+      }
+
       if (result.error === "EMAIL_NOT_VERIFIED") {
         setSigninActionHref(
           `/auth/check-email?intent=activation${
@@ -262,6 +364,7 @@ export function AuthPage() {
 
   const toggleMode = (nextMode: "signin" | "register") => {
     setMode(nextMode);
+    setTurnstileToken("");
     setSigninMessage(null);
     setSigninActionHref(null);
     setSigninActionLabel(null);
@@ -293,6 +396,11 @@ export function AuthPage() {
 
   return (
     <div className="space-y-8">
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+        strategy="afterInteractive"
+        onReady={() => setIsTurnstileReady(true)}
+      />
       <div className="mx-auto max-w-3xl">
         <Surface className="px-6 py-6 md:px-8 md:py-8 xl:px-10 xl:py-10">
           <div className="mb-6 space-y-3 text-center">
@@ -408,9 +516,23 @@ export function AuthPage() {
                   </Link>
                 </div>
 
+                <div className="space-y-2">
+                  <p className="text-sm theme-text-muted">
+                    {locale === "en" ? "Security check" : "Xác minh bảo mật"}
+                  </p>
+                  <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
+                    <div ref={turnstileContainerRef} className="min-h-[70px]" />
+                    <p className="mt-3 text-xs leading-6 theme-text-faint">
+                      {locale === "en"
+                        ? "This CAPTCHA helps protect the login form from automated abuse."
+                        : "CAPTCHA này giúp bảo vệ biểu mẫu đăng nhập khỏi truy cập tự động."}
+                    </p>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
-                  disabled={isBusy || authStatus === "loading"}
+                  disabled={isBusy || authStatus === "loading" || !turnstileToken}
                   className="w-full rounded-[1.4rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] px-5 py-3.5 text-sm font-semibold text-slate-950"
                 >
                   {isBusy
