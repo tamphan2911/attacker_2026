@@ -133,35 +133,6 @@ export function SponsorsPage() {
         ))}
       </section>
 
-      <section className="space-y-6">
-        <SectionHeading
-          eyebrow={locale === "en" ? "Logo wall" : "Logo wall"}
-          title={
-            locale === "en"
-              ? "A sponsor page should show the brands clearly."
-              : "Trang nhà tài trợ cần hiển thị rõ thương hiệu của các đối tác."
-          }
-          description={
-            locale === "en"
-              ? "These are sample visual marks for the prototype and can be replaced with official sponsor logos later."
-              : "Đây là các logo mẫu cho prototype và có thể được thay bằng logo chính thức của nhà tài trợ sau này."
-          }
-        />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {sponsorProfiles.map((sponsor) => (
-            <Surface key={sponsor.name + "-logo"} className="flex min-h-[170px] items-center justify-center px-6 py-6">
-              <Image
-                src={sponsor.logoSrc}
-                alt={sponsor.name}
-                width={320}
-                height={96}
-                className="h-20 w-full object-contain"
-              />
-            </Surface>
-          ))}
-        </div>
-      </section>
-
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="px-6 py-6 md:px-8 md:py-8">
           <SectionHeading
