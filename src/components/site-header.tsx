@@ -181,7 +181,7 @@ export function SiteHeader() {
 
       <div className="theme-navbar border-b backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-8">
-          <Link href="/" className="shrink-0" onClick={() => setIsOpen(false)}>
+          <Link href="/" className="group shrink-0" onClick={() => setIsOpen(false)}>
             <BrandMarkInner showText variant="header" />
           </Link>
 

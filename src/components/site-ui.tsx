@@ -26,10 +26,20 @@ export function BrandMarkInner({
       {showText ? (
         <div className="hidden min-w-0 sm:block">
           {variant === "header" ? (
-            <div className="rounded-[1rem] border border-[rgba(23,114,208,0.14)] bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(235,244,254,0.94))] px-3.5 py-2 shadow-[0_14px_30px_rgba(16,38,66,0.08)] dark:border-[rgba(88,196,255,0.16)] dark:bg-[linear-gradient(135deg,rgba(14,29,54,0.96),rgba(10,21,40,0.94))] dark:shadow-[0_14px_32px_rgba(2,8,20,0.24)]">
-              <p className="theme-heading bg-[linear-gradient(135deg,var(--brand-deep),var(--brand),var(--brand-soft))] bg-clip-text text-[1.05rem] font-semibold uppercase tracking-[0.16em] text-transparent">
-                Attacker 2026
-              </p>
+            <div className="theme-card-shadow-soft relative overflow-hidden rounded-[1.15rem] border border-[rgba(23,114,208,0.18)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(233,245,255,0.97)_58%,rgba(255,244,221,0.96))] px-3.5 py-2.5 shadow-[0_18px_36px_rgba(16,38,66,0.1)] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_22px_42px_rgba(16,38,66,0.14)] dark:border-[rgba(88,196,255,0.2)] dark:bg-[linear-gradient(135deg,rgba(12,26,47,0.98),rgba(15,39,72,0.96)_58%,rgba(46,28,9,0.9))] dark:shadow-[0_18px_38px_rgba(2,8,20,0.3)] dark:group-hover:shadow-[0_22px_44px_rgba(2,8,20,0.34)]">
+              <span className="absolute inset-y-2 left-2 w-1 rounded-full bg-[linear-gradient(180deg,#2563eb,#0ea5e9_55%,#f59e0b)]" />
+              <span className="absolute -right-5 -top-6 h-16 w-16 rounded-full bg-[radial-gradient(circle,rgba(14,165,233,0.22),rgba(14,165,233,0))] dark:bg-[radial-gradient(circle,rgba(125,211,252,0.24),rgba(125,211,252,0))]" />
+              <span className="absolute bottom-0 left-10 h-8 w-24 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.16),rgba(245,158,11,0))] dark:bg-[radial-gradient(circle,rgba(251,191,36,0.2),rgba(251,191,36,0))]" />
+              <div className="relative flex items-center gap-2 pl-3">
+                <p className="theme-heading text-[1.03rem] font-semibold uppercase tracking-[0.18em] text-slate-950 dark:text-white">
+                  <span className="bg-[linear-gradient(135deg,#0f2f5f,#1772d0_52%,#0891b2)] bg-clip-text text-transparent dark:bg-[linear-gradient(135deg,#ecfeff,#7dd3fc_56%,#fde68a)]">
+                    Attacker
+                  </span>
+                </p>
+                <span className="inline-flex items-center rounded-full border border-sky-500/18 bg-[linear-gradient(135deg,#1772d0,#0ea5e9)] px-2.5 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-white shadow-[0_10px_24px_rgba(23,114,208,0.22)] dark:border-sky-200/18 dark:bg-[linear-gradient(135deg,#38bdf8,#2563eb)] dark:shadow-[0_10px_26px_rgba(56,189,248,0.18)]">
+                  2026
+                </span>
+              </div>
             </div>
           ) : (
             <div>
