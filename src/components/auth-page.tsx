@@ -6,6 +6,7 @@ import {
   Building2,
   CalendarDays,
   ChevronDown,
+  CircleCheck,
   LockKeyhole,
   Mail,
   ShieldCheck,
@@ -75,6 +76,7 @@ export function AuthPage() {
     classYear: "",
     bio: "",
     password: "",
+    confirmPassword: "",
   });
   const [isUniversityMenuOpen, setIsUniversityMenuOpen] = useState(false);
   const universityMenuRef = useRef<HTMLDivElement | null>(null);
@@ -189,8 +191,20 @@ export function AuthPage() {
   };
 
   const handleRegister = async () => {
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setSigninMessage(
+        locale === "en"
+          ? "Password confirmation does not match."
+          : "Xác nhận mật khẩu không khớp.",
+      );
+      return;
+    }
+
     setIsBusy(true);
     setSigninMessage(null);
+
+    const { confirmPassword, ...registerPayload } = registerForm;
+    void confirmPassword;
 
     const response = await fetch("/api/auth/register", {
       method: "POST",
@@ -198,7 +212,7 @@ export function AuthPage() {
         "Content-Type": "application/json",
       },
       credentials: "same-origin",
-      body: JSON.stringify(registerForm),
+      body: JSON.stringify(registerPayload),
     });
 
     if (!response.ok) {
@@ -249,6 +263,24 @@ export function AuthPage() {
   const applyUniversityValue = (value: string) => {
     setRegisterForm((current) => ({ ...current, university: value }));
     setIsUniversityMenuOpen(false);
+  };
+
+  const handleSignInSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isBusy || authStatus === "loading") {
+      return;
+    }
+
+    void handleSignIn();
+  };
+
+  const handleRegisterSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isBusy || authStatus === "loading") {
+      return;
+    }
+
+    void handleRegister();
   };
 
   return (
@@ -321,54 +353,82 @@ export function AuthPage() {
               <span className="h-px flex-1 bg-[var(--line)]" />
             </div>
 
-            <div className="grid gap-4 xl:grid-cols-2">
-              {mode === "register" ? (
-                <label className="space-y-2 xl:col-span-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Full name" : "Họ tên"}</span>
-                  <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
-                    <UserRound className="mr-3 h-4 w-4 theme-text-faint" />
-                    <input
-                      value={registerForm.name}
-                      onChange={handleRegisterFieldChange("name")}
-                      placeholder={locale === "en" ? "Nguyen Van A" : "Nguyễn Văn A"}
-                      className={authFieldClassName}
-                    />
-                  </div>
-                </label>
-              ) : null}
+            {mode === "signin" ? (
+              <form onSubmit={handleSignInSubmit} className="space-y-4">
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <label className="space-y-2 xl:col-span-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Account ID" : "ID tài khoản"}
+                    </span>
+                    <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
+                      <ShieldCheck className="mr-3 h-4 w-4 theme-text-faint" />
+                      <input
+                        value={loginId}
+                        onChange={(event) => setLoginId(event.target.value)}
+                        placeholder={locale === "en" ? "Email or account ID" : "Email hoặc ID tài khoản"}
+                        className={authFieldClassName}
+                      />
+                    </div>
+                  </label>
 
-              {mode === "signin" ? (
-                <label className="space-y-2 xl:col-span-2">
-                  <span className="text-sm theme-text-muted">
-                    {locale === "en" ? "Account ID" : "ID tài khoản"}
-                  </span>
-                  <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
-                    <ShieldCheck className="mr-3 h-4 w-4 theme-text-faint" />
-                    <input
-                      value={loginId}
-                      onChange={(event) => setLoginId(event.target.value)}
-                      placeholder={locale === "en" ? "Email or account ID" : "Email hoặc ID tài khoản"}
-                      className={authFieldClassName}
-                    />
-                  </div>
-                </label>
-              ) : (
-                <label className="space-y-2">
-                  <span className="text-sm theme-text-muted">Email</span>
-                  <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
-                    <Mail className="mr-3 h-4 w-4 theme-text-faint" />
-                    <input
-                      value={registerForm.email}
-                      onChange={handleRegisterFieldChange("email")}
-                      placeholder="you@example.com"
-                      className={authFieldClassName}
-                    />
-                  </div>
-                </label>
-              )}
+                  <label className="space-y-2 xl:col-span-2">
+                    <span className="text-sm theme-text-muted">{locale === "en" ? "Password" : "Mật khẩu"}</span>
+                    <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
+                      <LockKeyhole className="mr-3 h-4 w-4 theme-text-faint" />
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(event) => setPassword(event.target.value)}
+                        placeholder={locale === "en" ? "Enter password" : "Nhập mật khẩu"}
+                        className={authFieldClassName}
+                      />
+                    </div>
+                  </label>
+                </div>
 
-              {mode === "register" ? (
-                <>
+                <button
+                  type="submit"
+                  disabled={isBusy || authStatus === "loading"}
+                  className="w-full rounded-[1.4rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] px-5 py-3.5 text-sm font-semibold text-slate-950"
+                >
+                  {isBusy
+                    ? locale === "en"
+                      ? "Processing..."
+                      : "Đang xử lý..."
+                    : locale === "en"
+                      ? "Sign in"
+                      : "Đăng nhập"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleRegisterSubmit} className="space-y-4">
+                <div className="grid gap-4 xl:grid-cols-2">
+                  <label className="space-y-2 xl:col-span-2">
+                    <span className="text-sm theme-text-muted">{locale === "en" ? "Full name" : "Họ tên"}</span>
+                    <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
+                      <UserRound className="mr-3 h-4 w-4 theme-text-faint" />
+                      <input
+                        value={registerForm.name}
+                        onChange={handleRegisterFieldChange("name")}
+                        placeholder={locale === "en" ? "Nguyen Van A" : "Nguyễn Văn A"}
+                        className={authFieldClassName}
+                      />
+                    </div>
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-sm theme-text-muted">Email</span>
+                    <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
+                      <Mail className="mr-3 h-4 w-4 theme-text-faint" />
+                      <input
+                        value={registerForm.email}
+                        onChange={handleRegisterFieldChange("email")}
+                        placeholder="you@example.com"
+                        className={authFieldClassName}
+                      />
+                    </div>
+                  </label>
+
                   <label className="space-y-2 xl:col-span-2">
                     <span className="text-sm theme-text-muted">{locale === "en" ? "University" : "Trường"}</span>
                     <div ref={universityMenuRef} className="relative">
@@ -424,11 +484,11 @@ export function AuthPage() {
                                 onClick={() => applyUniversityValue(registerForm.university.trim())}
                                 className="flex w-full items-center justify-between rounded-[1rem] border border-dashed theme-border px-3 py-3 text-left text-sm transition hover:bg-[rgba(23,114,208,0.05)]"
                               >
-                                  <span className="theme-text-strong">{registerForm.university.trim()}</span>
-                                  <span className="text-[11px] uppercase tracking-[0.22em] theme-text-faint">
+                                <span className="theme-text-strong">{registerForm.university.trim()}</span>
+                                <span className="text-[11px] uppercase tracking-[0.22em] theme-text-faint">
                                   {locale === "en" ? "Use custom" : "Dùng tên này"}
-                                  </span>
-                                </button>
+                                </span>
+                              </button>
                             ) : null}
                           </div>
                           <p className="px-3 pb-1 pt-3 text-xs leading-6 theme-text-faint">
@@ -440,6 +500,7 @@ export function AuthPage() {
                       ) : null}
                     </div>
                   </label>
+
                   <label className="space-y-2">
                     <span className="text-sm theme-text-muted">{locale === "en" ? "Major" : "Chuyên ngành"}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
@@ -452,6 +513,7 @@ export function AuthPage() {
                       />
                     </div>
                   </label>
+
                   <label className="space-y-2">
                     <span className="text-sm theme-text-muted">{locale === "en" ? "Student ID" : "Mã số sinh viên"}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
@@ -464,6 +526,7 @@ export function AuthPage() {
                       />
                     </div>
                   </label>
+
                   <label className="space-y-2">
                     <span className="text-sm theme-text-muted">{locale === "en" ? "Class year" : "Năm học"}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
@@ -476,6 +539,7 @@ export function AuthPage() {
                       />
                     </div>
                   </label>
+
                   <label className="space-y-2 xl:col-span-2">
                     <span className="text-sm theme-text-muted">{locale === "en" ? "Bio" : "Giới thiệu"}</span>
                     <textarea
@@ -488,58 +552,53 @@ export function AuthPage() {
                       className={authTextareaClassName}
                     />
                   </label>
-                </>
-              ) : null}
 
-              {mode === "signin" ? (
-                <label className="space-y-2 xl:col-span-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Password" : "Mật khẩu"}</span>
-                  <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
-                    <LockKeyhole className="mr-3 h-4 w-4 theme-text-faint" />
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      placeholder={locale === "en" ? "Enter password" : "Nhập mật khẩu"}
-                      className={authFieldClassName}
-                    />
-                  </div>
-                </label>
-              ) : (
-                <label className="space-y-2 xl:col-span-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Password" : "Mật khẩu"}</span>
-                  <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
-                    <LockKeyhole className="mr-3 h-4 w-4 theme-text-faint" />
-                    <input
-                      type="password"
-                      value={registerForm.password}
-                      onChange={handleRegisterFieldChange("password")}
-                      placeholder={locale === "en" ? "Enter password" : "Nhập mật khẩu"}
-                      className={authFieldClassName}
-                    />
-                  </div>
-                </label>
-              )}
-            </div>
+                  <label className="space-y-2 xl:col-span-2">
+                    <span className="text-sm theme-text-muted">{locale === "en" ? "Password" : "Mật khẩu"}</span>
+                    <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
+                      <LockKeyhole className="mr-3 h-4 w-4 theme-text-faint" />
+                      <input
+                        type="password"
+                        value={registerForm.password}
+                        onChange={handleRegisterFieldChange("password")}
+                        placeholder={locale === "en" ? "Enter password" : "Nhập mật khẩu"}
+                        className={authFieldClassName}
+                      />
+                    </div>
+                  </label>
 
-            <button
-              type="button"
-              onClick={() => void (mode === "signin" ? handleSignIn() : handleRegister())}
-              disabled={isBusy || authStatus === "loading"}
-              className="w-full rounded-[1.4rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] px-5 py-3.5 text-sm font-semibold text-slate-950"
-            >
-              {isBusy
-                ? locale === "en"
-                  ? "Processing..."
-                  : "Đang xử lý..."
-                : mode === "register"
-                ? locale === "en"
-                  ? "Create account"
-                  : "Tạo tài khoản"
-                : locale === "en"
-                  ? "Sign in"
-                  : "Đăng nhập"}
-            </button>
+                  <label className="space-y-2 xl:col-span-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Confirm password" : "Xác nhận mật khẩu"}
+                    </span>
+                    <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
+                      <CircleCheck className="mr-3 h-4 w-4 theme-text-faint" />
+                      <input
+                        type="password"
+                        value={registerForm.confirmPassword}
+                        onChange={handleRegisterFieldChange("confirmPassword")}
+                        placeholder={locale === "en" ? "Re-enter password" : "Nhập lại mật khẩu"}
+                        className={authFieldClassName}
+                      />
+                    </div>
+                  </label>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isBusy || authStatus === "loading"}
+                  className="w-full rounded-[1.4rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] px-5 py-3.5 text-sm font-semibold text-slate-950"
+                >
+                  {isBusy
+                    ? locale === "en"
+                      ? "Processing..."
+                      : "Đang xử lý..."
+                    : locale === "en"
+                      ? "Create account"
+                      : "Tạo tài khoản"}
+                </button>
+              </form>
+            )}
 
             {signinMessage ? (
               <p className="text-center text-sm theme-text-soft">{signinMessage}</p>
