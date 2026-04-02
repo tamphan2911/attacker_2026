@@ -8,8 +8,6 @@ import {
   Award,
   CalendarRange,
   BriefcaseBusiness,
-  ChevronLeft,
-  ChevronRight,
   Crown,
   GraduationCap,
   Medal,
@@ -377,7 +375,6 @@ const testimonialQuoteClasses = [
 export function HomePage() {
   const { locale, pageContent } = useSiteState();
   const [activeSlide, setActiveSlide] = useState(0);
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
   const heroSlides =
     pageContent.home.heroSlides.length > 0
       ? pageContent.home.heroSlides
@@ -388,14 +385,7 @@ export function HomePage() {
   }));
   const currentHeroSlide = heroDeck[activeSlide] ?? heroDeck[0];
   const sponsorMarqueeItems = [...sponsorProfiles, ...sponsorProfiles];
-  const testimonialWindowSize = Math.min(3, testimonialItems.length);
-  const visibleTestimonials = Array.from({ length: testimonialWindowSize }, (_, offset) => {
-    const index = (activeTestimonial + offset) % testimonialItems.length;
-    return {
-      item: testimonialItems[index],
-      index,
-    };
-  });
+  const testimonialMarqueeItems = [...testimonialItems, ...testimonialItems];
 
   useEffect(() => {
     if (heroDeck.length <= 1) {
@@ -410,20 +400,6 @@ export function HomePage() {
       window.clearInterval(intervalId);
     };
   }, [heroDeck.length]);
-
-  useEffect(() => {
-    if (testimonialItems.length <= 1) {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setActiveTestimonial((current) => (current + 1) % testimonialItems.length);
-    }, 5600);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, []);
 
   return (
     <div className="space-y-24 pb-8">
@@ -732,36 +708,19 @@ export function HomePage() {
                   : "Một cụm trích dẫn dạng slider, tổng hợp cảm nhận ngắn từ các đội chung kết, quán quân và đội tiềm năng của mùa trước."}
               </p>
             </div>
-            <div className="flex items-center justify-center gap-2 md:justify-end">
-              <button
-                type="button"
-                onClick={() =>
-                  setActiveTestimonial((current) => (current - 1 + testimonialItems.length) % testimonialItems.length)
-                }
-                aria-label={locale === "en" ? "Previous testimonial" : "Lời chia sẻ trước"}
-                className="theme-button-secondary inline-flex h-11 w-11 items-center justify-center rounded-full"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTestimonial((current) => (current + 1) % testimonialItems.length)}
-                aria-label={locale === "en" ? "Next testimonial" : "Lời chia sẻ tiếp theo"}
-                className="theme-button-secondary inline-flex h-11 w-11 items-center justify-center rounded-full"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
+            <div className="rounded-full border theme-border bg-white/70 px-4 py-2 text-center text-[0.72rem] font-semibold uppercase tracking-[0.18em] theme-text-soft dark:bg-white/[0.05]">
+              {locale === "en" ? "Auto-sliding voices" : "Trích dẫn tự động"}
             </div>
           </div>
 
-          <div className="grid gap-5 lg:grid-cols-3">
-            {visibleTestimonials.map(({ item, index }, position) => (
-              <button
-                key={`${item.name}-${index}`}
-                type="button"
-                onClick={() => setActiveTestimonial(index)}
-                className="theme-home-testimonial-card group relative flex h-full cursor-pointer flex-col rounded-[1.8rem] border p-5 text-left"
-              >
+          <div className="overflow-hidden py-1">
+            <div className="marquee-track flex w-max items-stretch gap-5 px-1 hover:[animation-play-state:paused]">
+              {testimonialMarqueeItems.map((item, index) => (
+                <div
+                  key={`${item.name}-${index}`}
+                  className="theme-home-testimonial-card relative flex min-h-[248px] w-[320px] shrink-0 flex-col rounded-[1.8rem] border p-5 text-left md:w-[352px]"
+                  aria-hidden={index >= testimonialItems.length}
+                >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border theme-border">
@@ -775,13 +734,13 @@ export function HomePage() {
                     </div>
                   </div>
                   <div
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${testimonialQuoteClasses[position % testimonialQuoteClasses.length]}`}
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${testimonialQuoteClasses[index % testimonialQuoteClasses.length]}`}
                   >
                     <Quote className="h-5 w-5" />
                   </div>
                 </div>
 
-                <p className="mt-5 text-sm leading-7 theme-text-body">
+                <p className="mt-5 flex-1 text-sm leading-7 theme-text-body">
                   &ldquo;{pickText(locale, item.quote)}&rdquo;
                 </p>
 
@@ -797,24 +756,12 @@ export function HomePage() {
                     </div>
                   ) : null}
                 </div>
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex justify-center gap-2 md:justify-start">
-              {testimonialItems.map((item, index) => (
-                <button
-                  key={item.name}
-                  type="button"
-                  onClick={() => setActiveTestimonial(index)}
-                  aria-label={item.name}
-                  className={`h-2.5 rounded-full transition ${
-                    index === activeTestimonial ? "w-10 bg-[var(--brand)]" : "w-2.5 bg-slate-300/70"
-                  }`}
-                />
+                </div>
               ))}
             </div>
+          </div>
+
+          <div className="flex justify-end">
             <Link href="/organizer" className="inline-flex items-center justify-center gap-2 text-sm font-semibold theme-accent md:justify-end">
               {locale === "en" ? "About Attacker" : "Giới thiệu Attacker"}
               <ArrowRight className="h-4 w-4" />
