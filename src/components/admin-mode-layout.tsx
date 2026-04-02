@@ -10,7 +10,6 @@ import {
   Medal,
   Newspaper,
   TableProperties,
-  UserCog,
   Users,
   Users2,
 } from "lucide-react";
@@ -89,14 +88,6 @@ const adminNavGroups: Array<{
         description: { en: "Participant records", vi: "Hồ sơ thí sinh" },
         children: [
           { href: "/admin/users", label: { en: "Participant list", vi: "Danh sách thí sinh" } },
-        ],
-      },
-      {
-        href: "/admin/organizer-team",
-        icon: UserCog,
-        label: { en: "Organizer team", vi: "Ban tổ chức" },
-        description: { en: "Admin and moderator roster", vi: "Danh sách admin và moderator" },
-        children: [
           { href: "/admin/organizer-team", label: { en: "Organizer team", vi: "Ban tổ chức" } },
         ],
       },
@@ -237,7 +228,9 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                 </p>
                 <div className="space-y-1.5">
                   {group.items.map((item) => {
-                    const active = isActiveRoute(pathname, item.href);
+                    const active =
+                      isActiveRoute(pathname, item.href) ||
+                      item.children?.some((child) => isActiveRoute(pathname, child.href));
                     const Icon = item.icon;
 
                     return (
