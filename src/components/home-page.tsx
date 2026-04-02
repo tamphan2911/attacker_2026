@@ -90,7 +90,7 @@ const homepageRewardItems = [
     },
     icon: Crown,
     iconClass: "bg-[linear-gradient(135deg,#f59e0b,#facc15)] text-slate-950",
-    borderClass: "border-amber-300/24 bg-white/14",
+    borderClass: "border-amber-300/50",
   },
   {
     rank: { en: "2nd place", vi: "Hạng 2" },
@@ -102,7 +102,7 @@ const homepageRewardItems = [
     },
     icon: Medal,
     iconClass: "bg-[linear-gradient(135deg,#e2e8f0,#cbd5e1)] text-slate-950",
-    borderClass: "border-white/14 bg-white/10",
+    borderClass: "border-slate-300/60",
   },
   {
     rank: { en: "3rd place", vi: "Hạng 3" },
@@ -114,7 +114,7 @@ const homepageRewardItems = [
     },
     icon: Award,
     iconClass: "bg-[linear-gradient(135deg,#fb923c,#f97316)] text-white",
-    borderClass: "border-white/14 bg-white/10",
+    borderClass: "border-orange-300/50",
   },
   {
     rank: { en: "4th place", vi: "Hạng 4" },
@@ -126,7 +126,7 @@ const homepageRewardItems = [
     },
     icon: Star,
     iconClass: "bg-[linear-gradient(135deg,#38bdf8,#14b8a6)] text-white",
-    borderClass: "border-cyan-300/18 bg-white/10",
+    borderClass: "border-cyan-300/40",
   },
 ] as const;
 
@@ -416,6 +416,21 @@ const heroCardIconClasses = [
   "bg-[linear-gradient(135deg,rgba(251,191,36,0.98),rgba(249,115,22,0.96))] text-slate-950 shadow-[0_14px_32px_rgba(249,115,22,0.24)]",
 ] as const;
 
+const metricIconClasses = [
+  "bg-[linear-gradient(135deg,#0ea5e9,#2563eb)] text-white",
+  "bg-[linear-gradient(135deg,#06b6d4,#14b8a6)] text-white",
+  "bg-[linear-gradient(135deg,#f59e0b,#f97316)] text-slate-950",
+  "bg-[linear-gradient(135deg,#8b5cf6,#7c3aed)] text-white",
+] as const;
+
+const metricIcons = [ShieldCheck, Users2, TrendingUp, Medal] as const;
+
+const testimonialQuoteClasses = [
+  "text-[#7c3aed] bg-[rgba(124,58,237,0.1)]",
+  "text-[#ec4899] bg-[rgba(236,72,153,0.1)]",
+  "text-[#2563eb] bg-[rgba(37,99,235,0.1)]",
+] as const;
+
 export function HomePage() {
   const { locale, newsPosts, pageContent } = useSiteState();
   const [activeSlide, setActiveSlide] = useState(0);
@@ -429,8 +444,15 @@ export function HomePage() {
     image: heroSlides[index % heroSlides.length]?.image ?? defaultPageContent.home.heroSlides[0].image,
   }));
   const currentHeroSlide = heroDeck[activeSlide] ?? heroDeck[0];
-  const currentTestimonial = testimonialItems[activeTestimonial] ?? testimonialItems[0];
   const sponsorMarqueeItems = [...sponsorProfiles, ...sponsorProfiles];
+  const testimonialWindowSize = Math.min(3, testimonialItems.length);
+  const visibleTestimonials = Array.from({ length: testimonialWindowSize }, (_, offset) => {
+    const index = (activeTestimonial + offset) % testimonialItems.length;
+    return {
+      item: testimonialItems[index],
+      index,
+    };
+  });
 
   useEffect(() => {
     if (heroDeck.length <= 1) {
@@ -587,35 +609,44 @@ export function HomePage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {homeMetrics.map((item) => (
+        {homeMetrics.map((item, index) => {
+          const Icon = metricIcons[index % metricIcons.length];
+
+          return (
           <div
             key={item.value + item.label.en}
-            className="rounded-[1.6rem] border theme-border bg-[rgba(255,255,255,0.76)] px-5 py-5 text-center"
+            className="theme-home-metric-card rounded-[1.7rem] border px-5 py-5 text-center"
           >
+            <div
+              className={`mx-auto flex h-12 w-12 items-center justify-center rounded-2xl shadow-[0_14px_30px_rgba(14,37,66,0.12)] ${metricIconClasses[index % metricIconClasses.length]}`}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
             <p className="theme-heading text-4xl font-semibold theme-text-strong">{item.value}</p>
             <p className="mt-3 text-sm font-medium uppercase tracking-[0.22em] theme-eyebrow">
               {pickText(locale, item.label)}
             </p>
             <p className="mt-3 text-sm leading-6 theme-text-soft">{pickText(locale, item.note)}</p>
           </div>
-        ))}
+          );
+        })}
       </section>
 
-      <section className="relative overflow-hidden rounded-[2.4rem] border border-slate-900/40 bg-[linear-gradient(140deg,#071223_0%,#0b2744_42%,#1772d0_100%)] px-6 py-8 text-white md:px-8 md:py-10">
+      <section className="theme-home-rewards-shell relative overflow-hidden rounded-[2.4rem] border px-6 py-8 md:px-8 md:py-10">
         <div className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-cyan-300/14 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-sky-300/16 blur-3xl" />
 
         <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_320px] xl:items-start">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-white/64">
+            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
               {pickText(locale, pageContent.competition.rewards.eyebrow)}
             </p>
-            <h2 className="theme-heading mt-5 max-w-3xl text-3xl font-semibold leading-[1.08] md:text-[3rem]">
+            <h2 className="theme-heading mt-5 max-w-3xl text-3xl font-semibold leading-[1.08] theme-text-strong md:text-[3rem]">
               {locale === "en"
                 ? "A prize structure that makes the top 5 instantly clear."
-                : "Cau truc giai thuong giup top 5 duoc nhin ra ngay lap tuc."}
+                : "Cấu trúc giải thưởng giúp top 5 được nhìn ra ngay lập tức."}
             </h2>
-            <p className="mt-5 max-w-3xl text-base leading-8 text-white/74">
+            <p className="theme-text-muted mt-5 max-w-3xl text-base leading-8">
               {locale === "en"
                 ? "The main awards are separated by final ranking from 1st to 4th, while Emerging Teams stay in their own smaller recognition block after Round 2."
                 : "Các giải chính được tách rõ theo thứ hạng chung kết từ hạng 1 đến hạng 4, trong khi Đội tiềm năng nằm ở một block riêng nhỏ hơn sau Vòng 2."}
@@ -628,25 +659,25 @@ export function HomePage() {
                 return (
                   <div
                     key={item.rank.en}
-                    className={`rounded-[1.8rem] border px-5 py-5 backdrop-blur-md ${item.borderClass}`}
+                    className={`theme-home-reward-card rounded-[1.8rem] border px-5 py-5 backdrop-blur-md ${item.borderClass}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.iconClass}`}>
                         <Icon className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/62">
+                        <p className="theme-text-soft text-[0.72rem] font-semibold uppercase tracking-[0.24em]">
                           {pickText(locale, item.rank)}
                         </p>
-                        <p className="mt-1 text-lg font-semibold text-white">
+                        <p className="theme-text-strong mt-1 text-lg font-semibold">
                           {pickText(locale, item.title)}
                         </p>
                       </div>
                     </div>
-                    <p className="mt-5 text-2xl font-semibold text-white md:text-[1.8rem]">
+                    <p className="theme-text-strong mt-5 text-2xl font-semibold md:text-[1.8rem]">
                       {pickText(locale, item.amount)}
                     </p>
-                    <p className="mt-3 text-sm leading-7 text-white/74">
+                    <p className="theme-text-muted mt-3 text-sm leading-7">
                       {pickText(locale, item.note)}
                     </p>
                   </div>
@@ -656,31 +687,31 @@ export function HomePage() {
           </div>
 
           <div className="space-y-4">
-            <div className="rounded-[2rem] border border-emerald-300/20 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(255,255,255,0.08))] px-5 py-6 backdrop-blur-md">
+            <div className="theme-home-reward-aside rounded-[2rem] border px-5 py-6 backdrop-blur-md">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#34d399,#10b981)] text-slate-950">
                   <Sparkles className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/62">
+                  <p className="theme-text-soft text-[0.72rem] font-semibold uppercase tracking-[0.24em]">
                     {pickText(locale, homepageEmergingReward.eyebrow)}
                   </p>
-                  <p className="mt-1 text-lg font-semibold text-white">
+                  <p className="theme-text-strong mt-1 text-lg font-semibold">
                     {pickText(locale, homepageEmergingReward.title)}
                   </p>
                 </div>
               </div>
-              <p className="mt-5 text-2xl font-semibold text-white">
+              <p className="theme-text-strong mt-5 text-2xl font-semibold">
                 {pickText(locale, homepageEmergingReward.amount)}
               </p>
-              <p className="mt-3 text-sm leading-7 text-white/74">
+              <p className="theme-text-muted mt-3 text-sm leading-7">
                 {pickText(locale, homepageEmergingReward.note)}
               </p>
             </div>
 
-            <div className="rounded-[2rem] border border-white/12 bg-white/8 px-5 py-5 backdrop-blur-md">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/64">
-                {locale === "en" ? "Competition path" : "Lo trinh cuoc thi"}
+            <div className="theme-home-reward-aside rounded-[2rem] border px-5 py-5 backdrop-blur-md">
+              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
+                {locale === "en" ? "Competition path" : "Lộ trình cuộc thi"}
               </p>
               <div className="mt-5 space-y-3">
                 {[
@@ -690,7 +721,7 @@ export function HomePage() {
                 ].map((item) => (
                   <div
                     key={item}
-                    className="rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-sm text-white/78"
+                    className="theme-home-path-item theme-text-body rounded-2xl border px-4 py-3 text-sm"
                   >
                     {item}
                   </div>
@@ -698,12 +729,12 @@ export function HomePage() {
               </div>
               <Link
                 href="/competition"
-                className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/16 bg-[rgba(7,18,35,0.28)] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_14px_32px_rgba(7,18,35,0.18)] transition hover:bg-[rgba(7,18,35,0.38)] hover:text-white"
+                className="theme-button-secondary mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
               >
                 {locale === "en" ? "Open full competition page" : "Mở trang cuộc thi đầy đủ"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
-              <p className="mt-4 text-sm leading-7 text-white/68">
+              <p className="theme-text-muted mt-4 text-sm leading-7">
                 {locale === "en"
                   ? "In addition to cash awards, teams may also receive sponsor-supported gifts, scholarships, and other non-cash opportunities."
                   : "Bên cạnh tiền thưởng, các đội còn có thể nhận thêm quà tặng, học bổng và những quyền lợi phi tiền mặt từ nhà tài trợ."}
@@ -746,162 +777,111 @@ export function HomePage() {
         </Surface>
       </section>
 
-      <section className="relative overflow-hidden rounded-[2.4rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(240,247,255,0.92))] px-6 py-8 md:px-8 md:py-10">
+      <section className="theme-home-testimonials-shell relative overflow-hidden rounded-[2.4rem] border px-6 py-8 md:px-8 md:py-10">
         <div className="absolute -right-8 top-0 h-40 w-40 rounded-full bg-sky-200/40 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-cyan-200/36 blur-3xl" />
 
-        <div className="relative grid gap-6 xl:grid-cols-[minmax(0,1.04fr)_340px] xl:items-start">
-          <div className="rounded-[2rem] border theme-border-strong bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(237,245,251,0.92))] p-6 shadow-[0_26px_64px_rgba(14,37,66,0.12)]">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="max-w-2xl">
-                <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.3em]">
-                  {locale === "en" ? "Attacker 2025 voices" : "Góc nhìn từ Attacker 2025"}
-                </p>
-                <h2 className="theme-heading mt-4 text-3xl font-semibold leading-[1.08] theme-text-strong md:text-[2.8rem]">
-                  {locale === "en"
-                    ? "What participants carried forward after last season."
-                    : "Những điều thí sinh mang theo sau mùa Attacker trước."}
-                </h2>
-                <p className="mt-4 max-w-2xl text-sm leading-7 theme-text-muted md:text-base">
-                  {locale === "en"
-                    ? "A more editorial testimonial stage with rotating profiles, direct quotes, and the transition from competition role to current direction."
-                    : "Một khu vực testimonial giàu tính biên tập hơn, xoay vòng giữa các gương mặt, câu trích dẫn và hành trình từ vai trò tại cuộc thi đến định hướng hiện tại."}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 self-start">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setActiveTestimonial((current) =>
-                      (current - 1 + testimonialItems.length) % testimonialItems.length,
-                    )
-                  }
-                  aria-label={locale === "en" ? "Previous testimonial" : "Lời chia sẻ trước"}
-                  className="theme-button-secondary inline-flex h-11 w-11 items-center justify-center rounded-full"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTestimonial((current) => (current + 1) % testimonialItems.length)}
-                  aria-label={locale === "en" ? "Next testimonial" : "Lời chia sẻ tiếp theo"}
-                  className="theme-button-secondary inline-flex h-11 w-11 items-center justify-center rounded-full"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-              </div>
+        <div className="relative space-y-7">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-center text-xs font-semibold uppercase tracking-[0.3em] theme-eyebrow md:text-left">
+                {locale === "en" ? "Testimonial" : "Cảm nhận"}
+              </p>
+              <h2 className="theme-heading mt-3 text-center text-3xl font-semibold leading-[1.08] theme-text-strong md:text-left md:text-[2.75rem]">
+                {locale === "en"
+                  ? "What Attacker 2025 participants think about the journey"
+                  : "Những gì thí sinh Attacker 2025 cảm nhận sau hành trình cuộc thi"}
+              </h2>
+              <p className="mt-3 text-center text-sm leading-7 theme-text-muted md:text-left md:text-base">
+                {locale === "en"
+                  ? "A sliding collection of short voices from finalists, champions, and emerging teams across last season."
+                  : "Một cụm trích dẫn dạng slider, tổng hợp cảm nhận ngắn từ các đội chung kết, quán quân và đội tiềm năng của mùa trước."}
+              </p>
             </div>
-
-            <div className="mt-8 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-              <div className="relative overflow-hidden rounded-[1.8rem] border theme-border bg-[linear-gradient(180deg,rgba(10,29,52,0.96),rgba(23,114,208,0.9))] p-4 text-white">
-                <div className="relative h-[250px] overflow-hidden rounded-[1.5rem] border border-white/12">
-                  <Image
-                    key={currentTestimonial.name}
-                    src={currentTestimonial.avatarImageSrc}
-                    alt={currentTestimonial.name}
-                    fill
-                    sizes="220px"
-                    className="object-cover transition duration-700"
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_0%,rgba(7,18,35,0.82)_100%)]" />
-                  <div className="absolute inset-x-0 bottom-0 p-4">
-                    <p className="theme-heading text-xl font-semibold text-white">{currentTestimonial.name}</p>
-                    <p className="mt-2 text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-white/70">
-                      {pickText(locale, currentTestimonial.competitionRole)}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4 rounded-[1.35rem] border border-white/12 bg-white/10 p-4 backdrop-blur-sm">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-white/88">
-                    <GraduationCap className="h-4 w-4" />
-                    <span>{currentTestimonial.university}</span>
-                  </div>
-                  {currentTestimonial.currentEmployment ? (
-                    <div className="mt-3 flex items-start gap-2 text-sm text-white/76">
-                      <BriefcaseBusiness className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>{pickText(locale, currentTestimonial.currentEmployment)}</span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden rounded-[1.9rem] border theme-border-strong bg-white/84 p-6 shadow-[0_22px_56px_rgba(14,37,66,0.08)]">
-                <div className="absolute -right-10 top-4 h-28 w-28 rounded-full bg-sky-100/70 blur-2xl" />
-                <div className="absolute left-0 top-0 h-full w-1.5 bg-[linear-gradient(180deg,#1772d0,#46bbff)]" />
-                <Quote className="relative h-9 w-9 theme-accent" />
-                <p className="relative mt-5 text-lg leading-9 theme-text-body md:text-[1.42rem] md:leading-10">
-                  &ldquo;{pickText(locale, currentTestimonial.quote)}&rdquo;
-                </p>
-
-                <div className="relative mt-8 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-[1.2rem] border theme-border bg-white/72 px-4 py-3">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                      {locale === "en" ? "Competition role" : "Vai trò tại cuộc thi"}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 theme-text-body">
-                      {pickText(locale, currentTestimonial.competitionRole)}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.2rem] border theme-border bg-white/72 px-4 py-3">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                      {locale === "en" ? "Current direction" : "Hướng đi hiện tại"}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 theme-text-body">
-                      {currentTestimonial.currentEmployment
-                        ? pickText(locale, currentTestimonial.currentEmployment)
-                        : locale === "en"
-                          ? "Still developing in student-led fintech projects."
-                          : "Tiếp tục phát triển qua các dự án fintech do sinh viên dẫn dắt."}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="relative mt-6 flex gap-2">
-                  {testimonialItems.map((item, index) => (
-                    <button
-                      key={item.name}
-                      type="button"
-                      onClick={() => setActiveTestimonial(index)}
-                      aria-label={item.name}
-                      className={`h-2.5 rounded-full transition ${
-                        index === activeTestimonial ? "w-10 bg-[var(--brand)]" : "w-2.5 bg-slate-300/70"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
+            <div className="flex items-center justify-center gap-2 md:justify-end">
+              <button
+                type="button"
+                onClick={() =>
+                  setActiveTestimonial((current) => (current - 1 + testimonialItems.length) % testimonialItems.length)
+                }
+                aria-label={locale === "en" ? "Previous testimonial" : "Lời chia sẻ trước"}
+                className="theme-button-secondary inline-flex h-11 w-11 items-center justify-center rounded-full"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTestimonial((current) => (current + 1) % testimonialItems.length)}
+                aria-label={locale === "en" ? "Next testimonial" : "Lời chia sẻ tiếp theo"}
+                className="theme-button-secondary inline-flex h-11 w-11 items-center justify-center rounded-full"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
 
-          <div className="space-y-3">
-            {testimonialItems.map((item, index) => (
+          <div className="grid gap-5 lg:grid-cols-3">
+            {visibleTestimonials.map(({ item, index }, position) => (
               <button
-                key={item.name}
+                key={`${item.name}-${index}`}
                 type="button"
                 onClick={() => setActiveTestimonial(index)}
-                className={`group flex w-full cursor-pointer items-start gap-4 rounded-[1.6rem] border px-4 py-4 text-left transition duration-300 ${
-                  index === activeTestimonial
-                    ? "theme-border-strong bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(230,242,255,0.96))] shadow-[0_20px_46px_rgba(14,37,66,0.12)]"
-                    : "theme-border bg-white/68 hover:-translate-y-0.5 hover:bg-white/86"
-                }`}
+                className="theme-home-testimonial-card group relative flex h-full cursor-pointer flex-col rounded-[1.8rem] border p-5 text-left"
               >
-                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-[1.1rem] border theme-border">
-                  <Image src={item.avatarImageSrc} alt={item.name} fill sizes="64px" className="object-cover" />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border theme-border">
+                      <Image src={item.avatarImageSrc} alt={item.name} fill sizes="56px" className="object-cover" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="theme-heading truncate text-base font-semibold theme-text-strong">{item.name}</p>
+                      <p className="mt-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                        {pickText(locale, item.competitionRole)}
+                      </p>
+                    </div>
+                  </div>
+                  <div
+                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${testimonialQuoteClasses[position % testimonialQuoteClasses.length]}`}
+                  >
+                    <Quote className="h-5 w-5" />
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="theme-heading text-base font-semibold theme-text-strong">{item.name}</p>
-                  <p className="mt-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
-                    {pickText(locale, item.competitionRole)}
-                  </p>
-                  <p className="mt-2 text-sm theme-text-soft">{item.university}</p>
-                  <p className="mt-2 text-sm leading-6 theme-text-muted">
-                    &ldquo;{pickText(locale, item.quote)}&rdquo;
-                  </p>
+
+                <p className="mt-5 text-sm leading-7 theme-text-body">
+                  &ldquo;{pickText(locale, item.quote)}&rdquo;
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <div className="theme-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium">
+                    <GraduationCap className="h-3.5 w-3.5" />
+                    <span>{item.university}</span>
+                  </div>
+                  {item.currentEmployment ? (
+                    <div className="theme-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium">
+                      <BriefcaseBusiness className="h-3.5 w-3.5" />
+                      <span>{pickText(locale, item.currentEmployment)}</span>
+                    </div>
+                  ) : null}
                 </div>
               </button>
             ))}
-            <Link href="/organizer" className="inline-flex items-center gap-2 px-1 text-sm font-semibold theme-accent">
+          </div>
+
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex justify-center gap-2 md:justify-start">
+              {testimonialItems.map((item, index) => (
+                <button
+                  key={item.name}
+                  type="button"
+                  onClick={() => setActiveTestimonial(index)}
+                  aria-label={item.name}
+                  className={`h-2.5 rounded-full transition ${
+                    index === activeTestimonial ? "w-10 bg-[var(--brand)]" : "w-2.5 bg-slate-300/70"
+                  }`}
+                />
+              ))}
+            </div>
+            <Link href="/organizer" className="inline-flex items-center justify-center gap-2 text-sm font-semibold theme-accent md:justify-end">
               {locale === "en" ? "About Attacker" : "Giới thiệu Attacker"}
               <ArrowRight className="h-4 w-4" />
             </Link>
