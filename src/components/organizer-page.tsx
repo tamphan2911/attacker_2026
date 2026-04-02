@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   ChevronLeft,
@@ -18,6 +18,7 @@ export function OrganizerPage() {
   const { locale, pageContent } = useSiteState();
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
   const [expandedGalleryIndex, setExpandedGalleryIndex] = useState<number | null>(null);
+  const galleryThumbnailRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const seasonStories = [
     {
       year: "2023",
@@ -179,6 +180,16 @@ export function OrganizerPage() {
       window.clearInterval(intervalId);
     };
   }, [gallerySlides.length]);
+
+  useEffect(() => {
+    const activeThumbnail = galleryThumbnailRefs.current[activeGalleryIndex];
+
+    activeThumbnail?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [activeGalleryIndex]);
 
   useEffect(() => {
     if (expandedGalleryIndex === null) {
@@ -426,16 +437,23 @@ export function OrganizerPage() {
               </div>
             </button>
 
-            <div className="border-t theme-border px-4 py-4 md:px-6">
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <div className="relative border-t theme-border px-4 py-4 md:px-6">
+              <div className="pointer-events-none absolute inset-y-0 left-4 z-10 hidden w-10 bg-[linear-gradient(90deg,var(--shell-start),transparent)] md:block" />
+              <div className="pointer-events-none absolute inset-y-0 right-4 z-10 hidden w-10 bg-[linear-gradient(270deg,var(--shell-start),transparent)] md:block" />
+              <div className="overflow-x-auto scroll-smooth px-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex w-max gap-3">
                 {gallerySlides.map((slide, index) => (
                   <button
                     key={`${slide.year}-${slide.image}`}
                     type="button"
+                    ref={(node) => {
+                      galleryThumbnailRefs.current[index] = node;
+                    }}
                     onClick={() => setActiveGalleryIndex(index)}
-                    className={`overflow-hidden rounded-[1.5rem] border text-left transition ${
+                    aria-current={index === activeGalleryIndex}
+                    className={`w-[220px] shrink-0 overflow-hidden rounded-[1.5rem] border text-left transition md:w-[240px] ${
                       index === activeGalleryIndex
-                        ? "border-sky-300/44 bg-[rgba(23,114,208,0.08)]"
+                        ? "border-sky-300/44 bg-[rgba(23,114,208,0.08)] shadow-[0_18px_42px_rgba(23,114,208,0.12)]"
                         : "theme-border theme-panel-subtle hover:bg-[var(--panel)]"
                     }`}
                   >
@@ -462,6 +480,7 @@ export function OrganizerPage() {
                     </div>
                   </button>
                 ))}
+                </div>
               </div>
             </div>
           </Surface>
