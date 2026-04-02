@@ -1,16 +1,75 @@
 "use client";
 
-import { ArrowRight, Award, BadgeCheck, Crown, Medal, Sparkles, Trophy, Users2 } from "lucide-react";
-import Link from "next/link";
+import { Award, BadgeCheck, Crown, Medal, Sparkles, Star, Trophy, Users2 } from "lucide-react";
 
 import {
   audienceHighlights,
-  rewardItems,
   roundItems,
 } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { InfoKicker, PageIntro, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+
+const competitionRewardItems = [
+  {
+    rank: { en: "1st place", vi: "Hạng 1" },
+    title: { en: "Champion", vi: "Quán quân" },
+    amount: { en: "30,000,000 VND", vi: "30.000.000 VND" },
+    note: {
+      en: "Awarded to the team with the highest final-round score.",
+      vi: "Trao cho đội có điểm cao nhất ở vòng chung kết.",
+    },
+    icon: Crown,
+    iconClass: "bg-[linear-gradient(135deg,#f59e0b,#facc15)] text-slate-950",
+    borderClass: "border-amber-300/50",
+  },
+  {
+    rank: { en: "2nd place", vi: "Hạng 2" },
+    title: { en: "Runner-up", vi: "Á quân" },
+    amount: { en: "15,000,000 VND", vi: "15.000.000 VND" },
+    note: {
+      en: "Awarded to the team with the second-highest final-round score.",
+      vi: "Trao cho đội có điểm cao thứ hai ở vòng chung kết.",
+    },
+    icon: Medal,
+    iconClass: "bg-[linear-gradient(135deg,#e2e8f0,#cbd5e1)] text-slate-950",
+    borderClass: "border-slate-300/60",
+  },
+  {
+    rank: { en: "3rd place", vi: "Hạng 3" },
+    title: { en: "Third place", vi: "Quý quân" },
+    amount: { en: "10,000,000 VND", vi: "10.000.000 VND" },
+    note: {
+      en: "Awarded to the team with the third-highest final-round score.",
+      vi: "Trao cho đội có điểm cao thứ ba ở vòng chung kết.",
+    },
+    icon: Award,
+    iconClass: "bg-[linear-gradient(135deg,#fb923c,#f97316)] text-white",
+    borderClass: "border-orange-300/50",
+  },
+  {
+    rank: { en: "4th place", vi: "Hạng 4" },
+    title: { en: "Two finalist teams", vi: "Hai đội đồng hạng 4" },
+    amount: { en: "2 x 5,000,000 VND", vi: "2 x 5.000.000 VND" },
+    note: {
+      en: "The remaining two finalists each receive the fourth-place award.",
+      vi: "Hai đội còn lại trong top 5 chung kết, mỗi đội nhận giải hạng 4.",
+    },
+    icon: Star,
+    iconClass: "bg-[linear-gradient(135deg,#38bdf8,#14b8a6)] text-white",
+    borderClass: "border-cyan-300/40",
+  },
+] as const;
+
+const competitionEmergingReward = {
+  eyebrow: { en: "Side recognition", vi: "Danh hiệu bổ sung" },
+  title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
+  amount: { en: "Top 10 teams", vi: "Top 10 đội" },
+  note: {
+    en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
+    vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
+  },
+} as const;
 
 export function CompetitionPage() {
   const { locale, pageContent } = useSiteState();
@@ -20,7 +79,6 @@ export function CompetitionPage() {
       <PageIntro
         eyebrow={pickText(locale, pageContent.competition.intro.eyebrow)}
         title={pickText(locale, pageContent.competition.intro.title)}
-        description={pickText(locale, pageContent.competition.intro.description)}
         aside={
           <Surface className="px-5 py-5">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
@@ -113,183 +171,109 @@ export function CompetitionPage() {
         </div>
       </section>
 
-      <section className="space-y-8">
-        <SectionHeading
-          eyebrow={locale === "en" ? "Advancement logic" : "Logic di tiep"}
-          title={
-            locale === "en"
-              ? "The progression thresholds are now explicit."
-              : "Cac nguong di tiep gio da duoc neu ro."
-          }
-          description={
-            locale === "en"
-              ? "This makes the structure easier to understand for both students and organizers before backend scoring is built."
-              : "Dieu nay giup sinh vien va ban to chuc de hieu cau truc hon truoc khi he thong cham diem backend duoc xay."
-          }
-        />
-        <div className="grid gap-4 xl:grid-cols-3">
-          {[
-            {
-              title: locale === "en" ? "Round 1 access" : "Quyền vào Vòng 1",
-              body:
-                locale === "en"
-                  ? "A user must already belong to a team of at least 3 members before taking the individual Round 1 paper."
-                  : "Người dùng phải thuộc một đội có ít nhất 3 thành viên trước khi vào bài thi cá nhân của Vòng 1.",
-            },
-            {
-              title: locale === "en" ? "Top 50 teams" : "Top 50 doi",
-              body:
-                locale === "en"
-                  ? "Round 1 is taken individually with 36 objective questions and 2 essay prompts, but the team average score decides which 50 teams move to Round 2."
-                  : "Vòng 1 được làm theo từng cá nhân với 36 câu khách quan và 2 câu tự luận, nhưng điểm trung bình đội sẽ quyết định 50 đội nào vào Vòng 2.",
-            },
-            {
-              title: locale === "en" ? "Top 5 + Top 10" : "Top 5 + Top 10",
-              body:
-                locale === "en"
-                  ? "Round 2 sends the top 5 teams to the final and recognizes the next 10 teams as Emerging Teams."
-                  : "Vòng 2 đưa top 5 đội vào chung kết và ghi nhận 10 đội tiếp theo là Đội tiềm năng.",
-            },
-          ].map((item, index) => (
-            <Surface key={item.title} className="px-6 py-6">
-              <StatusPill tone={index === 1 ? "success" : index === 2 ? "warning" : "default"}>
-                {locale === "en" ? `Step ${index + 1}` : `Buoc ${index + 1}`}
-              </StatusPill>
-              <p className="mt-5 text-xl font-semibold theme-text-strong">{item.title}</p>
-              <p className="mt-4 text-sm leading-7 theme-text-muted">{item.body}</p>
-            </Surface>
-          ))}
-        </div>
-      </section>
+      <section className="theme-home-rewards-shell relative overflow-hidden rounded-[2.4rem] border px-6 py-8 md:px-8 md:py-10">
+        <div className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-cyan-300/14 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-sky-300/16 blur-3xl" />
 
-      <section className="space-y-8">
-        <SectionHeading
-          eyebrow={pickText(locale, pageContent.competition.rewards.eyebrow)}
-          title={pickText(locale, pageContent.competition.rewards.title)}
-          description={pickText(locale, pageContent.competition.rewards.description)}
-        />
-        <div className="grid gap-4 xl:grid-cols-4">
-          {rewardItems.map((item, index) => {
-            const config =
-              index === 0
-                ? {
-                    icon: <Crown className="h-6 w-6 text-amber-300" />,
-                    accent: "bg-[linear-gradient(135deg,#0a1d34,#1772d0)] text-white",
-                    labelTone: "text-white/70",
-                    noteTone: "text-white/78",
-                    amountTone: "text-white",
-                    className: "xl:col-span-2",
-                  }
-                : index === 1
-                  ? {
-                      icon: <Medal className="h-6 w-6 theme-accent" />,
-                      accent: "theme-panel-strong",
-                      labelTone: "theme-eyebrow",
-                      noteTone: "theme-text-muted",
-                      amountTone: "theme-text-strong",
-                      className: "",
-                    }
-                  : index === 2
-                    ? {
-                        icon: <Award className="h-6 w-6 text-orange-400" />,
-                        accent: "theme-panel-strong",
-                        labelTone: "theme-eyebrow",
-                        noteTone: "theme-text-muted",
-                        amountTone: "theme-text-strong",
-                        className: "",
-                      }
-                    : {
-                        icon: <Sparkles className="h-6 w-6 text-emerald-400" />,
-                        accent: "theme-panel-strong",
-                        labelTone: "theme-eyebrow",
-                        noteTone: "theme-text-muted",
-                        amountTone: "theme-text-strong",
-                        className: "",
-                      };
+        <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_320px] xl:items-start">
+          <div>
+            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
+              {pickText(locale, pageContent.competition.rewards.eyebrow)}
+            </p>
+            <h2 className="theme-heading mt-5 max-w-3xl text-3xl font-semibold leading-[1.08] theme-text-strong md:text-[3rem]">
+              {locale === "en"
+                ? "A reward structure that makes every result band clear."
+                : "Cấu trúc giải thưởng giúp từng nhóm kết quả được nhìn rõ ngay lập tức."}
+            </h2>
+            <p className="theme-text-muted mt-5 max-w-3xl text-base leading-8">
+              {locale === "en"
+                ? "The main awards are separated by final ranking from 1st to 4th, while Emerging Teams stay in their own smaller recognition block after Round 2."
+                : "Các giải chính được tách rõ theo thứ hạng chung kết từ hạng 1 đến hạng 4, trong khi Đội tiềm năng nằm ở một block riêng nhỏ hơn sau Vòng 2."}
+            </p>
 
-            return (
-              <Surface key={item.title.en} className={`${config.className} overflow-hidden px-6 py-6`}>
-                <div className={`rounded-[1.75rem] border theme-border px-5 py-5 ${config.accent}`}>
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="rounded-2xl border border-white/12 bg-white/10 p-3 backdrop-blur-md">
-                      {config.icon}
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              {competitionRewardItems.map((item) => {
+                const Icon = item.icon;
+
+                return (
+                  <div
+                    key={item.rank.en}
+                    className={`theme-home-reward-card rounded-[1.8rem] border px-5 py-5 backdrop-blur-md ${item.borderClass}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.iconClass}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="theme-text-soft text-[0.72rem] font-semibold uppercase tracking-[0.24em]">
+                          {pickText(locale, item.rank)}
+                        </p>
+                        <p className="theme-text-strong mt-1 text-lg font-semibold">
+                          {pickText(locale, item.title)}
+                        </p>
+                      </div>
                     </div>
-                    <span className={`text-xs font-semibold uppercase tracking-[0.26em] ${config.labelTone}`}>
-                      {pickText(locale, item.title)}
-                    </span>
+                    <p className="theme-text-strong mt-5 text-2xl font-semibold md:text-[1.8rem]">
+                      {pickText(locale, item.amount)}
+                    </p>
+                    <p className="theme-text-muted mt-3 text-sm leading-7">
+                      {pickText(locale, item.note)}
+                    </p>
                   </div>
-                  <p className={`mt-6 text-3xl font-semibold ${config.amountTone}`}>
-                    {pickText(locale, item.amount)}
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="theme-home-reward-aside rounded-[2rem] border px-5 py-6 backdrop-blur-md">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#34d399,#10b981)] text-slate-950">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="theme-text-soft text-[0.72rem] font-semibold uppercase tracking-[0.24em]">
+                    {pickText(locale, competitionEmergingReward.eyebrow)}
                   </p>
-                  <p className={`mt-4 text-sm leading-7 ${config.noteTone}`}>
-                    {pickText(locale, item.note)}
+                  <p className="theme-text-strong mt-1 text-lg font-semibold">
+                    {pickText(locale, competitionEmergingReward.title)}
                   </p>
                 </div>
-              </Surface>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <SectionHeading
-            eyebrow={pickText(locale, pageContent.competition.mentors.eyebrow)}
-            title={pickText(locale, pageContent.competition.mentors.title)}
-            description={pickText(locale, pageContent.competition.mentors.description)}
-          />
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {[
-              {
-                title: locale === "en" ? "Quant & Trading" : "Quant va Giao dich",
-                body:
-                  locale === "en"
-                    ? "Market structure, strategy testing, and risk framing."
-                    : "Cau truc thi truong, kiem thu chien luoc va khung rui ro.",
-              },
-              {
-                title: locale === "en" ? "Product & UX" : "San pham va UX",
-                body:
-                  locale === "en"
-                    ? "User pain points, product logic, and usability storytelling."
-                    : "Nỗi đau người dùng, logic sản phẩm và cách kể chuyện về trải nghiệm.",
-              },
-              {
-                title: locale === "en" ? "Venture & Growth" : "Dau tu va Tang truong",
-                body:
-                  locale === "en"
-                    ? "Go-to-market, scaling assumptions, and investment readiness."
-                    : "Chien luoc go-to-market, gia dinh tang truong va su san sang tiep can dau tu.",
-              },
-            ].map((item) => (
-              <div key={item.title} className="rounded-3xl border theme-border theme-panel px-4 py-4">
-                <p className="text-lg font-semibold theme-text-strong">{item.title}</p>
-                <p className="mt-3 text-sm leading-7 theme-text-muted">{item.body}</p>
               </div>
-            ))}
-          </div>
-        </Surface>
+              <p className="theme-text-strong mt-5 text-2xl font-semibold">
+                {pickText(locale, competitionEmergingReward.amount)}
+              </p>
+              <p className="theme-text-muted mt-3 text-sm leading-7">
+                {pickText(locale, competitionEmergingReward.note)}
+              </p>
+            </div>
 
-        <Surface className="h-fit px-6 py-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Next route" : "Route tiep theo"}
-          </p>
-          <p className="mt-4 text-2xl font-semibold theme-text-strong">
-            {locale === "en" ? "Review the rules and timeline." : "Xem thể lệ và lịch trình."}
-          </p>
-          <p className="mt-4 text-sm leading-7 theme-text-muted">
-            {locale === "en"
-              ? "The companion page clarifies team eligibility, deadlines, and FAQ logic before the registration flow."
-              : "Trang đi kèm làm rõ điều kiện đội thi, hạn chót và FAQ trước khi người dùng vào quy trình đăng ký."}
-          </p>
-          <Link
-            href="/rules"
-            className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200"
-          >
-            {locale === "en" ? "Open rules page" : "Mở trang thể lệ"}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        </Surface>
+            <div className="theme-home-reward-aside rounded-[2rem] border px-5 py-5 backdrop-blur-md">
+              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
+                {locale === "en" ? "Competition path" : "Lộ trình cuộc thi"}
+              </p>
+              <div className="mt-5 space-y-3">
+                {[
+                  locale === "en" ? "Round 1 selects the top 50 teams." : "Vòng 1 chọn ra top 50 đội.",
+                  locale === "en" ? "Round 2 selects the top 5 finalists." : "Vòng 2 chọn ra top 5 đội chung kết.",
+                  locale === "en" ? "The next 10 teams are named Emerging Teams." : "10 đội tiếp theo được gọi tên là Đội tiềm năng.",
+                ].map((item) => (
+                  <div
+                    key={item}
+                    className="theme-home-path-item theme-text-body rounded-2xl border px-4 py-3 text-sm"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+              <p className="theme-text-muted mt-4 text-sm leading-7">
+                {locale === "en"
+                  ? "In addition to cash awards, teams may also receive sponsor-supported gifts, scholarships, and other non-cash opportunities."
+                  : "Bên cạnh tiền thưởng, các đội còn có thể nhận thêm quà tặng, học bổng và những quyền lợi phi tiền mặt từ nhà tài trợ."}
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   );

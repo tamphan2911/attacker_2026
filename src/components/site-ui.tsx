@@ -100,7 +100,7 @@ export function PageIntro({
 }: {
   eyebrow: string;
   title: string;
-  description: string;
+  description?: string;
   aside?: ReactNode;
 }) {
   return (
