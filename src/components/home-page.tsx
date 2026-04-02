@@ -359,6 +359,11 @@ export function HomePage() {
                 {locale === "en" ? "Open full competition page" : "Mở trang cuộc thi đầy đủ"}
                 <ArrowRight className="h-4 w-4" />
               </Link>
+              <p className="mt-4 text-sm leading-7 text-white/68">
+                {locale === "en"
+                  ? "In addition to cash awards, teams may also receive sponsor-supported gifts, scholarships, and other non-cash opportunities."
+                  : "Bên cạnh tiền thưởng, các đội còn có thể nhận thêm quà tặng, học bổng và những quyền lợi phi tiền mặt từ nhà tài trợ."}
+              </p>
             </div>
           </div>
         </div>
