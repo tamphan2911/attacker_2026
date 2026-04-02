@@ -1,11 +1,12 @@
-<svg width="240" height="72" viewBox="0 0 240 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="240" height="72" rx="18" fill="#F7FBFF"/>
-  <circle cx="38" cy="36" r="18" fill="#0A1D34"/>
-  <path d="M30 42L36 30L41 39L47 28" stroke="#7DE4FF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="30" cy="42" r="2.5" fill="#63D2FF"/>
-  <circle cx="36" cy="30" r="2.5" fill="#63D2FF"/>
-  <circle cx="41" cy="39" r="2.5" fill="#63D2FF"/>
-  <circle cx="47" cy="28" r="2.5" fill="#63D2FF"/>
-  <text x="68" y="34" fill="#0A1D34" font-family="Arial, sans-serif" font-size="21" font-weight="700">Quant</text>
-  <text x="68" y="52" fill="#4F6B88" font-family="Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="1.8">STUDIO</text>
+<svg width="320" height="96" viewBox="0 0 320 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="48" cy="48" r="30" fill="#0A1D34"/>
+  <path d="M30 58L41 39L51 52L66 33" stroke="#7DE4FF" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="30" cy="58" r="4" fill="#63D2FF"/>
+  <circle cx="41" cy="39" r="4" fill="#63D2FF"/>
+  <circle cx="51" cy="52" r="4" fill="#63D2FF"/>
+  <circle cx="66" cy="33" r="4" fill="#63D2FF"/>
+  <path d="M96 47.5C96 33.525 107.575 24 123.9 24C140.225 24 151.8 33.525 151.8 47.5C151.8 61.475 140.225 71 123.9 71C107.575 71 96 61.475 96 47.5ZM134.2 47.5C134.2 41.2 129.825 36.8 123.9 36.8C117.975 36.8 113.6 41.2 113.6 47.5C113.6 53.8 117.975 58.2 123.9 58.2C129.825 58.2 134.2 53.8 134.2 47.5Z" fill="#0A1D34"/>
+  <path d="M159 28H176.2L186.4 52L196.6 28H213.2L194.4 68H177.8L159 28Z" fill="#0A1D34"/>
+  <path d="M218 28H256.8V39.4H234.8V43.4H254.2V54.1H234.8V58.6H257.6V70H218V28Z" fill="#0A1D34"/>
+  <text x="96" y="84" fill="#4F6B88" font-family="'Be Vietnam Pro', Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3.2">QUANT STUDIO</text>
 </svg>

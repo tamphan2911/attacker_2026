@@ -1,8 +1,10 @@
-<svg width="240" height="72" viewBox="0 0 240 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="240" height="72" rx="18" fill="#F7FBFF"/>
-  <path d="M24 18H50L42 30H24V18Z" fill="#1772D0"/>
-  <path d="M24 34H44L36 46H24V34Z" fill="#63D2FF"/>
-  <path d="M24 50H58L50 62H24V50Z" fill="#0A1D34"/>
-  <text x="76" y="34" fill="#0A1D34" font-family="Arial, sans-serif" font-size="22" font-weight="700">Finverse</text>
-  <text x="76" y="52" fill="#4F6B88" font-family="Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="1.8">ECOSYSTEM</text>
+<svg width="320" height="96" viewBox="0 0 320 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M20 22H76L60 38H20V22Z" fill="#1772D0"/>
+  <path d="M20 42H64L50 58H20V42Z" fill="#63D2FF"/>
+  <path d="M20 62H88L72 78H20V62Z" fill="#0A1D34"/>
+  <path d="M110 25H127.2V70H110V25Z" fill="#0A1D34"/>
+  <path d="M136.6 25H175.4V37.8H153.8V43H173.8V54.8H153.8V70H136.6V25Z" fill="#0A1D34"/>
+  <path d="M182.2 25H199.4V56.3H239.2V70H182.2V25Z" fill="#0A1D34"/>
+  <path d="M244.4 47.5C244.4 33.975 255.525 24 270.6 24C279.55 24 287.25 27.45 292.25 33.7L281.45 43.45C278.675 40.15 275.525 38.4 271.4 38.4C264.5 38.4 261.6 42.725 261.6 47.5C261.6 52.275 264.5 56.6 271.4 56.6C275.525 56.6 278.675 54.85 281.45 51.55L292.25 61.3C287.25 67.55 279.55 71 270.6 71C255.525 71 244.4 61.025 244.4 47.5Z" fill="#0A1D34"/>
+  <text x="110" y="84" fill="#4F6B88" font-family="'Be Vietnam Pro', Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3.2">FINVERSE ECOSYSTEM</text>
 </svg>

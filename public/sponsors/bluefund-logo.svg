@@ -1,7 +1,8 @@
-<svg width="240" height="72" viewBox="0 0 240 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="240" height="72" rx="18" fill="#F7FBFF"/>
-  <path d="M35 18L46 36L35 54H22L33 36L22 18H35Z" fill="#1772D0"/>
-  <path d="M48 18L59 36L48 54H35L46 36L35 18H48Z" fill="#63D2FF"/>
-  <text x="78" y="34" fill="#0A1D34" font-family="Arial, sans-serif" font-size="22" font-weight="700">BlueFund</text>
-  <text x="78" y="52" fill="#4F6B88" font-family="Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="1.8">CAPITAL</text>
+<svg width="320" height="96" viewBox="0 0 320 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M18 26L36 48L18 70H40L58 48L40 26H18Z" fill="#1772D0"/>
+  <path d="M48 18L74 48L48 78H72L98 48L72 18H48Z" fill="#63D2FF"/>
+  <path d="M94 24H122C139.121 24 150 33.3195 150 47C150 60.6805 139.121 70 122 70H94V24ZM118.4 58.2C126.878 58.2 132.2 54.275 132.2 47C132.2 39.725 126.878 35.8 118.4 35.8H111.2V58.2H118.4Z" fill="#0A1D34"/>
+  <path d="M160 24H177.2V39.6H198.8V24H216V70H198.8V53.8H177.2V70H160V24Z" fill="#0A1D34"/>
+  <path d="M228 24H245.2V56.3H285V70H228V24Z" fill="#0A1D34"/>
+  <text x="110" y="84" fill="#4F6B88" font-family="'Be Vietnam Pro', Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3.2">BLUEFUND CAPITAL</text>
 </svg>

@@ -58,13 +58,13 @@ export function SponsorsPage() {
             <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-4">
-                  <div className="rounded-[1.5rem] border theme-border bg-white px-5 py-4 shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
+                  <div className="w-full max-w-[290px] rounded-[1.5rem] border theme-border bg-white px-4 py-4 shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
                     <Image
                       src={sponsor.logoSrc}
                       alt={sponsor.name}
-                      width={190}
-                      height={56}
-                      className="h-12 w-auto object-contain"
+                      width={320}
+                      height={96}
+                      className="h-16 w-full object-contain object-left"
                     />
                   </div>
                   <div className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] ${
@@ -122,13 +122,13 @@ export function SponsorsPage() {
         />
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {sponsorProfiles.map((sponsor) => (
-            <Surface key={sponsor.name + "-logo"} className="flex min-h-[150px] items-center justify-center px-5 py-5">
+            <Surface key={sponsor.name + "-logo"} className="flex min-h-[170px] items-center justify-center px-6 py-6">
               <Image
                 src={sponsor.logoSrc}
                 alt={sponsor.name}
-                width={210}
-                height={64}
-                className="h-auto max-h-16 w-auto object-contain"
+                width={320}
+                height={96}
+                className="h-20 w-full object-contain"
               />
             </Surface>
           ))}

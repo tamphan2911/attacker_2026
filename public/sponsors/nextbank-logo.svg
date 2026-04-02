@@ -1,9 +1,10 @@
-<svg width="240" height="72" viewBox="0 0 240 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="240" height="72" rx="18" fill="#F7FBFF"/>
-  <rect x="20" y="18" width="36" height="36" rx="12" fill="#0A1D34"/>
-  <path d="M31 27V45" stroke="#63D2FF" stroke-width="4" stroke-linecap="round"/>
-  <path d="M45 27V45" stroke="#1772D0" stroke-width="4" stroke-linecap="round"/>
-  <path d="M31 27L45 45" stroke="#8BE9FF" stroke-width="4" stroke-linecap="round"/>
-  <text x="72" y="34" fill="#0A1D34" font-family="Arial, sans-serif" font-size="21" font-weight="700">NextBank</text>
-  <text x="72" y="52" fill="#4F6B88" font-family="Arial, sans-serif" font-size="12" font-weight="600" letter-spacing="1.8">LAB</text>
+<svg width="320" height="96" viewBox="0 0 320 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="16" y="16" width="68" height="64" rx="22" fill="#0A1D34"/>
+  <path d="M34 30V66" stroke="#63D2FF" stroke-width="6" stroke-linecap="round"/>
+  <path d="M64 30V66" stroke="#1772D0" stroke-width="6" stroke-linecap="round"/>
+  <path d="M34 30L64 66" stroke="#8BE9FF" stroke-width="6" stroke-linecap="round"/>
+  <path d="M106 28H126.2L146.8 54.1V28H163.2V68H143L122.4 41.9V68H106V28Z" fill="#0A1D34"/>
+  <path d="M171 28H208.8V40.2H187.8V43.3H206.2V54.9H187.8V68H171V28Z" fill="#0A1D34"/>
+  <path d="M215 28H232.2V42.1H244.7L255.8 28H274.2L258.5 47.2L275 68H255.1L244.2 53.6H232.2V68H215V28Z" fill="#0A1D34"/>
+  <text x="106" y="84" fill="#4F6B88" font-family="'Be Vietnam Pro', Arial, sans-serif" font-size="13" font-weight="700" letter-spacing="3.2">NEXTBANK LAB</text>
 </svg>
