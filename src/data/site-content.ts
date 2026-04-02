@@ -36,6 +36,71 @@ export const contactInfo = {
   facebook: "https://www.facebook.com/clbfintechuel",
 };
 
+export const contactLocation = {
+  campusName: {
+    en: "University of Economics and Law",
+    vi: "Trường Đại học Kinh tế - Luật",
+  },
+  address: {
+    en: "669 National Highway 1A, Quarter 3, Linh Xuan Ward, Thu Duc City, Ho Chi Minh City",
+    vi: "669 Quốc lộ 1A, Khu phố 3, phường Linh Xuân, TP. Thủ Đức, TP. Hồ Chí Minh",
+  },
+  note: {
+    en: "Competition support is available at the organizer desk on campus during the official timeline and event days.",
+    vi: "Bàn hỗ trợ của ban tổ chức tiếp nhận thắc mắc tại trường trong các mốc lịch trình chính thức và vào ngày diễn ra sự kiện.",
+  },
+  mapEmbedUrl:
+    "https://www.google.com/maps?q=University%20of%20Economics%20and%20Law%2C%20Vietnam%20National%20University%20Ho%20Chi%20Minh%20City&output=embed",
+};
+
+export const contactDeskContacts = [
+  {
+    name: "Nguyễn Minh Châu",
+    phone: "0901 238 468",
+    tel: "0901238468",
+    responsibility: {
+      en: "Contestant support, registration questions, and account guidance",
+      vi: "Hỗ trợ thí sinh, giải đáp đăng ký và hướng dẫn tài khoản",
+    },
+  },
+  {
+    name: "Trần Hoàng Long",
+    phone: "0918 552 147",
+    tel: "0918552147",
+    responsibility: {
+      en: "Team formation, eligibility rules, and Round 1 logistics",
+      vi: "Tạo đội, điều kiện dự thi và hậu cần Vòng 1",
+    },
+  },
+  {
+    name: "Lê Quỳnh Như",
+    phone: "0933 401 225",
+    tel: "0933401225",
+    responsibility: {
+      en: "Media, communications, and sponsor visibility requests",
+      vi: "Truyền thông, nội dung đối ngoại và nhu cầu hiển thị nhà tài trợ",
+    },
+  },
+  {
+    name: "Phạm Đức Long",
+    phone: "0967 889 314",
+    tel: "0967889314",
+    responsibility: {
+      en: "Technical issues on the platform, submissions, and file support",
+      vi: "Sự cố kỹ thuật trên nền tảng, nộp bài và hỗ trợ tệp đính kèm",
+    },
+  },
+  {
+    name: "Võ Khánh Linh",
+    phone: "0985 772 036",
+    tel: "0985772036",
+    responsibility: {
+      en: "Judges, guests, partnership scheduling, and on-site coordination",
+      vi: "Điều phối giám khảo, khách mời, đối tác và lịch trình hiện trường",
+    },
+  },
+] as const;
+
 const round1Window = {
   startDate: "2026-05-16",
   endDate: "2026-05-17",
@@ -74,6 +139,7 @@ export const navItems: NavItem[] = [
   { href: "/competition", label: { en: "Competition", vi: "Cuộc thi" } },
   { href: "/rules", label: { en: "Rules & Timeline", vi: "Thể lệ và Lịch trình" } },
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
+  { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
   { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
   { href: "/organizer", label: { en: "Organizer", vi: "Ban tổ chức" } },
 ];

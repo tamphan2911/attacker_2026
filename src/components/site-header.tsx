@@ -53,6 +53,7 @@ const primaryNavItems: Array<{
     ],
   },
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
+  { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
   { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
   { href: "/organizer", label: { en: "Organizer", vi: "Ban tổ chức" } },
 ];
