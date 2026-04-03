@@ -159,6 +159,25 @@ function PhoneRequirementNotice({
   );
 }
 
+function pickDashboardCompetitionTone(state?: ReturnType<typeof getTeamCompetitionState>) {
+  if (!state) {
+    return "default" as const;
+  }
+
+  switch (state) {
+    case "not-eligible":
+      return "warning" as const;
+    case "round-1":
+    case "round-2":
+    case "round-3":
+      return "info" as const;
+  }
+}
+
+function pickDashboardRoleTone(isLeader: boolean) {
+  return isLeader ? ("info" as const) : ("default" as const);
+}
+
 export function DashboardPage() {
   const {
     locale,
@@ -378,10 +397,20 @@ export function DashboardPage() {
     currentRound1Submission &&
       (currentRound1Submission.essayScore == null || currentRound1Submission.totalScore == null),
   );
+  const currentTeamRound1Results = currentTeam
+    ? currentTeamMembers.map((member) => {
+        const submission = round1Submissions.find((item) => item.userId === member.id && item.teamId === currentTeam.id);
+
+        return {
+          member,
+          submission,
+        };
+      })
+    : [];
   const filteredAvailableUsers = availableUsers.filter((user) => {
     const keyword = inviteSearch.trim().toLowerCase();
     if (!keyword) {
-      return true;
+      return false;
     }
 
     return [user.name, user.email, user.university, user.major]
@@ -562,7 +591,7 @@ export function DashboardPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <StatusPill tone={isTargetTeamFull || isTargetTeamLocked ? "warning" : "success"}>
+                          <StatusPill tone={isTargetTeamFull || isTargetTeamLocked ? "warning" : "info"}>
                             {isTargetTeamFull
                               ? locale === "en"
                                 ? "Team full"
@@ -634,7 +663,7 @@ export function DashboardPage() {
                       />
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <StatusPill tone="success">
+                          <StatusPill tone="info">
                             {locale === "en" ? "Team lock request" : "Yêu cầu khóa đội"}
                           </StatusPill>
                           <StatusPill>{formatDateLabel(locale, request.createdAt)}</StatusPill>
@@ -840,7 +869,7 @@ export function DashboardPage() {
                   : pickText(locale, pageContent.workspace.noTeamDescription)}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                <StatusPill tone={currentCompetitionState === "not-eligible" ? "warning" : "success"}>
+                <StatusPill tone={pickDashboardCompetitionTone(currentCompetitionState)}>
                   {currentTeam
                     ? pickCompetitionStateLabel(locale, currentCompetitionState ?? "not-eligible")
                     : locale === "en"
@@ -856,7 +885,7 @@ export function DashboardPage() {
                         ? "success"
                         : currentTeam.round1LockStatus === "pending" || currentTeam.round1LockStatus === "declined"
                           ? "warning"
-                          : "default"
+                          : "info"
                     }
                   >
                     {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
@@ -948,7 +977,7 @@ export function DashboardPage() {
                 <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-5 py-5">
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill>{currentTeam.tag}</StatusPill>
-                    <StatusPill tone={isLeader ? "success" : "default"}>
+                    <StatusPill tone={pickDashboardRoleTone(isLeader)}>
                       {isLeader
                         ? locale === "en"
                           ? "Leader view"
@@ -991,10 +1020,10 @@ export function DashboardPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <StatusPill>{currentTeam.tag}</StatusPill>
-                  <StatusPill tone={currentCompetitionState === "not-eligible" ? "warning" : "success"}>
+                  <StatusPill tone={pickDashboardCompetitionTone(currentCompetitionState)}>
                     {pickCompetitionStateLabel(locale, currentCompetitionState ?? currentTeam.stage)}
                   </StatusPill>
-                  <StatusPill tone={isLeader ? "success" : "default"}>
+                  <StatusPill tone={pickDashboardRoleTone(isLeader)}>
                     {isLeader
                       ? locale === "en"
                         ? "You are the leader"
@@ -1132,7 +1161,7 @@ export function DashboardPage() {
                     {currentTeamMembers.length} / {TEAM_MAX_MEMBERS}
                   </p>
                 </div>
-                <StatusPill tone={currentCompetitionState === "not-eligible" ? "warning" : "success"}>
+                <StatusPill tone={pickDashboardCompetitionTone(currentCompetitionState)}>
                   {pickCompetitionStateLabel(locale, currentCompetitionState ?? currentTeam.stage)}
                 </StatusPill>
               </div>
@@ -1283,7 +1312,7 @@ export function DashboardPage() {
                               : "Tìm trong danh sách sinh viên hiện chưa là thành viên của bất kỳ đội nào."}
                     </p>
                   </div>
-                  <StatusPill tone={teamRosterLocked || isTeamFull ? "warning" : "default"}>
+                  <StatusPill tone={teamRosterLocked || isTeamFull ? "warning" : "info"}>
                     {teamRosterLocked
                       ? locale === "en"
                         ? "Roster locked"
@@ -1353,6 +1382,10 @@ export function DashboardPage() {
                         ? locale === "en"
                           ? "Roster changes are locked right now, so the invite list is intentionally disabled."
                           : "Đội hình hiện đang bị khóa nên danh sách mời thêm thành viên đang được tắt có chủ đích."
+                        : !inviteSearch.trim()
+                          ? locale === "en"
+                            ? "Start typing in the search box to look for students who are not in any team yet."
+                            : "Hãy bắt đầu gõ trong ô tìm kiếm để tìm sinh viên hiện chưa thuộc đội nào."
                         : inviteSearch.trim()
                           ? locale === "en"
                             ? "No available free-agent students match this search."
@@ -1429,7 +1462,7 @@ export function DashboardPage() {
                         ? "success"
                         : currentTeam.round1LockStatus === "pending" || currentTeam.round1LockStatus === "declined"
                           ? "warning"
-                          : "default"
+                          : "info"
                     }
                   >
                     {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
@@ -1754,6 +1787,118 @@ export function DashboardPage() {
                     <p className="mt-2 text-sm theme-text-soft">
                       {formatDateLabel(locale, currentRound1Submission.submittedAt)}
                     </p>
+                  </div>
+                </div>
+
+                <div className="mt-8 overflow-hidden rounded-[1.7rem] border theme-border">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
+                        <tr>
+                          {[
+                            "#",
+                            locale === "en" ? "Member" : "Thành viên",
+                            locale === "en" ? "Objective" : "Khách quan",
+                            locale === "en" ? "Essay" : "Tự luận",
+                            locale === "en" ? "Total" : "Tổng điểm",
+                            locale === "en" ? "Right / wrong" : "Đúng / sai",
+                            locale === "en" ? "Duration" : "Thời gian",
+                            locale === "en" ? "Submitted" : "Đã nộp",
+                            locale === "en" ? "Status" : "Trạng thái",
+                          ].map((label) => (
+                            <th key={label} className="px-4 py-3 font-medium">
+                              {label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentTeamRound1Results.map(({ member, submission }, index) => {
+                          const resultPending = Boolean(
+                            submission && (submission.essayScore == null || submission.totalScore == null),
+                          );
+
+                          return (
+                            <tr key={member.id} className="border-b theme-border last:border-b-0">
+                              <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{index + 1}</td>
+                              <td className="px-4 py-4">
+                                <div className="flex items-center gap-3">
+                                  <GradientAvatar
+                                    label={member.name}
+                                    tone={member.avatarTone}
+                                    imageSrc={member.avatarImageSrc}
+                                    className="h-10 w-10 rounded-[1rem]"
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="font-semibold theme-text-strong">{member.name}</p>
+                                    <p className="text-xs theme-text-soft">{member.studentId}</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 theme-text-body">
+                                {submission ? `${submission.objectiveScore} / ${ROUND1_OBJECTIVE_MAX_SCORE}` : "—"}
+                              </td>
+                              <td className="px-4 py-4 theme-text-body">
+                                {!submission
+                                  ? "—"
+                                  : submission.essayScore == null
+                                    ? locale === "en"
+                                      ? "Pending"
+                                      : "Đang chờ"
+                                    : `${submission.essayScore} / ${ROUND1_ESSAY_MAX_SCORE}`}
+                              </td>
+                              <td className="px-4 py-4 theme-text-body">
+                                {!submission
+                                  ? "—"
+                                  : submission.totalScore == null
+                                    ? locale === "en"
+                                      ? "Pending"
+                                      : "Đang chờ"
+                                    : `${submission.totalScore} / ${ROUND1_TOTAL_MAX_SCORE}`}
+                              </td>
+                              <td className="px-4 py-4 theme-text-body">
+                                {submission
+                                  ? locale === "en"
+                                    ? `${submission.rightCount} / ${submission.wrongCount}`
+                                    : `${submission.rightCount} / ${submission.wrongCount}`
+                                  : "—"}
+                              </td>
+                              <td className="px-4 py-4 theme-text-body">
+                                {submission
+                                  ? `${submission.durationMinutes} ${locale === "en" ? "min" : "phút"}`
+                                  : "—"}
+                              </td>
+                              <td className="px-4 py-4 theme-text-body">
+                                {submission ? formatDateLabel(locale, submission.submittedAt) : "—"}
+                              </td>
+                              <td className="px-4 py-4 text-center">
+                                <StatusPill
+                                  tone={
+                                    !submission
+                                      ? "default"
+                                      : resultPending
+                                        ? "warning"
+                                        : "success"
+                                  }
+                                >
+                                  {!submission
+                                    ? locale === "en"
+                                      ? "Not submitted"
+                                      : "Chưa nộp"
+                                    : resultPending
+                                      ? locale === "en"
+                                        ? "Essay review pending"
+                                        : "Đang chờ chấm tự luận"
+                                      : locale === "en"
+                                        ? "Complete"
+                                        : "Hoàn tất"}
+                                </StatusPill>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </Surface>
