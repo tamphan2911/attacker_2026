@@ -47,6 +47,7 @@ export interface RuleItem {
 }
 
 export interface TimelineItem {
+  id: string;
   phase: "general" | CompetitionRoundKey;
   startDate: string;
   endDate: string;
@@ -428,5 +429,6 @@ export interface AppSnapshot {
   round1Submissions: Round1Submission[];
   newsPosts: NewsPost[];
   judges: JudgeProfile[];
+  timelineItems: TimelineItem[];
   pageContent: SitePageContent;
 }

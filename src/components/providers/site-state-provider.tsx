@@ -24,6 +24,7 @@ import {
   newsPosts as seedNewsPosts,
   round1IndividualSubmissions as seedRound1Submissions,
   round1TestBanks as seedRound1TestBanks,
+  timelineItems as seedTimelineItems,
   mockSubmissions,
   mockTeams,
   mockUsers,
@@ -63,6 +64,7 @@ import type {
   TeamProfile,
   TeamSubmission,
   Theme,
+  TimelineItem,
   UserProfile,
 } from "@/types/site";
 
@@ -108,6 +110,7 @@ interface SiteDataApiPayload {
   judges: JudgeProfile[];
   newsPosts: NewsPost[];
   round1TestBanks: Round1TestBank[];
+  timelineItems: TimelineItem[];
 }
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
@@ -136,6 +139,7 @@ interface SiteStateValue {
   round1Submissions: Round1Submission[];
   newsPosts: NewsPost[];
   judges: JudgeProfile[];
+  timelineItems: TimelineItem[];
   pageContent: SitePageContent;
   currentUser: UserProfile;
   currentTeam?: TeamProfile;
@@ -218,6 +222,7 @@ function createInitialSnapshot(): AppSnapshot {
     round1Submissions: seedRound1Submissions,
     newsPosts: seedNewsPosts,
     judges: seedJudgeProfiles,
+    timelineItems: seedTimelineItems,
     pageContent: clonePageContent(defaultPageContent),
   };
 }
@@ -239,6 +244,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
   const [round1Submissions, setRound1Submissions] = useState<Round1Submission[]>(seedRound1Submissions);
   const [newsPosts, setNewsPosts] = useState<NewsPost[]>(seedNewsPosts);
   const [judges, setJudges] = useState<JudgeProfile[]>(seedJudgeProfiles);
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(seedTimelineItems);
   const [pageContent, setPageContent] = useState<SitePageContent>(() => clonePageContent(defaultPageContent));
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
@@ -268,6 +274,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       setRound1Submissions(snapshot.round1Submissions ?? seedRound1Submissions);
       setNewsPosts(snapshot.newsPosts ?? seedNewsPosts);
       setJudges(snapshot.judges ?? seedJudgeProfiles);
+      setTimelineItems(snapshot.timelineItems ?? seedTimelineItems);
       setPageContent(snapshot.pageContent ?? clonePageContent(defaultPageContent));
     } catch {
       window.localStorage.removeItem(STORAGE_KEY);
@@ -299,9 +306,10 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       round1Submissions,
       newsPosts,
       judges,
+      timelineItems,
       pageContent,
     });
-  }, [activeUserId, hasHydrated, invitations, judges, leadershipTransferRequests, locale, newsPosts, pageContent, round1Submissions, round1TestBanks, submissions, teamLockRequests, theme, teams, users]);
+  }, [activeUserId, hasHydrated, invitations, judges, leadershipTransferRequests, locale, newsPosts, pageContent, round1Submissions, round1TestBanks, submissions, teamLockRequests, theme, timelineItems, teams, users]);
 
   const pushToast = (message: LocalizedText, tone: ToastTone = "info") => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -335,6 +343,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     setJudges(payload.judges);
     setNewsPosts(payload.newsPosts);
     setRound1TestBanks(payload.round1TestBanks);
+    setTimelineItems(payload.timelineItems);
   }, []);
 
   const syncWorkspace = useCallback(async () => {
@@ -454,6 +463,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     setRound1Submissions(snapshot.round1Submissions);
     setNewsPosts(snapshot.newsPosts);
     setJudges(snapshot.judges);
+    setTimelineItems(snapshot.timelineItems);
     setPageContent(snapshot.pageContent);
     pushToast(
       {
@@ -2452,6 +2462,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     round1Submissions,
     newsPosts,
     judges,
+    timelineItems,
     pageContent,
     currentUser,
     currentTeam,

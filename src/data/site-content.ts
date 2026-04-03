@@ -1180,6 +1180,7 @@ export const ruleItems: RuleItem[] = [
 
 export const timelineItems: TimelineItem[] = [
   {
+    id: "registration-opens",
     phase: "general",
     startDate: "2026-04-06",
     endDate: "2026-05-10",
@@ -1202,6 +1203,7 @@ export const timelineItems: TimelineItem[] = [
     ],
   },
   {
+    id: "info-session-team-clinic",
     phase: "general",
     startDate: "2026-04-18",
     endDate: "2026-04-18",
@@ -1224,6 +1226,7 @@ export const timelineItems: TimelineItem[] = [
     ],
   },
   {
+    id: "registration-deadline-team-lock",
     phase: "general",
     startDate: "2026-05-10",
     endDate: "2026-05-10",
@@ -1246,6 +1249,7 @@ export const timelineItems: TimelineItem[] = [
     ],
   },
   {
+    id: "round-1-individual-qualifier",
     phase: "round-1",
     startDate: round1Window.startDate,
     endDate: round1Window.endDate,
@@ -1268,6 +1272,7 @@ export const timelineItems: TimelineItem[] = [
     ],
   },
   {
+    id: "round-1-top-50-announcement",
     phase: "round-1",
     startDate: "2026-05-24",
     endDate: "2026-05-24",
@@ -1290,6 +1295,7 @@ export const timelineItems: TimelineItem[] = [
     ],
   },
   {
+    id: "round-2-report-submission",
     phase: "round-2",
     startDate: round2Window.startDate,
     endDate: round2Window.endDate,
@@ -1312,6 +1318,7 @@ export const timelineItems: TimelineItem[] = [
     ],
   },
   {
+    id: "round-2-top-5-announcement",
     phase: "round-2",
     startDate: "2026-06-20",
     endDate: "2026-06-20",
@@ -1334,6 +1341,7 @@ export const timelineItems: TimelineItem[] = [
     ],
   },
   {
+    id: "round-3-grand-final",
     phase: "round-3",
     startDate: round3Window.startDate,
     endDate: round3Window.endDate,

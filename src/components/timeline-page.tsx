@@ -12,7 +12,6 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-import { timelineItems } from "@/data/site-content";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
@@ -107,7 +106,7 @@ const timelinePhaseMeta: Array<{
 type TimelineCardStatus = "finished" | "ongoing" | "upcoming" | "not-started";
 
 function getTimelineItemKey(item: TimelineItem) {
-  return `${item.phase}-${item.title.en}-${item.startDate}-${item.endDate}`;
+  return item.id;
 }
 
 function parseLocalDate(value: string, endOfDay = false) {
@@ -211,7 +210,7 @@ function getTimelineCardStatusMeta(
 }
 
 export function TimelinePage() {
-  const { locale } = useSiteState();
+  const { locale, timelineItems } = useSiteState();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -239,7 +238,15 @@ export function TimelinePage() {
     <div className="space-y-16 md:space-y-20">
       <section className="space-y-6">
         {timelinePhaseMeta.map((phase) => {
-          const items = timelineItems.filter((item) => item.phase === phase.phase);
+          const items = [...timelineItems]
+            .filter((item) => item.phase === phase.phase)
+            .sort((left, right) => {
+              if (left.startDate !== right.startDate) {
+                return left.startDate.localeCompare(right.startDate);
+              }
+
+              return left.endDate.localeCompare(right.endDate);
+            });
           const Icon = phase.icon;
 
           return (
@@ -281,7 +288,7 @@ export function TimelinePage() {
                     const StatusIcon = statusMeta.icon;
 
                     return (
-                    <Surface key={`${item.phase}-${item.title.en}-${item.startDate}`} className="theme-timeline-card px-5 py-5">
+                    <Surface key={item.id} className="theme-timeline-card px-5 py-5">
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
@@ -340,7 +347,7 @@ export function TimelinePage() {
                         <div className="mt-4 flex flex-wrap gap-3">
                           {item.supportLinks.map((supportLink) => (
                             <Link
-                              key={`${item.title.en}-${supportLink.href}`}
+                              key={`${item.id}-${supportLink.href}`}
                               href={supportLink.href}
                               className="theme-timeline-link inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition active:scale-[0.98]"
                             >

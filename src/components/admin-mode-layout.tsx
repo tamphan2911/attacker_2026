@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  CalendarClock,
   FilePenLine,
   FileQuestion,
   LayoutDashboard,
@@ -109,6 +110,16 @@ const adminNavGroups: Array<{
         adminOnly: true,
         children: [
           { href: "/admin/email-templates", label: { en: "System email templates", vi: "Mẫu email hệ thống" } },
+        ],
+      },
+      {
+        href: "/admin/timeline",
+        icon: CalendarClock,
+        label: { en: "Timeline", vi: "Lịch trình" },
+        description: { en: "Official dates for each timeline step", vi: "Ngày chính thức cho từng bước lịch trình" },
+        adminOnly: true,
+        children: [
+          { href: "/admin/timeline", label: { en: "Timeline schedule", vi: "Lịch trình chính thức" } },
         ],
       },
     ],
