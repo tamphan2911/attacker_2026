@@ -319,6 +319,19 @@ export function ForumPage() {
     }
   };
 
+  const handleReplyKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) {
+      return;
+    }
+
+    event.preventDefault();
+    if (isPostingReply || !replyDraft.trim()) {
+      return;
+    }
+
+    void handleReply();
+  };
+
   return (
     <div className="space-y-8 md:space-y-10">
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
@@ -658,6 +671,7 @@ export function ForumPage() {
                           <textarea
                             value={replyDraft}
                             onChange={(event) => setReplyDraft(event.target.value)}
+                            onKeyDown={handleReplyKeyDown}
                             placeholder={
                               locale === "en"
                                 ? "Write a useful reply about your background, what role you can take, and how people should contact you."
