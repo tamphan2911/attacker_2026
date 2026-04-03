@@ -167,8 +167,9 @@ export function ForumPage() {
     }
 
     const hasCurrentThread = threads.some((thread) => thread.slug === activeThreadSlug);
-    if (!activeThreadSlug || !hasCurrentThread) {
-      setActiveThreadSlug(threads[0].slug);
+    if (activeThreadSlug && !hasCurrentThread) {
+      setActiveThreadSlug("");
+      setActiveThread(null);
     }
   }, [activeThreadSlug, threads]);
 
