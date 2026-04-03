@@ -36,6 +36,7 @@ import type {
   Round1TestBank as AppRound1TestBank,
   TeamInvitation as AppTeamInvitation,
   NewsPost as AppNewsPost,
+  PublicUserProfile as AppPublicUserProfile,
   TeamProfile,
   TeamSubmission as AppTeamSubmission,
   UserProfile,
@@ -216,6 +217,25 @@ export function serializeUser(user: UserWithAccounts): UserProfile {
     avatarTone: user.avatarTone,
     avatarImageSrc: user.avatarImageSrc ?? undefined,
     providers: Array.from(providerSet),
+  };
+}
+
+export function serializePublicUserProfile(
+  user: Pick<
+    User,
+    "id" | "name" | "role" | "university" | "major" | "classYear" | "bio" | "avatarTone" | "avatarImageSrc"
+  >,
+): AppPublicUserProfile {
+  return {
+    id: user.id,
+    name: user.name,
+    role: mapUserRole(user.role),
+    university: user.university,
+    major: user.major,
+    classYear: user.classYear,
+    bio: user.bio,
+    avatarTone: user.avatarTone,
+    avatarImageSrc: user.avatarImageSrc ?? undefined,
   };
 }
 

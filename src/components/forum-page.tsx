@@ -70,6 +70,10 @@ function getForumCategoryLabel(locale: "en" | "vi", category: ForumThreadCategor
   return pickText(locale, forumCategoryCopy[category].label);
 }
 
+function getForumAuthorHref(userId: string) {
+  return `/users/${userId}`;
+}
+
 export function ForumPage() {
   const { locale, currentUser, isAuthenticated } = useSiteState();
   const [threads, setThreads] = useState<ForumThread[]>([]);
@@ -466,47 +470,58 @@ export function ForumPage() {
                   const isActive = thread.slug === activeThreadSlug;
 
                   return (
-                    <button
+                    <article
                       key={thread.id}
-                      type="button"
-                      onClick={() => setActiveThreadSlug(thread.slug)}
-                      className={`w-full rounded-[1.45rem] border px-4 py-4 text-left transition ${
+                      className={`rounded-[1.45rem] border px-4 py-4 transition ${
                         isActive
                           ? "border-sky-400/34 bg-[rgba(23,114,208,0.1)] shadow-[0_18px_42px_rgba(23,114,208,0.1)]"
                           : "theme-border theme-panel-subtle hover:bg-[var(--panel)]"
                       }`}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                          {getForumCategoryLabel(locale, thread.category)}
-                        </span>
-                        <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                          {thread.status === "open"
-                            ? locale === "en"
-                              ? "Open"
-                              : "Đang mở"
-                            : locale === "en"
-                              ? "Closed"
-                              : "Đã đóng"}
-                        </span>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveThreadSlug(thread.slug)}
+                        className="w-full text-left"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
+                            {getForumCategoryLabel(locale, thread.category)}
+                          </span>
+                          <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
+                            {thread.status === "open"
+                              ? locale === "en"
+                                ? "Open"
+                                : "Đang mở"
+                              : locale === "en"
+                                ? "Closed"
+                                : "Đã đóng"}
+                          </span>
+                        </div>
 
-                      <p className="mt-4 text-base font-semibold leading-7 theme-text-strong">
-                        {thread.title}
-                      </p>
-                      <p className="mt-2 text-sm leading-7 theme-text-muted">{thread.summary}</p>
+                        <p className="mt-4 text-base font-semibold leading-7 theme-text-strong">
+                          {thread.title}
+                        </p>
+                        <p className="mt-2 text-sm leading-7 theme-text-muted">{thread.summary}</p>
+                      </button>
 
                       <div className="mt-4 flex items-center gap-3">
-                        <GradientAvatar
-                          label={thread.author.name}
-                          tone={thread.author.avatarTone}
-                          imageSrc={thread.author.avatarImageSrc}
-                          className="h-10 w-10 rounded-full"
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold theme-text-strong">{thread.author.name}</p>
-                          <p className="truncate text-xs theme-text-soft">{thread.university}</p>
-                        </div>
+                        <Link
+                          href={getForumAuthorHref(thread.author.id)}
+                          className="group flex min-w-0 items-center gap-3 rounded-[1rem] transition hover:opacity-90"
+                        >
+                          <GradientAvatar
+                            label={thread.author.name}
+                            tone={thread.author.avatarTone}
+                            imageSrc={thread.author.avatarImageSrc}
+                            className="h-10 w-10 rounded-full"
+                          />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold theme-text-strong transition group-hover:text-sky-700 dark:group-hover:text-sky-200">
+                              {thread.author.name}
+                            </p>
+                            <p className="truncate text-xs theme-text-soft">{thread.university}</p>
+                          </div>
+                        </Link>
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
@@ -520,7 +535,7 @@ export function ForumPage() {
                           </span>
                         ))}
                       </div>
-                    </button>
+                    </article>
                   );
                 })}
               </div>
@@ -551,7 +566,10 @@ export function ForumPage() {
                 </div>
 
                 <div className="mt-5 flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-3">
+                  <Link
+                    href={getForumAuthorHref(selectedThreadFromList.author.id)}
+                    className="group flex items-center gap-3 rounded-[1rem] transition hover:opacity-90"
+                  >
                     <GradientAvatar
                       label={selectedThreadFromList.author.name}
                       tone={selectedThreadFromList.author.avatarTone}
@@ -559,12 +577,14 @@ export function ForumPage() {
                       className="h-11 w-11 rounded-full"
                     />
                     <div>
-                      <p className="text-sm font-semibold theme-text-strong">{selectedThreadFromList.author.name}</p>
+                      <p className="text-sm font-semibold theme-text-strong transition group-hover:text-sky-700 dark:group-hover:text-sky-200">
+                        {selectedThreadFromList.author.name}
+                      </p>
                       <p className="text-xs theme-text-soft">
                         {selectedThreadFromList.university || (locale === "en" ? "Participant" : "Thí sinh")}
                       </p>
                     </div>
-                  </div>
+                  </Link>
                   <span className="theme-chip rounded-full px-3 py-1 text-[0.72rem]">
                     <UsersRound className="mr-1 inline h-3.5 w-3.5" />
                     {selectedThreadFromList.replyCount} {locale === "en" ? "replies" : "phản hồi"}
@@ -619,14 +639,23 @@ export function ForumPage() {
                               className="rounded-[1.45rem] border theme-border px-4 py-4 theme-panel-subtle"
                             >
                               <div className="flex items-center gap-3">
-                                <GradientAvatar
-                                  label={reply.author.name}
-                                  tone={reply.author.avatarTone}
-                                  imageSrc={reply.author.avatarImageSrc}
-                                  className="h-10 w-10 rounded-full"
-                                />
+                                <Link
+                                  href={getForumAuthorHref(reply.author.id)}
+                                  className="group flex min-w-0 items-center gap-3 rounded-[1rem] transition hover:opacity-90"
+                                >
+                                  <GradientAvatar
+                                    label={reply.author.name}
+                                    tone={reply.author.avatarTone}
+                                    imageSrc={reply.author.avatarImageSrc}
+                                    className="h-10 w-10 rounded-full"
+                                  />
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-semibold theme-text-strong transition group-hover:text-sky-700 dark:group-hover:text-sky-200">
+                                      {reply.author.name}
+                                    </p>
+                                  </div>
+                                </Link>
                                 <div className="min-w-0">
-                                  <p className="text-sm font-semibold theme-text-strong">{reply.author.name}</p>
                                   <p className="text-xs theme-text-soft">
                                     {formatForumTimestamp(locale, reply.createdAt)}
                                   </p>

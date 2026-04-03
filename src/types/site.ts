@@ -255,6 +255,18 @@ export interface UserProfile {
   providers: ("email" | "google")[];
 }
 
+export interface PublicUserProfile {
+  id: string;
+  name: string;
+  role: UserRole;
+  university: string;
+  major: string;
+  classYear: string;
+  bio: string;
+  avatarTone: string;
+  avatarImageSrc?: string;
+}
+
 export interface EditableSectionCopy {
   eyebrow: LocalizedText;
   title: LocalizedText;
