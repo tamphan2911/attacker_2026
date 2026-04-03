@@ -41,7 +41,6 @@ import {
   getActiveRound1Bank,
   getRound1ObjectiveScore,
   isRound1QuestionAnswered,
-  limitEssayToWordCount,
   pickRound1TypeLabel,
   scoreRound1Question,
   type Round1PaperQuestion,
@@ -83,6 +82,7 @@ export function Round1ExamPage() {
     locale,
     currentUser,
     currentTeam,
+    theme,
     round1TestBanks,
     round1Submissions,
     hasHydrated,
@@ -334,6 +334,11 @@ export function Round1ExamPage() {
     currentQuestion?.type === "essay"
       ? Math.round(ROUND1_ESSAY_MAX_SCORE / ROUND1_ESSAY_TOTAL)
       : 2;
+  const currentEssayWordCount =
+    currentQuestion?.type === "essay"
+      ? countWords(currentResponse?.essayText ?? "")
+      : 0;
+  const currentEssayExceedsLimit = currentQuestion?.type === "essay" && currentEssayWordCount > round1WordLimit;
   const navigateToQuestion = (index: number) => {
     setSession((current) =>
       current
@@ -863,17 +868,6 @@ export function Round1ExamPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <StatusPill>{currentQuestion.topic}</StatusPill>
                 <StatusPill>{pickRound1TypeLabel(locale, currentQuestion.type)}</StatusPill>
-                <StatusPill
-                  tone={
-                    currentQuestion.difficulty === "hard"
-                      ? "warning"
-                      : currentQuestion.difficulty === "medium"
-                        ? "success"
-                        : "default"
-                    }
-                  >
-                    {currentQuestion.difficulty}
-                  </StatusPill>
                 <StatusPill tone={currentQuestion.type === "essay" ? "warning" : "success"}>
                   {locale === "en"
                     ? `${currentQuestionPointValue} points`
@@ -1071,8 +1065,8 @@ export function Round1ExamPage() {
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                       <StatusPill tone="warning">
                         {locale === "en"
-                          ? `${countWords(currentResponse?.essayText ?? "")}/${round1WordLimit} words`
-                          : `${countWords(currentResponse?.essayText ?? "")}/${round1WordLimit} từ`}
+                          ? `${round1WordLimit} words maximum`
+                          : `Tối đa ${round1WordLimit} từ`}
                       </StatusPill>
                       <span className="text-xs uppercase tracking-[0.18em] theme-text-soft">
                         {locale === "en"
@@ -1096,7 +1090,7 @@ export function Round1ExamPage() {
                               answers: {
                                 ...current.answers,
                                 [currentQuestion.id]: {
-                                  essayText: limitEssayToWordCount(event.target.value, round1WordLimit),
+                                  essayText: event.target.value,
                                 },
                               },
                             }
@@ -1105,11 +1099,22 @@ export function Round1ExamPage() {
                     }
                     className="theme-placeholder w-full rounded-[1.5rem] border theme-border theme-panel px-5 py-4 text-sm leading-7 theme-text-strong outline-none"
                   />
-                  <p className="text-sm leading-7 theme-text-soft">
-                    {locale === "en"
-                      ? "The system keeps only the first 200 words in this frontend prototype."
-                      : "Hệ thống chỉ giữ lại 200 từ đầu tiên trong prototype frontend này."}
-                  </p>
+                  <div className="flex flex-col gap-2 text-sm leading-7 sm:flex-row sm:items-center sm:justify-between">
+                    <p className={currentEssayExceedsLimit ? "font-medium text-amber-800 dark:text-amber-100" : "theme-text-soft"}>
+                      {locale === "en"
+                        ? `${currentEssayWordCount}/${round1WordLimit} words`
+                        : `${currentEssayWordCount}/${round1WordLimit} từ`}
+                    </p>
+                    <p className={currentEssayExceedsLimit ? "text-amber-800 dark:text-amber-100" : "theme-text-soft"}>
+                      {currentEssayExceedsLimit
+                        ? locale === "en"
+                          ? "You have exceeded the 200-word limit. Shorten the response before submitting."
+                          : "Bạn đã vượt quá giới hạn 200 từ. Hãy rút gọn câu trả lời trước khi nộp."
+                        : locale === "en"
+                          ? "Stay within the 200-word limit for this essay answer."
+                          : "Hãy giữ câu trả lời trong giới hạn 200 từ cho câu tự luận này."}
+                    </p>
+                  </div>
                 </div>
               ) : null}
 
@@ -1144,19 +1149,29 @@ export function Round1ExamPage() {
         <div className="space-y-4 xl:sticky xl:top-28 xl:self-start">
           <Surface className="overflow-hidden px-6 py-6">
             <div
-              className={`rounded-[1.8rem] px-5 py-5 ${
-                remainingSeconds <= 300
-                  ? "bg-[linear-gradient(135deg,rgba(245,158,11,0.24),rgba(148,64,0,0.18))]"
-                  : "bg-[linear-gradient(135deg,rgba(23,114,208,0.22),rgba(8,47,73,0.2))]"
+              className={`rounded-[1.8rem] border px-5 py-5 ${
+                theme === "dark"
+                  ? remainingSeconds <= 300
+                    ? "border-amber-300/18 bg-[linear-gradient(135deg,rgba(245,158,11,0.24),rgba(148,64,0,0.18))]"
+                    : "border-sky-300/18 bg-[linear-gradient(135deg,rgba(23,114,208,0.22),rgba(8,47,73,0.2))]"
+                  : remainingSeconds <= 300
+                    ? "border-amber-700/16 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.96),rgba(251,191,36,0.22))]"
+                    : "border-sky-700/14 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(224,242,254,0.96),rgba(191,219,254,0.86))]"
               }`}
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/72">
+              <p className={`text-xs font-semibold uppercase tracking-[0.28em] ${
+                theme === "dark" ? "text-white/72" : "text-slate-700"
+              }`}>
                 {locale === "en" ? "Time left" : "Thời gian còn lại"}
               </p>
-              <p className="mt-4 font-mono text-5xl font-semibold tracking-[0.14em] text-white">
+              <p className={`mt-4 font-mono text-5xl font-semibold tracking-[0.14em] ${
+                theme === "dark" ? "text-white" : "text-slate-950"
+              }`}>
                 {formatRemainingTime(remainingSeconds)}
               </p>
-              <p className="mt-4 text-sm leading-7 text-white/74">
+              <p className={`mt-4 text-sm leading-7 ${
+                theme === "dark" ? "text-white/74" : "text-slate-700"
+              }`}>
                 {locale === "en"
                   ? "The timer continues even if you refresh or navigate away. The attempt cannot be paused or restarted."
                   : "Đồng hồ vẫn tiếp tục chạy ngay cả khi bạn tải lại trang hoặc rời khỏi đây. Lượt thi không thể tạm dừng hoặc bắt đầu lại."}
@@ -1245,7 +1260,7 @@ export function Round1ExamPage() {
                 );
               })}
             </div>
-            <div className="mt-5 space-y-2 text-xs theme-text-soft">
+            <div className="mt-6 space-y-3 text-xs theme-text-soft">
               <p className="inline-flex items-center gap-2">
                 <span className="h-2.5 w-2.5 rounded-full bg-[rgba(23,114,208,0.65)]" />
                 {locale === "en" ? "Current question" : "Câu hiện tại"}
