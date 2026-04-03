@@ -688,9 +688,9 @@ export function ForumPage() {
       </section>
 
       {isComposerOpen ? (
-        <div className="fixed inset-0 z-[80] bg-[rgba(7,18,35,0.58)] p-4 backdrop-blur-sm md:p-8">
-          <div className="mx-auto max-w-3xl">
-            <Surface className="overflow-hidden px-0 py-0">
+        <div className="fixed inset-0 z-[80] overflow-y-auto bg-[rgba(7,18,35,0.58)] p-4 backdrop-blur-sm md:p-8">
+          <div className="mx-auto max-w-3xl py-2 md:py-4">
+            <Surface className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden px-0 py-0 md:max-h-[calc(100vh-4rem)]">
               <div className="flex items-center justify-between border-b theme-border px-6 py-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
@@ -715,7 +715,8 @@ export function ForumPage() {
                 </button>
               </div>
 
-              <div className="grid gap-4 px-6 py-6 md:grid-cols-2">
+              <div className="overflow-y-auto px-6 py-6">
+                <div className="grid gap-4 md:grid-cols-2">
                 <label className="space-y-2">
                   <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
                     {locale === "en" ? "Thread title" : "Tiêu đề"}
@@ -804,6 +805,7 @@ export function ForumPage() {
                     className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
                   />
                 </label>
+                </div>
               </div>
 
               <div className="border-t theme-border px-6 py-5">
