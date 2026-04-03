@@ -507,7 +507,7 @@ export function OrganizerPage() {
 
       {expandedGallerySlide ? (
         <div className="fixed inset-0 z-[80] bg-[rgba(6,12,22,0.82)] p-4 backdrop-blur-md md:p-8">
-          <div className="mx-auto flex h-full max-w-6xl flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[rgba(6,12,22,0.72)] shadow-[0_30px_120px_rgba(2,8,20,0.44)]">
+          <div className="mx-auto flex h-full max-w-7xl flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[rgba(6,12,22,0.72)] shadow-[0_30px_120px_rgba(2,8,20,0.44)]">
             <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 md:px-6">
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-200">
@@ -527,69 +527,30 @@ export function OrganizerPage() {
               </button>
             </div>
 
-            <div className="grid flex-1 gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
-              <div className="relative min-h-[420px] bg-slate-950">
-                <Image
-                  src={expandedGallerySlide.image}
-                  alt={pickText(locale, expandedGallerySlide.title)}
-                  fill
-                  sizes="(min-width: 1024px) 900px, 100vw"
-                  className="object-contain"
-                />
-                <button
-                  type="button"
-                  onClick={() => shiftExpandedGallery(-1)}
-                  className="absolute left-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,18,35,0.54)] text-white transition hover:bg-[rgba(7,18,35,0.72)]"
-                  aria-label={locale === "en" ? "Previous image" : "Ảnh trước"}
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => shiftExpandedGallery(1)}
-                  className="absolute right-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,18,35,0.54)] text-white transition hover:bg-[rgba(7,18,35,0.72)]"
-                  aria-label={locale === "en" ? "Next image" : "Ảnh tiếp theo"}
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </button>
-              </div>
-
-              <div className="border-t border-white/10 px-6 py-6 text-white lg:border-l lg:border-t-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">
-                  {locale === "en" ? "Photo description" : "Mô tả hình ảnh"}
-                </p>
-                <p className="theme-heading mt-5 text-3xl font-semibold leading-[1.08]">
-                  {pickText(locale, expandedGallerySlide.title)}
-                </p>
-                <p className="mt-5 text-sm leading-8 text-white/72">
-                  {pickText(locale, expandedGallerySlide.description)}
-                </p>
-
-                <div className="mt-8 space-y-3">
-                  {gallerySlides.map((slide, index) => (
-                    <button
-                      key={`expanded-${slide.year}-${slide.image}`}
-                      type="button"
-                      onClick={() => setExpandedGalleryIndex(index)}
-                      className={`flex w-full items-center justify-between rounded-[1.25rem] border px-4 py-3 text-left transition ${
-                        index === expandedGalleryIndex
-                          ? "border-cyan-300/34 bg-white/10"
-                          : "border-white/10 bg-white/[0.04] hover:bg-white/[0.08]"
-                      }`}
-                    >
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">
-                          {slide.year}
-                        </p>
-                        <p className="mt-2 text-sm font-semibold text-white/88">
-                          {pickText(locale, slide.label)}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-white/58" />
-                    </button>
-                  ))}
-                </div>
-              </div>
+            <div className="relative flex-1 bg-slate-950">
+              <Image
+                src={expandedGallerySlide.image}
+                alt={pickText(locale, expandedGallerySlide.title)}
+                fill
+                sizes="100vw"
+                className="object-contain"
+              />
+              <button
+                type="button"
+                onClick={() => shiftExpandedGallery(-1)}
+                className="absolute left-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,18,35,0.54)] text-white transition hover:bg-[rgba(7,18,35,0.72)]"
+                aria-label={locale === "en" ? "Previous image" : "Ảnh trước"}
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => shiftExpandedGallery(1)}
+                className="absolute right-4 top-1/2 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/14 bg-[rgba(7,18,35,0.54)] text-white transition hover:bg-[rgba(7,18,35,0.72)]"
+                aria-label={locale === "en" ? "Next image" : "Ảnh tiếp theo"}
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
