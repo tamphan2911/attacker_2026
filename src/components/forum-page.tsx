@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   CirclePlus,
   LoaderCircle,
   MessageSquare,
@@ -58,6 +60,8 @@ const forumCategoryOrder: ForumThreadCategory[] = [
   "general-discussion",
 ];
 
+const THREADS_PER_PAGE = 10;
+
 function formatForumTimestamp(locale: "en" | "vi", value: string) {
   return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
     day: "2-digit",
@@ -72,6 +76,15 @@ function getForumCategoryLabel(locale: "en" | "vi", category: ForumThreadCategor
 
 function getForumAuthorHref(userId: string) {
   return `/users/${userId}`;
+}
+
+function trimForumPreview(value: string, maxLength = 168) {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  if (normalized.length <= maxLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, maxLength).trimEnd()}...`;
 }
 
 export function ForumPage() {
@@ -91,6 +104,7 @@ export function ForumPage() {
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<ForumThreadCategory | "all">("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [replyDraft, setReplyDraft] = useState("");
   const [threadDraft, setThreadDraft] = useState({
     title: "",
@@ -178,6 +192,10 @@ export function ForumPage() {
   }, [activeThreadSlug, loadThreadDetail]);
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryFilter, deferredSearchValue]);
+
+  useEffect(() => {
     if (!isComposerOpen) {
       return;
     }
@@ -221,9 +239,14 @@ export function ForumPage() {
   }, [categoryFilter, deferredSearchValue, threads]);
 
   const selectedThreadFromList =
-    filteredThreads.find((thread) => thread.slug === activeThreadSlug) ??
-    threads.find((thread) => thread.slug === activeThreadSlug) ??
-    null;
+    threads.find((thread) => thread.slug === activeThreadSlug) ?? null;
+
+  const totalPages = Math.max(1, Math.ceil(filteredThreads.length / THREADS_PER_PAGE));
+  const currentListPage = Math.min(currentPage, totalPages);
+  const paginatedThreads = filteredThreads.slice(
+    (currentListPage - 1) * THREADS_PER_PAGE,
+    currentListPage * THREADS_PER_PAGE,
+  );
 
   const activeCategoryDescription =
     categoryFilter === "all"
@@ -339,72 +362,17 @@ export function ForumPage() {
 
   return (
     <div className="space-y-8 md:space-y-10">
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-        <SectionHeading
-          eyebrow={locale === "en" ? "Forum" : "Forum"}
-          title={
-            locale === "en"
-              ? "A discussion space built mainly for participants who still need teammates."
-              : "Một không gian thảo luận được tạo chủ yếu cho thí sinh đang cần tìm đồng đội."
-          }
-          description={
-            locale === "en"
-              ? "Open a thread, state what kind of team or teammate you need, and move the conversation forward in one place instead of scattered messages."
-              : "Mở một chủ đề, nói rõ bạn đang cần đội hay cần người ở vai trò nào, rồi tiếp tục trao đổi ngay trong một nơi thay vì rời rạc qua nhiều tin nhắn."
-          }
-        />
-
-        <Surface className="px-5 py-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-            {locale === "en" ? "How this forum helps" : "Forum này giúp gì"}
-          </p>
-          <div className="mt-5 space-y-3">
-            {[
-              locale === "en"
-                ? "Participants can open public threads to look for a team or recruit members."
-                : "Thí sinh có thể mở chủ đề công khai để tìm đội hoặc tuyển thêm thành viên.",
-              locale === "en"
-                ? "Replies stay attached to the thread, so the conversation is easier to follow."
-                : "Các phản hồi được gắn ngay dưới chủ đề, giúp cuộc trao đổi dễ theo dõi hơn.",
-              locale === "en"
-                ? "Only signed-in participant accounts can post. Everyone can still browse the discussion."
-                : "Chỉ tài khoản thí sinh đã đăng nhập mới có thể đăng bài. Mọi người vẫn có thể xem công khai.",
-            ].map((item) => (
-              <div
-                key={item}
-                className="theme-panel-subtle rounded-[1.35rem] border theme-border px-4 py-4 text-sm leading-7 theme-text-body"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => setIsComposerOpen(true)}
-              disabled={!canPostAsParticipant}
-              className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
-            >
-              <CirclePlus className="h-4 w-4" />
-              {locale === "en" ? "Open a thread" : "Mở chủ đề"}
-            </button>
-            {!canPostAsParticipant ? (
-              <Link
-                href="/auth"
-                className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
-              >
-                {locale === "en" ? "Sign in to participate" : "Đăng nhập để tham gia"}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            ) : null}
-          </div>
-        </Surface>
-      </section>
-
       <section className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <Surface className="overflow-hidden px-0 py-0">
+        <Surface className="overflow-hidden px-0 py-0 xl:sticky xl:top-24 xl:self-start">
           <div className="border-b theme-border px-5 py-5">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                {locale === "en" ? "Forum navigator" : "Điều hướng forum"}
+              </p>
+              <p className="mt-3 text-xl font-semibold theme-text-strong">
+                {locale === "en" ? "Filter teammate-matching conversations" : "Lọc các cuộc trò chuyện tìm đồng đội"}
+              </p>
+            </div>
             <div className="theme-news-search flex items-center gap-3 rounded-[1.4rem] border px-4 py-3">
               <span className="theme-news-search-icon inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
                 <Search className="h-4 w-4" />
@@ -440,98 +408,16 @@ export function ForumPage() {
               ))}
             </div>
             <p className="mt-4 text-sm leading-7 theme-text-muted">{activeCategoryDescription}</p>
-          </div>
-
-          <div className="max-h-[880px] overflow-y-auto px-3 py-3">
-            {isLoadingThreads ? (
-              <div className="flex items-center gap-3 rounded-[1.4rem] border theme-border px-4 py-4 theme-panel-subtle">
-                <LoaderCircle className="h-4 w-4 animate-spin theme-accent" />
-                <span className="text-sm theme-text-body">
-                  {locale === "en" ? "Loading discussion threads..." : "Đang tải danh sách thảo luận..."}
-                </span>
-              </div>
-            ) : listError ? (
-              <div className="rounded-[1.4rem] border border-rose-500/18 bg-rose-500/10 px-4 py-4 text-sm text-rose-800 dark:text-rose-100">
-                {listError}
-              </div>
-            ) : filteredThreads.length === 0 ? (
-              <div className="rounded-[1.4rem] border theme-border px-4 py-5 theme-panel-subtle">
-                <p className="text-sm font-semibold theme-text-strong">
-                  {locale === "en" ? "No matching thread yet." : "Chưa có chủ đề phù hợp."}
-                </p>
-                <p className="mt-2 text-sm leading-7 theme-text-muted">
-                  {locale === "en"
-                    ? "Try another keyword or open the first thread for your own team-search message."
-                    : "Hãy đổi từ khóa khác hoặc mở một chủ đề mới cho nhu cầu tìm đội của bạn."}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredThreads.map((thread) => {
-                  const isActive = thread.slug === activeThreadSlug;
-
-                  return (
-                    <button
-                      key={thread.id}
-                      type="button"
-                      onClick={() => setActiveThreadSlug(thread.slug)}
-                      className={`rounded-[1.45rem] border px-4 py-4 transition ${
-                        isActive
-                          ? "border-sky-400/34 bg-[rgba(23,114,208,0.1)] shadow-[0_18px_42px_rgba(23,114,208,0.1)]"
-                          : "theme-border theme-panel-subtle hover:bg-[var(--panel)]"
-                      } w-full text-left`}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                          {getForumCategoryLabel(locale, thread.category)}
-                        </span>
-                        <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                          {thread.status === "open"
-                            ? locale === "en"
-                              ? "Open"
-                              : "Đang mở"
-                            : locale === "en"
-                              ? "Closed"
-                              : "Đã đóng"}
-                        </span>
-                      </div>
-
-                      <p className="mt-4 text-base font-semibold leading-7 theme-text-strong">
-                        {thread.title}
-                      </p>
-                      <p className="mt-2 text-sm leading-7 theme-text-muted">{thread.summary}</p>
-
-                      <div className="mt-4 flex items-center gap-3">
-                        <GradientAvatar
-                          label={thread.author.name}
-                          tone={thread.author.avatarTone}
-                          imageSrc={thread.author.avatarImageSrc}
-                          className="h-10 w-10 rounded-full"
-                        />
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold theme-text-strong">
-                            {thread.author.name}
-                          </p>
-                          <p className="truncate text-xs theme-text-soft">{thread.university}</p>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
-                          <MessageSquare className="mr-1 inline h-3.5 w-3.5" />
-                          {thread.replyCount}
-                        </span>
-                        {thread.preferredRoles.slice(0, 2).map((role) => (
-                          <span key={role} className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
-                            {role}
-                          </span>
-                        ))}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <div className="mt-4 rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-sm font-semibold theme-text-strong">
+                {filteredThreads.length} {locale === "en" ? "matching threads" : "chủ đề phù hợp"}
+              </p>
+              <p className="mt-2 text-sm leading-7 theme-text-muted">
+                {locale === "en"
+                  ? "Use the list on the right to review the newest active discussions, then open one when it matches your interest."
+                  : "Dùng danh sách bên phải để xem các chủ đề đang hoạt động mới nhất, rồi mở cuộc trò chuyện phù hợp với nhu cầu của bạn."}
+              </p>
+            </div>
           </div>
         </Surface>
 
@@ -541,6 +427,19 @@ export function ForumPage() {
               <div className="border-b theme-border px-6 py-6 md:px-7">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveThreadSlug("");
+                        setActiveThread(null);
+                        setDetailError("");
+                        setReplyError("");
+                      }}
+                      className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold"
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      {locale === "en" ? "Back to thread list" : "Quay lại danh sách chủ đề"}
+                    </button>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
                         {getForumCategoryLabel(locale, selectedThreadFromList.category)}
@@ -723,16 +622,174 @@ export function ForumPage() {
               </div>
             </div>
           ) : (
-            <div className="flex min-h-[420px] items-center justify-center px-6 py-6 text-center">
-              <div className="max-w-md space-y-3">
-                <p className="text-lg font-semibold theme-text-strong">
-                  {locale === "en" ? "Choose a thread to read the discussion." : "Hãy chọn một chủ đề để xem cuộc trao đổi."}
-                </p>
-                <p className="text-sm leading-7 theme-text-muted">
-                  {locale === "en"
-                    ? "The right panel will show the full conversation, preferred roles, and replies."
-                    : "Khung bên phải sẽ hiển thị toàn bộ nội dung, vai trò đang cần và các phản hồi."}
-                </p>
+            <div className="min-h-[720px]">
+              <div className="border-b theme-border px-6 py-6 md:px-7">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                  <SectionHeading
+                    eyebrow={locale === "en" ? "Forum thread list" : "Danh sách chủ đề"}
+                    title={
+                      locale === "en"
+                        ? "Open the newest active discussions from participants and teams."
+                        : "Mở các cuộc trò chuyện đang hoạt động mới nhất từ thí sinh và đội thi."
+                    }
+                    description={
+                      locale === "en"
+                        ? "Threads are ordered by recent activity. Open one to read the full conversation or publish your own if you still need teammates."
+                        : "Các chủ đề được sắp theo hoạt động gần nhất. Hãy mở một chủ đề để đọc toàn bộ cuộc trao đổi, hoặc đăng chủ đề mới nếu bạn vẫn cần đồng đội."
+                    }
+                  />
+
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsComposerOpen(true)}
+                      disabled={!canPostAsParticipant}
+                      className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
+                    >
+                      <CirclePlus className="h-4 w-4" />
+                      {locale === "en" ? "Open a thread" : "Mở chủ đề"}
+                    </button>
+                    {!canPostAsParticipant ? (
+                      <Link
+                        href="/auth"
+                        className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
+                      >
+                        {locale === "en" ? "Sign in to participate" : "Đăng nhập để tham gia"}
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+                {statusMessage ? <p className="mt-4 text-sm theme-text-soft">{statusMessage}</p> : null}
+              </div>
+
+              <div className="space-y-6 px-6 py-6 md:px-7">
+                {isLoadingThreads ? (
+                  <div className="flex items-center gap-3 rounded-[1.4rem] border theme-border px-4 py-4 theme-panel-subtle">
+                    <LoaderCircle className="h-4 w-4 animate-spin theme-accent" />
+                    <span className="text-sm theme-text-body">
+                      {locale === "en" ? "Loading discussion threads..." : "Đang tải danh sách thảo luận..."}
+                    </span>
+                  </div>
+                ) : listError ? (
+                  <div className="rounded-[1.4rem] border border-rose-500/18 bg-rose-500/10 px-4 py-4 text-sm text-rose-800 dark:text-rose-100">
+                    {listError}
+                  </div>
+                ) : filteredThreads.length === 0 ? (
+                  <div className="rounded-[1.4rem] border theme-border px-4 py-5 theme-panel-subtle">
+                    <p className="text-sm font-semibold theme-text-strong">
+                      {locale === "en" ? "No matching thread yet." : "Chưa có chủ đề phù hợp."}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 theme-text-muted">
+                      {locale === "en"
+                        ? "Try another keyword or open the first thread for your own team-search message."
+                        : "Hãy đổi từ khóa khác hoặc mở một chủ đề mới cho nhu cầu tìm đội của bạn."}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid gap-4">
+                      {paginatedThreads.map((thread) => (
+                        <button
+                          key={thread.id}
+                          type="button"
+                          onClick={() => setActiveThreadSlug(thread.slug)}
+                          className="w-full rounded-[1.6rem] border theme-border px-5 py-5 text-left theme-panel-subtle transition hover:-translate-y-0.5 hover:bg-[var(--panel)]"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
+                                {getForumCategoryLabel(locale, thread.category)}
+                              </span>
+                              <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
+                                {thread.status === "open"
+                                  ? locale === "en"
+                                    ? "Open"
+                                    : "Đang mở"
+                                  : locale === "en"
+                                    ? "Closed"
+                                    : "Đã đóng"}
+                              </span>
+                            </div>
+                            <span className="text-xs theme-text-soft">
+                              {locale === "en" ? "Last activity" : "Hoạt động gần nhất"} ·{" "}
+                              {formatForumTimestamp(locale, thread.lastActivityAt)}
+                            </span>
+                          </div>
+
+                          <div className="mt-4 flex items-start gap-4">
+                            <GradientAvatar
+                              label={thread.author.name}
+                              tone={thread.author.avatarTone}
+                              imageSrc={thread.author.avatarImageSrc}
+                              className="h-11 w-11 rounded-full"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-lg font-semibold leading-7 theme-text-strong">{thread.title}</p>
+                              <p className="mt-2 text-sm leading-7 theme-text-muted">{thread.summary}</p>
+                              <div className="mt-4 rounded-[1.25rem] border theme-border bg-white/76 px-4 py-4 dark:bg-white/[0.05]">
+                                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] theme-eyebrow">
+                                  {locale === "en" ? "Latest message" : "Tin nhắn mới nhất"}
+                                </p>
+                                <p className="mt-2 text-sm leading-7 theme-text-body">
+                                  {trimForumPreview(thread.lastMessagePreview || thread.summary)}
+                                </p>
+                                <p className="mt-2 text-xs theme-text-soft">
+                                  {(thread.lastMessageAuthorName || thread.author.name)} ·{" "}
+                                  {formatForumTimestamp(locale, thread.lastMessageAt || thread.lastActivityAt)}
+                                </p>
+                              </div>
+                              <div className="mt-4 flex flex-wrap items-center gap-2">
+                                <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
+                                  <MessageSquare className="mr-1 inline h-3.5 w-3.5" />
+                                  {thread.replyCount} {locale === "en" ? "replies" : "phản hồi"}
+                                </span>
+                                <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
+                                  {thread.author.name}
+                                </span>
+                                {thread.preferredRoles.slice(0, 3).map((role) => (
+                                  <span key={role} className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
+                                    {role}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
+                    {totalPages > 1 ? (
+                      <div className="flex flex-col gap-3 border-t theme-border pt-5 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm theme-text-soft">
+                          {locale === "en"
+                            ? `Page ${currentListPage} of ${totalPages}`
+                            : `Trang ${currentListPage} / ${totalPages}`}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage((current) => Math.max(1, current - 1))}
+                            disabled={currentListPage === 1}
+                            className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                            {locale === "en" ? "Previous" : "Trước"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage((current) => Math.min(totalPages, current + 1))}
+                            disabled={currentListPage === totalPages}
+                            className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                          >
+                            {locale === "en" ? "Next" : "Tiếp"}
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                )}
               </div>
             </div>
           )}

@@ -118,6 +118,22 @@ export async function listForumThreads() {
           avatarImageSrc: true,
         },
       },
+      replies: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              role: true,
+              university: true,
+              avatarTone: true,
+              avatarImageSrc: true,
+            },
+          },
+        },
+      },
       _count: {
         select: { replies: true },
       },

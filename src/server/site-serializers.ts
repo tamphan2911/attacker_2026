@@ -295,6 +295,9 @@ export function serializeForumThread(
     updatedAt: thread.updatedAt.toISOString(),
     lastActivityAt: thread.lastActivityAt.toISOString(),
     replyCount: thread._count?.replies ?? thread.replies?.length ?? 0,
+    lastMessagePreview: thread.replies?.[0]?.body || thread.body,
+    lastMessageAt: thread.replies?.[0]?.createdAt.toISOString() ?? thread.createdAt.toISOString(),
+    lastMessageAuthorName: thread.replies?.[0]?.author.name ?? thread.author.name,
     author: serializeForumAuthor(thread.author),
     replies: thread.replies?.map(serializeForumReply),
   };

@@ -139,6 +139,9 @@ export interface ForumThread {
   updatedAt: string;
   lastActivityAt: string;
   replyCount: number;
+  lastMessagePreview?: string;
+  lastMessageAt?: string;
+  lastMessageAuthorName?: string;
   author: ForumAuthor;
   replies?: ForumReply[];
 }
