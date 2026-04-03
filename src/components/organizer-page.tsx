@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   ChevronLeft,
@@ -18,7 +18,6 @@ export function OrganizerPage() {
   const { locale, pageContent } = useSiteState();
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
   const [expandedGalleryIndex, setExpandedGalleryIndex] = useState<number | null>(null);
-  const galleryThumbnailRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const seasonStories = [
     {
       year: "2023",
@@ -180,16 +179,6 @@ export function OrganizerPage() {
       window.clearInterval(intervalId);
     };
   }, [gallerySlides.length]);
-
-  useEffect(() => {
-    const activeThumbnail = galleryThumbnailRefs.current[activeGalleryIndex];
-
-    activeThumbnail?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center",
-    });
-  }, [activeGalleryIndex]);
 
   useEffect(() => {
     if (expandedGalleryIndex === null) {
@@ -446,9 +435,6 @@ export function OrganizerPage() {
                   <button
                     key={`${slide.year}-${slide.image}`}
                     type="button"
-                    ref={(node) => {
-                      galleryThumbnailRefs.current[index] = node;
-                    }}
                     onClick={() => setActiveGalleryIndex(index)}
                     aria-current={index === activeGalleryIndex}
                     className={`w-[220px] shrink-0 overflow-hidden rounded-[1.5rem] border text-left transition md:w-[240px] ${
