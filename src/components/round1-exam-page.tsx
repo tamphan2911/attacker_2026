@@ -1660,7 +1660,7 @@ export function Round1ExamPage() {
                       isCurrent
                         ? "border-[rgba(23,114,208,0.42)] bg-[rgba(23,114,208,0.14)] theme-text-strong"
                         : isAnswered
-                          ? "border-emerald-300/24 bg-emerald-300/10 text-emerald-100"
+                          ? "border-emerald-300/24 bg-emerald-300/10 text-slate-950 dark:text-emerald-100"
                           : "theme-border theme-panel theme-text-soft hover:bg-[rgba(23,114,208,0.05)]"
                     }`}
                   >
@@ -1691,8 +1691,8 @@ export function Round1ExamPage() {
             {remainingSeconds <= 300 ? (
               <div className="mt-5 rounded-[1.4rem] border border-amber-300/24 bg-amber-300/10 px-4 py-4">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-200" />
-                  <p className="text-sm leading-6 text-amber-50">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-700 dark:text-amber-200" />
+                  <p className="text-sm leading-6 text-slate-950 dark:text-amber-50">
                     {locale === "en"
                       ? "Less than 5 minutes remain. Unanswered questions will be counted as incorrect when the exam auto-submits."
                       : "Còn dưới 5 phút. Các câu chưa trả lời sẽ bị tính là sai khi bài thi tự động nộp."}
