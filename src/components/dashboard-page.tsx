@@ -1131,14 +1131,15 @@ export function DashboardPage() {
               </div>
 
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  disabled={!isLeader}
-                  onClick={handleTeamSave}
-                  className="theme-button-primary rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold disabled:opacity-60"
-                >
-                  {locale === "en" ? "Save team profile" : "Lưu hồ sơ đội"}
-                </button>
+                {isLeader ? (
+                  <button
+                    type="button"
+                    onClick={handleTeamSave}
+                    className="theme-button-primary rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
+                  >
+                    {locale === "en" ? "Save team profile" : "Lưu hồ sơ đội"}
+                  </button>
+                ) : null}
                 <p className="self-center text-sm theme-text-soft">
                   {isLeader
                     ? locale === "en"
