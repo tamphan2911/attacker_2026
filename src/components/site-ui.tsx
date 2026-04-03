@@ -188,11 +188,11 @@ export function StatusPill({
         "inline-flex min-h-8 items-center justify-center rounded-full border px-3 py-1 text-center text-xs font-medium whitespace-nowrap",
         tone === "default" && "theme-chip",
         tone === "info" &&
-          "border-sky-700/28 bg-[linear-gradient(135deg,rgba(56,189,248,0.26),rgba(37,99,235,0.16))] text-slate-950 shadow-[0_10px_24px_rgba(56,189,248,0.08)] dark:border-sky-300/22 dark:bg-sky-300/14 dark:text-sky-100 dark:shadow-none",
+          "border-sky-700/28 bg-[linear-gradient(135deg,rgba(56,189,248,0.26),rgba(37,99,235,0.16))] text-black shadow-[0_10px_24px_rgba(56,189,248,0.08)] dark:border-sky-300/22 dark:bg-sky-300/14 dark:text-sky-100 dark:shadow-none",
         tone === "success" &&
-          "border-emerald-700/28 bg-[linear-gradient(135deg,rgba(52,211,153,0.24),rgba(16,185,129,0.16))] text-slate-950 shadow-[0_10px_24px_rgba(16,185,129,0.08)] dark:border-emerald-300/22 dark:bg-emerald-300/12 dark:text-emerald-100 dark:shadow-none",
+          "border-emerald-700/28 bg-[linear-gradient(135deg,rgba(52,211,153,0.24),rgba(16,185,129,0.16))] text-black shadow-[0_10px_24px_rgba(16,185,129,0.08)] dark:border-emerald-300/22 dark:bg-emerald-300/12 dark:text-emerald-100 dark:shadow-none",
         tone === "warning" &&
-          "border-amber-700/30 bg-[linear-gradient(135deg,rgba(251,191,36,0.3),rgba(245,158,11,0.18))] text-slate-950 shadow-[0_10px_24px_rgba(245,158,11,0.08)] dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100 dark:shadow-none",
+          "border-amber-700/30 bg-[linear-gradient(135deg,rgba(251,191,36,0.3),rgba(245,158,11,0.18))] text-black shadow-[0_10px_24px_rgba(245,158,11,0.08)] dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100 dark:shadow-none",
       )}
     >
       {children}
