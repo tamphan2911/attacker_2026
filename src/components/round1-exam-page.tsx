@@ -1715,17 +1715,17 @@ export function Round1ExamPage() {
                 );
               })}
             </div>
-            <div className="mt-6 space-y-3 text-xs theme-text-soft">
-              <p className="inline-flex items-center gap-2">
+            <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 text-xs">
+              <p className="inline-flex items-center gap-3 text-slate-600 dark:text-slate-300">
                 <span className="h-2.5 w-2.5 rounded-full bg-[rgba(23,114,208,0.65)]" />
                 {locale === "en" ? "Current question" : "Câu hiện tại"}
               </p>
-              <p className="inline-flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-300" />
+              <p className="inline-flex items-center gap-3 text-slate-700 dark:text-emerald-100">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 dark:bg-emerald-300" />
                 {locale === "en" ? "Answered" : "Đã trả lời"}
               </p>
-              <p className="inline-flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-white/30" />
+              <p className="inline-flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-white/30" />
                 {locale === "en" ? "Not answered yet" : "Chưa trả lời"}
               </p>
             </div>
