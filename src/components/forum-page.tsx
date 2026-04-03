@@ -172,6 +172,23 @@ export function ForumPage() {
     void loadThreadDetail(activeThreadSlug);
   }, [activeThreadSlug, loadThreadDetail]);
 
+  useEffect(() => {
+    if (!isComposerOpen) {
+      return;
+    }
+
+    const { overflow: bodyOverflow } = document.body.style;
+    const { overflow: htmlOverflow } = document.documentElement.style;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = bodyOverflow;
+      document.documentElement.style.overflow = htmlOverflow;
+    };
+  }, [isComposerOpen]);
+
   const filteredThreads = useMemo(() => {
     const normalizedSearch = deferredSearchValue.trim().toLowerCase();
 
@@ -688,7 +705,7 @@ export function ForumPage() {
       </section>
 
       {isComposerOpen ? (
-        <div className="fixed inset-0 z-[80] overflow-y-auto bg-[rgba(7,18,35,0.58)] p-4 backdrop-blur-sm md:p-8">
+        <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-[rgba(7,18,35,0.58)] p-4 backdrop-blur-sm md:p-8">
           <div className="mx-auto max-w-3xl py-2 md:py-4">
             <Surface className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden px-0 py-0 md:max-h-[calc(100vh-4rem)]">
               <div className="flex items-center justify-between border-b theme-border px-6 py-5">
@@ -715,96 +732,96 @@ export function ForumPage() {
                 </button>
               </div>
 
-              <div className="overflow-y-auto px-6 py-6">
+              <div className="overflow-y-auto overscroll-contain px-6 py-6">
                 <div className="grid gap-4 md:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                    {locale === "en" ? "Thread title" : "Tiêu đề"}
-                  </span>
-                  <input
-                    value={threadDraft.title}
-                    onChange={(event) => setThreadDraft((current) => ({ ...current, title: event.target.value }))}
-                    className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
-                  />
-                </label>
+                  <label className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "Thread title" : "Tiêu đề"}
+                    </span>
+                    <input
+                      value={threadDraft.title}
+                      onChange={(event) => setThreadDraft((current) => ({ ...current, title: event.target.value }))}
+                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                    />
+                  </label>
 
-                <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                    {locale === "en" ? "Category" : "Phân loại"}
-                  </span>
-                  <select
-                    value={threadDraft.category}
-                    onChange={(event) =>
-                      setThreadDraft((current) => ({
-                        ...current,
-                        category: event.target.value as ForumThreadCategory,
-                      }))
-                    }
-                    className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
-                  >
-                    {forumCategoryOrder.map((category) => (
-                      <option key={category} value={category}>
-                        {getForumCategoryLabel(locale, category)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  <label className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "Category" : "Phân loại"}
+                    </span>
+                    <select
+                      value={threadDraft.category}
+                      onChange={(event) =>
+                        setThreadDraft((current) => ({
+                          ...current,
+                          category: event.target.value as ForumThreadCategory,
+                        }))
+                      }
+                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                    >
+                      {forumCategoryOrder.map((category) => (
+                        <option key={category} value={category}>
+                          {getForumCategoryLabel(locale, category)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
 
-                <label className="space-y-2 md:col-span-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                    {locale === "en" ? "Roles or skills you want to mention" : "Vai trò hoặc kỹ năng bạn muốn nhắc đến"}
-                  </span>
-                  <input
-                    value={threadDraft.preferredRoles}
-                    onChange={(event) =>
-                      setThreadDraft((current) => ({ ...current, preferredRoles: event.target.value }))
-                    }
-                    placeholder={
-                      locale === "en"
-                        ? "Example: Product, UI/UX, Data analysis, Frontend"
-                        : "Ví dụ: Product, UI/UX, Phân tích dữ liệu, Frontend"
-                    }
-                    className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
-                  />
-                </label>
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "Roles or skills you want to mention" : "Vai trò hoặc kỹ năng bạn muốn nhắc đến"}
+                    </span>
+                    <input
+                      value={threadDraft.preferredRoles}
+                      onChange={(event) =>
+                        setThreadDraft((current) => ({ ...current, preferredRoles: event.target.value }))
+                      }
+                      placeholder={
+                        locale === "en"
+                          ? "Example: Product, UI/UX, Data analysis, Frontend"
+                          : "Ví dụ: Product, UI/UX, Phân tích dữ liệu, Frontend"
+                      }
+                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                    />
+                  </label>
 
-                <label className="space-y-2 md:col-span-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                    {locale === "en" ? "Short summary" : "Mô tả ngắn"}
-                  </span>
-                  <textarea
-                    value={threadDraft.summary}
-                    onChange={(event) => setThreadDraft((current) => ({ ...current, summary: event.target.value }))}
-                    className="theme-field min-h-[96px] w-full rounded-[1rem] border px-4 py-3 text-sm leading-7 outline-none"
-                  />
-                </label>
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "Short summary" : "Mô tả ngắn"}
+                    </span>
+                    <textarea
+                      value={threadDraft.summary}
+                      onChange={(event) => setThreadDraft((current) => ({ ...current, summary: event.target.value }))}
+                      className="theme-field min-h-[96px] w-full rounded-[1rem] border px-4 py-3 text-sm leading-7 outline-none"
+                    />
+                  </label>
 
-                <label className="space-y-2 md:col-span-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                    {locale === "en" ? "Main post" : "Nội dung chính"}
-                  </span>
-                  <textarea
-                    value={threadDraft.body}
-                    onChange={(event) => setThreadDraft((current) => ({ ...current, body: event.target.value }))}
-                    className="theme-field min-h-[180px] w-full rounded-[1rem] border px-4 py-3 text-sm leading-7 outline-none"
-                  />
-                </label>
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "Main post" : "Nội dung chính"}
+                    </span>
+                    <textarea
+                      value={threadDraft.body}
+                      onChange={(event) => setThreadDraft((current) => ({ ...current, body: event.target.value }))}
+                      className="theme-field min-h-[180px] w-full rounded-[1rem] border px-4 py-3 text-sm leading-7 outline-none"
+                    />
+                  </label>
 
-                <label className="space-y-2 md:col-span-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                    {locale === "en" ? "Contact note" : "Ghi chú liên hệ"}
-                  </span>
-                  <input
-                    value={threadDraft.contactNote}
-                    onChange={(event) => setThreadDraft((current) => ({ ...current, contactNote: event.target.value }))}
-                    placeholder={
-                      locale === "en"
-                        ? "Example: I usually check forum replies every evening."
-                        : "Ví dụ: Tôi thường xem phản hồi trên forum vào mỗi buổi tối."
-                    }
-                    className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
-                  />
-                </label>
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "Contact note" : "Ghi chú liên hệ"}
+                    </span>
+                    <input
+                      value={threadDraft.contactNote}
+                      onChange={(event) => setThreadDraft((current) => ({ ...current, contactNote: event.target.value }))}
+                      placeholder={
+                        locale === "en"
+                          ? "Example: I usually check forum replies every evening."
+                          : "Ví dụ: Tôi thường xem phản hồi trên forum vào mỗi buổi tối."
+                      }
+                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                    />
+                  </label>
                 </div>
               </div>
 
