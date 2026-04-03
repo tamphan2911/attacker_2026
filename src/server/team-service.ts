@@ -25,7 +25,12 @@ import {
   type Round1PaperQuestion,
   type Round1QuestionResponse,
 } from "@/lib/round1";
-import type { Round1Question, Round1TestBank as AppRound1TestBank } from "@/types/site";
+import type {
+  Round1Question,
+  Round1QuestionDifficulty,
+  Round1QuestionType,
+  Round1TestBank as AppRound1TestBank,
+} from "@/types/site";
 
 type ServiceSuccess<T> = {
   ok: true;
@@ -98,10 +103,63 @@ export interface PersistedRound1Attempt {
 
 function parseRound1AttemptQuestions(rawQuestions: string) {
   try {
-    return JSON.parse(rawQuestions) as Round1PaperQuestion[];
+    const parsed = JSON.parse(rawQuestions) as Round1PaperQuestion[];
+    return Array.isArray(parsed)
+      ? parsed.map((question, index) => normalizePersistedRound1Question(question, index))
+      : [];
   } catch {
     return [];
   }
+}
+
+function normalizePersistedDifficulty(
+  difficulty: string | undefined,
+): Round1QuestionDifficulty {
+  switch ((difficulty ?? "").toLowerCase()) {
+    case "easy":
+      return "easy";
+    case "medium":
+      return "medium";
+    case "hard":
+      return "hard";
+    default:
+      return "medium";
+  }
+}
+
+function normalizePersistedType(type: string | undefined): Round1QuestionType {
+  switch ((type ?? "").toLowerCase()) {
+    case "true_false":
+    case "true-false":
+      return "true-false";
+    case "single_choice":
+    case "single-choice":
+      return "single-choice";
+    case "multiple_choice":
+    case "multiple-choice":
+      return "multiple-choice";
+    case "pairing":
+      return "pairing";
+    case "essay":
+      return "essay";
+    default:
+      return "single-choice";
+  }
+}
+
+function normalizePersistedRound1Question(
+  question: Round1PaperQuestion,
+  index: number,
+): Round1PaperQuestion {
+  return {
+    ...question,
+    difficulty: normalizePersistedDifficulty(String(question.difficulty)),
+    type: normalizePersistedType(String(question.type)),
+    paperOrder:
+      typeof question.paperOrder === "number" && Number.isFinite(question.paperOrder)
+        ? question.paperOrder
+        : index + 1,
+  };
 }
 
 function parseRound1AttemptAnswers(rawAnswers: string | null | undefined) {
