@@ -77,6 +77,10 @@ enum Round1BankStatus {
   ARCHIVED
 }
 
+enum Round1AttemptStatus {
+  IN_PROGRESS
+}
+
 enum TeamSubmissionResourceSource {
   EXTERNAL
   UPLOAD
@@ -127,6 +131,7 @@ model User {
   receivedTransfers LeadershipTransferRequest[] @relation("TransferRecipient")
   sentLockRequests Round1TeamLockRequest[]   @relation("Round1LockSender")
   receivedLockRequests Round1TeamLockRequest[] @relation("Round1LockRecipient")
+  round1ExamAttempt  Round1ExamAttempt?
   round1Submissions Round1Submission[]
   teamSubmissions TeamSubmission[]
   actionTokens    UserActionToken[]
@@ -173,6 +178,7 @@ model Team {
   invitations               TeamInvitation[]
   leadershipTransferRequests LeadershipTransferRequest[]
   round1LockRequests        Round1TeamLockRequest[]
+  round1ExamAttempts        Round1ExamAttempt[]
   round1Submissions         Round1Submission[]
   submissions               TeamSubmission[]
 }
@@ -249,7 +255,29 @@ model Round1TestBank {
   questions           String
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
+  attempts            Round1ExamAttempt[]
   submissions         Round1Submission[]
+}
+
+model Round1ExamAttempt {
+  id                   String             @id @default(cuid())
+  bankId               String
+  teamId               String
+  userId               String             @unique
+  status               Round1AttemptStatus @default(IN_PROGRESS)
+  startedAt            DateTime
+  deadlineAt           DateTime
+  currentQuestionIndex Int                @default(0)
+  questions            String
+  answers              String             @default("{}")
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  bank                 Round1TestBank     @relation(fields: [bankId], references: [id], onDelete: Restrict)
+  team                 Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([teamId, deadlineAt])
+  @@index([deadlineAt])
 }
 
 model Round1Submission {

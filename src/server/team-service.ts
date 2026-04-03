@@ -3,16 +3,29 @@ import { randomUUID } from "node:crypto";
 import {
   CompetitionStage,
   LeadershipTransferStatus,
+  Round1BankStatus,
+  Round1TestBankType,
   SubmissionRound,
   Round1TeamLockRequestStatus,
   TeamInvitationStatus,
   TeamRound1LockStatus,
   TeamSubmissionResourceSource,
   UserRole,
+  type Prisma,
+  type Round1ExamAttempt,
+  type Round1Submission,
 } from "@prisma/client";
 
 import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS, competitionRoundWindows } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import {
+  createRound1ExamPaper,
+  getRound1ObjectiveScore,
+  scoreRound1Question,
+  type Round1PaperQuestion,
+  type Round1QuestionResponse,
+} from "@/lib/round1";
+import type { Round1Question, Round1TestBank as AppRound1TestBank } from "@/types/site";
 
 type ServiceSuccess<T> = {
   ok: true;
@@ -69,6 +82,182 @@ function isTeamRosterLocked(team: { stage: CompetitionStage; round1LockStatus: T
 
 function trimInput(value: string) {
   return value.trim();
+}
+
+export interface PersistedRound1Attempt {
+  id: string;
+  bankId: string;
+  teamId: string;
+  userId: string;
+  startedAt: string;
+  deadlineAt: string;
+  currentQuestionIndex: number;
+  questions: Round1PaperQuestion[];
+  answers: Record<string, Round1QuestionResponse>;
+}
+
+function parseRound1AttemptQuestions(rawQuestions: string) {
+  try {
+    return JSON.parse(rawQuestions) as Round1PaperQuestion[];
+  } catch {
+    return [];
+  }
+}
+
+function parseRound1AttemptAnswers(rawAnswers: string | null | undefined) {
+  try {
+    const parsed = rawAnswers ? (JSON.parse(rawAnswers) as Record<string, Round1QuestionResponse>) : {};
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function serializeRound1AttemptRecord(attempt: Round1ExamAttempt): PersistedRound1Attempt {
+  return {
+    id: attempt.id,
+    bankId: attempt.bankId,
+    teamId: attempt.teamId,
+    userId: attempt.userId,
+    startedAt: attempt.startedAt.toISOString(),
+    deadlineAt: attempt.deadlineAt.toISOString(),
+    currentQuestionIndex: attempt.currentQuestionIndex,
+    questions: parseRound1AttemptQuestions(attempt.questions),
+    answers: parseRound1AttemptAnswers(attempt.answers),
+  };
+}
+
+function isRound1AttemptExpired(attempt: Pick<Round1ExamAttempt, "deadlineAt">, now = new Date()) {
+  return now.getTime() >= attempt.deadlineAt.getTime();
+}
+
+function parseStoredRound1Questions(rawQuestions: string) {
+  try {
+    return JSON.parse(rawQuestions) as Round1Question[];
+  } catch {
+    return [];
+  }
+}
+
+function mapStoredBankToAppBank(
+  bank: NonNullable<Awaited<ReturnType<typeof pickRound1Bank>>>,
+  bankType: AppRound1TestBank["bankType"],
+): AppRound1TestBank {
+  return {
+    id: bank.id,
+    bankType,
+    title: { en: bank.titleEn, vi: bank.titleVi },
+    description: { en: bank.descriptionEn, vi: bank.descriptionVi },
+    status: bank.status.toLowerCase() as AppRound1TestBank["status"],
+    questionPoolSize: bank.questionPoolSize,
+    questionsPerAttempt: bank.questionsPerAttempt,
+    shuffleQuestions: bank.shuffleQuestions,
+    shuffleOptions: bank.shuffleOptions,
+    durationMinutes: bank.durationMinutes,
+    wordLimit: bank.wordLimit ?? undefined,
+    publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
+    questions: parseStoredRound1Questions(bank.questions),
+  };
+}
+
+async function pickRound1Bank(
+  tx: Prisma.TransactionClient,
+  bankType: Round1TestBankType,
+) {
+  const activeBank = await tx.round1TestBank.findFirst({
+    where: {
+      bankType,
+      status: Round1BankStatus.ACTIVE,
+    },
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+  });
+
+  if (activeBank) {
+    return activeBank;
+  }
+
+  return tx.round1TestBank.findFirst({
+    where: {
+      bankType,
+    },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+  });
+}
+
+async function finalizeRound1AttemptRecord(
+  tx: Prisma.TransactionClient,
+  attempt: Round1ExamAttempt,
+  override?: {
+    currentQuestionIndex?: number;
+    answers?: Record<string, Round1QuestionResponse>;
+  },
+) {
+  const existingSubmission = await tx.round1Submission.findUnique({
+    where: { userId: attempt.userId },
+  });
+
+  if (existingSubmission) {
+    await tx.round1ExamAttempt.delete({ where: { id: attempt.id } });
+    return existingSubmission;
+  }
+
+  const bank = await tx.round1TestBank.findUnique({
+    where: { id: attempt.bankId },
+  });
+
+  if (!bank) {
+    throw new Error("Round 1 test bank not found while finalizing the attempt.");
+  }
+
+  const questions = parseRound1AttemptQuestions(attempt.questions);
+  const answers = override?.answers ?? parseRound1AttemptAnswers(attempt.answers);
+
+  const scoreSummary = questions.reduce(
+    (result, question) => {
+      const questionScore = scoreRound1Question(question, answers[question.id]);
+
+      if (!questionScore.autoScored) {
+        return result;
+      }
+
+      return {
+        autoScoredCount: result.autoScoredCount + 1,
+        rightCount: result.rightCount + (questionScore.isCorrect ? 1 : 0),
+      };
+    },
+    { autoScoredCount: 0, rightCount: 0 },
+  );
+
+  const rightCount = scoreSummary.rightCount;
+  const wrongCount = scoreSummary.autoScoredCount - rightCount;
+  const objectiveScore = getRound1ObjectiveScore(rightCount);
+  const elapsedMinutes = Math.max(
+    1,
+    Math.ceil((Math.min(Date.now(), attempt.deadlineAt.getTime()) - attempt.startedAt.getTime()) / 60000),
+  );
+
+  const submission = await tx.round1Submission.create({
+    data: {
+      bankId: attempt.bankId,
+      teamId: attempt.teamId,
+      userId: attempt.userId,
+      rightCount,
+      wrongCount,
+      score: objectiveScore,
+      objectiveScore,
+      durationMinutes: Math.min(bank.durationMinutes, elapsedMinutes),
+      answers: JSON.stringify({
+        questions,
+        answers,
+      }),
+    },
+  });
+
+  await tx.round1ExamAttempt.delete({
+    where: { id: attempt.id },
+  });
+
+  return submission;
 }
 
 export async function createTeamForUser(
@@ -789,6 +978,223 @@ export async function respondToRound1TeamLock(
   });
 }
 
+async function loadRound1ExamActorContext(tx: Prisma.TransactionClient, actorId: string) {
+  const user = await tx.user.findUnique({ where: { id: actorId } });
+  if (!user) {
+    return fail(404, "User not found.");
+  }
+
+  if (user.role !== UserRole.STUDENT) {
+    return fail(403, "Only student accounts can submit Round 1 attempts.");
+  }
+
+  const membership = await tx.teamMember.findUnique({
+    where: { userId: actorId },
+    include: {
+      team: {
+        include: {
+          members: true,
+        },
+      },
+    },
+  });
+
+  if (!membership) {
+    return fail(409, "Join a team before taking the Round 1 test.");
+  }
+
+  if (membership.team.members.length < TEAM_MIN_MEMBERS) {
+    return fail(409, `Round 1 only opens for teams with at least ${TEAM_MIN_MEMBERS} members.`);
+  }
+
+  if (membership.team.stage !== CompetitionStage.ROUND_1) {
+    return fail(409, "This team is no longer competing in Round 1.");
+  }
+
+  if (membership.team.round1LockStatus !== TeamRound1LockStatus.LOCKED) {
+    return fail(409, "The team must finish the Round 1 lock protocol before any member can start the exam.");
+  }
+
+  return ok({ user, membership });
+}
+
+export async function getRound1ExamState(
+  actorId: string,
+): Promise<ServiceResult<{ attempt: PersistedRound1Attempt | null; submission: Round1Submission | null; autoSubmitted?: boolean }>> {
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({ where: { id: actorId } });
+    if (!user) {
+      return fail(404, "User not found.");
+    }
+
+    if (user.role !== UserRole.STUDENT) {
+      return ok({ attempt: null, submission: null });
+    }
+
+    const existingSubmission = await tx.round1Submission.findUnique({
+      where: { userId: actorId },
+    });
+    if (existingSubmission) {
+      return ok({ attempt: null, submission: existingSubmission });
+    }
+
+    const attempt = await tx.round1ExamAttempt.findUnique({
+      where: { userId: actorId },
+    });
+    if (!attempt) {
+      return ok({ attempt: null, submission: null });
+    }
+
+    if (isRound1AttemptExpired(attempt)) {
+      const submission = await finalizeRound1AttemptRecord(tx, attempt);
+      return ok({ attempt: null, submission, autoSubmitted: true });
+    }
+
+    return ok({ attempt: serializeRound1AttemptRecord(attempt), submission: null });
+  });
+}
+
+export async function startRound1Attempt(
+  actorId: string,
+): Promise<ServiceResult<{ attempt: PersistedRound1Attempt | null; submission: Round1Submission | null; autoSubmitted?: boolean }>> {
+  return prisma.$transaction(async (tx) => {
+    const actorContext = await loadRound1ExamActorContext(tx, actorId);
+    if (!actorContext.ok) {
+      return fail(actorContext.status, actorContext.error);
+    }
+
+    if (isRound1Finished()) {
+      return fail(409, "Round 1 is finished. New Round 1 submissions are closed.");
+    }
+
+    const existingSubmission = await tx.round1Submission.findUnique({
+      where: { userId: actorId },
+    });
+    if (existingSubmission) {
+      return ok({ attempt: null, submission: existingSubmission });
+    }
+
+    const existingAttempt = await tx.round1ExamAttempt.findUnique({
+      where: { userId: actorId },
+    });
+
+    if (existingAttempt) {
+      if (isRound1AttemptExpired(existingAttempt)) {
+        const submission = await finalizeRound1AttemptRecord(tx, existingAttempt);
+        return ok({ attempt: null, submission, autoSubmitted: true });
+      }
+
+      return ok({ attempt: serializeRound1AttemptRecord(existingAttempt), submission: null });
+    }
+
+    const objectiveBank = await pickRound1Bank(tx, Round1TestBankType.OBJECTIVE);
+    const essayBank = await pickRound1Bank(tx, Round1TestBankType.ESSAY);
+
+    if (!objectiveBank || !essayBank) {
+      return fail(404, "Round 1 bank configuration is incomplete.");
+    }
+
+    const startedAt = new Date();
+    const deadlineAt = new Date(startedAt.getTime() + objectiveBank.durationMinutes * 60 * 1000);
+    const questions = createRound1ExamPaper({
+      objectiveBank: mapStoredBankToAppBank(objectiveBank, "objective"),
+      essayBank: mapStoredBankToAppBank(essayBank, "essay"),
+    });
+
+    const attempt = await tx.round1ExamAttempt.create({
+      data: {
+        bankId: objectiveBank.id,
+        teamId: actorContext.data.membership.teamId,
+        userId: actorId,
+        startedAt,
+        deadlineAt,
+        currentQuestionIndex: 0,
+        questions: JSON.stringify(questions),
+        answers: JSON.stringify({}),
+      },
+    });
+
+    return ok({ attempt: serializeRound1AttemptRecord(attempt), submission: null }, 201);
+  });
+}
+
+export async function saveRound1AttemptProgress(
+  actorId: string,
+  payload: {
+    currentQuestionIndex: number;
+    answers: Record<string, Round1QuestionResponse>;
+  },
+): Promise<ServiceResult<{ attempt: PersistedRound1Attempt | null; submission: Round1Submission | null; autoSubmitted?: boolean }>> {
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({ where: { id: actorId } });
+    if (!user) {
+      return fail(404, "User not found.");
+    }
+
+    const existingSubmission = await tx.round1Submission.findUnique({
+      where: { userId: actorId },
+    });
+    if (existingSubmission) {
+      return ok({ attempt: null, submission: existingSubmission });
+    }
+
+    const attempt = await tx.round1ExamAttempt.findUnique({
+      where: { userId: actorId },
+    });
+    if (!attempt) {
+      return fail(404, "Round 1 attempt not found.");
+    }
+
+    if (isRound1AttemptExpired(attempt)) {
+      const submission = await finalizeRound1AttemptRecord(tx, attempt, payload);
+      return ok({ attempt: null, submission, autoSubmitted: true });
+    }
+
+    const questionCount = parseRound1AttemptQuestions(attempt.questions).length;
+    const nextIndex =
+      questionCount > 0
+        ? Math.max(0, Math.min(questionCount - 1, Math.trunc(payload.currentQuestionIndex)))
+        : 0;
+
+    const updatedAttempt = await tx.round1ExamAttempt.update({
+      where: { id: attempt.id },
+      data: {
+        currentQuestionIndex: nextIndex,
+        answers: JSON.stringify(payload.answers),
+      },
+    });
+
+    return ok({ attempt: serializeRound1AttemptRecord(updatedAttempt), submission: null });
+  });
+}
+
+export async function completeRound1Attempt(
+  actorId: string,
+  payload?: {
+    currentQuestionIndex?: number;
+    answers?: Record<string, Round1QuestionResponse>;
+  },
+): Promise<ServiceResult<{ submission: Round1Submission }>> {
+  return prisma.$transaction(async (tx) => {
+    const existingSubmission = await tx.round1Submission.findUnique({
+      where: { userId: actorId },
+    });
+    if (existingSubmission) {
+      return ok({ submission: existingSubmission });
+    }
+
+    const attempt = await tx.round1ExamAttempt.findUnique({
+      where: { userId: actorId },
+    });
+    if (!attempt) {
+      return fail(404, "Round 1 attempt not found.");
+    }
+
+    const submission = await finalizeRound1AttemptRecord(tx, attempt, payload);
+    return ok({ submission });
+  });
+}
+
 export async function submitRound1Attempt(
   actorId: string,
   payload: {
@@ -867,6 +1273,10 @@ export async function submitRound1Attempt(
         durationMinutes: payload.durationMinutes,
         answers: payload.answers == null ? undefined : JSON.stringify(payload.answers),
       },
+    });
+
+    await tx.round1ExamAttempt.deleteMany({
+      where: { userId: actorId },
     });
 
     return ok({ submissionId: submission.id }, 201);

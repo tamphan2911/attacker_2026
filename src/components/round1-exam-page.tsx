@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -10,9 +9,11 @@ import {
   BookText,
   Clock3,
   FileQuestion,
+  LoaderCircle,
   Play,
   ShieldCheck,
   Target,
+  X,
 } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -37,19 +38,20 @@ import {
   ROUND1_TOTAL_MAX_SCORE,
   ROUND1_TOPIC_COUNT,
   countWords,
-  createRound1ExamPaper,
   getActiveRound1Bank,
-  getRound1ObjectiveScore,
   isRound1QuestionAnswered,
   pickRound1TypeLabel,
-  scoreRound1Question,
   type Round1PaperQuestion,
   type Round1QuestionResponse,
 } from "@/lib/round1";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
+import type { Round1Submission } from "@/types/site";
 
 interface Round1ExamSession {
+  id: string;
   bankId: string;
+  teamId: string;
+  userId: string;
   startedAt: string;
   deadlineAt: string;
   currentQuestionIndex: number;
@@ -57,7 +59,13 @@ interface Round1ExamSession {
   questions: Round1PaperQuestion[];
 }
 
-const SESSION_STORAGE_PREFIX = "attacker-2026-round1-exam-session-v3";
+type AttemptStateResponse = {
+  attempt: Round1ExamSession | null;
+  submission: Round1Submission | null;
+  autoSubmitted?: boolean;
+};
+
+type DialogMode = "start" | "submit" | null;
 
 function formatRemainingTime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -75,6 +83,185 @@ function getLatestSubmissionForUser<T extends { userId: string; submittedAt: str
     .sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))[0];
 }
 
+function Round1ConfirmDialog({
+  locale,
+  mode,
+  open,
+  pending,
+  error,
+  answeredCount,
+  totalCount,
+  unansweredCount,
+  essayWarning,
+  onClose,
+  onConfirm,
+}: {
+  locale: "en" | "vi";
+  mode: Exclude<DialogMode, null>;
+  open: boolean;
+  pending: boolean;
+  error: string | null;
+  answeredCount: number;
+  totalCount: number;
+  unansweredCount: number;
+  essayWarning: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!open) {
+    return null;
+  }
+
+  const isStart = mode === "start";
+
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(7,18,35,0.56)] px-4 py-6 backdrop-blur-sm">
+      <div className="theme-card-shadow w-full max-w-xl overflow-hidden rounded-[2rem] border theme-border bg-[rgba(255,255,255,0.98)] shadow-[0_28px_70px_rgba(10,22,40,0.2)] dark:bg-[rgba(10,20,36,0.98)]">
+        <div className="flex items-start justify-between gap-4 border-b theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(234,244,255,0.94))] px-6 py-5 dark:bg-[linear-gradient(135deg,rgba(12,26,47,0.98),rgba(15,39,72,0.92))]">
+          <div className="space-y-3">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-sky-700/16 bg-[linear-gradient(135deg,rgba(37,99,235,0.14),rgba(14,165,233,0.16))] text-sky-700 dark:border-sky-300/16 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(37,99,235,0.18))] dark:text-sky-100">
+              {isStart ? <Play className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+            </span>
+            <div>
+              <p className="theme-eyebrow text-[0.68rem] font-semibold uppercase tracking-[0.3em]">
+                {isStart
+                  ? locale === "en"
+                    ? "Round 1 check"
+                    : "Xác nhận Vòng 1"
+                  : locale === "en"
+                    ? "Submit attempt"
+                    : "Nộp bài"}
+              </p>
+              <h2 className="theme-heading mt-2 text-2xl font-semibold theme-text-strong">
+                {isStart
+                  ? locale === "en"
+                    ? "Start the official Round 1 exam?"
+                    : "Bắt đầu lượt thi Vòng 1 chính thức?"
+                  : locale === "en"
+                    ? "Submit the current Round 1 attempt?"
+                    : "Nộp lượt thi Vòng 1 hiện tại?"}
+              </h2>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={pending}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border theme-border theme-panel text-sm theme-text-strong"
+            aria-label={locale === "en" ? "Close dialog" : "Đóng cửa sổ"}
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4 px-6 py-6">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
+                {locale === "en" ? "Answered" : "Đã trả lời"}
+              </p>
+              <p className="mt-2 text-2xl font-semibold theme-text-strong">{answeredCount}</p>
+            </div>
+            <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
+                {locale === "en" ? "Remaining" : "Chưa trả lời"}
+              </p>
+              <p className="mt-2 text-2xl font-semibold theme-text-strong">{unansweredCount}</p>
+            </div>
+            <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
+                {locale === "en" ? "Question total" : "Tổng số câu"}
+              </p>
+              <p className="mt-2 text-2xl font-semibold theme-text-strong">{totalCount}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {(isStart
+              ? [
+                  locale === "en"
+                    ? "The timer starts immediately and keeps running across refresh, tab close, sign out, and re-login."
+                    : "Đồng hồ bắt đầu ngay lập tức và vẫn tiếp tục chạy dù bạn tải lại trang, đóng tab, đăng xuất hay đăng nhập lại.",
+                  locale === "en"
+                    ? "This is one official attempt only. The paper order is fixed for this attempt and cannot be regenerated."
+                    : "Đây là lượt thi chính thức duy nhất. Thứ tự câu hỏi của lượt thi này được cố định và không thể tạo lại.",
+                  locale === "en"
+                    ? "If time expires, the latest saved answers will be submitted automatically."
+                    : "Khi hết giờ, các câu trả lời đã lưu gần nhất sẽ được tự động nộp.",
+                ]
+              : [
+                  locale === "en"
+                    ? "After submission, this account cannot reopen or redo the Round 1 exam."
+                    : "Sau khi nộp, tài khoản này không thể mở lại hoặc làm lại bài thi Vòng 1.",
+                  locale === "en"
+                    ? "Unanswered objective questions will be counted as incorrect."
+                    : "Các câu khách quan chưa trả lời sẽ được tính là sai.",
+                  locale === "en"
+                    ? "Essay responses remain pending manual review by admin or moderator."
+                    : "Phần tự luận sẽ tiếp tục chờ admin hoặc moderator chấm thủ công.",
+                ]
+            ).map((item) => (
+              <div
+                key={item}
+                className="flex items-start gap-3 rounded-[1.4rem] border theme-border theme-panel px-4 py-3.5 text-sm leading-7 theme-text-body"
+              >
+                <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-[linear-gradient(135deg,#1772d0,#0ea5e9)]" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+
+          {essayWarning ? (
+            <div className="rounded-[1.4rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+              {locale === "en"
+                ? "One of the essay responses is over the 200-word limit. Consider shortening it before submitting."
+                : "Có câu tự luận đang vượt quá giới hạn 200 từ. Hãy cân nhắc rút gọn trước khi nộp."}
+            </div>
+          ) : null}
+
+          <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-3.5 text-sm leading-7 theme-text-muted">
+            {locale === "en"
+              ? `Technical support: ${contactInfo.email} · ${contactInfo.phone}`
+              : `Hỗ trợ kỹ thuật: ${contactInfo.email} · ${contactInfo.phone}`}
+          </div>
+
+          {error ? (
+            <div className="rounded-[1.4rem] border border-rose-700/18 bg-[linear-gradient(135deg,rgba(255,241,242,0.98),rgba(255,228,230,0.94))] px-4 py-3.5 text-sm leading-7 text-rose-900 dark:border-rose-300/18 dark:bg-rose-300/12 dark:text-rose-100">
+              {error}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="flex flex-col-reverse gap-3 border-t theme-border px-6 py-5 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={pending}
+            className="inline-flex items-center justify-center rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {locale === "en" ? "Cancel" : "Hủy"}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={pending}
+            className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isStart ? <Play className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
+            {isStart
+              ? locale === "en"
+                ? "Start official attempt"
+                : "Bắt đầu lượt thi chính thức"
+              : locale === "en"
+                ? "Submit now"
+                : "Nộp ngay"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Round1ExamPage() {
   const {
     authStatus,
@@ -86,69 +273,153 @@ export function Round1ExamPage() {
     round1TestBanks,
     round1Submissions,
     hasHydrated,
-    submitRound1Attempt,
   } = useSiteState();
   const [session, setSession] = useState<Round1ExamSession | null>(null);
+  const [attemptState, setAttemptState] = useState<"idle" | "loading" | "ready">("idle");
+  const [resolvedSubmission, setResolvedSubmission] = useState<Round1Submission | null>(null);
+  const [dialogMode, setDialogMode] = useState<DialogMode>(null);
+  const [dialogPending, setDialogPending] = useState(false);
+  const [dialogError, setDialogError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const router = useRouter();
+  const sessionRef = useRef<Round1ExamSession | null>(null);
+  const submissionRef = useRef<Round1Submission | null>(null);
+  const submitInFlightRef = useRef(false);
 
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
   const round1WordLimit = activeEssayBank?.wordLimit ?? ROUND1_ESSAY_WORD_LIMIT;
-  const existingSubmission = getLatestSubmissionForUser(round1Submissions, currentUser.id);
+  const providerSubmission = getLatestSubmissionForUser(round1Submissions, currentUser.id);
+  const existingSubmission = resolvedSubmission ?? providerSubmission;
   const isStudent = currentUser.role === "student";
   const currentCompetitionState = currentTeam ? getTeamCompetitionState(currentTeam) : undefined;
   const round1Window = getCompetitionRoundWindow("round-1");
   const round1Finished = isRoundFinished("round-1");
   const teamRound1Locked = Boolean(currentTeam && isTeamRound1Locked(currentTeam));
   const isEligibleForRound1 = Boolean(isStudent && currentTeam && canTeamTakeRound1(currentTeam));
-  const sessionStorageKey = `${SESSION_STORAGE_PREFIX}:${currentUser.id}`;
+  const progressSnapshot = session
+    ? JSON.stringify({
+        currentQuestionIndex: session.currentQuestionIndex,
+        answers: session.answers,
+      })
+    : "";
 
   useEffect(() => {
-    if (!hasHydrated) {
+    sessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    submissionRef.current = existingSubmission ?? null;
+  }, [existingSubmission]);
+
+  useEffect(() => {
+    if (!hasHydrated || !isAuthenticated || !currentUser.id || existingSubmission || !isStudent) {
+      setAttemptState((current) => (current === "ready" ? current : "ready"));
       return;
     }
 
-    if (existingSubmission) {
-      window.localStorage.removeItem(sessionStorageKey);
-      return;
-    }
+    let cancelled = false;
 
-    let timeoutId: number | undefined;
+    const loadAttemptState = async () => {
+      setAttemptState("loading");
+      setPageError(null);
 
-    try {
-      const raw = window.localStorage.getItem(sessionStorageKey);
-      const nextSession = raw ? (JSON.parse(raw) as Round1ExamSession) : null;
+      try {
+        const response = await fetch("/api/round-1/attempt", {
+          cache: "no-store",
+          credentials: "same-origin",
+        });
 
-      timeoutId = window.setTimeout(() => {
-        setSession(nextSession);
-      }, 0);
-    } catch {
-      window.localStorage.removeItem(sessionStorageKey);
-      timeoutId = window.setTimeout(() => {
-        setSession(null);
-      }, 0);
-    }
+        if (!response.ok) {
+          throw new Error();
+        }
 
-    return () => {
-      if (timeoutId) {
-        window.clearTimeout(timeoutId);
+        const payload = (await response.json()) as AttemptStateResponse;
+        if (cancelled) {
+          return;
+        }
+
+        setResolvedSubmission(payload.submission);
+        setSession(payload.attempt);
+        setAttemptState("ready");
+
+        if (payload.submission && (payload.autoSubmitted || !providerSubmission)) {
+          window.location.assign("/dashboard#round1-result");
+        }
+      } catch {
+        if (!cancelled) {
+          setSession(null);
+          setAttemptState("ready");
+          setPageError(
+            locale === "en"
+              ? "Could not restore the current Round 1 attempt right now."
+              : "Hiện không thể khôi phục lượt thi Vòng 1 đang diễn ra.",
+          );
+        }
       }
     };
-  }, [existingSubmission, hasHydrated, sessionStorageKey]);
+
+    void loadAttemptState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser.id, existingSubmission, hasHydrated, isAuthenticated, isStudent, locale, providerSubmission]);
+
+  const persistAttemptProgress = useCallback(
+    async (
+      targetSession: Round1ExamSession,
+      options?: { keepalive?: boolean; silent?: boolean },
+    ) => {
+      const response = await fetch("/api/round-1/attempt", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        cache: "no-store",
+        keepalive: options?.keepalive,
+        body: JSON.stringify({
+          currentQuestionIndex: targetSession.currentQuestionIndex,
+          answers: targetSession.answers,
+        }),
+      });
+
+      if (!response.ok) {
+        if (!options?.silent) {
+          setPageError(
+            locale === "en"
+              ? "Could not save the current Round 1 progress."
+              : "Hiện không thể lưu tiến độ làm bài Vòng 1.",
+          );
+        }
+        return;
+      }
+
+      const payload = (await response.json()) as AttemptStateResponse;
+      setPageError(null);
+      if (payload.submission) {
+        setResolvedSubmission(payload.submission);
+        setSession(null);
+        window.location.assign("/dashboard#round1-result");
+      }
+    },
+    [locale],
+  );
 
   useEffect(() => {
-    if (!hasHydrated) {
+    if (!session || attemptState !== "ready" || existingSubmission) {
       return;
     }
 
-    if (!session) {
-      window.localStorage.removeItem(sessionStorageKey);
-      return;
-    }
+    const timeoutId = window.setTimeout(() => {
+      void persistAttemptProgress(session);
+    }, 700);
 
-    window.localStorage.setItem(sessionStorageKey, JSON.stringify(session));
-  }, [hasHydrated, session, sessionStorageKey]);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [attemptState, existingSubmission, persistAttemptProgress, progressSnapshot, session]);
 
   useEffect(() => {
     if (!session) {
@@ -180,49 +451,83 @@ export function Round1ExamPage() {
     };
   }, [session]);
 
-  const finalizeExam = useCallback(
-    (targetSession: Round1ExamSession) => {
-      const targetObjectiveBank = round1TestBanks.find((bank) => bank.id === targetSession.bankId);
-      if (!targetObjectiveBank) {
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    const flushProgress = () => {
+      if (!sessionRef.current || submissionRef.current) {
         return;
       }
 
-      const scoreSummary = targetSession.questions.reduce(
-        (result, question) => {
-          const questionScore = scoreRound1Question(question, targetSession.answers[question.id]);
+      void persistAttemptProgress(sessionRef.current, { keepalive: true, silent: true });
+    };
 
-          if (!questionScore.autoScored) {
-            return result;
-          }
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        flushProgress();
+      }
+    };
 
-          return {
-            autoScoredCount: result.autoScoredCount + 1,
-            rightCount: result.rightCount + (questionScore.isCorrect ? 1 : 0),
-          };
-        },
-        { autoScoredCount: 0, rightCount: 0 },
-      );
-      const rightCount = scoreSummary.rightCount;
-      const wrongCount = scoreSummary.autoScoredCount - rightCount;
-      const elapsedMinutes = Math.max(
-        1,
-        Math.ceil((Date.now() - new Date(targetSession.startedAt).getTime()) / 60000),
-      );
+    window.addEventListener("pagehide", flushProgress);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-      const objectiveScore = getRound1ObjectiveScore(rightCount);
-      submitRound1Attempt({
-        bankId: targetSession.bankId,
-        rightCount,
-        wrongCount,
-        objectiveScore,
-        durationMinutes: Math.min(targetObjectiveBank.durationMinutes, elapsedMinutes),
-      });
+    return () => {
+      window.removeEventListener("pagehide", flushProgress);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [persistAttemptProgress, session]);
 
-      setSession(null);
-      window.localStorage.removeItem(sessionStorageKey);
-      router.push("/dashboard#round1-result");
+  const submitExamAttempt = useCallback(
+    async (targetSession: Round1ExamSession) => {
+      if (submitInFlightRef.current) {
+        return;
+      }
+
+      submitInFlightRef.current = true;
+      setDialogPending(true);
+      setDialogError(null);
+
+      try {
+        const response = await fetch("/api/round-1/attempt/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "same-origin",
+          cache: "no-store",
+          body: JSON.stringify({
+            currentQuestionIndex: targetSession.currentQuestionIndex,
+            answers: targetSession.answers,
+          }),
+        });
+
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(
+            payload?.error ||
+              (locale === "en"
+                ? "Could not submit the Round 1 attempt right now."
+                : "Hiện không thể nộp bài Vòng 1."),
+          );
+        }
+
+        window.location.assign("/dashboard#round1-result");
+      } catch (error) {
+        setDialogError(
+          error instanceof Error
+            ? error.message
+            : locale === "en"
+              ? "Could not submit the Round 1 attempt right now."
+              : "Hiện không thể nộp bài Vòng 1.",
+        );
+      } finally {
+        submitInFlightRef.current = false;
+        setDialogPending(false);
+      }
     },
-    [round1TestBanks, router, sessionStorageKey, submitRound1Attempt],
+    [locale],
   );
 
   const remainingSeconds = session
@@ -235,13 +540,67 @@ export function Round1ExamPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      finalizeExam(session);
+      void submitExamAttempt(session);
     }, 0);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [existingSubmission, finalizeExam, remainingSeconds, session]);
+  }, [existingSubmission, remainingSeconds, session, submitExamAttempt]);
+
+  const startExam = useCallback(async () => {
+    setDialogPending(true);
+    setDialogError(null);
+
+    try {
+      const response = await fetch("/api/round-1/attempt", {
+        method: "POST",
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(
+          payload?.error ||
+            (locale === "en"
+              ? "Could not start the Round 1 exam right now."
+              : "Hiện không thể bắt đầu bài thi Vòng 1."),
+        );
+      }
+
+      const payload = (await response.json()) as AttemptStateResponse;
+
+      if (payload.submission) {
+        setResolvedSubmission(payload.submission);
+        window.location.assign("/dashboard#round1-result");
+        return;
+      }
+
+      setPageError(null);
+      setSession(payload.attempt);
+      setNowMs(Date.now());
+      setDialogMode(null);
+    } catch (error) {
+      setDialogError(
+        error instanceof Error
+          ? error.message
+          : locale === "en"
+            ? "Could not start the Round 1 exam right now."
+            : "Hiện không thể bắt đầu bài thi Vòng 1.",
+      );
+    } finally {
+      setDialogPending(false);
+    }
+  }, [locale]);
+
+  const handleConfirmSubmit = async () => {
+    if (!session) {
+      return;
+    }
+
+    await submitExamAttempt(session);
+  };
 
   if (authStatus === "loading" || !hasHydrated) {
     return (
@@ -249,6 +608,17 @@ export function Round1ExamPage() {
         <SectionHeading
           eyebrow="Round 1"
           title={locale === "en" ? "Loading Round 1 exam..." : "Đang tải bài thi Vòng 1..."}
+        />
+      </Surface>
+    );
+  }
+
+  if (isAuthenticated && !currentUser.id) {
+    return (
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <SectionHeading
+          eyebrow="Round 1"
+          title={locale === "en" ? "Loading your Round 1 workspace..." : "Đang tải không gian Vòng 1 của bạn..."}
         />
       </Surface>
     );
@@ -276,7 +646,7 @@ export function Round1ExamPage() {
     );
   }
 
-  if (!activeObjectiveBank || !activeEssayBank) {
+  if (!session && !existingSubmission && (!activeObjectiveBank || !activeEssayBank)) {
     return (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
@@ -296,23 +666,32 @@ export function Round1ExamPage() {
     );
   }
 
-  const startExam = () => {
-    const startedAt = new Date();
-    const deadlineAt = new Date(startedAt.getTime() + activeObjectiveBank.durationMinutes * 60 * 1000);
+  if (session && !currentTeam) {
+    return (
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <SectionHeading
+          eyebrow="Round 1"
+          title={locale === "en" ? "Restoring the current team context..." : "Đang khôi phục ngữ cảnh đội hiện tại..."}
+        />
+      </Surface>
+    );
+  }
 
-    setSession({
-      bankId: activeObjectiveBank.id,
-      startedAt: startedAt.toISOString(),
-      deadlineAt: deadlineAt.toISOString(),
-      currentQuestionIndex: 0,
-      answers: {},
-      questions: createRound1ExamPaper({
-        objectiveBank: activeObjectiveBank,
-        essayBank: activeEssayBank,
-      }),
-    });
-    setNowMs(startedAt.getTime());
-  };
+  if (!existingSubmission && isStudent && attemptState === "loading") {
+    return (
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <SectionHeading
+          eyebrow="Round 1"
+          title={locale === "en" ? "Restoring your current Round 1 attempt..." : "Đang khôi phục lượt thi Vòng 1 của bạn..."}
+          description={
+            locale === "en"
+              ? "Your saved answers and timer are being synced from the backend."
+              : "Câu trả lời đã lưu và thời gian còn lại đang được đồng bộ từ backend."
+          }
+        />
+      </Surface>
+    );
+  }
 
   const currentQuestion = session?.questions[session.currentQuestionIndex];
   const currentResponse = currentQuestion ? session?.answers[currentQuestion.id] : undefined;
@@ -412,7 +791,7 @@ export function Round1ExamPage() {
     );
   }
 
-  if (!isStudent) {
+  if (!session && !isStudent) {
     return (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
@@ -436,7 +815,7 @@ export function Round1ExamPage() {
     );
   }
 
-  if (!currentTeam) {
+  if (!session && !currentTeam) {
     return (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
@@ -455,7 +834,7 @@ export function Round1ExamPage() {
     );
   }
 
-  if (!isEligibleForRound1) {
+  if (!session && !isEligibleForRound1) {
     if (currentCompetitionState && currentCompetitionState !== "not-eligible" && currentCompetitionState !== "round-1") {
       return (
         <Surface className="px-6 py-6 md:px-8 md:py-8">
@@ -560,8 +939,8 @@ export function Round1ExamPage() {
         <div className="mt-6 flex flex-wrap gap-3">
           <StatusPill tone="warning">
             {locale === "en"
-              ? `${currentTeam.memberIds.length}/${TEAM_MIN_MEMBERS} required members`
-              : `${currentTeam.memberIds.length}/${TEAM_MIN_MEMBERS} thanh vien bat buoc`}
+              ? `${currentTeam?.memberIds.length ?? 0}/${TEAM_MIN_MEMBERS} required members`
+              : `${currentTeam?.memberIds.length ?? 0}/${TEAM_MIN_MEMBERS} thanh vien bat buoc`}
           </StatusPill>
           <Link href="/dashboard" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
             {locale === "en" ? "Invite more members" : "Mời thêm thành viên"}
@@ -573,13 +952,20 @@ export function Round1ExamPage() {
 
   if (!session) {
     return (
-      <div className="space-y-8">
-        <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-          <ArrowLeft className="h-4 w-4" />
-          {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
-        </Link>
+      <>
+        <div className="space-y-8">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
+            <ArrowLeft className="h-4 w-4" />
+            {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
+          </Link>
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+          {pageError ? (
+            <div className="rounded-[1.5rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-5 py-4 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+              {pageError}
+            </div>
+          ) : null}
+
+          <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
           <Surface className="overflow-hidden px-0 py-0">
             <div className="border-b theme-border bg-[linear-gradient(135deg,rgba(8,47,73,0.18),rgba(23,114,208,0.14),rgba(14,165,233,0.08))] px-6 py-8 md:px-8 md:py-9">
               <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
@@ -597,7 +983,7 @@ export function Round1ExamPage() {
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 <StatusPill>{`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
-                <StatusPill>{`${activeObjectiveBank.durationMinutes} ${locale === "en" ? "minutes" : "phút"}`}</StatusPill>
+                <StatusPill>{`${activeObjectiveBank!.durationMinutes} ${locale === "en" ? "minutes" : "phút"}`}</StatusPill>
                 <StatusPill>{locale === "en" ? "One official attempt" : "1 lượt thi chính thức"}</StatusPill>
                 {round1Window ? <StatusPill>{formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate)}</StatusPill> : null}
               </div>
@@ -705,10 +1091,10 @@ export function Round1ExamPage() {
             <div className="mt-5 rounded-[1.8rem] border theme-border theme-panel px-5 py-5">
               <p className="text-lg font-semibold theme-text-strong">{currentUser.name}</p>
               <p className="mt-2 text-sm theme-text-soft">
-                {currentTeam.name} · {currentUser.university}
+                {currentTeam!.name} · {currentUser.university}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <StatusPill>{`#${currentTeam.tag}`}</StatusPill>
+                <StatusPill>{`#${currentTeam!.tag}`}</StatusPill>
                 <StatusPill>{`${ROUND1_TOTAL_QUESTIONS} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
               </div>
             </div>
@@ -744,10 +1130,14 @@ export function Round1ExamPage() {
 
             <button
               type="button"
-              onClick={startExam}
+              onClick={() => {
+                setDialogError(null);
+                setDialogMode("start");
+              }}
+              disabled={dialogPending}
               className="theme-button-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[1.5rem] px-5 py-3.5 text-sm font-semibold"
             >
-              <Play className="h-4 w-4" />
+              {dialogPending && dialogMode === "start" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
               {locale === "en" ? "Start Round 1 exam" : "Bắt đầu bài thi Vòng 1"}
             </button>
             <p className="mt-4 text-sm leading-7 theme-text-muted">
@@ -768,12 +1158,12 @@ export function Round1ExamPage() {
             {
               icon: <FileQuestion className="h-5 w-5 text-cyan-300" />,
               label: locale === "en" ? "Objective bank" : "Ngân hàng khách quan",
-              value: activeObjectiveBank.questionPoolSize.toString(),
+              value: activeObjectiveBank!.questionPoolSize.toString(),
             },
             {
               icon: <BookText className="h-5 w-5 text-emerald-300" />,
               label: locale === "en" ? "Essay bank" : "Ngân hàng tự luận",
-              value: activeEssayBank.questionPoolSize.toString(),
+              value: activeEssayBank!.questionPoolSize.toString(),
             },
             {
               icon: <Target className="h-5 w-5 text-orange-300" />,
@@ -783,7 +1173,7 @@ export function Round1ExamPage() {
             {
               icon: <Clock3 className="h-5 w-5 text-amber-300" />,
               label: locale === "en" ? "Time limit" : "Thời lượng",
-              value: `${activeObjectiveBank.durationMinutes}m`,
+              value: `${activeObjectiveBank!.durationMinutes}m`,
             },
           ].map((item) => (
             <Surface key={item.label} className="px-5 py-5">
@@ -796,20 +1186,42 @@ export function Round1ExamPage() {
               <p className="mt-4 text-4xl font-semibold theme-text-strong">{item.value}</p>
             </Surface>
           ))}
-        </section>
-      </div>
+          </section>
+        </div>
+
+        <Round1ConfirmDialog
+          locale={locale}
+          mode="start"
+          open={dialogMode === "start"}
+          pending={dialogPending}
+          error={dialogError}
+          answeredCount={0}
+          totalCount={ROUND1_TOTAL_QUESTIONS}
+          unansweredCount={ROUND1_TOTAL_QUESTIONS}
+          essayWarning={false}
+          onClose={() => {
+            if (!dialogPending) {
+              setDialogMode(null);
+            }
+          }}
+          onConfirm={() => {
+            void startExam();
+          }}
+        />
+      </>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
           <ArrowLeft className="h-4 w-4" />
           {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
         </Link>
         <div className="flex flex-wrap gap-2">
-          <StatusPill>{`#${currentTeam.tag}`}</StatusPill>
+          <StatusPill>{`#${currentTeam!.tag}`}</StatusPill>
           <StatusPill>{`${answeredCount}/${session.questions.length} ${locale === "en" ? "answered" : "đã trả lời"}`}</StatusPill>
           <StatusPill tone={currentQuestion?.type === "essay" ? "warning" : "default"}>
             {currentQuestion?.type === "essay"
@@ -822,6 +1234,12 @@ export function Round1ExamPage() {
           </StatusPill>
         </div>
       </div>
+
+      {pageError ? (
+        <div className="rounded-[1.5rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-5 py-4 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+          {pageError}
+        </div>
+      ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Surface className="px-6 py-6 md:px-8 md:py-8">
@@ -1184,7 +1602,7 @@ export function Round1ExamPage() {
                   {locale === "en" ? "Candidate" : "Thí sinh"}
                 </p>
                 <p className="mt-3 text-base font-semibold theme-text-strong">{currentUser.name}</p>
-                <p className="mt-2 text-sm theme-text-muted">{currentTeam.name}</p>
+                <p className="mt-2 text-sm theme-text-muted">{currentTeam!.name}</p>
               </div>
               <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
@@ -1201,21 +1619,17 @@ export function Round1ExamPage() {
             <button
               type="button"
               onClick={() => {
-                const confirmed = window.confirm(
-                  locale === "en"
-                    ? "Submit this Round 1 attempt now?"
-                    : "Bạn có muốn nộp bài Vòng 1 ngay bây giờ không?",
-                );
-
-                if (!confirmed) {
-                  return;
-                }
-
-                finalizeExam(session);
+                setDialogError(null);
+                setDialogMode("submit");
               }}
+              disabled={dialogPending}
               className="theme-button-primary mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[1.5rem] px-5 py-3.5 text-sm font-semibold"
             >
-              <ShieldCheck className="h-4 w-4" />
+              {dialogPending && dialogMode === "submit" ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="h-4 w-4" />
+              )}
               {locale === "en" ? "Submit exam" : "Nộp bài thi"}
             </button>
             <p className="mt-4 text-sm leading-7 theme-text-muted">
@@ -1289,6 +1703,31 @@ export function Round1ExamPage() {
           </Surface>
         </div>
       </section>
-    </div>
+      </div>
+
+      <Round1ConfirmDialog
+        locale={locale}
+        mode="submit"
+        open={dialogMode === "submit"}
+        pending={dialogPending}
+        error={dialogError}
+        answeredCount={answeredCount}
+        totalCount={session.questions.length}
+        unansweredCount={session.questions.length - answeredCount}
+        essayWarning={Boolean(
+          session.questions
+            .slice(ROUND1_OBJECTIVE_TOTAL)
+            .some((question) => countWords(session.answers[question.id]?.essayText ?? "") > round1WordLimit),
+        )}
+        onClose={() => {
+          if (!dialogPending) {
+            setDialogMode(null);
+          }
+        }}
+        onConfirm={() => {
+          void handleConfirmSubmit();
+        }}
+      />
+    </>
   );
 }

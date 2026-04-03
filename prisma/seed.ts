@@ -269,6 +269,7 @@ async function main() {
   await prisma.userActionToken.deleteMany();
   await prisma.forumReply.deleteMany();
   await prisma.forumThread.deleteMany();
+  await prisma.round1ExamAttempt.deleteMany();
   await prisma.round1Submission.deleteMany();
   await prisma.round1TestBank.deleteMany();
   await prisma.round1TeamLockRequest.deleteMany();

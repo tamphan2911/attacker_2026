@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
@@ -11,11 +12,16 @@ import {
   serializeTeamSubmission,
   serializeUser,
 } from "@/server/site-serializers";
+import { getRound1ExamState } from "@/server/team-service";
 
 export async function GET() {
   const currentDbUser = await getCurrentDbUser();
   if (!currentDbUser) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
+  }
+
+  if (currentDbUser.role === UserRole.STUDENT) {
+    await getRound1ExamState(currentDbUser.id);
   }
 
   const membership = await prisma.teamMember.findUnique({
