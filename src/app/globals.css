@@ -952,6 +952,20 @@ textarea {
   color: #0f172a;
 }
 
+[data-theme="light"] :where(
+    [class*="dark:text-sky-100"],
+    [class*="dark:text-emerald-100"],
+    [class*="dark:text-amber-100"],
+    [class*="dark:text-violet-100"],
+    [class*="dark:text-cyan-100"],
+    [class*="dark:text-rose-100"],
+    [class*="dark:text-amber-50"],
+    [class*="dark:text-white"],
+    [class*="dark:text-slate-300"]
+  ) {
+  color: #0f172a !important;
+}
+
 [data-theme="dark"] .bg-white\/60,
 [data-theme="dark"] .bg-white\/70,
 [data-theme="dark"] .bg-white\/72,
