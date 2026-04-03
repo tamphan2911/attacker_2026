@@ -397,7 +397,10 @@ export function SiteHeader() {
                 ) : null}
               </div>
             ) : (
-              <Link href="/auth" className="theme-button-primary rounded-full px-5 py-2.5 text-sm font-semibold transition hover:brightness-110">
+              <Link
+                href="/auth"
+                className="theme-button-primary inline-flex min-w-[9.75rem] items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap transition hover:brightness-110"
+              >
                 {locale === "en" ? "Join today" : "Tham gia ngay"}
               </Link>
             )}
