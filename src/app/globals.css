@@ -935,6 +935,21 @@ textarea {
   color: #0f172a;
 }
 
+[data-theme="light"] .text-sky-800,
+[data-theme="light"] .text-sky-950,
+[data-theme="light"] .text-cyan-800,
+[data-theme="light"] .text-cyan-950,
+[data-theme="light"] .text-violet-800,
+[data-theme="light"] .text-violet-950,
+[data-theme="light"] .text-emerald-800,
+[data-theme="light"] .text-emerald-950,
+[data-theme="light"] .text-amber-800,
+[data-theme="light"] .text-amber-950,
+[data-theme="light"] .text-rose-800,
+[data-theme="light"] .text-rose-950 {
+  color: #0f172a;
+}
+
 [data-theme="dark"] .bg-white\/60,
 [data-theme="dark"] .bg-white\/70,
 [data-theme="dark"] .bg-white\/72,
