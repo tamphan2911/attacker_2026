@@ -471,58 +471,49 @@ export function ForumPage() {
                   const isActive = thread.slug === activeThreadSlug;
 
                   return (
-                    <article
+                    <button
                       key={thread.id}
+                      type="button"
+                      onClick={() => setActiveThreadSlug(thread.slug)}
                       className={`rounded-[1.45rem] border px-4 py-4 transition ${
                         isActive
                           ? "border-sky-400/34 bg-[rgba(23,114,208,0.1)] shadow-[0_18px_42px_rgba(23,114,208,0.1)]"
                           : "theme-border theme-panel-subtle hover:bg-[var(--panel)]"
-                      }`}
+                      } w-full text-left`}
                     >
-                      <button
-                        type="button"
-                        onClick={() => setActiveThreadSlug(thread.slug)}
-                        className="w-full text-left"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                            {getForumCategoryLabel(locale, thread.category)}
-                          </span>
-                          <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                            {thread.status === "open"
-                              ? locale === "en"
-                                ? "Open"
-                                : "Đang mở"
-                              : locale === "en"
-                                ? "Closed"
-                                : "Đã đóng"}
-                          </span>
-                        </div>
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
+                          {getForumCategoryLabel(locale, thread.category)}
+                        </span>
+                        <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
+                          {thread.status === "open"
+                            ? locale === "en"
+                              ? "Open"
+                              : "Đang mở"
+                            : locale === "en"
+                              ? "Closed"
+                              : "Đã đóng"}
+                        </span>
+                      </div>
 
-                        <p className="mt-4 text-base font-semibold leading-7 theme-text-strong">
-                          {thread.title}
-                        </p>
-                        <p className="mt-2 text-sm leading-7 theme-text-muted">{thread.summary}</p>
-                      </button>
+                      <p className="mt-4 text-base font-semibold leading-7 theme-text-strong">
+                        {thread.title}
+                      </p>
+                      <p className="mt-2 text-sm leading-7 theme-text-muted">{thread.summary}</p>
 
                       <div className="mt-4 flex items-center gap-3">
-                        <Link
-                          href={getForumAuthorHref(thread.author.id)}
-                          className="group flex min-w-0 items-center gap-3 rounded-[1rem] transition hover:opacity-90"
-                        >
-                          <GradientAvatar
-                            label={thread.author.name}
-                            tone={thread.author.avatarTone}
-                            imageSrc={thread.author.avatarImageSrc}
-                            className="h-10 w-10 rounded-full"
-                          />
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold theme-text-strong transition group-hover:text-sky-700 dark:group-hover:text-sky-200">
-                              {thread.author.name}
-                            </p>
-                            <p className="truncate text-xs theme-text-soft">{thread.university}</p>
-                          </div>
-                        </Link>
+                        <GradientAvatar
+                          label={thread.author.name}
+                          tone={thread.author.avatarTone}
+                          imageSrc={thread.author.avatarImageSrc}
+                          className="h-10 w-10 rounded-full"
+                        />
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold theme-text-strong">
+                            {thread.author.name}
+                          </p>
+                          <p className="truncate text-xs theme-text-soft">{thread.university}</p>
+                        </div>
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
@@ -536,7 +527,7 @@ export function ForumPage() {
                           </span>
                         ))}
                       </div>
-                    </article>
+                    </button>
                   );
                 })}
               </div>
