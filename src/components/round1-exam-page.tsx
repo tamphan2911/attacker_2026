@@ -115,8 +115,9 @@ function Round1ConfirmDialog({
   const isStart = mode === "start";
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[rgba(7,18,35,0.56)] px-4 py-6 backdrop-blur-sm">
-      <div className="theme-card-shadow w-full max-w-xl overflow-hidden rounded-[2rem] border theme-border bg-[rgba(255,255,255,0.98)] shadow-[0_28px_70px_rgba(10,22,40,0.2)] dark:bg-[rgba(10,20,36,0.98)]">
+    <div className="fixed inset-0 z-[90] overflow-y-auto bg-[rgba(7,18,35,0.56)] px-4 py-5 backdrop-blur-sm md:px-6 md:py-8">
+      <div className="mx-auto flex min-h-full w-full max-w-xl items-center justify-center">
+        <div className="theme-card-shadow flex w-full max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden rounded-[2rem] border theme-border bg-[rgba(255,255,255,0.98)] shadow-[0_28px_70px_rgba(10,22,40,0.2)] dark:bg-[rgba(10,20,36,0.98)] md:max-h-[calc(100vh-4rem)]">
         <div className="flex items-start justify-between gap-4 border-b theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(234,244,255,0.94))] px-6 py-5 dark:bg-[linear-gradient(135deg,rgba(12,26,47,0.98),rgba(15,39,72,0.92))]">
           <div className="space-y-3">
             <span className="inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-sky-700/16 bg-[linear-gradient(135deg,rgba(37,99,235,0.14),rgba(14,165,233,0.16))] text-sky-700 dark:border-sky-300/16 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.22),rgba(37,99,235,0.18))] dark:text-sky-100">
@@ -154,7 +155,7 @@ function Round1ConfirmDialog({
           </button>
         </div>
 
-        <div className="space-y-4 px-6 py-6">
+        <div className="space-y-4 overflow-y-auto px-6 py-6">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
@@ -257,6 +258,7 @@ function Round1ConfirmDialog({
                 : "Nộp ngay"}
           </button>
         </div>
+        </div>
       </div>
     </div>
   );
@@ -303,6 +305,29 @@ export function Round1ExamPage() {
         answers: session.answers,
       })
     : "";
+
+  const applyAttemptPayload = useCallback(
+    (payload: AttemptStateResponse) => {
+      if (payload.submission) {
+        setResolvedSubmission(payload.submission);
+        window.location.assign("/dashboard#round1-result");
+        return true;
+      }
+
+      if (!payload.attempt || payload.attempt.questions.length === 0) {
+        return false;
+      }
+
+      setResolvedSubmission(null);
+      setPageError(null);
+      setAttemptState("ready");
+      setSession(payload.attempt);
+      setNowMs(Date.now());
+      setDialogMode(null);
+      return true;
+    },
+    [],
+  );
 
   useEffect(() => {
     sessionRef.current = session;
@@ -551,6 +576,7 @@ export function Round1ExamPage() {
   const startExam = useCallback(async () => {
     setDialogPending(true);
     setDialogError(null);
+    setAttemptState("loading");
 
     try {
       const response = await fetch("/api/round-1/attempt", {
@@ -570,18 +596,33 @@ export function Round1ExamPage() {
       }
 
       const payload = (await response.json()) as AttemptStateResponse;
-
-      if (payload.submission) {
-        setResolvedSubmission(payload.submission);
-        window.location.assign("/dashboard#round1-result");
+      if (applyAttemptPayload(payload)) {
         return;
       }
 
-      setPageError(null);
-      setSession(payload.attempt);
-      setNowMs(Date.now());
-      setDialogMode(null);
+      const restoreResponse = await fetch("/api/round-1/attempt", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+
+      if (!restoreResponse.ok) {
+        throw new Error(
+          locale === "en"
+            ? "The exam was started, but the current attempt could not be restored."
+            : "Bài thi đã được bắt đầu nhưng hệ thống không thể khôi phục lượt thi hiện tại.",
+        );
+      }
+
+      const restoredPayload = (await restoreResponse.json()) as AttemptStateResponse;
+      if (!applyAttemptPayload(restoredPayload)) {
+        throw new Error(
+          locale === "en"
+            ? "The exam was started, but the current attempt is not ready to display yet."
+            : "Bài thi đã được bắt đầu nhưng lượt thi hiện tại chưa sẵn sàng để hiển thị.",
+        );
+      }
     } catch (error) {
+      setAttemptState("ready");
       setDialogError(
         error instanceof Error
           ? error.message
@@ -592,7 +633,7 @@ export function Round1ExamPage() {
     } finally {
       setDialogPending(false);
     }
-  }, [locale]);
+  }, [applyAttemptPayload, locale]);
 
   const handleConfirmSubmit = async () => {
     if (!session) {
