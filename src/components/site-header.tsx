@@ -401,7 +401,7 @@ export function SiteHeader() {
                 href="/auth"
                 className="theme-button-primary inline-flex min-w-[9.75rem] items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold whitespace-nowrap transition hover:brightness-110"
               >
-                {locale === "en" ? "Join today" : "Tham gia ngay"}
+                {locale === "en" ? "Log in" : "Đăng nhập"}
               </Link>
             )}
           </div>
