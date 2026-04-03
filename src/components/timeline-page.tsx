@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   CalendarDays,
+  CheckCircle2,
+  Clock3,
   Flag,
   Route,
   ShieldCheck,
@@ -13,7 +16,7 @@ import { timelineItems } from "@/data/site-content";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
-import type { CompetitionRoundKey } from "@/types/site";
+import type { CompetitionRoundKey, TimelineItem } from "@/types/site";
 
 const timelinePhaseMeta: Array<{
   phase: "general" | CompetitionRoundKey;
@@ -101,8 +104,136 @@ const timelinePhaseMeta: Array<{
   },
 ];
 
+type TimelineCardStatus = "finished" | "ongoing" | "upcoming" | "not-started";
+
+function getTimelineItemKey(item: TimelineItem) {
+  return `${item.phase}-${item.title.en}-${item.startDate}-${item.endDate}`;
+}
+
+function parseLocalDate(value: string, endOfDay = false) {
+  const [year, month, day] = value.split("-").map(Number);
+  return endOfDay
+    ? new Date(year, month - 1, day, 23, 59, 59, 999)
+    : new Date(year, month - 1, day, 0, 0, 0, 0);
+}
+
+function formatCountdown(locale: "en" | "vi", distanceMs: number) {
+  if (distanceMs <= 0) {
+    return locale === "en" ? "now" : "ngay bây giờ";
+  }
+
+  const totalSeconds = Math.floor(distanceMs / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const paddedHours = String(hours).padStart(2, "0");
+  const paddedMinutes = String(minutes).padStart(2, "0");
+  const paddedSeconds = String(seconds).padStart(2, "0");
+
+  if (days > 0) {
+    return locale === "en"
+      ? `${days}d ${paddedHours}:${paddedMinutes}:${paddedSeconds}`
+      : `${days} ngày ${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+  }
+
+  return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+}
+
+function getTimelineCardStatusClass(status: TimelineCardStatus, phaseStatusClass: string) {
+  switch (status) {
+    case "ongoing":
+      return `${phaseStatusClass} shadow-[0_18px_34px_rgba(15,23,42,0.08)] dark:shadow-none`;
+    case "upcoming":
+      return `${phaseStatusClass} shadow-[0_12px_26px_rgba(15,23,42,0.06)] dark:shadow-none`;
+    case "finished":
+      return "border-slate-300/28 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(241,245,249,0.96))] text-slate-700 dark:border-white/14 dark:bg-white/[0.06] dark:text-slate-200";
+    case "not-started":
+    default:
+      return "border-slate-300/24 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] text-slate-700 dark:border-white/14 dark:bg-white/[0.06] dark:text-slate-200";
+  }
+}
+
+function getTimelineCardStatusMeta(
+  item: TimelineItem,
+  now: Date,
+  locale: "en" | "vi",
+  nextUpcomingKey: string | null,
+) {
+  const key = getTimelineItemKey(item);
+  const startAt = parseLocalDate(item.startDate);
+  const endAt = parseLocalDate(item.endDate, true);
+
+  if (now > endAt) {
+    return {
+      key,
+      status: "finished" as const,
+      label: locale === "en" ? "Finished" : "Đã kết thúc",
+      countdown: "",
+      icon: CheckCircle2,
+    };
+  }
+
+  if (now >= startAt && now <= endAt) {
+    return {
+      key,
+      status: "ongoing" as const,
+      label: locale === "en" ? "Ongoing" : "Đang diễn ra",
+      countdown:
+        locale === "en"
+          ? `Ends in ${formatCountdown(locale, endAt.getTime() - now.getTime())}`
+          : `Kết thúc trong ${formatCountdown(locale, endAt.getTime() - now.getTime())}`,
+      icon: Clock3,
+    };
+  }
+
+  if (key === nextUpcomingKey) {
+    return {
+      key,
+      status: "upcoming" as const,
+      label: locale === "en" ? "Starting soon" : "Sắp diễn ra",
+      countdown:
+        locale === "en"
+          ? `Starts in ${formatCountdown(locale, startAt.getTime() - now.getTime())}`
+          : `Bắt đầu trong ${formatCountdown(locale, startAt.getTime() - now.getTime())}`,
+      icon: Clock3,
+    };
+  }
+
+  return {
+    key,
+    status: "not-started" as const,
+    label: locale === "en" ? "Not started" : "Chưa diễn ra",
+    countdown: "",
+    icon: CalendarDays,
+  };
+}
+
 export function TimelinePage() {
   const { locale } = useSiteState();
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const orderedTimelineItems = [...timelineItems].sort((left, right) => {
+    const leftStart = parseLocalDate(left.startDate).getTime();
+    const rightStart = parseLocalDate(right.startDate).getTime();
+    if (leftStart !== rightStart) {
+      return leftStart - rightStart;
+    }
+
+    return parseLocalDate(left.endDate, true).getTime() - parseLocalDate(right.endDate, true).getTime();
+  });
+
+  const nextUpcomingItem = orderedTimelineItems.find((item) => parseLocalDate(item.startDate).getTime() > now.getTime());
+  const nextUpcomingKey = nextUpcomingItem ? getTimelineItemKey(nextUpcomingItem) : null;
 
   return (
     <div className="space-y-16 md:space-y-20">
@@ -145,7 +276,11 @@ export function TimelinePage() {
                 </div>
 
                 <div className="space-y-4">
-                  {items.map((item) => (
+                  {items.map((item) => {
+                    const statusMeta = getTimelineCardStatusMeta(item, now, locale, nextUpcomingKey);
+                    const StatusIcon = statusMeta.icon;
+
+                    return (
                     <Surface key={`${item.phase}-${item.title.en}-${item.startDate}`} className="theme-timeline-card px-5 py-5">
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
@@ -156,9 +291,18 @@ export function TimelinePage() {
                             {pickText(locale, item.title)}
                           </h3>
                         </div>
-                        <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium ${phase.statusClass}`}>
-                          <CalendarDays className="h-4 w-4" />
-                          {locale === "en" ? "Scheduled" : "Đã lên lịch"}
+                        <span
+                          className={`inline-flex min-w-[12rem] flex-col items-start rounded-[1.1rem] border px-4 py-2.5 text-left ${getTimelineCardStatusClass(statusMeta.status, phase.statusClass)}`}
+                        >
+                          <span className="inline-flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em]">
+                            <StatusIcon className="h-3.5 w-3.5" />
+                            {statusMeta.label}
+                          </span>
+                          {statusMeta.countdown ? (
+                            <span className="mt-1 text-xs font-medium leading-5">
+                              {statusMeta.countdown}
+                            </span>
+                          ) : null}
                         </span>
                       </div>
 
@@ -207,7 +351,8 @@ export function TimelinePage() {
                         </div>
                       ) : null}
                     </Surface>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </section>
