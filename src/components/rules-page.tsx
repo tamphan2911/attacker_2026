@@ -45,6 +45,7 @@ const policyIconClasses = [
   "border-cyan-700/24 bg-[linear-gradient(135deg,rgba(6,182,212,0.24),rgba(34,211,238,0.16))] text-cyan-950 shadow-[0_10px_24px_rgba(6,182,212,0.08)] dark:text-cyan-100",
   "border-emerald-700/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.24),rgba(52,211,153,0.16))] text-emerald-950 shadow-[0_10px_24px_rgba(16,185,129,0.08)] dark:text-emerald-100",
 ] as const;
+const specificRuleIcons = [Sparkles, ShieldAlert, Medal] as const;
 const quickPolicyItems = [
   {
     icon: UsersRound,
@@ -69,7 +70,7 @@ const roundRuleMeta = {
       "border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.32),rgba(59,130,246,0.24))] text-sky-950 shadow-[0_12px_26px_rgba(14,165,233,0.1)] dark:text-sky-100",
     chipClass:
       "border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.26),rgba(59,130,246,0.18))] text-sky-950 shadow-[0_12px_30px_rgba(14,165,233,0.1)] dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
-    noteNumberClass:
+    noteMarkerClass:
       "border border-sky-700/22 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(224,242,254,0.98))] text-sky-950 shadow-[0_10px_24px_rgba(14,165,233,0.1)] dark:border-sky-300/18 dark:bg-[linear-gradient(135deg,#38bdf8,#2563eb)] dark:text-white",
     deliverableIcon: Clock3,
     deliverableIconClass:
@@ -111,7 +112,7 @@ const roundRuleMeta = {
       "border-emerald-700/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.3),rgba(52,211,153,0.22))] text-emerald-950 shadow-[0_12px_26px_rgba(16,185,129,0.1)] dark:text-emerald-100",
     chipClass:
       "border-emerald-700/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.24),rgba(52,211,153,0.18))] text-emerald-950 shadow-[0_12px_30px_rgba(16,185,129,0.1)] dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
-    noteNumberClass:
+    noteMarkerClass:
       "border border-emerald-700/22 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(220,252,231,0.98))] text-emerald-950 shadow-[0_10px_24px_rgba(16,185,129,0.1)] dark:border-emerald-300/18 dark:bg-[linear-gradient(135deg,#34d399,#059669)] dark:text-white",
     deliverableIcon: NotebookPen,
     deliverableIconClass:
@@ -153,7 +154,7 @@ const roundRuleMeta = {
       "border-amber-700/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.32),rgba(249,115,22,0.22))] text-amber-950 shadow-[0_12px_26px_rgba(245,158,11,0.1)] dark:text-amber-100",
     chipClass:
       "border-amber-700/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.26),rgba(249,115,22,0.18))] text-amber-950 shadow-[0_12px_30px_rgba(245,158,11,0.1)] dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
-    noteNumberClass:
+    noteMarkerClass:
       "border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(254,243,199,0.98))] text-amber-950 shadow-[0_10px_24px_rgba(245,158,11,0.1)] dark:border-amber-300/18 dark:bg-[linear-gradient(135deg,#fbbf24,#f97316)] dark:text-white",
     deliverableIcon: Orbit,
     deliverableIconClass:
@@ -341,13 +342,35 @@ export function RulesPage() {
                     <span className={`inline-flex h-11 w-11 items-center justify-center rounded-[1.2rem] border ${meta.iconClass}`}>
                       <Icon className="h-5 w-5" />
                     </span>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                        {pickText(locale, round.label)}
-                      </p>
-                      <h3 className="theme-heading mt-2 text-2xl font-semibold theme-text-strong md:text-[2.2rem]">
-                        {pickText(locale, round.title)}
-                      </h3>
+                    <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                          {pickText(locale, round.label)}
+                        </p>
+                        <div className="mt-2 flex flex-wrap items-center gap-3">
+                          <h3 className="theme-heading text-2xl font-semibold theme-text-strong md:text-[2.2rem]">
+                            {pickText(locale, round.title)}
+                          </h3>
+                          <div className="group relative">
+                            <Link
+                              href={`/competition/timeline#${roundKey}-timeline`}
+                              aria-label={
+                                locale === "en"
+                                  ? "Open this round on the timeline page"
+                                  : "Mở giai đoạn này trên trang lịch trình"
+                              }
+                              className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition hover:-translate-y-0.5 active:translate-y-0 ${meta.chipClass}`}
+                            >
+                              <CalendarDays className="h-4.5 w-4.5" />
+                            </Link>
+                            <span className="theme-header-tooltip pointer-events-none absolute right-0 top-full z-20 mt-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                              {locale === "en"
+                                ? "Open this round on timeline page"
+                                : "Mở giai đoạn này trên trang lịch trình"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -404,51 +427,47 @@ export function RulesPage() {
                         {locale === "en" ? "Specific round rules" : "Quy định riêng của vòng"}
                       </p>
                       <div className="mt-5 space-y-3">
-                        {meta.notes.map((note, index) => (
-                          <div
-                            key={note.en}
-                            className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
-                          >
-                            <div className="flex items-center gap-3">
-                            <span className={`inline-flex h-8 min-w-8 items-center justify-center rounded-[0.85rem] px-2 text-[0.68rem] font-semibold tracking-[0.12em] ${meta.noteNumberClass}`}>
-                              {index + 1}
-                            </span>
-                            <p className="text-sm leading-7 theme-text-body">{pickText(locale, note)}</p>
+                        {meta.notes.map((note, index) => {
+                          const NoteIcon = specificRuleIcons[index] ?? Sparkles;
+
+                          return (
+                            <div
+                              key={note.en}
+                              className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.95rem] ${meta.noteMarkerClass}`}>
+                                  <NoteIcon className="h-4 w-4" />
+                                </span>
+                                <p className="text-sm leading-7 theme-text-body">{pickText(locale, note)}</p>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </Surface>
-
-                  <Surface className="theme-rules-shell overflow-hidden px-5 py-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                      {locale === "en" ? "Round notes" : "Lưu ý của vòng"}
-                    </p>
-                    <div className="mt-5 space-y-3">
-                      {meta.roundNotes.map((note, index) => (
-                        <div
-                          key={note.en}
-                          className="theme-rules-note-card flex items-start gap-3 rounded-[1.35rem] border px-4 py-4"
-                        >
-                          <span className={`inline-flex h-8 min-w-8 items-center justify-center rounded-[0.85rem] px-2 text-[0.68rem] font-semibold tracking-[0.12em] ${meta.noteNumberClass}`}>
-                            {index + 1}
-                          </span>
-                          <p className="text-sm leading-7 theme-text-body">{pickText(locale, note)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </Surface>
-
-                  <Link
-                    href={`/competition/timeline#${roundKey}-timeline`}
-                    className={`inline-flex w-full items-center justify-between rounded-[1.35rem] border px-4 py-3 text-sm font-semibold transition active:scale-[0.99] ${meta.chipClass}`}
-                  >
-                    <span>{locale === "en" ? "Open this round on timeline page" : "Mở giai đoạn này trên trang lịch trình"}</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
                 </div>
               </div>
+
+              <Surface className="theme-rules-shell mt-6 overflow-hidden px-5 py-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                  {locale === "en" ? "Round notes" : "Lưu ý của vòng"}
+                </p>
+                <div className="mt-5 grid gap-3 lg:grid-cols-2">
+                  {meta.roundNotes.map((note) => (
+                    <div
+                      key={note.en}
+                      className="theme-rules-note-card flex items-start gap-3 rounded-[1.35rem] border px-4 py-4"
+                    >
+                      <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.95rem] ${meta.noteMarkerClass}`}>
+                        <NotebookPen className="h-4 w-4" />
+                      </span>
+                      <p className="text-sm leading-7 theme-text-body">{pickText(locale, note)}</p>
+                    </div>
+                  ))}
+                </div>
+              </Surface>
             </section>
           );
         })}
