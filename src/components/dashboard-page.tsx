@@ -1045,7 +1045,7 @@ export function DashboardPage() {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Current stage" : "Giai đoạn hiện tại"}
+                      {locale === "en" ? "Current stage" : "Vị trí hiện tại"}
                     </p>
                     <p className="mt-3 text-lg font-semibold theme-text-strong">
                       {currentTeam ? pickTeamDisplayStatusLabel(locale, currentTeam) : "--"}
