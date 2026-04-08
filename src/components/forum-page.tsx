@@ -10,6 +10,7 @@ import {
   LoaderCircle,
   MessageSquare,
   Search,
+  Sparkles,
   UsersRound,
   X,
 } from "lucide-react";
@@ -17,7 +18,7 @@ import {
 import { pickText } from "@/lib/site";
 import type { ForumReply, ForumThread, ForumThreadCategory, LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { GradientAvatar, SectionHeading, Surface } from "@/components/site-ui";
+import { GradientAvatar, Surface } from "@/components/site-ui";
 
 type ForumThreadsPayload = {
   threads: ForumThread[];
@@ -85,6 +86,18 @@ function trimForumPreview(value: string, maxLength = 168) {
   }
 
   return `${normalized.slice(0, maxLength).trimEnd()}...`;
+}
+
+function getForumRoleLabel(locale: "en" | "vi", role: ForumThread["author"]["role"]) {
+  if (role === "admin") {
+    return locale === "en" ? "Admin" : "Quản trị";
+  }
+
+  if (role === "moderator") {
+    return locale === "en" ? "Moderator" : "Điều phối";
+  }
+
+  return locale === "en" ? "Participant" : "Thí sinh";
 }
 
 export function ForumPage() {
@@ -365,14 +378,6 @@ export function ForumPage() {
       <section className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
         <Surface className="overflow-hidden px-0 py-0 xl:sticky xl:top-24 xl:self-start">
           <div className="border-b theme-border px-5 py-5">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                {locale === "en" ? "Forum navigator" : "Điều hướng forum"}
-              </p>
-              <p className="mt-3 text-xl font-semibold theme-text-strong">
-                {locale === "en" ? "Filter teammate-matching conversations" : "Lọc các cuộc trò chuyện tìm đồng đội"}
-              </p>
-            </div>
             <div className="theme-news-search flex items-center gap-3 rounded-[1.4rem] border px-4 py-3">
               <span className="theme-news-search-icon inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
                 <Search className="h-4 w-4" />
@@ -407,16 +412,13 @@ export function ForumPage() {
                 </button>
               ))}
             </div>
-            <p className="mt-4 text-sm leading-7 theme-text-muted">{activeCategoryDescription}</p>
             <div className="mt-4 rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4">
-              <p className="text-sm font-semibold theme-text-strong">
-                {filteredThreads.length} {locale === "en" ? "matching threads" : "chủ đề phù hợp"}
-              </p>
-              <p className="mt-2 text-sm leading-7 theme-text-muted">
-                {locale === "en"
-                  ? "Use the list on the right to review the newest active discussions, then open one when it matches your interest."
-                  : "Dùng danh sách bên phải để xem các chủ đề đang hoạt động mới nhất, rồi mở cuộc trò chuyện phù hợp với nhu cầu của bạn."}
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-semibold theme-text-strong">
+                  {filteredThreads.length} {locale === "en" ? "matching threads" : "chủ đề phù hợp"}
+                </p>
+              </div>
+              <p className="mt-2 text-sm leading-6 theme-text-muted">{activeCategoryDescription}</p>
             </div>
           </div>
         </Surface>
@@ -624,29 +626,29 @@ export function ForumPage() {
           ) : (
             <div className="min-h-[720px]">
               <div className="border-b theme-border px-6 py-6 md:px-7">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                  <SectionHeading
-                    eyebrow={locale === "en" ? "Forum thread list" : "Danh sách chủ đề"}
-                    title={
-                      locale === "en"
-                        ? "Open the newest active discussions from participants and teams."
-                        : "Mở các cuộc trò chuyện đang hoạt động mới nhất từ thí sinh và đội thi."
-                    }
-                    description={
-                      locale === "en"
-                        ? "Threads are ordered by recent activity. Open one to read the full conversation or publish your own if you still need teammates."
-                        : "Các chủ đề được sắp theo hoạt động gần nhất. Hãy mở một chủ đề để đọc toàn bộ cuộc trao đổi, hoặc đăng chủ đề mới nếu bạn vẫn cần đồng đội."
-                    }
-                  />
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
+                      <MessageSquare className="mr-1 inline h-3.5 w-3.5" />
+                      {filteredThreads.length} {locale === "en" ? "active threads" : "chủ đề đang hoạt động"}
+                    </span>
+                    <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
+                      {locale === "en"
+                        ? `Sorted by recent activity`
+                        : "Sắp theo hoạt động gần nhất"}
+                    </span>
+                  </div>
 
                   <div className="flex flex-wrap gap-3">
                     <button
                       type="button"
                       onClick={() => setIsComposerOpen(true)}
                       disabled={!canPostAsParticipant}
-                      className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
+                      className="inline-flex items-center gap-3 rounded-full border border-sky-500/24 bg-[linear-gradient(135deg,rgba(37,99,235,0.98),rgba(14,165,233,0.9))] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_34px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_40px_rgba(37,99,235,0.28)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-300/18 dark:bg-[linear-gradient(135deg,rgba(14,165,233,0.88),rgba(37,99,235,0.78))] dark:shadow-[0_18px_34px_rgba(2,8,20,0.28)]"
                     >
-                      <CirclePlus className="h-4 w-4" />
+                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/18 ring-1 ring-white/18">
+                        <Sparkles className="h-4 w-4" />
+                      </span>
                       {locale === "en" ? "Open a thread" : "Mở chủ đề"}
                     </button>
                     {!canPostAsParticipant ? (
@@ -694,65 +696,79 @@ export function ForumPage() {
                           key={thread.id}
                           type="button"
                           onClick={() => setActiveThreadSlug(thread.slug)}
-                          className="w-full rounded-[1.6rem] border theme-border px-5 py-5 text-left theme-panel-subtle transition hover:-translate-y-0.5 hover:bg-[var(--panel)]"
+                          className="w-full rounded-[1.45rem] border theme-border px-4 py-4 text-left theme-panel-subtle transition hover:-translate-y-0.5 hover:bg-[var(--panel)]"
                         >
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                                {getForumCategoryLabel(locale, thread.category)}
-                              </span>
-                              <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                                {thread.status === "open"
-                                  ? locale === "en"
-                                    ? "Open"
-                                    : "Đang mở"
-                                  : locale === "en"
-                                    ? "Closed"
-                                    : "Đã đóng"}
-                              </span>
-                            </div>
-                            <span className="text-xs theme-text-soft">
-                              {locale === "en" ? "Last activity" : "Hoạt động gần nhất"} ·{" "}
-                              {formatForumTimestamp(locale, thread.lastActivityAt)}
-                            </span>
-                          </div>
-
-                          <div className="mt-4 flex items-start gap-4">
+                          <div className="flex items-start gap-4">
                             <GradientAvatar
                               label={thread.author.name}
                               tone={thread.author.avatarTone}
                               imageSrc={thread.author.avatarImageSrc}
-                              className="h-11 w-11 rounded-full"
+                              className="h-12 w-12 rounded-full"
                             />
                             <div className="min-w-0 flex-1">
-                              <p className="text-lg font-semibold leading-7 theme-text-strong">{thread.title}</p>
-                              <p className="mt-2 text-sm leading-7 theme-text-muted">{thread.summary}</p>
-                              <div className="mt-4 rounded-[1.25rem] border theme-border bg-white/76 px-4 py-4 dark:bg-white/[0.05]">
-                                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] theme-eyebrow">
-                                  {locale === "en" ? "Latest message" : "Tin nhắn mới nhất"}
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="truncate text-sm font-semibold theme-text-strong">
+                                    {thread.author.name}
+                                  </p>
+                                  <p className="truncate text-xs theme-text-soft">
+                                    {thread.author.university || thread.university || getForumRoleLabel(locale, thread.author.role)}
+                                  </p>
+                                </div>
+                                <span className="text-[0.72rem] theme-text-soft">
+                                  {locale === "en" ? "Last activity" : "Hoạt động gần nhất"} ·{" "}
+                                  {formatForumTimestamp(locale, thread.lastActivityAt)}
+                                </span>
+                              </div>
+
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
+                                  {getForumCategoryLabel(locale, thread.category)}
+                                </span>
+                                <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
+                                  {thread.status === "open"
+                                    ? locale === "en"
+                                      ? "Open"
+                                      : "Đang mở"
+                                    : locale === "en"
+                                      ? "Closed"
+                                      : "Đã đóng"}
+                                </span>
+                                <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
+                                  <UsersRound className="mr-1 inline h-3.5 w-3.5" />
+                                  {thread.replyCount} {locale === "en" ? "replies" : "phản hồi"}
+                                </span>
+                                <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
+                                  {getForumRoleLabel(locale, thread.author.role)}
+                                </span>
+                              </div>
+
+                              <p className="mt-3 truncate text-base font-semibold leading-6 theme-text-strong">
+                                {thread.title}
+                              </p>
+                              <p className="mt-1 truncate text-sm leading-6 theme-text-muted">
+                                {thread.summary}
+                              </p>
+
+                              <div className="mt-3 rounded-[1.1rem] border theme-border bg-white/72 px-3.5 py-3 dark:bg-white/[0.05]">
+                                <p className="truncate text-sm leading-6 theme-text-body">
+                                  {trimForumPreview(thread.lastMessagePreview || thread.summary, 88)}
                                 </p>
-                                <p className="mt-2 text-sm leading-7 theme-text-body">
-                                  {trimForumPreview(thread.lastMessagePreview || thread.summary)}
-                                </p>
-                                <p className="mt-2 text-xs theme-text-soft">
+                                <p className="mt-1 truncate text-xs theme-text-soft">
                                   {(thread.lastMessageAuthorName || thread.author.name)} ·{" "}
                                   {formatForumTimestamp(locale, thread.lastMessageAt || thread.lastActivityAt)}
                                 </p>
                               </div>
-                              <div className="mt-4 flex flex-wrap items-center gap-2">
-                                <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
-                                  <MessageSquare className="mr-1 inline h-3.5 w-3.5" />
-                                  {thread.replyCount} {locale === "en" ? "replies" : "phản hồi"}
-                                </span>
-                                <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
-                                  {thread.author.name}
-                                </span>
-                                {thread.preferredRoles.slice(0, 3).map((role) => (
-                                  <span key={role} className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
-                                    {role}
-                                  </span>
-                                ))}
-                              </div>
+
+                              {thread.preferredRoles.length > 0 ? (
+                                <div className="mt-3 flex flex-wrap items-center gap-2">
+                                  {thread.preferredRoles.slice(0, 3).map((role) => (
+                                    <span key={role} className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
+                                      {role}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : null}
                             </div>
                           </div>
                         </button>
