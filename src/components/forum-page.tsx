@@ -427,8 +427,8 @@ export function ForumPage() {
           {selectedThreadFromList ? (
             <div className="min-h-[720px]">
               <div className="border-b theme-border px-6 py-6 md:px-7">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -442,20 +442,20 @@ export function ForumPage() {
                       <ChevronLeft className="h-4 w-4" />
                       {locale === "en" ? "Back to thread list" : "Quay lại danh sách chủ đề"}
                     </button>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                        {getForumCategoryLabel(locale, selectedThreadFromList.category)}
-                      </span>
-                      <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
-                        {locale === "en" ? "Last activity" : "Hoạt động gần nhất"} ·{" "}
-                        {formatForumTimestamp(locale, selectedThreadFromList.lastActivityAt)}
-                      </span>
-                    </div>
-                    <h2 className="theme-heading mt-4 text-2xl font-semibold leading-[1.15] theme-text-strong md:text-[2.3rem]">
+                    <h2 className="theme-heading min-w-0 text-2xl font-semibold leading-[1.15] theme-text-strong md:text-[2.3rem]">
                       {selectedThreadFromList.title}
                     </h2>
-                    <p className="mt-3 text-sm leading-7 theme-text-muted">{selectedThreadFromList.summary}</p>
+                    <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
+                      {locale === "en" ? "Last activity" : "Hoạt động gần nhất"} ·{" "}
+                      {formatForumTimestamp(locale, selectedThreadFromList.lastActivityAt)}
+                    </span>
                   </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
+                      {getForumCategoryLabel(locale, selectedThreadFromList.category)}
+                    </span>
+                  </div>
+                  <p className="mt-4 text-sm leading-7 theme-text-muted">{selectedThreadFromList.summary}</p>
                 </div>
 
                 <div className="mt-5 flex flex-wrap items-center gap-4">
@@ -499,7 +499,15 @@ export function ForumPage() {
                   </div>
                 ) : activeThread ? (
                   <>
-                    <div className="rounded-[1.6rem] border theme-border px-5 py-5 theme-panel-subtle">
+                    <div className="rounded-[1.6rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(241,247,253,0.88))] px-5 py-5 shadow-[0_18px_36px_rgba(13,37,66,0.06)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] dark:shadow-none">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                          {locale === "en" ? "Main thread post" : "Bài đăng chính"}
+                        </p>
+                        <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
+                          {formatForumTimestamp(locale, selectedThreadFromList.createdAt)}
+                        </span>
+                      </div>
                       <p className="text-sm leading-8 theme-text-body whitespace-pre-line">{activeThread.body}</p>
                       {activeThread.contactNote ? (
                         <div className="mt-5 rounded-[1.25rem] border theme-border bg-white/76 px-4 py-4 dark:bg-white/[0.05]">
@@ -512,7 +520,10 @@ export function ForumPage() {
                       {activeThread.preferredRoles.length > 0 ? (
                         <div className="mt-5 flex flex-wrap gap-2">
                           {activeThread.preferredRoles.map((role) => (
-                            <span key={role} className="theme-chip rounded-full px-3 py-1 text-[0.72rem]">
+                            <span
+                              key={role}
+                              className="rounded-full border border-sky-500/22 bg-[linear-gradient(135deg,rgba(37,99,235,0.12),rgba(14,165,233,0.08))] px-3 py-1 text-[0.72rem] font-medium text-sky-800 shadow-[0_10px_24px_rgba(37,99,235,0.06)] dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100 dark:shadow-none"
+                            >
                               {role}
                             </span>
                           ))}
@@ -529,7 +540,7 @@ export function ForumPage() {
                           activeThread.replies.map((reply: ForumReply) => (
                             <div
                               key={reply.id}
-                              className="rounded-[1.45rem] border theme-border px-4 py-4 theme-panel-subtle"
+                              className="rounded-[1.45rem] border theme-border bg-white/70 px-4 py-4 shadow-[0_12px_28px_rgba(13,37,66,0.04)] dark:bg-white/[0.04] dark:shadow-none"
                             >
                               <div className="flex items-center gap-3">
                                 <Link
@@ -570,6 +581,7 @@ export function ForumPage() {
                     </div>
 
                     <div className="rounded-[1.6rem] border theme-border px-5 py-5 theme-panel-subtle">
+                      <div className="rounded-[1.45rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(244,249,255,0.84))] px-5 py-5 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))]">
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                         {locale === "en" ? "Join the conversation" : "Tham gia trao đổi"}
                       </p>
@@ -618,6 +630,7 @@ export function ForumPage() {
                           </div>
                         </>
                       )}
+                      </div>
                     </div>
                   </>
                 ) : null}
