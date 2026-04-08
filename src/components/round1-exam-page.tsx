@@ -196,7 +196,7 @@ function Round1ConfirmDialog({
                     : "Sau khi nộp, tài khoản này không thể mở lại hoặc làm lại bài thi Vòng 1.",
                   locale === "en"
                     ? "Unanswered objective questions will be counted as incorrect."
-                    : "Các câu khách quan chưa trả lời sẽ được tính là sai.",
+                    : "Các câu trắc nghiệm chưa trả lời sẽ được tính là sai.",
                   locale === "en"
                     ? "Essay responses remain pending manual review by admin or moderator."
                     : "Phần tự luận sẽ tiếp tục chờ admin hoặc moderator chấm thủ công.",
@@ -700,7 +700,7 @@ export function Round1ExamPage() {
           description={
             locale === "en"
               ? "Ask the organizing team to activate both the objective bank and the essay bank before opening the exam."
-              : "Hãy yêu cầu ban tổ chức kích hoạt cả ngân hàng khách quan và ngân hàng tự luận trước khi mở bài thi."
+              : "Hãy yêu cầu ban tổ chức kích hoạt cả ngân hàng trắc nghiệm và ngân hàng tự luận trước khi mở bài thi."
           }
         />
       </Surface>
@@ -789,13 +789,13 @@ export function Round1ExamPage() {
             description={
               locale === "en"
                 ? "Objective score is available immediately. Essay score remains pending until admin or moderator review finishes."
-                : "Điểm phần khách quan có ngay. Điểm tự luận vẫn ở trạng thái chờ cho tới khi admin hoặc moderator chấm xong."
+                : "Điểm phần trắc nghiệm có ngay. Điểm tự luận vẫn ở trạng thái chờ cho tới khi admin hoặc moderator chấm xong."
             }
           />
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Objective score" : "Điểm khách quan"}
+                {locale === "en" ? "Objective score" : "Điểm trắc nghiệm"}
               </p>
               <p className="mt-2 text-2xl font-semibold theme-text-strong">
                 {`${existingSubmission.objectiveScore} / ${ROUND1_OBJECTIVE_MAX_SCORE}`}
@@ -1020,7 +1020,7 @@ export function Round1ExamPage() {
               <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted md:text-base">
                 {locale === "en"
                   ? "Each student receives 36 objective questions generated from 6 topics and 2 essay questions placed at the end. The timer runs for 60 minutes, the exam cannot be paused, and the result returns to Team Workspace after submission."
-                  : "Mỗi thí sinh nhận 36 câu khách quan được tạo từ 6 chủ đề và 2 câu tự luận luôn đặt ở cuối đề. Đồng hồ chạy trong 60 phút, bài thi không thể tạm dừng và kết quả sẽ quay về Không gian đội sau khi nộp."}
+                  : "Mỗi thí sinh nhận 36 câu trắc nghiệm được tạo từ 6 chủ đề và 2 câu tự luận luôn đặt ở cuối đề. Đồng hồ chạy trong 60 phút, bài thi không thể tạm dừng và kết quả sẽ quay về Không gian đội sau khi nộp."}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 <StatusPill>{`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
@@ -1038,7 +1038,7 @@ export function Round1ExamPage() {
                     title:
                       locale === "en"
                         ? "Objective block"
-                        : "Khối khách quan",
+                        : "Khối trắc nghiệm",
                     body:
                       locale === "en"
                         ? `${ROUND1_OBJECTIVE_TOTAL} questions: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} per topic across ${ROUND1_TOPIC_COUNT} topics, with 2 easy, 2 medium, and 2 hard questions in each topic.`
@@ -1107,7 +1107,7 @@ export function Round1ExamPage() {
                       body:
                         locale === "en"
                           ? "Objective score is shown immediately, while essay score stays pending moderator review."
-                          : "Điểm khách quan có ngay, còn điểm tự luận sẽ chờ moderator hoặc admin chấm.",
+                          : "Điểm trắc nghiệm có ngay, còn điểm tự luận sẽ chờ moderator hoặc admin chấm.",
                     },
                   ].map((item) => (
                     <div key={item.step} className="flex gap-4">
@@ -1143,7 +1143,7 @@ export function Round1ExamPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
               <div className="rounded-[1.45rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.2em] theme-text-soft">
-                  {locale === "en" ? "Objective scoring" : "Điểm khách quan"}
+                  {locale === "en" ? "Objective scoring" : "Điểm trắc nghiệm"}
                 </p>
                 <p className="mt-3 text-2xl font-semibold theme-text-strong">
                   {ROUND1_OBJECTIVE_MAX_SCORE}
@@ -1198,7 +1198,7 @@ export function Round1ExamPage() {
           {[
             {
               icon: <FileQuestion className="h-5 w-5 text-cyan-300" />,
-              label: locale === "en" ? "Objective bank" : "Ngân hàng khách quan",
+              label: locale === "en" ? "Objective bank" : "Ngân hàng trắc nghiệm",
               value: activeObjectiveBank!.questionPoolSize.toString(),
             },
             {
@@ -1271,7 +1271,7 @@ export function Round1ExamPage() {
                 : "Phần tự luận"
               : locale === "en"
                 ? "Objective section"
-                : "Phần khách quan"}
+                : "Phần trắc nghiệm"}
           </StatusPill>
         </div>
       </div>
@@ -1298,7 +1298,7 @@ export function Round1ExamPage() {
                 <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted">
                   {locale === "en"
                     ? "One question appears at a time. Use the arrows or the question-number navigator to jump anywhere in the paper. Objective questions are shuffled, while the 2 essay questions stay at the end."
-                    : "Mỗi lần chỉ hiển thị 1 câu hỏi. Hãy dùng mũi tên hoặc bảng số câu hỏi để nhảy đến bất kỳ vị trí nào trong đề. Phần khách quan được đảo ngẫu nhiên, còn 2 câu tự luận luôn nằm ở cuối đề."}
+                    : "Mỗi lần chỉ hiển thị 1 câu hỏi. Hãy dùng mũi tên hoặc bảng số câu hỏi để nhảy đến bất kỳ vị trí nào trong đề. Phần trắc nghiệm được đảo ngẫu nhiên, còn 2 câu tự luận luôn nằm ở cuối đề."}
                 </p>
               </div>
               <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -1316,7 +1316,7 @@ export function Round1ExamPage() {
                 />
               </div>
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] theme-text-soft">
-                <span>{locale === "en" ? "Objective block" : "Khối khách quan"} · {objectiveAnsweredCount}/{ROUND1_OBJECTIVE_TOTAL}</span>
+                <span>{locale === "en" ? "Objective block" : "Khối trắc nghiệm"} · {objectiveAnsweredCount}/{ROUND1_OBJECTIVE_TOTAL}</span>
                 <span>{locale === "en" ? "Essay block" : "Khối tự luận"} · {essayAnsweredCount}/{ROUND1_ESSAY_TOTAL}</span>
               </div>
             </div>
@@ -1652,7 +1652,7 @@ export function Round1ExamPage() {
                 <p className="mt-3 text-sm leading-7 theme-text-muted">
                   {locale === "en"
                     ? `${ROUND1_OBJECTIVE_TOTAL} objective questions x 2 points, plus ${ROUND1_ESSAY_TOTAL} essay questions reviewed later.`
-                    : `${ROUND1_OBJECTIVE_TOTAL} câu khách quan x 2 điểm, cộng với ${ROUND1_ESSAY_TOTAL} câu tự luận được chấm sau.`}
+                    : `${ROUND1_OBJECTIVE_TOTAL} câu trắc nghiệm x 2 điểm, cộng với ${ROUND1_ESSAY_TOTAL} câu tự luận được chấm sau.`}
                 </p>
               </div>
             </div>

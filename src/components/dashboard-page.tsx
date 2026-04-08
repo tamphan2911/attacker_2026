@@ -1798,10 +1798,10 @@ export function DashboardPage() {
                       {round1EssayPending
                         ? locale === "en"
                           ? "The objective section is scored immediately. Essay score and total score remain pending until admin or moderator review is completed."
-                          : "Phần khách quan được chấm ngay. Điểm tự luận và tổng điểm vẫn ở trạng thái chờ cho tới khi admin hoặc moderator chấm xong."
+                          : "Phần trắc nghiệm được chấm ngay. Điểm tự luận và tổng điểm vẫn ở trạng thái chờ cho tới khi admin hoặc moderator chấm xong."
                         : locale === "en"
                           ? "Multiple-choice score, essay score, and final total are all complete for this Round 1 attempt."
-                          : "Điểm khách quan, điểm tự luận và tổng điểm cuối cùng của bài Vòng 1 này đều đã hoàn tất."}
+                          : "Điểm trắc nghiệm, điểm tự luận và tổng điểm cuối cùng của bài Vòng 1 này đều đã hoàn tất."}
                     </p>
                   </div>
                   <StatusPill tone={round1EssayPending ? "warning" : "success"}>

@@ -427,7 +427,7 @@ function getBankTypeLabel(locale: Locale, bankType: Round1TestBank["bankType"]) 
     return locale === "en" ? "Essay bank" : "Ngân hàng tự luận";
   }
 
-  return locale === "en" ? "Objective bank" : "Ngân hàng khách quan";
+  return locale === "en" ? "Objective bank" : "Ngân hàng trắc nghiệm";
 }
 
 function buildSubmissionExportRows(
@@ -605,7 +605,7 @@ export function AdminRound1Manager() {
           />
           <MetricCard
             icon={<ListOrdered className="h-5 w-5 text-emerald-300" />}
-            label={locale === "en" ? "Objective pool" : "Kho khách quan"}
+            label={locale === "en" ? "Objective pool" : "Kho trắc nghiệm"}
             value={activeObjectiveBank.questionPoolSize.toString()}
             note={locale === "en" ? "Master 100-question bank" : "Ngân hàng gốc 100 câu"}
           />
@@ -613,7 +613,7 @@ export function AdminRound1Manager() {
             icon={<Shuffle className="h-5 w-5 text-orange-300" />}
             label={locale === "en" ? "Paper structure" : "Cấu trúc đề"}
             value={`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL}`}
-            note={locale === "en" ? "36 objective + 2 essay" : "36 khách quan + 2 tự luận"}
+            note={locale === "en" ? "36 objective + 2 essay" : "36 trắc nghiệm + 2 tự luận"}
           />
           <MetricCard
             icon={<Trophy className="h-5 w-5 text-amber-300" />}
@@ -730,7 +730,7 @@ export function AdminRound1Manager() {
                         <p className="mt-2 text-sm leading-6 theme-text-muted">
                           {locale === "en"
                             ? "Objective questions are reordered per student, and answer options are shuffled per question."
-                            : "Các câu khách quan được đảo theo từng thí sinh và thứ tự đáp án được đảo trên từng câu."}
+                            : "Các câu trắc nghiệm được đảo theo từng thí sinh và thứ tự đáp án được đảo trên từng câu."}
                         </p>
                       </div>
                     </>
@@ -753,7 +753,7 @@ export function AdminRound1Manager() {
                         <p className="mt-2 text-sm leading-6 theme-text-muted">
                           {locale === "en"
                             ? "Essay prompts are appended as the last 2 questions after the objective section."
-                            : "Các câu tự luận được đặt ở 2 vị trí cuối, sau khi kết thúc phần khách quan."}
+                            : "Các câu tự luận được đặt ở 2 vị trí cuối, sau khi kết thúc phần trắc nghiệm."}
                         </p>
                       </div>
                       <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -829,7 +829,7 @@ export function AdminRound1Manager() {
                   locale === "en" ? "Rank" : "Hang",
                   locale === "en" ? "Team" : "Đội",
                   locale === "en" ? "Completed" : "Da lam",
-                  locale === "en" ? "Objective avg" : "TB khach quan",
+                  locale === "en" ? "Objective avg" : "TB trắc nghiệm",
                   locale === "en" ? "Essay avg" : "TB tu luan",
                   locale === "en" ? "Total avg" : "TB tong",
                   locale === "en" ? "Latest activity" : "Cap nhat gan nhat",
@@ -985,7 +985,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                 ? "This detail page shows the objective-bank configuration used to generate the first 36 questions of each student paper, plus a preview of the authored question set in the prototype."
                 : "This detail page shows the separate essay-bank configuration used for the last 2 questions of each student paper, plus a preview of the authored prompts in the prototype."
               : isObjectiveBank
-                ? "Trang này hiển thị cấu hình ngân hàng khách quan dùng để tạo 36 câu đầu của mỗi đề thi sinh viên, đồng thời preview tập câu hỏi đã được soạn trong prototype."
+                ? "Trang này hiển thị cấu hình ngân hàng trắc nghiệm dùng để tạo 36 câu đầu của mỗi đề thi sinh viên, đồng thời preview tập câu hỏi đã được soạn trong prototype."
                 : "Trang này hiển thị cấu hình ngân hàng tự luận riêng dùng cho 2 câu cuối của mỗi đề thi sinh viên, đồng thời preview các câu hỏi đã được soạn trong prototype."
           }
         />
@@ -1024,7 +1024,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
             isObjectiveBank
               ? locale === "en"
                 ? "Objective questions drawn per paper"
-                : "Số câu khách quan rút cho mỗi đề"
+                : "Số câu trắc nghiệm rút cho mỗi đề"
               : locale === "en"
                 ? "Essay prompts drawn per paper"
                 : "Số câu tự luận rút cho mỗi đề"
@@ -1059,7 +1059,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                 ? "The live Round 1 paper is created from the master objective pool, not only from the preview list below. The prototype preview helps admin and moderator accounts inspect topic coverage, difficulty balance, and wording quality."
                 : "The live Round 1 paper takes its last 2 questions from this separate essay pool, not only from the preview list below. The prototype preview helps admin and moderator accounts inspect prompt quality and rubric clarity."
               : isObjectiveBank
-                ? "Đề thi Vòng 1 thực tế được tạo từ kho khách quan gốc, không chỉ từ danh sách preview bên dưới. Phần preview trong prototype giúp admin và moderator kiểm tra độ phủ chủ đề, cân bằng độ khó và chất lượng diễn đạt."
+                ? "Đề thi Vòng 1 thực tế được tạo từ kho trắc nghiệm gốc, không chỉ từ danh sách preview bên dưới. Phần preview trong prototype giúp admin và moderator kiểm tra độ phủ chủ đề, cân bằng độ khó và chất lượng diễn đạt."
                 : "Đề thi Vòng 1 thực tế lấy 2 câu cuối từ kho tự luận riêng này, không chỉ từ danh sách preview bên dưới. Phần preview trong prototype giúp admin và moderator kiểm tra chất lượng prompt và độ rõ của rubric."}
           </p>
           <div className="mt-6 grid gap-3 md:grid-cols-3">
@@ -1071,7 +1071,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                 {isObjectiveBank
                   ? locale === "en"
                     ? `${ROUND1_TOPIC_COUNT} topics × ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} objective questions`
-                    : `${ROUND1_TOPIC_COUNT} chủ đề × ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu khách quan`
+                    : `${ROUND1_TOPIC_COUNT} chủ đề × ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu trắc nghiệm`
                   : locale === "en"
                     ? `Random ${ROUND1_ESSAY_TOTAL} / ${bank.questionPoolSize} essay prompts`
                     : `Rút ngẫu nhiên ${ROUND1_ESSAY_TOTAL} / ${bank.questionPoolSize} câu tự luận`}
@@ -1086,7 +1086,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                   ? bank.shuffleQuestions
                     ? locale === "en"
                       ? "Objective section reordered per student"
-                      : "Phần khách quan được đảo theo từng thí sinh"
+                      : "Phần trắc nghiệm được đảo theo từng thí sinh"
                     : locale === "en"
                       ? "Fixed order"
                       : "Thứ tự cố định"
@@ -1356,7 +1356,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
           description={
             locale === "en"
               ? "This page breaks Round 1 down by member so the committee can review each student's objective result, assign essay points manually, and confirm the final team average after review."
-              : "Trang này tách kết quả Vòng 1 theo từng thành viên để ban tổ chức xem điểm khách quan của từng sinh viên, nhập điểm tự luận thủ công và chốt điểm trung bình đội sau khi chấm."
+              : "Trang này tách kết quả Vòng 1 theo từng thành viên để ban tổ chức xem điểm trắc nghiệm của từng sinh viên, nhập điểm tự luận thủ công và chốt điểm trung bình đội sau khi chấm."
           }
         />
         <div className="flex flex-wrap gap-3">
@@ -1404,7 +1404,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
         />
         <MetricCard
           icon={<Target className="h-5 w-5 text-emerald-300" />}
-          label={locale === "en" ? "Objective average" : "Điểm trung bình khách quan"}
+          label={locale === "en" ? "Objective average" : "Điểm trung bình trắc nghiệm"}
           value={group.completedRows.length ? `${group.averageObjectiveScore.toFixed(2)} / ${ROUND1_OBJECTIVE_MAX_SCORE}` : "--"}
           note={
             group.completedRows.length
@@ -1496,7 +1496,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
               <p className="mt-3 text-sm leading-7 theme-text-muted">
                 {locale === "en"
                   ? "Round 1 stays individual at the student level. Objective score is available immediately, essay score is added after manual review, and only then is the final total score confirmed."
-                  : "Vòng 1 được làm bài theo cá nhân. Điểm phần khách quan có ngay, điểm tự luận được bổ sung sau khi chấm thủ công, và chỉ khi đó tổng điểm cuối cùng mới được xác nhận."}
+                  : "Vòng 1 được làm bài theo cá nhân. Điểm phần trắc nghiệm có ngay, điểm tự luận được bổ sung sau khi chấm thủ công, và chỉ khi đó tổng điểm cuối cùng mới được xác nhận."}
               </p>
             </div>
           </div>

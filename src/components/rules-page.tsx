@@ -86,7 +86,7 @@ const roundRuleMeta = {
       },
       {
         en: "Every member takes one timed paper consisting of 36 objective questions and 2 essay questions.",
-        vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 36 câu khách quan và 2 câu tự luận.",
+        vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 36 câu trắc nghiệm và 2 câu tự luận.",
       },
       {
         en: "Top 50 teams are selected by the average score of eligible team members.",
@@ -100,7 +100,7 @@ const roundRuleMeta = {
       },
       {
         en: "Objective score is available first, while essay score stays pending until admin or moderator review is completed.",
-        vi: "Điểm phần khách quan có trước, còn điểm tự luận vẫn ở trạng thái chờ cho đến khi admin hoặc moderator chấm xong.",
+        vi: "Điểm phần trắc nghiệm có trước, còn điểm tự luận vẫn ở trạng thái chờ cho đến khi admin hoặc moderator chấm xong.",
       },
     ],
   },

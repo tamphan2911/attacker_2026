@@ -283,7 +283,7 @@ export const defaultPageContent: SitePageContent = {
       },
       description: {
         en: "Attacker 2026 starts with an individual qualifier built from 36 objective questions across 6 topics plus 2 essay questions, then moves the best teams into judge-scored project evaluation and a live final defense. Progression is determined by team results, not solo participation alone.",
-        vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 36 câu hỏi khách quan trải đều trên 6 chủ đề và 2 câu tự luận, sau đó đưa các đội tốt nhất vào giai đoạn đánh giá dự án bởi giám khảo và vòng chung kết bảo vệ trực tiếp. Việc đi tiếp được quyết định bởi kết quả của đội, không chỉ bởi từng cá nhân riêng lẻ.",
+        vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 36 câu hỏi trắc nghiệm trải đều trên 6 chủ đề và 2 câu tự luận, sau đó đưa các đội tốt nhất vào giai đoạn đánh giá dự án bởi giám khảo và vòng chung kết bảo vệ trực tiếp. Việc đi tiếp được quyết định bởi kết quả của đội, không chỉ bởi từng cá nhân riêng lẻ.",
       },
     },
     rounds: {
@@ -294,7 +294,7 @@ export const defaultPageContent: SitePageContent = {
       },
       description: {
         en: "Members first complete an individual paper with 36 objective questions and 2 essays, then qualified teams submit reports, and finalists defend their project live in front of the judges.",
-        vi: "Thí sinh trước tiên hoàn thành một bài thi cá nhân gồm 36 câu khách quan và 2 câu tự luận, sau đó các đội đủ điều kiện nộp báo cáo, và các đội vào sâu sẽ bảo vệ dự án trực tiếp trước hội đồng giám khảo.",
+        vi: "Thí sinh trước tiên hoàn thành một bài thi cá nhân gồm 36 câu trắc nghiệm và 2 câu tự luận, sau đó các đội đủ điều kiện nộp báo cáo, và các đội vào sâu sẽ bảo vệ dự án trực tiếp trước hội đồng giám khảo.",
       },
     },
     rewards: {
@@ -621,7 +621,7 @@ export const competitionOverview = {
   },
   description: {
     en: "Attacker 2026 starts with an individual qualifier built from 36 objective questions across 6 topics plus 2 essay questions, then moves the strongest teams into a judge-scored report round and a live final presentation. Advancement is calculated at the team level, even when the first test is taken individually.",
-    vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 36 câu hỏi khách quan trải đều trên 6 chủ đề và 2 câu tự luận, sau đó đưa các đội mạnh nhất vào vòng nộp báo cáo được giám khảo chấm điểm và một buổi thuyết trình chung kết trực tiếp. Việc đi tiếp được tính ở cấp độ đội, dù cho bài thi đầu tiên được làm theo từng cá nhân.",
+    vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 36 câu hỏi trắc nghiệm trải đều trên 6 chủ đề và 2 câu tự luận, sau đó đưa các đội mạnh nhất vào vòng nộp báo cáo được giám khảo chấm điểm và một buổi thuyết trình chung kết trực tiếp. Việc đi tiếp được tính ở cấp độ đội, dù cho bài thi đầu tiên được làm theo từng cá nhân.",
   },
 };
 
@@ -668,16 +668,16 @@ export const roundItems: RoundItem[] = [
     },
     duration: {
       en: "36 objective questions + 2 essay questions online",
-      vi: "36 câu khách quan + 2 câu tự luận trực tuyến",
+      vi: "36 câu trắc nghiệm + 2 câu tự luận trực tuyến",
     },
     description: {
       en: "Each eligible member receives a personalized paper with 36 objective questions drawn by topic and difficulty, followed by 2 essay questions. The average score of the team is used for ranking, and the top 50 teams proceed to Round 2.",
-      vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 36 câu hỏi khách quan được rút theo chủ đề và độ khó, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
+      vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 36 câu hỏi trắc nghiệm được rút theo chủ đề và độ khó, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
     },
     deliverables: [
       {
         en: "36 objective questions across 6 topics",
-        vi: "36 câu khách quan trên 6 chủ đề",
+        vi: "36 câu trắc nghiệm trên 6 chủ đề",
       },
       {
         en: "2 essay responses with 200-word limit each",
@@ -1114,7 +1114,7 @@ export const judgeProfiles: JudgeProfile[] = [
     organization: "Finverse Learning Hub",
     bio: {
       en: "Supports Round 1 by checking clarity of wording, fairness between topics, and the practical relevance of the objective paper.",
-      vi: "Hỗ trợ Vòng 1 bằng việc kiểm tra độ rõ câu chữ, tính công bằng giữa các chủ đề và mức độ gắn với thực tiễn của phần khách quan.",
+      vi: "Hỗ trợ Vòng 1 bằng việc kiểm tra độ rõ câu chữ, tính công bằng giữa các chủ đề và mức độ gắn với thực tiễn của phần trắc nghiệm.",
     },
     expertise: [
       { en: "Testing fairness", vi: "Công bằng khảo thí" },
@@ -1166,7 +1166,7 @@ export const ruleItems: RuleItem[] = [
     title: { en: "Round 1 eligibility", vi: "Điều kiện vào Vòng 1" },
     description: {
       en: "Teams can be created by one student, but only teams with 3 to 5 members may enter Round 1. Every member, including the leader, takes an individual paper with 36 objective questions and 2 essay questions.",
-      vi: "Đội có thể được tạo bởi một sinh viên, nhưng chỉ những đội có từ 3 đến 5 thành viên mới được vào Vòng 1. Mỗi thành viên, kể cả đội trưởng, đều làm một đề cá nhân gồm 36 câu khách quan và 2 câu tự luận.",
+      vi: "Đội có thể được tạo bởi một sinh viên, nhưng chỉ những đội có từ 3 đến 5 thành viên mới được vào Vòng 1. Mỗi thành viên, kể cả đội trưởng, đều làm một đề cá nhân gồm 36 câu trắc nghiệm và 2 câu tự luận.",
     },
   },
   {
@@ -1256,7 +1256,7 @@ export const timelineItems: TimelineItem[] = [
     title: { en: "Round 01 individual qualifier", vi: "Vòng 01 bài thi cá nhân" },
     description: {
       en: "Eligible members complete an online paper with 36 objective questions distributed across 6 topics and 2 essay questions at the end.",
-      vi: "Các thành viên đủ điều kiện hoàn thành một bài thi trực tuyến gồm 36 câu khách quan trải trên 6 chủ đề và 2 câu tự luận ở cuối đề.",
+      vi: "Các thành viên đủ điều kiện hoàn thành một bài thi trực tuyến gồm 36 câu trắc nghiệm trải trên 6 chủ đề và 2 câu tự luận ở cuối đề.",
     },
     location: {
       en: "Official Attacker Round 1 exam portal",
@@ -2636,11 +2636,11 @@ export const round1TestBanks: Round1TestBank[] = [
     bankType: "objective",
     title: {
       en: "Round 1 objective bank A",
-      vi: "Ngân hàng câu hỏi khách quan Vòng 1 A",
+      vi: "Ngân hàng câu hỏi trắc nghiệm Vòng 1 A",
     },
     description: {
       en: "Primary official bank for the 36 objective questions in each paper. The system randomizes 6 questions per topic across 6 topics with a 2 easy / 2 medium / 2 hard mix.",
-      vi: "Ngân hàng chính thức cho 36 câu hỏi khách quan trong mỗi đề. Hệ thống rút ngẫu nhiên 6 câu trên mỗi chủ đề trong 6 chủ đề, theo cơ cấu 2 dễ / 2 trung bình / 2 khó.",
+      vi: "Ngân hàng chính thức cho 36 câu hỏi trắc nghiệm trong mỗi đề. Hệ thống rút ngẫu nhiên 6 câu trên mỗi chủ đề trong 6 chủ đề, theo cơ cấu 2 dễ / 2 trung bình / 2 khó.",
     },
     status: "active",
     questionPoolSize: 100,

@@ -88,7 +88,7 @@ export function CompetitionPage() {
               {[
                 {
                   icon: <Sparkles className="h-4 w-4 text-cyan-300" />,
-                  label: locale === "en" ? "36 objective + 2 essay questions" : "36 câu khách quan + 2 câu tự luận",
+                  label: locale === "en" ? "36 objective + 2 essay questions" : "36 câu trắc nghiệm + 2 câu tự luận",
                 },
                 {
                   icon: <Users2 className="h-4 w-4 text-emerald-300" />,
