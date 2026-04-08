@@ -984,9 +984,10 @@ export function DashboardPage() {
                     </Link>
                   ) : null}
                   {roundJumpTargets.length > 0 ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-2 py-2">
+                    <div className="inline-flex flex-wrap items-center gap-2 rounded-[1.4rem] border theme-border theme-panel px-2 py-2">
                       {roundJumpTargets.map((target) => {
                         const Icon = target.icon;
+                        const roundLabel = pickRoundLabel(locale, target.round);
 
                         return (
                           <div key={target.round} className="group relative">
@@ -998,14 +999,17 @@ export function DashboardPage() {
                                   : `Cuộn tới ${pickRoundLabel(locale, target.round)}`
                               }
                               onClick={() => scrollToDashboardSection(target.sectionId)}
-                              className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition hover:-translate-y-0.5 active:translate-y-0 ${target.buttonClass}`}
+                              className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${target.buttonClass}`}
                             >
-                              <Icon className="h-4.5 w-4.5" />
+                              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/58 dark:bg-white/12">
+                                <Icon className="h-4 w-4" />
+                              </span>
+                              <span>{roundLabel}</span>
                             </button>
                             <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-30 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
                               {locale === "en"
-                                ? `Scroll to ${pickRoundLabel(locale, target.round)}`
-                                : `Cuộn tới ${pickRoundLabel(locale, target.round)}`}
+                                ? `Scroll to ${roundLabel}`
+                                : `Cuộn tới ${roundLabel}`}
                             </span>
                           </div>
                         );
