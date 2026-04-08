@@ -419,6 +419,49 @@ export function DashboardPage() {
       .includes(keyword);
   });
 
+  const roundJumpTargets = currentTeam
+    ? [
+        {
+          round: "round-1" as const,
+          sectionId: "round-1-section",
+          icon: ShieldCheck,
+          buttonClass:
+            "border-sky-600/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.18),rgba(59,130,246,0.12))] text-sky-800 hover:border-sky-600/34 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.24),rgba(59,130,246,0.16))] dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
+        },
+        ...(hasTeamReachedRound(currentTeam, "round-2")
+          ? [
+              {
+                round: "round-2" as const,
+                sectionId: "round-2-section",
+                icon: FolderClock,
+                buttonClass:
+                  "border-emerald-600/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.18),rgba(52,211,153,0.12))] text-emerald-800 hover:border-emerald-600/34 hover:bg-[linear-gradient(135deg,rgba(16,185,129,0.24),rgba(52,211,153,0.16))] dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
+              },
+            ]
+          : []),
+        ...(hasTeamReachedRound(currentTeam, "round-3")
+          ? [
+              {
+                round: "round-3" as const,
+                sectionId: "round-3-section",
+                icon: Crown,
+                buttonClass:
+                  "border-amber-600/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.18),rgba(249,115,22,0.12))] text-amber-800 hover:border-amber-600/34 hover:bg-[linear-gradient(135deg,rgba(245,158,11,0.24),rgba(249,115,22,0.16))] dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
+              },
+            ]
+          : []),
+      ]
+    : [];
+
+  const scrollToDashboardSection = (sectionId: string) => {
+    const target = document.getElementById(sectionId);
+    if (!target) {
+      return;
+    }
+
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const handleTeamSave = () => {
     if (!currentTeam && !hasProfilePhoneNumber) {
       return;
@@ -940,6 +983,35 @@ export function DashboardPage() {
                       Admin
                     </Link>
                   ) : null}
+                  {roundJumpTargets.length > 0 ? (
+                    <div className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-2 py-2">
+                      {roundJumpTargets.map((target) => {
+                        const Icon = target.icon;
+
+                        return (
+                          <div key={target.round} className="group relative">
+                            <button
+                              type="button"
+                              aria-label={
+                                locale === "en"
+                                  ? `Scroll to ${pickRoundLabel(locale, target.round)}`
+                                  : `Cuộn tới ${pickRoundLabel(locale, target.round)}`
+                              }
+                              onClick={() => scrollToDashboardSection(target.sectionId)}
+                              className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition hover:-translate-y-0.5 active:translate-y-0 ${target.buttonClass}`}
+                            >
+                              <Icon className="h-4.5 w-4.5" />
+                            </button>
+                            <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-30 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                              {locale === "en"
+                                ? `Scroll to ${pickRoundLabel(locale, target.round)}`
+                                : `Cuộn tới ${pickRoundLabel(locale, target.round)}`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -1421,8 +1493,9 @@ export function DashboardPage() {
             </Surface>
           </section>
 
-          <section id="round1-lock">
+          <section id="round-1-section" className="scroll-mt-36">
             <Surface className="px-6 py-6 md:px-8 md:py-8">
+              <div id="round1-lock" />
               <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                 <div className="max-w-3xl">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
@@ -1697,7 +1770,7 @@ export function DashboardPage() {
           </section>
 
           {currentRound1Submission ? (
-            <section id="round1-result">
+            <section id="round1-result" className="scroll-mt-36">
               <Surface className="px-6 py-6 md:px-8 md:py-8">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                   <div className="max-w-3xl">
@@ -1715,7 +1788,7 @@ export function DashboardPage() {
                           ? "The objective section is scored immediately. Essay score and total score remain pending until admin or moderator review is completed."
                           : "Phần khách quan được chấm ngay. Điểm tự luận và tổng điểm vẫn ở trạng thái chờ cho tới khi admin hoặc moderator chấm xong."
                         : locale === "en"
-                          ? "Objective score, essay score, and final total are all complete for this Round 1 attempt."
+                          ? "Multiple-choice score, essay score, and final total are all complete for this Round 1 attempt."
                           : "Điểm khách quan, điểm tự luận và tổng điểm cuối cùng của bài Vòng 1 này đều đã hoàn tất."}
                     </p>
                   </div>
@@ -1733,7 +1806,7 @@ export function DashboardPage() {
                 <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Objective score" : "Điểm khách quan"}
+                      {locale === "en" ? "Multiple choices score" : "Điểm trắc nghiệm"}
                     </p>
                     <p className="mt-3 text-3xl font-semibold theme-text-strong">
                       {`${currentRound1Submission.objectiveScore} / ${ROUND1_OBJECTIVE_MAX_SCORE}`}
@@ -1799,7 +1872,7 @@ export function DashboardPage() {
                           {[
                             "#",
                             locale === "en" ? "Member" : "Thành viên",
-                            locale === "en" ? "Objective" : "Khách quan",
+                            locale === "en" ? "Multiple choices" : "Trắc nghiệm",
                             locale === "en" ? "Essay" : "Tự luận",
                             locale === "en" ? "Total" : "Tổng điểm",
                             locale === "en" ? "Right / wrong" : "Đúng / sai",
@@ -2157,6 +2230,7 @@ function SubmissionRoundCard({
   onFormChange: (payload: Partial<SubmissionFormState>) => void;
   onSubmit: () => void | Promise<void>;
 }) {
+  const sectionId = round === "round-2" ? "round-2-section" : "round-3-section";
   const sortedSubmissions = [...submissions].sort((a, b) => b.version - a.version);
   const latestSubmission = sortedSubmissions[0];
   const roundLabel =
@@ -2208,7 +2282,8 @@ function SubmissionRoundCard({
     : undefined;
 
   return (
-    <Surface className="px-6 py-6 md:px-8 md:py-8">
+    <section id={sectionId} className="scroll-mt-36">
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">
@@ -2404,6 +2479,7 @@ function SubmissionRoundCard({
           )}
         </div>
       </div>
-    </Surface>
+      </Surface>
+    </section>
   );
 }
