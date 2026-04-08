@@ -5,6 +5,7 @@ import type {
   CompetitionState,
   Locale,
   SubmissionRound,
+  TeamFinalOutcome,
   TeamProfile,
 } from "@/types/site";
 
@@ -103,6 +104,131 @@ export function pickCompetitionStateDescription(locale: Locale, state: Competiti
         ? "This team passed Round 2 and is currently competing in the final round."
         : "Đội này đã qua Vòng 2 và hiện đang thi đấu ở vòng chung kết.";
   }
+}
+
+export function pickTeamFinalOutcomeLabel(locale: Locale, outcome: TeamFinalOutcome) {
+  switch (outcome) {
+    case "champion":
+      return locale === "en" ? "Champion" : "Quán quân";
+    case "runner-up":
+      return locale === "en" ? "Runner-up" : "Á quân";
+    case "third-place":
+      return locale === "en" ? "Third place" : "Quý quân";
+    case "fourth-place":
+      return locale === "en" ? "4th place" : "Hạng 4";
+    case "emerging-team":
+      return locale === "en" ? "Emerging Team" : "Đội Tiềm năng";
+  }
+}
+
+function canShowTeamFinalOutcome(team: TeamProfile, now = new Date()) {
+  if (!team.finalOutcome) {
+    return false;
+  }
+
+  if (team.finalOutcome === "emerging-team") {
+    return isRoundFinished("round-2", now) || isRoundFinished("round-3", now);
+  }
+
+  return isRoundFinished("round-3", now);
+}
+
+export function pickTeamDisplayStatusLabel(locale: Locale, team: TeamProfile, now = new Date()) {
+  const competitionState = getTeamCompetitionState(team);
+  if (competitionState === "not-eligible") {
+    return pickCompetitionStateLabel(locale, competitionState);
+  }
+
+  if (canShowTeamFinalOutcome(team, now) && team.finalOutcome) {
+    return pickTeamFinalOutcomeLabel(locale, team.finalOutcome);
+  }
+
+  if (team.stage === "round-3" && isRoundFinished("round-3", now)) {
+    return locale === "en" ? "Stop at Round 3" : "Dừng chân tại Vòng 3";
+  }
+
+  if (team.stage === "round-2" && isRoundFinished("round-2", now)) {
+    return locale === "en" ? "Stop at Round 2" : "Dừng chân tại Vòng 2";
+  }
+
+  if (team.stage === "round-1" && isRoundFinished("round-1", now)) {
+    return locale === "en" ? "Stop at Round 1" : "Dừng chân tại Vòng 1";
+  }
+
+  return pickCompetitionStateLabel(locale, competitionState);
+}
+
+export function pickTeamDisplayStatusDescription(locale: Locale, team: TeamProfile, now = new Date()) {
+  const competitionState = getTeamCompetitionState(team);
+  if (competitionState === "not-eligible") {
+    return pickCompetitionStateDescription(locale, competitionState);
+  }
+
+  if (canShowTeamFinalOutcome(team, now) && team.finalOutcome) {
+    switch (team.finalOutcome) {
+      case "champion":
+        return locale === "en"
+          ? "This team finished the season as the overall champion."
+          : "Đội này khép lại mùa giải với danh hiệu quán quân.";
+      case "runner-up":
+        return locale === "en"
+          ? "This team finished the season as the runner-up."
+          : "Đội này khép lại mùa giải với danh hiệu á quân.";
+      case "third-place":
+        return locale === "en"
+          ? "This team finished the season in third place."
+          : "Đội này khép lại mùa giải với vị trí quý quân.";
+      case "fourth-place":
+        return locale === "en"
+          ? "This team finished the season in fourth place."
+          : "Đội này khép lại mùa giải với vị trí hạng 4.";
+      case "emerging-team":
+        return locale === "en"
+          ? "This team completed the season as an Emerging Team after Round 2."
+          : "Đội này khép lại mùa giải với danh hiệu Đội Tiềm năng sau Vòng 2.";
+    }
+  }
+
+  if (team.stage === "round-3" && isRoundFinished("round-3", now)) {
+    return locale === "en"
+      ? "This team reached the final round and stopped there."
+      : "Đội này đã vào vòng chung kết và dừng chân tại đó.";
+  }
+
+  if (team.stage === "round-2" && isRoundFinished("round-2", now)) {
+    return locale === "en"
+      ? "This team reached Round 2 and stopped there."
+      : "Đội này đã vào Vòng 2 và dừng chân tại đó.";
+  }
+
+  if (team.stage === "round-1" && isRoundFinished("round-1", now)) {
+    return locale === "en"
+      ? "This team completed Round 1 and stopped there."
+      : "Đội này đã hoàn thành Vòng 1 và dừng chân tại đó.";
+  }
+
+  return pickCompetitionStateDescription(locale, competitionState);
+}
+
+export function pickTeamDisplayStatusTone(team: TeamProfile, now = new Date()) {
+  const competitionState = getTeamCompetitionState(team);
+  if (competitionState === "not-eligible") {
+    return "warning" as const;
+  }
+
+  if (canShowTeamFinalOutcome(team, now) && team.finalOutcome) {
+    return "success" as const;
+  }
+
+  if (
+    (team.stage === "round-1" && isRoundFinished("round-1", now)) ||
+    (team.stage === "round-2" && isRoundFinished("round-2", now)) ||
+    (team.stage === "round-3" && isRoundFinished("round-3", now))
+  ) {
+    return "warning" as const;
+  }
+
+  return "info" as const;
 }
 
 export function pickRoundLabel(locale: Locale, round: CompetitionRoundKey) {

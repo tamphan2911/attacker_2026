@@ -5,16 +5,28 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
 
-import { DEMO_ADMIN_LOGIN_ID, TEAM_MIN_MEMBERS } from "@/data/site-content";
-import { pickCompetitionStateDescription, pickCompetitionStateLabel } from "@/lib/competition";
+import { DEMO_ADMIN_LOGIN_ID } from "@/data/site-content";
+import {
+  pickTeamDisplayStatusDescription,
+  pickTeamDisplayStatusLabel,
+  pickTeamDisplayStatusTone,
+} from "@/lib/competition";
 import { formatDateLabel, getTeamForUser } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
-import type { CompetitionStage, TeamProfile, UserProfile, UserRole } from "@/types/site";
+import type { CompetitionStage, TeamFinalOutcome, TeamProfile, UserProfile, UserRole } from "@/types/site";
 
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
+
+const teamFinalOutcomeOptions: Array<{ value: TeamFinalOutcome; label: { en: string; vi: string } }> = [
+  { value: "champion", label: { en: "Champion", vi: "Quán quân" } },
+  { value: "runner-up", label: { en: "Runner-up", vi: "Á quân" } },
+  { value: "third-place", label: { en: "Third place", vi: "Quý quân" } },
+  { value: "fourth-place", label: { en: "4th place", vi: "Hạng 4" } },
+  { value: "emerging-team", label: { en: "Emerging Team", vi: "Đội Tiềm năng" } },
+];
 
 function NotFoundState({
   title,
@@ -526,6 +538,32 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
                 <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
               </select>
             </label>
+            <label className="space-y-2">
+              <span className="text-sm theme-text-muted">
+                {locale === "en" ? "Final outcome" : "Kết quả cuối"}
+              </span>
+              <select
+                value={draft.finalOutcome ?? ""}
+                onChange={(event) =>
+                  setDraft((current) =>
+                    current
+                      ? {
+                          ...current,
+                          finalOutcome: (event.target.value || undefined) as TeamFinalOutcome | undefined,
+                        }
+                      : current,
+                  )
+                }
+                className={fieldClassName}
+              >
+                <option value="">{locale === "en" ? "No final title yet" : "Chưa có danh hiệu cuối"}</option>
+                {teamFinalOutcomeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label[locale]}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label className="space-y-2 md:col-span-2">
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Avatar tone" : "Avatar tone"}
@@ -604,22 +642,12 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
                 {locale === "en" ? "Competition status" : "Trang thai thi dau"}
               </p>
               <div className="mt-2">
-                <StatusPill tone={draft.stage === "round-1" && team.memberIds.length < TEAM_MIN_MEMBERS ? "warning" : "success"}>
-                  {pickCompetitionStateLabel(
-                    locale,
-                    draft.stage === "round-1" && team.memberIds.length < TEAM_MIN_MEMBERS
-                      ? "not-eligible"
-                      : draft.stage,
-                  )}
+                <StatusPill tone={pickTeamDisplayStatusTone(draft)}>
+                  {pickTeamDisplayStatusLabel(locale, draft)}
                 </StatusPill>
               </div>
               <p className="mt-3 text-sm leading-7 theme-text-muted">
-                {pickCompetitionStateDescription(
-                  locale,
-                  draft.stage === "round-1" && team.memberIds.length < TEAM_MIN_MEMBERS
-                    ? "not-eligible"
-                    : draft.stage,
-                )}
+                {pickTeamDisplayStatusDescription(locale, draft)}
               </p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">

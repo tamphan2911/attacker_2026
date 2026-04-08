@@ -3,6 +3,7 @@ import {
   LeadershipTransferStatus,
   Round1QuestionDifficulty,
   Round1QuestionType,
+  TeamFinalOutcome,
   Round1TeamLockRequestStatus,
   Round1TestBankType,
   TeamInvitationStatus,
@@ -88,6 +89,23 @@ function mapTeamLockStatus(status: TeamRound1LockStatus): TeamProfile["round1Loc
     case TeamRound1LockStatus.OPEN:
     default:
       return "open";
+  }
+}
+
+function mapTeamFinalOutcome(status: TeamFinalOutcome | null): TeamProfile["finalOutcome"] {
+  switch (status) {
+    case TeamFinalOutcome.CHAMPION:
+      return "champion";
+    case TeamFinalOutcome.RUNNER_UP:
+      return "runner-up";
+    case TeamFinalOutcome.THIRD_PLACE:
+      return "third-place";
+    case TeamFinalOutcome.FOURTH_PLACE:
+      return "fourth-place";
+    case TeamFinalOutcome.EMERGING_TEAM:
+      return "emerging-team";
+    default:
+      return undefined;
   }
 }
 
@@ -314,6 +332,7 @@ export function serializeTeam(team: TeamWithMembers): TeamProfile {
     leaderId: team.leaderId,
     memberIds: team.members.map((member) => member.userId),
     stage: mapStage(team.stage),
+    finalOutcome: mapTeamFinalOutcome(team.finalOutcome),
     round1LockStatus: mapTeamLockStatus(team.round1LockStatus),
     round1LockProtocolId: team.round1LockProtocolId ?? undefined,
     round1LockRequestedAt: team.round1LockRequestedAt?.toISOString(),

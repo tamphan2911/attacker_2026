@@ -22,7 +22,11 @@ import { AdminRound1Manager } from "@/components/admin-round1-manager";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
 import { getAdminUserCompetitionStatus, pickAdminUserRoleLabel } from "@/lib/admin-users";
-import { getTeamCompetitionState, pickCompetitionStateLabel } from "@/lib/competition";
+import {
+  pickCompetitionStateLabel,
+  pickTeamDisplayStatusLabel,
+  pickTeamDisplayStatusTone,
+} from "@/lib/competition";
 import { formatDateLabel, getTeamForUser } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
@@ -226,17 +230,6 @@ function pickAdminRoleTone(role: UserProfile["role"]) {
   }
 
   return "success" as const;
-}
-
-function pickTeamStatusTone(state: ReturnType<typeof getTeamCompetitionState>) {
-  switch (state) {
-    case "not-eligible":
-      return "warning" as const;
-    case "round-1":
-    case "round-2":
-    case "round-3":
-      return "info" as const;
-  }
 }
 
 function UsersTableSection() {
@@ -551,7 +544,6 @@ function TeamsTableSection() {
   useAdminTitleScroll();
 
   const rows = teams.map((team) => {
-    const competitionState = getTeamCompetitionState(team);
     const leader = users.find((user) => user.id === team.leaderId);
     const members = team.memberIds
       .map((memberId) => users.find((user) => user.id === memberId)?.name ?? memberId)
@@ -563,8 +555,8 @@ function TeamsTableSection() {
       tag: team.tag,
       leader: leader?.name ?? "",
       memberCount: team.memberIds.length,
-      statusTone: pickTeamStatusTone(competitionState),
-      status: pickCompetitionStateLabel(locale, competitionState),
+      statusTone: pickTeamDisplayStatusTone(team),
+      status: pickTeamDisplayStatusLabel(locale, team),
       stage: pickCompetitionStateLabel(locale, team.stage),
       track: team.track,
       createdAt: team.createdAt,

@@ -27,8 +27,9 @@ import {
   isTeamRosterLocked,
   isTeamRound1Locked,
   isTeamCurrentlyCompetingRound,
-  pickCompetitionStateDescription,
-  pickCompetitionStateLabel,
+  pickTeamDisplayStatusDescription,
+  pickTeamDisplayStatusLabel,
+  pickTeamDisplayStatusTone,
   pickRound1LockStatusLabel,
   pickRoundLabel,
 } from "@/lib/competition";
@@ -157,21 +158,6 @@ function PhoneRequirementNotice({
       </div>
     </div>
   );
-}
-
-function pickDashboardCompetitionTone(state?: ReturnType<typeof getTeamCompetitionState>) {
-  if (!state) {
-    return "default" as const;
-  }
-
-  switch (state) {
-    case "not-eligible":
-      return "warning" as const;
-    case "round-1":
-    case "round-2":
-    case "round-3":
-      return "info" as const;
-  }
 }
 
 function pickDashboardRoleTone(isLeader: boolean) {
@@ -558,8 +544,8 @@ export function DashboardPage() {
     }));
   };
 
-  const competitionSummary = currentCompetitionState
-    ? pickCompetitionStateDescription(locale, currentCompetitionState)
+  const competitionSummary = currentTeam
+    ? pickTeamDisplayStatusDescription(locale, currentTeam)
     : "";
   const competitionWindowLabel = currentStageWindow
     ? formatDateRangeLabel(locale, currentStageWindow.startDate, currentStageWindow.endDate)
@@ -935,15 +921,14 @@ export function DashboardPage() {
                   : pickText(locale, pageContent.workspace.noTeamDescription)}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                <StatusPill tone={pickDashboardCompetitionTone(currentCompetitionState)}>
+                <StatusPill tone={currentTeam ? pickTeamDisplayStatusTone(currentTeam) : "default"}>
                   {currentTeam
-                    ? pickCompetitionStateLabel(locale, currentCompetitionState ?? "not-eligible")
+                    ? pickTeamDisplayStatusLabel(locale, currentTeam)
                     : locale === "en"
                       ? "No team yet"
                       : "Chưa có đội"}
                 </StatusPill>
                 <StatusPill>{`${teamReadinessCount}/${TEAM_MAX_MEMBERS} ${locale === "en" ? "members" : "thành viên"}`}</StatusPill>
-                {currentTeam ? <StatusPill>{`${openSlots} ${locale === "en" ? "open slots" : "chỗ trống"}`}</StatusPill> : null}
                 {currentTeam ? (
                   <StatusPill
                     tone={
@@ -1063,7 +1048,7 @@ export function DashboardPage() {
                       {locale === "en" ? "Current stage" : "Giai đoạn hiện tại"}
                     </p>
                     <p className="mt-3 text-lg font-semibold theme-text-strong">
-                      {currentTeam ? pickCompetitionStateLabel(locale, currentCompetitionState ?? currentTeam.stage) : "--"}
+                      {currentTeam ? pickTeamDisplayStatusLabel(locale, currentTeam) : "--"}
                     </p>
                     {competitionWindowLabel ? (
                       <p className="mt-2 text-sm theme-text-soft">{competitionWindowLabel}</p>
@@ -1119,8 +1104,8 @@ export function DashboardPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <StatusPill>{currentTeam.tag}</StatusPill>
-                  <StatusPill tone={pickDashboardCompetitionTone(currentCompetitionState)}>
-                    {pickCompetitionStateLabel(locale, currentCompetitionState ?? currentTeam.stage)}
+                  <StatusPill tone={pickTeamDisplayStatusTone(currentTeam)}>
+                    {pickTeamDisplayStatusLabel(locale, currentTeam)}
                   </StatusPill>
                   <StatusPill tone={pickDashboardRoleTone(isLeader)}>
                     {isLeader
@@ -1261,8 +1246,8 @@ export function DashboardPage() {
                     {currentTeamMembers.length} / {TEAM_MAX_MEMBERS}
                   </p>
                 </div>
-                <StatusPill tone={pickDashboardCompetitionTone(currentCompetitionState)}>
-                  {pickCompetitionStateLabel(locale, currentCompetitionState ?? currentTeam.stage)}
+                <StatusPill tone={pickTeamDisplayStatusTone(currentTeam)}>
+                  {pickTeamDisplayStatusLabel(locale, currentTeam)}
                 </StatusPill>
               </div>
 

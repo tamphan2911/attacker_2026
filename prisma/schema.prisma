@@ -32,6 +32,14 @@ enum TeamRound1LockStatus {
   DECLINED
 }
 
+enum TeamFinalOutcome {
+  CHAMPION
+  RUNNER_UP
+  THIRD_PLACE
+  FOURTH_PLACE
+  EMERGING_TEAM
+}
+
 enum TeamInvitationStatus {
   PENDING
   ACCEPTED
@@ -164,6 +172,7 @@ model Team {
   tag                       String                @unique
   leaderId                  String
   stage                     CompetitionStage      @default(ROUND_1)
+  finalOutcome              TeamFinalOutcome?
   round1LockStatus          TeamRound1LockStatus  @default(OPEN)
   round1LockProtocolId      String?
   round1LockRequestedAt     DateTime?

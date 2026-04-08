@@ -2,6 +2,7 @@ import {
   CompetitionStage,
   Round1QuestionDifficulty,
   Round1QuestionType,
+  TeamFinalOutcome,
   TeamRound1LockStatus,
   UserRole,
 } from "@prisma/client";
@@ -65,6 +66,23 @@ function mapStage(stage: TeamProfile["stage"]) {
     case "round-1":
     default:
       return CompetitionStage.ROUND_1;
+  }
+}
+
+function mapTeamFinalOutcome(outcome?: TeamProfile["finalOutcome"]) {
+  switch (outcome) {
+    case "champion":
+      return TeamFinalOutcome.CHAMPION;
+    case "runner-up":
+      return TeamFinalOutcome.RUNNER_UP;
+    case "third-place":
+      return TeamFinalOutcome.THIRD_PLACE;
+    case "fourth-place":
+      return TeamFinalOutcome.FOURTH_PLACE;
+    case "emerging-team":
+      return TeamFinalOutcome.EMERGING_TEAM;
+    default:
+      return null;
   }
 }
 
@@ -607,7 +625,7 @@ export async function deleteModeratorAccountByAdmin(
 
 export async function updateTeamByAdmin(
   teamId: string,
-  payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio" | "leaderId" | "stage">>,
+  payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio" | "leaderId" | "stage" | "finalOutcome">>,
 ): Promise<ServiceResult<{ teamId: string }>> {
   const team = await prisma.team.findUnique({
     where: { id: teamId },
@@ -656,6 +674,7 @@ export async function updateTeamByAdmin(
       bio: payload.bio?.trim(),
       leaderId: payload.leaderId,
       stage: nextStage,
+      finalOutcome: payload.finalOutcome === undefined ? undefined : mapTeamFinalOutcome(payload.finalOutcome),
       round1LockStatus: shouldForceLock ? TeamRound1LockStatus.LOCKED : undefined,
       round1LockedAt: shouldForceLock ? team.round1LockedAt ?? new Date() : undefined,
       round1LockDeclinedAt: shouldForceLock ? null : undefined,

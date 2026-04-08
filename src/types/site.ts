@@ -6,6 +6,12 @@ export type CompetitionStage = "round-1" | "round-2" | "round-3";
 export type CompetitionState = "not-eligible" | CompetitionStage;
 export type CompetitionRoundKey = CompetitionStage;
 export type TeamRound1LockStatus = "open" | "pending" | "locked" | "declined";
+export type TeamFinalOutcome =
+  | "champion"
+  | "runner-up"
+  | "third-place"
+  | "fourth-place"
+  | "emerging-team";
 
 export type LocalizedText = Record<Locale, string>;
 
@@ -470,6 +476,7 @@ export interface TeamProfile {
   leaderId: string;
   memberIds: string[];
   stage: CompetitionStage;
+  finalOutcome?: TeamFinalOutcome;
   round1LockStatus: TeamRound1LockStatus;
   round1LockProtocolId?: string;
   round1LockRequestedAt?: string;

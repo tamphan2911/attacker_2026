@@ -180,7 +180,7 @@ interface SiteStateValue {
   updateCurrentTeam: (payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio">>) => void;
   updateTeamByAdmin: (
     teamId: string,
-    payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio" | "leaderId" | "stage">>,
+    payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio" | "leaderId" | "stage" | "finalOutcome">>,
   ) => void;
   deleteTeamByAdmin: (teamId: string) => void;
   updateRound1QuestionByAdmin: (bankId: string, questionId: string, payload: Round1Question) => void;
@@ -1279,7 +1279,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
 
   const updateTeamByAdmin = (
     teamId: string,
-    payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio" | "leaderId" | "stage">>,
+    payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio" | "leaderId" | "stage" | "finalOutcome">>,
   ) => {
     if (!canAccessAdminMode) {
       pushToast(
