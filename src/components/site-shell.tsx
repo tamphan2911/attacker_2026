@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
+import { ScrollToTopButton } from "@/components/scroll-to-top-button";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 
@@ -26,6 +27,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
           {children}
         </main>
         <SiteFooter />
+        <ScrollToTopButton />
       </div>
     </div>
   );
