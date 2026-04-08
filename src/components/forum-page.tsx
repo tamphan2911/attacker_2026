@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
   ArrowRight,
   ChevronLeft,
   ChevronRight,
@@ -26,6 +27,18 @@ type ForumThreadsPayload = {
 
 type ForumThreadPayload = {
   thread: ForumThread;
+};
+
+type ForumModerationIssue = {
+  field: "title" | "summary" | "body" | "contactNote" | "preferredRoles" | "reply";
+  category: "profanity" | "sexual-content" | "abusive-content";
+  terms: string[];
+};
+
+type ForumMutationPayload = {
+  error?: string;
+  slug?: string;
+  issues?: ForumModerationIssue[];
 };
 
 const forumCategoryCopy: Record<
@@ -104,6 +117,92 @@ function getForumRoleLabel(locale: "en" | "vi", role: ForumThread["author"]["rol
   return locale === "en" ? "Participant" : "Thí sinh";
 }
 
+function getForumModerationFieldLabel(locale: "en" | "vi", field: ForumModerationIssue["field"]) {
+  switch (field) {
+    case "title":
+      return locale === "en" ? "Thread title" : "Tiêu đề chủ đề";
+    case "summary":
+      return locale === "en" ? "Short summary" : "Mô tả ngắn";
+    case "body":
+      return locale === "en" ? "Main post" : "Nội dung chính";
+    case "contactNote":
+      return locale === "en" ? "Contact note" : "Ghi chú liên hệ";
+    case "preferredRoles":
+      return locale === "en" ? "Roles or skills" : "Vai trò hoặc kỹ năng";
+    case "reply":
+      return locale === "en" ? "Reply content" : "Nội dung phản hồi";
+  }
+}
+
+function getForumModerationCategoryLabel(locale: "en" | "vi", category: ForumModerationIssue["category"]) {
+  switch (category) {
+    case "profanity":
+      return locale === "en" ? "Vulgar language" : "Từ ngữ tục tĩu";
+    case "sexual-content":
+      return locale === "en" ? "Sexual content" : "Nội dung gợi dục";
+    case "abusive-content":
+      return locale === "en" ? "Abusive language" : "Ngôn ngữ công kích";
+  }
+}
+
+function ForumModerationWarning({
+  locale,
+  issues,
+  className = "",
+}: {
+  locale: "en" | "vi";
+  issues: ForumModerationIssue[];
+  className?: string;
+}) {
+  if (issues.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className={`rounded-[1.4rem] border border-amber-400/26 bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(255,255,255,0.88))] px-4 py-4 text-left shadow-[0_18px_34px_rgba(120,53,15,0.08)] dark:bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(15,23,42,0.82))] dark:shadow-none ${className}`}>
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-400/18 text-amber-800 dark:text-amber-100">
+          <AlertTriangle className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold theme-text-strong">
+            {locale === "en"
+              ? "Please revise the highlighted wording before posting."
+              : "Hãy chỉnh lại các nội dung được đánh dấu trước khi đăng."}
+          </p>
+          <p className="mt-2 text-sm leading-7 theme-text-muted">
+            {locale === "en"
+              ? "The forum blocks vulgar, sexual, or abusive wording. Remove or rewrite the items below and try again."
+              : "Forum sẽ chặn từ ngữ tục tĩu, gợi dục hoặc công kích. Hãy sửa hoặc viết lại các mục dưới đây rồi thử lại."}
+          </p>
+          <div className="mt-4 space-y-3">
+            {issues.map((issue, index) => (
+              <div
+                key={`${issue.field}-${issue.category}-${index}`}
+                className="rounded-[1.15rem] border border-amber-500/18 bg-white/72 px-3.5 py-3 dark:bg-white/[0.05]"
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                  {getForumModerationFieldLabel(locale, issue.field)} · {getForumModerationCategoryLabel(locale, issue.category)}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {issue.terms.map((term) => (
+                    <span
+                      key={term}
+                      className="rounded-full border border-amber-500/24 bg-amber-500/12 px-2.5 py-1 text-[0.72rem] font-medium text-slate-950 dark:text-amber-100"
+                    >
+                      {term}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ForumPage() {
   const { locale, currentUser, isAuthenticated } = useSiteState();
   const [threads, setThreads] = useState<ForumThread[]>([]);
@@ -113,6 +212,8 @@ export function ForumPage() {
   const [detailError, setDetailError] = useState("");
   const [composerError, setComposerError] = useState("");
   const [replyError, setReplyError] = useState("");
+  const [composerModerationIssues, setComposerModerationIssues] = useState<ForumModerationIssue[]>([]);
+  const [replyModerationIssues, setReplyModerationIssues] = useState<ForumModerationIssue[]>([]);
   const [statusMessage, setStatusMessage] = useState("");
   const [isLoadingThreads, setIsLoadingThreads] = useState(true);
   const [isLoadingThreadDetail, setIsLoadingThreadDetail] = useState(false);
@@ -229,6 +330,22 @@ export function ForumPage() {
     };
   }, [isComposerOpen]);
 
+  useEffect(() => {
+    if (composerModerationIssues.length === 0) {
+      return;
+    }
+
+    setComposerModerationIssues([]);
+  }, [threadDraft, composerModerationIssues.length]);
+
+  useEffect(() => {
+    if (replyModerationIssues.length === 0) {
+      return;
+    }
+
+    setReplyModerationIssues([]);
+  }, [replyDraft, replyModerationIssues.length]);
+
   const filteredThreads = useMemo(() => {
     const normalizedSearch = deferredSearchValue.trim().toLowerCase();
 
@@ -285,6 +402,7 @@ export function ForumPage() {
 
   const handleCreateThread = async () => {
     setComposerError("");
+    setComposerModerationIssues([]);
     setStatusMessage("");
     setIsCreatingThread(true);
 
@@ -306,9 +424,15 @@ export function ForumPage() {
         }),
       });
 
-      const payload = (await response.json()) as { error?: string; slug?: string };
+      const payload = (await response.json()) as ForumMutationPayload;
 
       if (!response.ok) {
+        if (payload.issues?.length) {
+          setComposerModerationIssues(payload.issues);
+          setComposerError("");
+          return;
+        }
+
         throw new Error(payload.error ?? "Unable to create this thread.");
       }
 
@@ -334,6 +458,7 @@ export function ForumPage() {
     }
 
     setReplyError("");
+    setReplyModerationIssues([]);
     setStatusMessage("");
     setIsPostingReply(true);
 
@@ -345,8 +470,14 @@ export function ForumPage() {
         body: JSON.stringify({ body: replyDraft }),
       });
 
-      const payload = (await response.json()) as { error?: string };
+      const payload = (await response.json()) as ForumMutationPayload;
       if (!response.ok) {
+        if (payload.issues?.length) {
+          setReplyModerationIssues(payload.issues);
+          setReplyError("");
+          return;
+        }
+
         throw new Error(payload.error ?? "Unable to post this reply.");
       }
 
@@ -616,6 +747,11 @@ export function ForumPage() {
                                 : "Viết một phản hồi hữu ích về nền tảng của bạn, vai trò bạn có thể đảm nhận và cách mọi người nên liên hệ với bạn."
                             }
                             className="theme-field mt-4 min-h-[140px] w-full rounded-[1.35rem] border px-4 py-3 text-sm leading-7 outline-none"
+                          />
+                          <ForumModerationWarning
+                            locale={locale}
+                            issues={replyModerationIssues}
+                            className="mt-3"
                           />
                           {replyError ? (
                             <p className="mt-3 text-sm text-rose-700 dark:text-rose-200">{replyError}</p>
@@ -951,6 +1087,7 @@ export function ForumPage() {
               </div>
 
               <div className="border-t theme-border px-6 py-5">
+                <ForumModerationWarning locale={locale} issues={composerModerationIssues} className="mb-3" />
                 {composerError ? (
                   <p className="mb-3 text-sm text-rose-700 dark:text-rose-200">{composerError}</p>
                 ) : null}

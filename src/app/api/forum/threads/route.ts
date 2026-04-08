@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   });
 
   if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
+    return NextResponse.json({ error: result.error, issues: result.issues }, { status: result.status });
   }
 
   return NextResponse.json(result.data, { status: result.status });

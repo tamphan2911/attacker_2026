@@ -5,6 +5,10 @@ import {
 } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import {
+  detectForumModerationIssues,
+  type ForumModerationIssue,
+} from "@/server/forum-moderation";
 
 type ServiceSuccess<T> = {
   ok: true;
@@ -16,6 +20,7 @@ type ServiceFailure = {
   ok: false;
   status: number;
   error: string;
+  issues?: ForumModerationIssue[];
 };
 
 export type ServiceResult<T> = ServiceSuccess<T> | ServiceFailure;
@@ -24,8 +29,8 @@ function ok<T>(data: T, status = 200): ServiceSuccess<T> {
   return { ok: true, status, data };
 }
 
-function fail(status: number, error: string): ServiceFailure {
-  return { ok: false, status, error };
+function fail(status: number, error: string, issues?: ForumModerationIssue[]): ServiceFailure {
+  return { ok: false, status, error, issues };
 }
 
 function trimInput(value: string) {
@@ -216,6 +221,22 @@ export async function createForumThreadForUser(
     return fail(400, "Summary is too long.");
   }
 
+  const moderationIssues = detectForumModerationIssues([
+    { field: "title", value: title },
+    { field: "summary", value: summary },
+    { field: "body", value: body },
+    { field: "contactNote", value: contactNote },
+    { field: "preferredRoles", value: preferredRoles.join(", ") },
+  ]);
+
+  if (moderationIssues.length > 0) {
+    return fail(
+      422,
+      "Some parts of this thread contain wording that is not allowed in the forum community.",
+      moderationIssues,
+    );
+  }
+
   const slug = await createUniqueThreadSlug(title);
 
   const thread = await prisma.forumThread.create({
@@ -253,6 +274,18 @@ export async function createForumReplyForUser(
   const body = trimInput(payload.body);
   if (!body) {
     return fail(400, "Reply content is required.");
+  }
+
+  const moderationIssues = detectForumModerationIssues([
+    { field: "reply", value: body },
+  ]);
+
+  if (moderationIssues.length > 0) {
+    return fail(
+      422,
+      "This reply contains wording that is not allowed in the forum community.",
+      moderationIssues,
+    );
   }
 
   const thread = await prisma.forumThread.findUnique({
