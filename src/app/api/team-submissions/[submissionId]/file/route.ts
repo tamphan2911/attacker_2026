@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
 import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
+import { canJudgeAccessTeamSubmissionFile } from "@/server/judge-service";
 import { readTeamSubmissionFile } from "@/server/team-submission-storage";
 
 export const runtime = "nodejs";
@@ -35,6 +36,7 @@ export async function GET(
 
   const canAccessFile =
     hasElevatedRole(currentUser.role) ||
+    (await canJudgeAccessTeamSubmissionFile(currentUser.id, submissionId)) ||
     submission.team.members.some((member) => member.userId === currentUser.id);
 
   if (!canAccessFile) {

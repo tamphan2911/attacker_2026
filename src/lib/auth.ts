@@ -8,6 +8,7 @@ import { compare } from "bcryptjs";
 import { z } from "zod";
 
 import { prisma } from "@/lib/db";
+import { syncJudgeAccounts } from "@/server/judge-accounts";
 import { verifyTurnstileToken } from "@/server/turnstile";
 
 const credentialsSchema = z.object({
@@ -50,6 +51,8 @@ export const authOptions: NextAuthOptions = {
         if (!turnstileVerification.success) {
           throw new Error("CAPTCHA_FAILED");
         }
+
+        await syncJudgeAccounts();
 
         const login = parsed.data.login.trim().toLowerCase();
         const user = await prisma.user.findFirst({

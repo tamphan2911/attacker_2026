@@ -1,7 +1,7 @@
 export type Locale = "en" | "vi";
 export type Theme = "dark" | "light";
 export type SubmissionRound = "round-2" | "round-3";
-export type UserRole = "student" | "moderator" | "admin";
+export type UserRole = "student" | "judge" | "moderator" | "admin";
 export type CompetitionStage = "round-1" | "round-2" | "round-3";
 export type CompetitionState = "not-eligible" | CompetitionStage;
 export type CompetitionRoundKey = CompetitionStage;
@@ -248,6 +248,7 @@ export interface UserProfile {
   name: string;
   email: string;
   role: UserRole;
+  judgeProfileId?: string;
   studentId: string;
   phoneNumber: string;
   university: string;
@@ -269,6 +270,116 @@ export interface PublicUserProfile {
   bio: string;
   avatarTone: string;
   avatarImageSrc?: string;
+}
+
+export type JudgeTaskStatus = "scored" | "pending";
+
+export interface JudgeAssignmentSummary {
+  userId: string;
+  judgeProfileId: string;
+  name: string;
+  position: string;
+  organization: string;
+  rounds: CompetitionRoundKey[];
+}
+
+export interface JudgeDashboardRound1Task {
+  kind: "round-1";
+  submissionId: string;
+  participantId: string;
+  participantName: string;
+  participantUniversity: string;
+  teamId: string;
+  teamName: string;
+  teamTag: string;
+  submittedAt: string;
+  objectiveScore: number;
+  durationMinutes: number;
+  status: JudgeTaskStatus;
+  scoredAt?: string;
+}
+
+export interface JudgeDashboardTeamTask {
+  kind: SubmissionRound;
+  submissionId: string;
+  teamId: string;
+  teamName: string;
+  teamTag: string;
+  title: string;
+  version: number;
+  submittedAt: string;
+  submittedByName: string;
+  resourceLabel: string;
+  resourceUrl?: string;
+  status: JudgeTaskStatus;
+  scoredAt?: string;
+}
+
+export type JudgeDashboardTask = JudgeDashboardRound1Task | JudgeDashboardTeamTask;
+
+export interface JudgeDashboardRoundGroup {
+  round: CompetitionRoundKey;
+  tasks: JudgeDashboardTask[];
+}
+
+export interface JudgeDashboardData {
+  judge: JudgeAssignmentSummary;
+  rounds: JudgeDashboardRoundGroup[];
+}
+
+export interface JudgeRound1EssayAnswer {
+  questionId: string;
+  order: number;
+  prompt: LocalizedText;
+  rubricNote?: LocalizedText;
+  answerText: string;
+  wordCount: number;
+}
+
+export interface JudgeRound1Detail {
+  round: "round-1";
+  submissionId: string;
+  participantId: string;
+  participantName: string;
+  participantUniversity: string;
+  teamId: string;
+  teamName: string;
+  teamTag: string;
+  submittedAt: string;
+  durationMinutes: number;
+  rightCount: number;
+  wrongCount: number;
+  objectiveScore: number;
+  essays: JudgeRound1EssayAnswer[];
+  review: {
+    score: number | null;
+    note: string;
+    scoredAt?: string;
+  };
+  maxScore: number;
+}
+
+export interface JudgeTeamSubmissionDetail {
+  round: SubmissionRound;
+  submissionId: string;
+  teamId: string;
+  teamName: string;
+  teamTag: string;
+  title: string;
+  summary: string;
+  version: number;
+  submittedAt: string;
+  submittedByName: string;
+  resourceLabel: string;
+  resourceUrl?: string;
+  resourceMimeType?: string;
+  resourceSizeBytes?: number;
+  review: {
+    score: number | null;
+    note: string;
+    scoredAt?: string;
+  };
+  maxScore: number;
 }
 
 export interface EditableSectionCopy {

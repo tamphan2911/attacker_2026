@@ -97,6 +97,10 @@ function getForumRoleLabel(locale: "en" | "vi", role: ForumThread["author"]["rol
     return locale === "en" ? "Moderator" : "Điều phối";
   }
 
+  if (role === "judge") {
+    return locale === "en" ? "Judge" : "Giám khảo";
+  }
+
   return locale === "en" ? "Participant" : "Thí sinh";
 }
 

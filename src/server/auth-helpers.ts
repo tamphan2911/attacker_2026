@@ -21,3 +21,7 @@ export function hasElevatedRole(role: UserRole) {
 export function hasAdminRole(role: UserRole) {
   return role === UserRole.ADMIN;
 }
+
+export function hasJudgeRole(role: UserRole) {
+  return role === UserRole.JUDGE;
+}

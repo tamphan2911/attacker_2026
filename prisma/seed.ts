@@ -35,7 +35,16 @@ import {
 const prisma = new PrismaClient();
 
 const DEFAULT_STUDENT_PASSWORD = "Student@2026";
+const DEFAULT_JUDGE_PASSWORD = "Judge@2026";
 const DEFAULT_MODERATOR_PASSWORD = "Moderator@2026";
+
+function buildJudgeLoginId(judgeId: string) {
+  return judgeId.trim().toLowerCase();
+}
+
+function buildJudgeEmail(loginId: string) {
+  return `judge+${loginId}@internal.attacker.local`;
+}
 
 const forumSeedThreads = [
   {
@@ -269,6 +278,8 @@ async function main() {
   await prisma.userActionToken.deleteMany();
   await prisma.forumReply.deleteMany();
   await prisma.forumThread.deleteMany();
+  await prisma.round1JudgeReview.deleteMany();
+  await prisma.teamSubmissionJudgeReview.deleteMany();
   await prisma.round1ExamAttempt.deleteMany();
   await prisma.round1Submission.deleteMany();
   await prisma.round1TestBank.deleteMany();
@@ -284,6 +295,7 @@ async function main() {
 
   const adminPasswordHash = await hash(DEMO_ADMIN_PASSWORD, 12);
   const studentPasswordHash = await hash(DEFAULT_STUDENT_PASSWORD, 12);
+  const judgePasswordHash = await hash(DEFAULT_JUDGE_PASSWORD, 12);
   const moderatorPasswordHash = await hash(DEFAULT_MODERATOR_PASSWORD, 12);
 
   for (const user of mockUsers) {
@@ -314,6 +326,31 @@ async function main() {
         bio: user.bio,
         avatarTone: user.avatarTone,
         avatarImageSrc: user.avatarImageSrc,
+      },
+    });
+  }
+
+  for (const judge of judgeProfiles) {
+    const loginId = buildJudgeLoginId(judge.id);
+
+    await prisma.user.create({
+      data: {
+        id: `judge-account-${judge.id}`,
+        loginId,
+        email: buildJudgeEmail(loginId),
+        emailVerifiedAt: new Date(),
+        passwordHash: judgePasswordHash,
+        name: judge.name,
+        role: UserRole.JUDGE,
+        judgeProfileId: judge.id,
+        studentId: null,
+        phoneNumber: null,
+        university: judge.organization,
+        major: judge.role.en,
+        classYear: "",
+        bio: judge.bio.en,
+        avatarTone: judge.avatarTone,
+        avatarImageSrc: judge.imageSrc,
       },
     });
   }
@@ -542,6 +579,7 @@ async function main() {
   console.log("Seeded backend data.");
   console.log(`Admin login: ${DEMO_ADMIN_LOGIN_ID} / ${DEMO_ADMIN_PASSWORD}`);
   console.log(`Student demo password: ${DEFAULT_STUDENT_PASSWORD}`);
+  console.log(`Judge demo password: ${DEFAULT_JUDGE_PASSWORD}`);
   console.log(`Moderator demo password: ${DEFAULT_MODERATOR_PASSWORD}`);
 }
 

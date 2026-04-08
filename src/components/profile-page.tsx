@@ -17,6 +17,7 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { getTeamCompetitionState, pickCompetitionStateLabel } from "@/lib/competition";
+import { pickText } from "@/lib/site";
 
 const MAX_AVATAR_FILE_BYTES = 1024 * 1024;
 
@@ -76,7 +77,17 @@ function readImageFileAsDataUrl(file: File) {
 
 function pickRoleLabel(locale: ReturnType<typeof useSiteState>["locale"], role: ReturnType<typeof useSiteState>["currentUser"]["role"]) {
   if (locale === "en") {
-    return role;
+    switch (role) {
+      case "admin":
+        return "Administrator";
+      case "moderator":
+        return "Moderator";
+      case "judge":
+        return "Judge";
+      case "student":
+      default:
+        return "Participant";
+    }
   }
 
   switch (role) {
@@ -84,8 +95,10 @@ function pickRoleLabel(locale: ReturnType<typeof useSiteState>["locale"], role: 
       return "Quản trị viên";
     case "moderator":
       return "Điều phối viên";
+    case "judge":
+      return "Giám khảo";
     default:
-      return "Sinh viên";
+      return "Thí sinh";
   }
 }
 
@@ -133,6 +146,7 @@ function ProfileEditor({
 >) {
   const [form, setForm] = useState<ProfileFormState>(() => createProfileFormState(currentUser));
   const [avatarError, setAvatarError] = useState("");
+  const isStudentAccount = currentUser.role === "student";
 
   useEffect(() => {
     setForm(createProfileFormState(currentUser));
@@ -214,14 +228,16 @@ function ProfileEditor({
               />
             </label>
 
-            <label className="space-y-2">
-              <span className="text-sm theme-text-muted">{locale === "en" ? "Student ID" : "Mã số sinh viên"}</span>
-              <input
-                value={form.studentId}
-                onChange={(event) => setForm((current) => ({ ...current, studentId: event.target.value }))}
-                className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
-              />
-            </label>
+            {isStudentAccount ? (
+              <label className="space-y-2">
+                <span className="text-sm theme-text-muted">{locale === "en" ? "Student ID" : "Mã số sinh viên"}</span>
+                <input
+                  value={form.studentId}
+                  onChange={(event) => setForm((current) => ({ ...current, studentId: event.target.value }))}
+                  className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
+                />
+              </label>
+            ) : null}
 
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">{locale === "en" ? "Phone number" : "Số điện thoại"}</span>
@@ -358,7 +374,7 @@ function ProfileEditor({
 }
 
 export function ProfilePage() {
-  const { authStatus, isAuthenticated, locale, currentUser, currentTeam } = useSiteState();
+  const { authStatus, isAuthenticated, locale, currentUser, currentTeam, judges } = useSiteState();
 
   if (authStatus === "loading") {
     return (
@@ -383,6 +399,10 @@ export function ProfilePage() {
   }
 
   const currentTeamState = currentTeam ? getTeamCompetitionState(currentTeam) : undefined;
+  const currentJudgeProfile =
+    currentUser.role === "judge" && currentUser.judgeProfileId
+      ? judges.find((judge) => judge.id === currentUser.judgeProfileId)
+      : undefined;
   const providerLabel = currentUser.providers.length
     ? currentUser.providers.map((provider) => pickProviderLabel(locale, provider)).join(" · ")
     : locale === "en"
@@ -412,7 +432,9 @@ export function ProfilePage() {
                 {currentUser.bio || (locale === "en" ? "No bio has been added yet." : "Bạn chưa thêm phần giới thiệu.")}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                {currentUser.studentId ? <StatusPill>{`${locale === "en" ? "Student ID" : "MSSV"} · ${currentUser.studentId}`}</StatusPill> : null}
+                {currentUser.role === "student" && currentUser.studentId ? (
+                  <StatusPill>{`${locale === "en" ? "Student ID" : "MSSV"} · ${currentUser.studentId}`}</StatusPill>
+                ) : null}
                 <StatusPill>{pickRoleLabel(locale, currentUser.role)}</StatusPill>
                 <StatusPill>{providerLabel}</StatusPill>
                 {currentTeam && currentTeamState ? (
@@ -430,10 +452,16 @@ export function ProfilePage() {
                   {locale === "en" ? "Edit profile" : "Chỉnh sửa hồ sơ"}
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href={currentUser.role === "judge" ? "/judge-dashboard" : "/dashboard"}
                   className="inline-flex items-center justify-center gap-2 rounded-[1.4rem] border theme-border theme-panel px-5 py-3.5 text-sm font-semibold theme-text-strong"
                 >
-                  {locale === "en" ? "Open workspace" : "Mở không gian đội"}
+                  {currentUser.role === "judge"
+                    ? locale === "en"
+                      ? "Judge Dashboard"
+                      : "Bảng chấm giám khảo"
+                    : locale === "en"
+                      ? "Open workspace"
+                      : "Mở không gian đội"}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -448,15 +476,51 @@ export function ProfilePage() {
           <div className="mt-5 space-y-3">
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "University" : "Trường"}
+                {currentUser.role === "judge"
+                  ? locale === "en"
+                    ? "Organization"
+                    : "Đơn vị"
+                  : locale === "en"
+                    ? "University"
+                    : "Trường"}
               </p>
-              <p className="mt-3 text-sm leading-7 theme-text-body">{currentUser.university}</p>
+              <p className="mt-3 text-sm leading-7 theme-text-body">
+                {currentJudgeProfile?.organization || currentUser.university || "--"}
+              </p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Major / class year" : "Chuyên ngành / năm học"}
+                {currentUser.role === "judge"
+                  ? locale === "en"
+                    ? "Position / rounds"
+                    : "Chức vụ / vòng chấm"
+                  : locale === "en"
+                    ? "Major / class year"
+                    : "Chuyên ngành / năm học"}
               </p>
-              <p className="mt-3 text-sm leading-7 theme-text-body">{`${currentUser.major} · ${currentUser.classYear}`}</p>
+              <p className="mt-3 text-sm leading-7 theme-text-body">
+                {currentUser.role === "judge"
+                  ? `${currentJudgeProfile ? pickText(locale, currentJudgeProfile.role) : currentUser.major || "--"} · ${
+                      currentJudgeProfile?.rounds.length
+                        ? currentJudgeProfile.rounds
+                            .map((round) =>
+                              round === "round-1"
+                                ? locale === "en"
+                                  ? "Round 1"
+                                  : "Vòng 1"
+                                : round === "round-2"
+                                  ? locale === "en"
+                                    ? "Round 2"
+                                    : "Vòng 2"
+                                  : locale === "en"
+                                    ? "Final round"
+                                    : "Chung kết",
+                            )
+                            .join(" · ")
+                        : "--"
+                    }`
+                  : `${currentUser.major} · ${currentUser.classYear}`}
+              </p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
@@ -503,9 +567,19 @@ export function ProfilePage() {
             <School className="h-5 w-5 text-sky-400" />
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Academic profile" : "Hồ sơ học tập"}
+                {currentUser.role === "judge"
+                  ? locale === "en"
+                    ? "Judge role"
+                    : "Vai trò giám khảo"
+                  : locale === "en"
+                    ? "Academic profile"
+                    : "Hồ sơ học tập"}
               </p>
-              <p className="mt-2 text-sm leading-7 theme-text-body">{`${currentUser.university} · ${currentUser.major}`}</p>
+              <p className="mt-2 text-sm leading-7 theme-text-body">
+                {currentUser.role === "judge"
+                  ? `${currentJudgeProfile ? pickText(locale, currentJudgeProfile.role) : currentUser.major} · ${currentJudgeProfile?.organization || currentUser.university}`
+                  : `${currentUser.university} · ${currentUser.major}`}
+              </p>
             </div>
           </div>
         </Surface>
@@ -539,9 +613,17 @@ export function ProfilePage() {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Student ID" : "Mã số sinh viên"}
+                {currentUser.role === "judge"
+                  ? locale === "en"
+                    ? "Judge profile ID"
+                    : "Mã hồ sơ giám khảo"
+                  : locale === "en"
+                    ? "Student ID"
+                    : "Mã số sinh viên"}
               </p>
-              <p className="mt-3 text-sm theme-text-body">{currentUser.studentId || "--"}</p>
+              <p className="mt-3 text-sm theme-text-body">
+                {currentUser.role === "judge" ? currentUser.judgeProfileId || "--" : currentUser.studentId || "--"}
+              </p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
@@ -553,15 +635,47 @@ export function ProfilePage() {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "University" : "Trường"}
+                {currentUser.role === "judge"
+                  ? locale === "en"
+                    ? "Organization"
+                    : "Đơn vị"
+                  : locale === "en"
+                    ? "University"
+                    : "Trường"}
               </p>
-              <p className="mt-3 text-sm theme-text-body">{currentUser.university}</p>
+              <p className="mt-3 text-sm theme-text-body">{currentJudgeProfile?.organization || currentUser.university || "--"}</p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Class year" : "Khóa / năm học"}
+                {currentUser.role === "judge"
+                  ? locale === "en"
+                    ? "Assigned rounds"
+                    : "Vòng phụ trách"
+                  : locale === "en"
+                    ? "Class year"
+                    : "Khóa / năm học"}
               </p>
-              <p className="mt-3 text-sm theme-text-body">{currentUser.classYear}</p>
+              <p className="mt-3 text-sm theme-text-body">
+                {currentUser.role === "judge"
+                  ? currentJudgeProfile?.rounds.length
+                    ? currentJudgeProfile.rounds
+                        .map((round) =>
+                          round === "round-1"
+                            ? locale === "en"
+                              ? "Round 1"
+                              : "Vòng 1"
+                            : round === "round-2"
+                              ? locale === "en"
+                                ? "Round 2"
+                                : "Vòng 2"
+                              : locale === "en"
+                                ? "Final round"
+                                : "Chung kết",
+                        )
+                        .join(" · ")
+                    : "--"
+                  : currentUser.classYear}
+              </p>
             </div>
           </div>
         </Surface>
@@ -571,15 +685,66 @@ export function ProfilePage() {
             <Users2 className="h-5 w-5 text-sky-400" />
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Current team" : "Đội hiện tại"}
+                {currentUser.role === "judge"
+                  ? locale === "en"
+                    ? "Judge assignment"
+                    : "Phân công giám khảo"
+                  : locale === "en"
+                    ? "Current team"
+                    : "Đội hiện tại"}
               </p>
               <p className="mt-2 text-lg font-semibold theme-text-strong">
-                {currentTeam ? currentTeam.name : locale === "en" ? "No team yet" : "Chưa tham gia đội"}
+                {currentUser.role === "judge"
+                  ? currentJudgeProfile
+                    ? locale === "en"
+                      ? "Assigned judging rounds"
+                      : "Các vòng được phân công chấm"
+                    : locale === "en"
+                      ? "No linked judge profile"
+                      : "Chưa có hồ sơ giám khảo liên kết"
+                  : currentTeam
+                    ? currentTeam.name
+                    : locale === "en"
+                      ? "No team yet"
+                      : "Chưa tham gia đội"}
               </p>
             </div>
           </div>
 
-          {currentTeam ? (
+          {currentUser.role === "judge" ? (
+            <div className="mt-5 rounded-[1.6rem] border theme-border theme-panel px-5 py-5">
+              <div className="flex flex-wrap gap-2">
+                {currentJudgeProfile?.rounds.map((round) => (
+                  <StatusPill key={round} tone={round === "round-1" ? "info" : round === "round-2" ? "success" : "warning"}>
+                    {round === "round-1"
+                      ? locale === "en"
+                        ? "Round 1"
+                        : "Vòng 1"
+                      : round === "round-2"
+                        ? locale === "en"
+                          ? "Round 2"
+                          : "Vòng 2"
+                        : locale === "en"
+                          ? "Final round"
+                          : "Chung kết"}
+                  </StatusPill>
+                )) ?? null}
+              </div>
+              <p className="mt-4 text-sm leading-7 theme-text-muted">
+                {locale === "en"
+                  ? "Use the judge dashboard to open assigned scoring tasks, read essay responses, download team reports, and save your own judge score."
+                  : "Hãy dùng bảng chấm giám khảo để mở các đầu việc được phân công, đọc phần tự luận, tải báo cáo đội thi và lưu điểm chấm riêng của chính bạn."}
+              </p>
+
+              <Link
+                href="/judge-dashboard"
+                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold theme-accent"
+              >
+                {locale === "en" ? "Open judge dashboard" : "Mở bảng chấm giám khảo"}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          ) : currentTeam ? (
             <div className="mt-5 rounded-[1.6rem] border theme-border theme-panel px-5 py-5">
               <div className="flex items-start gap-4">
                 <GradientAvatar

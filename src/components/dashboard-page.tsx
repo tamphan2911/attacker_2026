@@ -265,20 +265,43 @@ export function DashboardPage() {
         <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
           <div className="max-w-2xl">
             <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
-              {locale === "en" ? "Organizer workspace" : "Workspace vận hành"}
+              {currentUser.role === "judge"
+                ? locale === "en"
+                  ? "Judge dashboard"
+                  : "Bảng chấm giám khảo"
+                : locale === "en"
+                  ? "Organizer workspace"
+                  : "Workspace vận hành"}
             </p>
             <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.7rem]">
-              {locale === "en"
-                ? "Admin and moderator accounts do not join teams or competition rounds."
-                : "Tài khoản admin và moderator không tham gia đội thi hoặc các vòng thi."}
+              {currentUser.role === "judge"
+                ? locale === "en"
+                  ? "Judge accounts review scoring tasks instead of joining teams."
+                  : "Tài khoản giám khảo dùng để chấm điểm, không tham gia đội thi."
+                : locale === "en"
+                  ? "Admin and moderator accounts do not join teams or competition rounds."
+                  : "Tài khoản admin và moderator không tham gia đội thi hoặc các vòng thi."}
             </h1>
             <p className="mt-4 text-sm leading-7 theme-text-soft">
-              {locale === "en"
-                ? "This account is reserved for moderation. Use admin mode to manage the platform, and use the profile page only for internal identity details."
-                : "Tài khoản này chỉ dùng cho công tác điều phối. Hãy dùng admin mode để vận hành hệ thống, và chỉ dùng trang hồ sơ cho thông tin định danh nội bộ."}
+              {currentUser.role === "judge"
+                ? locale === "en"
+                  ? "Open the judge dashboard to review essay responses, download team reports, and save your own score for the rounds assigned to you."
+                  : "Hãy mở bảng chấm giám khảo để xem phần tự luận, tải báo cáo đội thi và lưu điểm chấm của riêng bạn cho các vòng được phân công."
+                : locale === "en"
+                  ? "This account is reserved for moderation. Use admin mode to manage the platform, and use the profile page only for internal identity details."
+                  : "Tài khoản này chỉ dùng cho công tác điều phối. Hãy dùng admin mode để vận hành hệ thống, và chỉ dùng trang hồ sơ cho thông tin định danh nội bộ."}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            {currentUser.role === "judge" ? (
+              <Link
+                href="/judge-dashboard"
+                className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                {locale === "en" ? "Open judge dashboard" : "Mở bảng chấm giám khảo"}
+              </Link>
+            ) : null}
             {canAccessAdminMode ? (
               <Link
                 href="/admin"

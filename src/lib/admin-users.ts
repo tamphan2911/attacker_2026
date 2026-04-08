@@ -9,6 +9,8 @@ export function pickAdminUserRoleLabel(locale: Locale, role: UserProfile["role"]
   switch (role) {
     case "admin":
       return locale === "en" ? "Administrator" : "Quản trị viên";
+    case "judge":
+      return locale === "en" ? "Judge" : "Giám khảo";
     case "moderator":
       return locale === "en" ? "Moderator" : "Điều phối viên";
     case "student":
@@ -38,6 +40,14 @@ export function getAdminUserCompetitionStatus(
     return {
       key: "moderator",
       label: locale === "en" ? "Moderation" : "Điều phối vận hành",
+      tone: "default",
+    };
+  }
+
+  if (user.role === "judge") {
+    return {
+      key: "judge",
+      label: locale === "en" ? "Judge review" : "Giám khảo chấm điểm",
       tone: "default",
     };
   }

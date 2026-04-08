@@ -48,6 +48,8 @@ function mapUserRole(role: UserProfile["role"]) {
       return UserRole.ADMIN;
     case "moderator":
       return UserRole.MODERATOR;
+    case "judge":
+      return UserRole.JUDGE;
     case "student":
     default:
       return UserRole.STUDENT;
@@ -74,6 +76,10 @@ function buildOrganizerEmail(loginId: string) {
   return `organizer+${loginId}@internal.attacker.local`;
 }
 
+export function buildJudgeEmail(loginId: string) {
+  return `judge+${loginId}@internal.attacker.local`;
+}
+
 export async function savePageContentByAdmin(
   payload: SitePageContent,
 ): Promise<ServiceResult<{ saved: true }>> {
@@ -95,7 +101,7 @@ export function getDefaultJudges() {
   return judgeProfiles;
 }
 
-async function readStoredJudges() {
+export async function readStoredJudges() {
   const cmsEntry = await prisma.cmsEntry.findUnique({
     where: { scope: JUDGES_SCOPE },
     select: { payload: true },
@@ -157,6 +163,34 @@ export async function updateJudgeByAdmin(
     judges.map((judge) => (judge.id === judgeId ? payload : judge)),
   );
 
+  if (judgeId !== nextJudgeId) {
+    const nextLoginId = nextJudgeId.trim().toLowerCase();
+    await prisma.user.updateMany({
+      where: { judgeProfileId: judgeId, role: UserRole.JUDGE },
+      data: {
+        judgeProfileId: nextJudgeId,
+        loginId: nextLoginId,
+        email: buildJudgeEmail(nextLoginId),
+        name: payload.name,
+        university: payload.organization,
+        major: payload.role.en || payload.role.vi,
+        avatarTone: payload.avatarTone,
+        avatarImageSrc: payload.imageSrc || null,
+      },
+    });
+  } else {
+    await prisma.user.updateMany({
+      where: { judgeProfileId: judgeId, role: UserRole.JUDGE },
+      data: {
+        name: payload.name,
+        university: payload.organization,
+        major: payload.role.en || payload.role.vi,
+        avatarTone: payload.avatarTone,
+        avatarImageSrc: payload.imageSrc || null,
+      },
+    });
+  }
+
   if (existingJudge.imageSrc !== payload.imageSrc) {
     const previousStorageKey = getJudgeImageStorageKeyFromUrl(existingJudge.imageSrc);
     if (previousStorageKey) {
@@ -178,6 +212,12 @@ export async function deleteJudgeByAdmin(
   }
 
   await saveJudges(judges.filter((judge) => judge.id !== judgeId));
+  await prisma.user.deleteMany({
+    where: {
+      judgeProfileId: judgeId,
+      role: UserRole.JUDGE,
+    },
+  });
   const storageKey = getJudgeImageStorageKeyFromUrl(existingJudge.imageSrc);
   if (storageKey) {
     await deleteJudgeImageFile(storageKey).catch(() => {});

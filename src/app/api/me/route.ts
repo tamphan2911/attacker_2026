@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { UserRole } from "@prisma/client";
 import { z } from "zod";
 
 import { getAuthSession } from "@/lib/auth";
@@ -41,6 +42,17 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   }
 
+  const existingUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      role: true,
+    },
+  });
+
+  if (!existingUser) {
+    return NextResponse.json({ error: "User not found." }, { status: 404 });
+  }
+
   const payload = updateProfileSchema.safeParse(await request.json().catch(() => null));
   if (!payload.success) {
     return NextResponse.json(
@@ -76,8 +88,8 @@ export async function PATCH(request: Request) {
     data: {
       name: payload.data.name.trim(),
       email: normalizedEmail,
-      studentId: normalizedStudentId || null,
-      loginId: normalizedStudentId || undefined,
+      studentId: existingUser.role === UserRole.STUDENT ? normalizedStudentId || null : undefined,
+      loginId: existingUser.role === UserRole.STUDENT ? normalizedStudentId || undefined : undefined,
       phoneNumber: normalizedPhoneNumber || null,
       university: payload.data.university.trim(),
       major: payload.data.major.trim(),

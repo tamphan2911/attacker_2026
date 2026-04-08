@@ -57,6 +57,8 @@ function mapUserRole(role: UserRole): UserProfile["role"] {
       return "admin";
     case UserRole.MODERATOR:
       return "moderator";
+    case UserRole.JUDGE:
+      return "judge";
     case UserRole.STUDENT:
     default:
       return "student";
@@ -208,6 +210,7 @@ export function serializeUser(user: UserWithAccounts): UserProfile {
     name: user.name,
     email: user.email,
     role: mapUserRole(user.role),
+    judgeProfileId: user.judgeProfileId ?? undefined,
     studentId: user.studentId ?? "",
     phoneNumber: user.phoneNumber ?? "",
     university: user.university,

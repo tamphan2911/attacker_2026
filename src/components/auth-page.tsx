@@ -129,7 +129,25 @@ export function AuthPage() {
       return;
     }
 
-    router.replace(canAccessAdminMode ? "/admin" : "/dashboard");
+    if (canAccessAdminMode) {
+      router.replace("/admin");
+      return;
+    }
+
+    void (async () => {
+      const response = await fetch("/api/me", {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        router.replace("/dashboard");
+        return;
+      }
+
+      const payload = (await response.json()) as { user?: { role?: string } | null };
+      router.replace(payload.user?.role === "judge" ? "/judge-dashboard" : "/dashboard");
+    })();
   }, [canAccessAdminMode, isAuthenticated, router]);
 
   useEffect(() => {
@@ -232,7 +250,13 @@ export function AuthPage() {
     }
 
     const payload = (await response.json()) as { user?: { role?: string } | null };
-    router.push(payload.user?.role === "admin" || payload.user?.role === "moderator" ? "/admin" : "/dashboard");
+    router.push(
+      payload.user?.role === "admin" || payload.user?.role === "moderator"
+        ? "/admin"
+        : payload.user?.role === "judge"
+          ? "/judge-dashboard"
+          : "/dashboard",
+    );
     router.refresh();
   };
 
