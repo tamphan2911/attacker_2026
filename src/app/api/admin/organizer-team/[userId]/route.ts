@@ -3,11 +3,11 @@ import { z } from "zod";
 
 import { hasAdminRole, getCurrentDbUser } from "@/server/auth-helpers";
 import {
-  deleteModeratorAccountByAdmin,
-  updateModeratorAccountByAdmin,
+  deleteOrganizerAccountByAdmin,
+  updateOrganizerAccountByAdmin,
 } from "@/server/admin-service";
 
-const updateModeratorSchema = z.object({
+const updateOrganizerSchema = z.object({
   loginId: z.string().trim().min(3).regex(/^[a-zA-Z0-9._-]+$/),
   name: z.string().trim().min(1),
   password: z.string().min(8).optional().or(z.literal("")),
@@ -23,7 +23,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Admin access required." }, { status: 403 });
   }
 
-  const payload = updateModeratorSchema.safeParse(await request.json().catch(() => null));
+  const payload = updateOrganizerSchema.safeParse(await request.json().catch(() => null));
   if (!payload.success) {
     return NextResponse.json(
       { error: "Invalid organizer account payload.", issues: payload.error.flatten() },
@@ -32,7 +32,7 @@ export async function PATCH(
   }
 
   const { userId } = await params;
-  const result = await updateModeratorAccountByAdmin(userId, {
+  const result = await updateOrganizerAccountByAdmin(userId, {
     ...payload.data,
     password: payload.data.password?.trim() || undefined,
   });
@@ -53,7 +53,7 @@ export async function DELETE(
   }
 
   const { userId } = await params;
-  const result = await deleteModeratorAccountByAdmin(userId);
+  const result = await deleteOrganizerAccountByAdmin(userId);
   if (result.ok) {
     return NextResponse.json(result.data, { status: result.status });
   }

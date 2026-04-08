@@ -2,12 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { hasAdminRole, getCurrentDbUser } from "@/server/auth-helpers";
-import { createModeratorAccountByAdmin } from "@/server/admin-service";
+import { createOrganizerAccountByAdmin } from "@/server/admin-service";
 
-const createModeratorSchema = z.object({
+const createOrganizerSchema = z.object({
   loginId: z.string().trim().min(3).regex(/^[a-zA-Z0-9._-]+$/),
   name: z.string().trim().min(1),
   password: z.string().min(8),
+  role: z.enum(["admin", "moderator"]),
   avatarImageSrc: z.string().trim().optional(),
 });
 
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Admin access required." }, { status: 403 });
   }
 
-  const payload = createModeratorSchema.safeParse(await request.json().catch(() => null));
+  const payload = createOrganizerSchema.safeParse(await request.json().catch(() => null));
   if (!payload.success) {
     return NextResponse.json(
       { error: "Invalid organizer account payload.", issues: payload.error.flatten() },
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await createModeratorAccountByAdmin(payload.data);
+  const result = await createOrganizerAccountByAdmin(payload.data);
   if (result.ok) {
     return NextResponse.json(result.data, { status: result.status });
   }
