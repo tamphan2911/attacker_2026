@@ -1,6 +1,7 @@
 import { competitionRoundWindows, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import type {
   CompetitionRoundKey,
+  CompetitionRoundWindow,
   CompetitionStage,
   CompetitionState,
   Locale,
@@ -16,8 +17,56 @@ const stageOrder: Record<CompetitionStage, number> = {
   "round-3": 3,
 };
 
-export function getCompetitionRoundWindow(round: CompetitionRoundKey) {
-  return competitionRoundWindows.find((item) => item.round === round);
+const primaryRoundTimelineItemIds: Record<CompetitionRoundKey, string> = {
+  "round-1": "round-1-individual-qualifier",
+  "round-2": "round-2-report-submission",
+  "round-3": "round-3-final-presentation",
+};
+
+function sortTimelineItemsByDate(items: TimelineItem[]) {
+  return [...items].sort((left, right) => {
+    if (left.startDate !== right.startDate) {
+      return left.startDate.localeCompare(right.startDate);
+    }
+
+    return left.endDate.localeCompare(right.endDate);
+  });
+}
+
+export function getTimelineItemById(itemId: string, timelineItems?: TimelineItem[]) {
+  return timelineItems?.find((item) => item.id === itemId);
+}
+
+export function getCompetitionRoundPrimaryTimelineItem(
+  round: CompetitionRoundKey,
+  timelineItems?: TimelineItem[],
+) {
+  return getTimelineItemById(primaryRoundTimelineItemIds[round], timelineItems);
+}
+
+export function getCompetitionRoundWindow(
+  round: CompetitionRoundKey,
+  timelineItems?: TimelineItem[],
+): CompetitionRoundWindow | undefined {
+  const fallbackWindow = competitionRoundWindows.find((item) => item.round === round);
+  if (!timelineItems?.length) {
+    return fallbackWindow;
+  }
+
+  const phaseItems = sortTimelineItemsByDate(timelineItems.filter((item) => item.phase === round));
+  if (!phaseItems.length) {
+    return fallbackWindow;
+  }
+
+  return {
+    round,
+    title: fallbackWindow?.title ?? {
+      en: round === "round-1" ? "Round 1" : round === "round-2" ? "Round 2" : "Round 3",
+      vi: round === "round-1" ? "Vòng 1" : round === "round-2" ? "Vòng 2" : "Vòng 3",
+    },
+    startDate: phaseItems[0].startDate,
+    endDate: phaseItems[phaseItems.length - 1].endDate,
+  };
 }
 
 function endOfDay(value: string) {
@@ -39,8 +88,25 @@ export function getSubmissionDeadlineTimelineItem(
   return timelineItems.find((item) => item.id === getSubmissionDeadlineItemId(round));
 }
 
-export function isRoundFinished(round: CompetitionRoundKey, now = new Date()) {
-  const window = getCompetitionRoundWindow(round);
+export function isTimelineItemFinished(
+  itemId: string,
+  timelineItems?: TimelineItem[],
+  now = new Date(),
+) {
+  const item = getTimelineItemById(itemId, timelineItems);
+  if (!item) {
+    return false;
+  }
+
+  return now.getTime() > endOfDay(item.endDate).getTime();
+}
+
+export function isRoundFinished(
+  round: CompetitionRoundKey,
+  now = new Date(),
+  timelineItems?: TimelineItem[],
+) {
+  const window = getCompetitionRoundWindow(round, timelineItems);
   if (!window) {
     return false;
   }
@@ -76,8 +142,16 @@ export function hasTeamReachedRound(team: TeamProfile, round: CompetitionRoundKe
   return stageOrder[team.stage] >= stageOrder[round];
 }
 
-export function canTeamTakeRound1(team: TeamProfile, now = new Date()) {
-  return getTeamCompetitionState(team) === "round-1" && isTeamRound1Locked(team) && !isRoundFinished("round-1", now);
+export function canTeamTakeRound1(
+  team: TeamProfile,
+  now = new Date(),
+  timelineItems?: TimelineItem[],
+) {
+  const round1Closed = getCompetitionRoundPrimaryTimelineItem("round-1", timelineItems)
+    ? isTimelineItemFinished("round-1-individual-qualifier", timelineItems, now)
+    : isRoundFinished("round-1", now, timelineItems);
+
+  return getTeamCompetitionState(team) === "round-1" && isTeamRound1Locked(team) && !round1Closed;
 }
 
 export function canTeamSubmitForRound(
@@ -89,7 +163,7 @@ export function canTeamSubmitForRound(
   const submissionDeadlineItem = getSubmissionDeadlineTimelineItem(round, timelineItems);
   const isSubmissionWindowClosed = submissionDeadlineItem
     ? now.getTime() > endOfDay(submissionDeadlineItem.endDate).getTime()
-    : isRoundFinished(round, now);
+    : isRoundFinished(round, now, timelineItems);
 
   return isTeamCurrentlyCompetingRound(team, round) && !isSubmissionWindowClosed;
 }
@@ -143,50 +217,60 @@ export function pickTeamFinalOutcomeLabel(locale: Locale, outcome: TeamFinalOutc
   }
 }
 
-function canShowTeamFinalOutcome(team: TeamProfile, now = new Date()) {
+function canShowTeamFinalOutcome(team: TeamProfile, now = new Date(), timelineItems?: TimelineItem[]) {
   if (!team.finalOutcome) {
     return false;
   }
 
   if (team.finalOutcome === "emerging-team") {
-    return isRoundFinished("round-2", now) || isRoundFinished("round-3", now);
+    return isRoundFinished("round-2", now, timelineItems) || isRoundFinished("round-3", now, timelineItems);
   }
 
-  return isRoundFinished("round-3", now);
+  return isRoundFinished("round-3", now, timelineItems);
 }
 
-export function pickTeamDisplayStatusLabel(locale: Locale, team: TeamProfile, now = new Date()) {
+export function pickTeamDisplayStatusLabel(
+  locale: Locale,
+  team: TeamProfile,
+  now = new Date(),
+  timelineItems?: TimelineItem[],
+) {
   const competitionState = getTeamCompetitionState(team);
   if (competitionState === "not-eligible") {
     return pickCompetitionStateLabel(locale, competitionState);
   }
 
-  if (canShowTeamFinalOutcome(team, now) && team.finalOutcome) {
+  if (canShowTeamFinalOutcome(team, now, timelineItems) && team.finalOutcome) {
     return pickTeamFinalOutcomeLabel(locale, team.finalOutcome);
   }
 
-  if (team.stage === "round-3" && isRoundFinished("round-3", now)) {
+  if (team.stage === "round-3" && isRoundFinished("round-3", now, timelineItems)) {
     return locale === "en" ? "Stop at Round 3" : "Dừng chân tại Vòng 3";
   }
 
-  if (team.stage === "round-2" && isRoundFinished("round-2", now)) {
+  if (team.stage === "round-2" && isRoundFinished("round-2", now, timelineItems)) {
     return locale === "en" ? "Stop at Round 2" : "Dừng chân tại Vòng 2";
   }
 
-  if (team.stage === "round-1" && isRoundFinished("round-1", now)) {
+  if (team.stage === "round-1" && isRoundFinished("round-1", now, timelineItems)) {
     return locale === "en" ? "Stop at Round 1" : "Dừng chân tại Vòng 1";
   }
 
   return pickCompetitionStateLabel(locale, competitionState);
 }
 
-export function pickTeamDisplayStatusDescription(locale: Locale, team: TeamProfile, now = new Date()) {
+export function pickTeamDisplayStatusDescription(
+  locale: Locale,
+  team: TeamProfile,
+  now = new Date(),
+  timelineItems?: TimelineItem[],
+) {
   const competitionState = getTeamCompetitionState(team);
   if (competitionState === "not-eligible") {
     return pickCompetitionStateDescription(locale, competitionState);
   }
 
-  if (canShowTeamFinalOutcome(team, now) && team.finalOutcome) {
+  if (canShowTeamFinalOutcome(team, now, timelineItems) && team.finalOutcome) {
     switch (team.finalOutcome) {
       case "champion":
         return locale === "en"
@@ -211,19 +295,19 @@ export function pickTeamDisplayStatusDescription(locale: Locale, team: TeamProfi
     }
   }
 
-  if (team.stage === "round-3" && isRoundFinished("round-3", now)) {
+  if (team.stage === "round-3" && isRoundFinished("round-3", now, timelineItems)) {
     return locale === "en"
       ? "This team reached the final round and stopped there."
       : "Đội này đã vào vòng chung kết và dừng chân tại đó.";
   }
 
-  if (team.stage === "round-2" && isRoundFinished("round-2", now)) {
+  if (team.stage === "round-2" && isRoundFinished("round-2", now, timelineItems)) {
     return locale === "en"
       ? "This team reached Round 2 and stopped there."
       : "Đội này đã vào Vòng 2 và dừng chân tại đó.";
   }
 
-  if (team.stage === "round-1" && isRoundFinished("round-1", now)) {
+  if (team.stage === "round-1" && isRoundFinished("round-1", now, timelineItems)) {
     return locale === "en"
       ? "This team completed Round 1 and stopped there."
       : "Đội này đã hoàn thành Vòng 1 và dừng chân tại đó.";
@@ -232,20 +316,24 @@ export function pickTeamDisplayStatusDescription(locale: Locale, team: TeamProfi
   return pickCompetitionStateDescription(locale, competitionState);
 }
 
-export function pickTeamDisplayStatusTone(team: TeamProfile, now = new Date()) {
+export function pickTeamDisplayStatusTone(
+  team: TeamProfile,
+  now = new Date(),
+  timelineItems?: TimelineItem[],
+) {
   const competitionState = getTeamCompetitionState(team);
   if (competitionState === "not-eligible") {
     return "warning" as const;
   }
 
-  if (canShowTeamFinalOutcome(team, now) && team.finalOutcome) {
+  if (canShowTeamFinalOutcome(team, now, timelineItems) && team.finalOutcome) {
     return "success" as const;
   }
 
   if (
-    (team.stage === "round-1" && isRoundFinished("round-1", now)) ||
-    (team.stage === "round-2" && isRoundFinished("round-2", now)) ||
-    (team.stage === "round-3" && isRoundFinished("round-3", now))
+    (team.stage === "round-1" && isRoundFinished("round-1", now, timelineItems)) ||
+    (team.stage === "round-2" && isRoundFinished("round-2", now, timelineItems)) ||
+    (team.stage === "round-3" && isRoundFinished("round-3", now, timelineItems))
   ) {
     return "warning" as const;
   }

@@ -35,7 +35,7 @@ function sortTimelineItems(items: TimelineItem[]) {
 }
 
 export function AdminTimelineManager() {
-  const { locale } = useSiteState();
+  const { locale, updateTimelineItemsByAdmin } = useSiteState();
   useAdminTitleScroll();
 
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(() => cloneTimeline(defaultTimelineItems));
@@ -135,6 +135,7 @@ export function AdminTimelineManager() {
     }
 
     setSavedTimelineItems(cloneTimeline(timelineItems));
+    updateTimelineItemsByAdmin(cloneTimeline(timelineItems));
     setMessage(locale === "en" ? "Timeline schedule updated." : "Đã cập nhật lịch trình.");
     setIsSaving(false);
   };

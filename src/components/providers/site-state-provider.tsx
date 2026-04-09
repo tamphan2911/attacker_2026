@@ -157,6 +157,7 @@ interface SiteStateValue {
   createJudgeByAdmin: (payload: JudgeProfile) => Promise<boolean>;
   updateJudgeByAdmin: (judgeId: string, payload: JudgeProfile) => Promise<boolean>;
   deleteJudgeByAdmin: (judgeId: string) => Promise<boolean>;
+  updateTimelineItemsByAdmin: (timelineItems: TimelineItem[]) => void;
   createOrganizerAccountByAdmin: (payload: {
     loginId: string;
     name: string;
@@ -2290,7 +2291,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!canTeamTakeRound1(team)) {
+    if (!canTeamTakeRound1(team, new Date(), timelineItems)) {
       pushToast(
         {
           en: "Round 1 is finished. New Round 1 submissions are closed.",
@@ -2533,6 +2534,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     createJudgeByAdmin,
     updateJudgeByAdmin,
     deleteJudgeByAdmin,
+    updateTimelineItemsByAdmin: setTimelineItems,
     createOrganizerAccountByAdmin,
     updateOrganizerAccountByAdmin,
     deleteOrganizerAccountByAdmin,

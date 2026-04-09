@@ -21,11 +21,13 @@ import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import {
   canTeamSubmitForRound,
   getCompetitionRoundWindow,
+  getCompetitionRoundPrimaryTimelineItem,
   getSubmissionDeadlineTimelineItem,
   getTeamCompetitionState,
   hasTeamPassedRound,
   hasTeamReachedRound,
   isRoundFinished,
+  isTimelineItemFinished,
   isTeamRosterLocked,
   isTeamRound1Locked,
   isTeamCurrentlyCompetingRound,
@@ -55,6 +57,7 @@ import type {
   SubmissionRound,
   TeamProfile,
   TeamSubmission,
+  TimelineItem,
   UserProfile,
 } from "@/types/site";
 
@@ -359,11 +362,13 @@ export function DashboardPage() {
   const openSlots = currentTeam
     ? TEAM_MAX_MEMBERS - currentTeam.memberIds.length - sentInvitations.length
     : TEAM_MAX_MEMBERS;
-  const currentStageWindow = currentTeam ? getCompetitionRoundWindow(currentTeam.stage) : undefined;
-  const round1Window = getCompetitionRoundWindow("round-1");
-  const round1Finished = isRoundFinished("round-1");
-  const round2Finished = isRoundFinished("round-2");
-  const round3Finished = isRoundFinished("round-3");
+  const currentStageWindow = currentTeam ? getCompetitionRoundWindow(currentTeam.stage, timelineItems) : undefined;
+  const round1Window =
+    getCompetitionRoundPrimaryTimelineItem("round-1", timelineItems) ??
+    getCompetitionRoundWindow("round-1", timelineItems);
+  const round1Finished = isTimelineItemFinished("round-1-individual-qualifier", timelineItems, new Date());
+  const round2Finished = isRoundFinished("round-2", new Date(), timelineItems);
+  const round3Finished = isRoundFinished("round-3", new Date(), timelineItems);
   const round3SubmissionDeadlineItem = getSubmissionDeadlineTimelineItem("round-3", timelineItems);
   const round3SubmissionClosed = Boolean(
     currentTeam &&
@@ -557,7 +562,7 @@ export function DashboardPage() {
   };
 
   const competitionSummary = currentTeam
-    ? pickTeamDisplayStatusDescription(locale, currentTeam)
+    ? pickTeamDisplayStatusDescription(locale, currentTeam, new Date(), timelineItems)
     : "";
   const competitionWindowLabel = currentStageWindow
     ? formatDateRangeLabel(locale, currentStageWindow.startDate, currentStageWindow.endDate)
@@ -937,9 +942,9 @@ export function DashboardPage() {
                   : pickText(locale, pageContent.workspace.noTeamDescription)}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                <StatusPill tone={currentTeam ? pickTeamDisplayStatusTone(currentTeam) : "default"}>
+                <StatusPill tone={currentTeam ? pickTeamDisplayStatusTone(currentTeam, new Date(), timelineItems) : "default"}>
                   {currentTeam
-                    ? pickTeamDisplayStatusLabel(locale, currentTeam)
+                    ? pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems)
                     : locale === "en"
                       ? "No team yet"
                       : "Chưa có đội"}
@@ -1064,7 +1069,7 @@ export function DashboardPage() {
                       {locale === "en" ? "Current stage" : "Vị trí hiện tại"}
                     </p>
                     <p className="mt-3 text-lg font-semibold theme-text-strong">
-                      {currentTeam ? pickTeamDisplayStatusLabel(locale, currentTeam) : "--"}
+                      {currentTeam ? pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems) : "--"}
                     </p>
                     {competitionWindowLabel ? (
                       <p className="mt-2 text-sm theme-text-soft">{competitionWindowLabel}</p>
@@ -1120,8 +1125,8 @@ export function DashboardPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <StatusPill>{currentTeam.tag}</StatusPill>
-                  <StatusPill tone={pickTeamDisplayStatusTone(currentTeam)}>
-                    {pickTeamDisplayStatusLabel(locale, currentTeam)}
+                  <StatusPill tone={pickTeamDisplayStatusTone(currentTeam, new Date(), timelineItems)}>
+                    {pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems)}
                   </StatusPill>
                   <StatusPill tone={pickDashboardRoleTone(isLeader)}>
                     {isLeader
@@ -1262,8 +1267,8 @@ export function DashboardPage() {
                     {currentTeamMembers.length} / {TEAM_MAX_MEMBERS}
                   </p>
                 </div>
-                <StatusPill tone={pickTeamDisplayStatusTone(currentTeam)}>
-                  {pickTeamDisplayStatusLabel(locale, currentTeam)}
+                <StatusPill tone={pickTeamDisplayStatusTone(currentTeam, new Date(), timelineItems)}>
+                  {pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems)}
                 </StatusPill>
               </div>
 
@@ -2013,6 +2018,7 @@ export function DashboardPage() {
                 <SubmissionRoundCard
                   locale={locale}
                   round="round-2"
+                  timelineItems={timelineItems}
                   isLeader={Boolean(isLeader)}
                   isCurrentRound={isTeamCurrentlyCompetingRound(currentTeam, "round-2")}
                   hasPassedRound={hasTeamPassedRound(currentTeam, "round-2")}
@@ -2033,6 +2039,7 @@ export function DashboardPage() {
                 <SubmissionRoundCard
                   locale={locale}
                   round="round-3"
+                  timelineItems={timelineItems}
                   isLeader={Boolean(isLeader)}
                   isCurrentRound={isTeamCurrentlyCompetingRound(currentTeam, "round-3")}
                   hasPassedRound={hasTeamPassedRound(currentTeam, "round-3")}
@@ -2238,6 +2245,7 @@ export function DashboardPage() {
 function SubmissionRoundCard({
   locale,
   round,
+  timelineItems,
   isLeader,
   isCurrentRound,
   hasPassedRound,
@@ -2252,6 +2260,7 @@ function SubmissionRoundCard({
 }: {
   locale: Locale;
   round: SubmissionRound;
+  timelineItems: TimelineItem[];
   isLeader: boolean;
   isCurrentRound: boolean;
   hasPassedRound: boolean;
@@ -2275,7 +2284,7 @@ function SubmissionRoundCard({
       : locale === "en"
         ? "Final report submission"
         : "Nộp báo cáo chung kết";
-  const roundWindow = getCompetitionRoundWindow(round);
+  const roundWindow = getSubmissionDeadlineTimelineItem(round, timelineItems) ?? getCompetitionRoundWindow(round, timelineItems);
   const roundWindowLabel = submissionWindowLabel ?? (roundWindow
     ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate)
     : undefined);

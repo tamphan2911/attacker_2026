@@ -24,12 +24,12 @@ import {
   TEAM_MAX_MEMBERS,
   TEAM_MIN_MEMBERS,
   audienceHighlights,
-  competitionRoundWindows,
   roundItems,
   ruleItems,
 } from "@/data/site-content";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
+import { getCompetitionRoundWindow } from "@/lib/competition";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 
 const generalRuleIcons = [UsersRound, GraduationCap, Sparkles];
@@ -226,7 +226,7 @@ const roundRuleMeta = {
 } as const;
 
 export function RulesPage() {
-  const { locale, pageContent } = useSiteState();
+  const { locale, pageContent, timelineItems } = useSiteState();
 
   return (
     <div className="space-y-16 md:space-y-20">
@@ -385,7 +385,7 @@ export function RulesPage() {
       <section className="space-y-6">
         {roundItems.map((round) => {
           const roundKey = round.id === "01" ? "round-1" : round.id === "02" ? "round-2" : "round-3";
-          const roundWindow = competitionRoundWindows.find((item) => item.round === roundKey);
+          const roundWindow = getCompetitionRoundWindow(roundKey, timelineItems);
           const meta = roundRuleMeta[round.id as keyof typeof roundRuleMeta];
           const Icon = meta.icon;
 

@@ -226,7 +226,7 @@ function pickAdminRoleTone(role: UserProfile["role"]) {
 }
 
 function UsersTableSection() {
-  const { locale, users, teams, deleteUserByAdmin } = useSiteState();
+  const { locale, users, teams, timelineItems, deleteUserByAdmin } = useSiteState();
   useAdminTitleScroll();
   const firstStickyColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
   const secondStickyColumnClass = "sticky z-10 bg-[var(--panel)]";
@@ -250,7 +250,7 @@ function UsersTableSection() {
     () =>
       users.filter((user) => user.role === "student").map((user) => {
         const team = getTeamForUser(user.id, teams);
-        const status = getAdminUserCompetitionStatus(locale, user, team);
+        const status = getAdminUserCompetitionStatus(locale, user, team, timelineItems);
 
         return {
           id: user.id,
@@ -269,7 +269,7 @@ function UsersTableSection() {
           providers: user.providers.join(", "),
         };
       }),
-    [locale, teams, users],
+    [locale, teams, timelineItems, users],
   );
 
   const filteredRows = useMemo(
@@ -559,7 +559,7 @@ function UsersTableSection() {
 }
 
 function TeamsTableSection() {
-  const { locale, teams, users, deleteTeamByAdmin } = useSiteState();
+  const { locale, teams, users, timelineItems, deleteTeamByAdmin } = useSiteState();
   useAdminTitleScroll();
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<"all" | "round-1" | "round-2" | "round-3">("all");
@@ -581,8 +581,8 @@ function TeamsTableSection() {
           leaderId: leader?.id ?? "",
           leader: leader?.name ?? "",
           memberCount: team.memberIds.length,
-          statusTone: pickTeamDisplayStatusTone(team),
-          status: pickTeamDisplayStatusLabel(locale, team),
+          statusTone: pickTeamDisplayStatusTone(team, new Date(), timelineItems),
+          status: pickTeamDisplayStatusLabel(locale, team, new Date(), timelineItems),
           stageKey: team.stage,
           stage: pickCompetitionStateLabel(locale, team.stage),
           track: team.track,
@@ -590,7 +590,7 @@ function TeamsTableSection() {
           members,
         };
       }),
-    [locale, teams, users],
+    [locale, teams, timelineItems, users],
   );
 
   const filteredRows = useMemo(

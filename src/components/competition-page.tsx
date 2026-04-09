@@ -6,7 +6,8 @@ import {
   audienceHighlights,
   roundItems,
 } from "@/data/site-content";
-import { pickText } from "@/lib/site";
+import { getCompetitionRoundWindow } from "@/lib/competition";
+import { formatDateRangeLabel, pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { InfoKicker, PageIntro, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 
@@ -72,7 +73,7 @@ const competitionEmergingReward = {
 } as const;
 
 export function CompetitionPage() {
-  const { locale, pageContent } = useSiteState();
+  const { locale, pageContent, timelineItems } = useSiteState();
 
   return (
     <div className="space-y-20">
@@ -133,6 +134,11 @@ export function CompetitionPage() {
 
         <div className="space-y-6">
           {roundItems.map((item, index) => (
+            (() => {
+              const roundKey = item.id === "01" ? "round-1" : item.id === "02" ? "round-2" : "round-3";
+              const roundWindow = getCompetitionRoundWindow(roundKey, timelineItems);
+
+              return (
             <Surface key={item.id} className="overflow-hidden">
               <div className="grid gap-0 lg:grid-cols-[280px_minmax(0,1fr)]">
                 <div
@@ -149,7 +155,9 @@ export function CompetitionPage() {
                     {pickText(locale, item.title)}
                   </p>
                   <p className="mt-3 text-sm uppercase tracking-[0.24em] theme-text-soft">
-                    {pickText(locale, item.duration)}
+                    {roundWindow
+                      ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate)
+                      : pickText(locale, item.duration)}
                   </p>
                 </div>
                 <div className="px-6 py-8">
@@ -170,6 +178,8 @@ export function CompetitionPage() {
                 </div>
               </div>
             </Surface>
+              );
+            })()
           ))}
         </div>
       </section>

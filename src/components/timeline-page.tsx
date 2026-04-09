@@ -19,7 +19,6 @@ import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
 import {
   canTeamTakeRound1,
-  isRoundFinished,
   isTeamCurrentlyCompetingRound,
 } from "@/lib/competition";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
@@ -142,12 +141,14 @@ function buildTimelineActionLinks({
   currentUserRole,
   currentTeam,
   activeUserId,
+  timelineItems,
   now,
 }: {
   item: TimelineItem;
   currentUserRole: UserRole;
   currentTeam?: TeamProfile;
   activeUserId: string;
+  timelineItems: TimelineItem[];
   now: Date;
 }): TimelineActionLink[] {
   const actionLinks: TimelineActionLink[] = [];
@@ -163,7 +164,7 @@ function buildTimelineActionLinks({
 
   for (const supportLink of item.supportLinks ?? []) {
     if (item.id === "round-1-individual-qualifier" && supportLink.href === "/round-1") {
-      if (currentUserRole === "student" && currentTeam && canTeamTakeRound1(currentTeam, now)) {
+      if (currentUserRole === "student" && currentTeam && canTeamTakeRound1(currentTeam, now, timelineItems)) {
         actionLinks.push({
           key: `${item.id}-${supportLink.href}`,
           href: supportLink.href,
@@ -181,7 +182,7 @@ function buildTimelineActionLinks({
         currentTeam.leaderId === activeUserId &&
         isTeamCurrentlyCompetingRound(currentTeam, "round-2")
       ) {
-        const round2Closed = isRoundFinished("round-2", now);
+        const round2Closed = now.getTime() > parseLocalDate(item.endDate, true).getTime();
         actionLinks.push({
           key: `${item.id}-${supportLink.href}`,
           href: round2Closed ? undefined : "/dashboard#round-2-section",
@@ -513,6 +514,7 @@ export function TimelinePage() {
                       currentUserRole: currentUser.role,
                       currentTeam,
                       activeUserId,
+                      timelineItems,
                       now,
                     });
 

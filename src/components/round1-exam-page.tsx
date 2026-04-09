@@ -21,10 +21,11 @@ import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { TEAM_MIN_MEMBERS, contactInfo } from "@/data/site-content";
 import {
   canTeamTakeRound1,
+  getCompetitionRoundPrimaryTimelineItem,
   getCompetitionRoundWindow,
   getTeamCompetitionState,
+  isTimelineItemFinished,
   isTeamRound1Locked,
-  isRoundFinished,
   pickCompetitionStateLabel,
 } from "@/lib/competition";
 import {
@@ -275,6 +276,7 @@ export function Round1ExamPage() {
     theme,
     round1TestBanks,
     round1Submissions,
+    timelineItems,
     hasHydrated,
   } = useSiteState();
   const [session, setSession] = useState<Round1ExamSession | null>(null);
@@ -298,10 +300,14 @@ export function Round1ExamPage() {
   const existingSubmission = resolvedSubmission ?? providerSubmission;
   const isStudent = currentUser.role === "student";
   const currentCompetitionState = currentTeam ? getTeamCompetitionState(currentTeam) : undefined;
-  const round1Window = getCompetitionRoundWindow("round-1");
-  const round1Finished = isRoundFinished("round-1");
+  const round1Window =
+    getCompetitionRoundPrimaryTimelineItem("round-1", timelineItems) ??
+    getCompetitionRoundWindow("round-1", timelineItems);
+  const round1Finished = isTimelineItemFinished("round-1-individual-qualifier", timelineItems, new Date());
   const teamRound1Locked = Boolean(currentTeam && isTeamRound1Locked(currentTeam));
-  const isEligibleForRound1 = Boolean(isStudent && currentTeam && canTeamTakeRound1(currentTeam));
+  const isEligibleForRound1 = Boolean(
+    isStudent && currentTeam && canTeamTakeRound1(currentTeam, new Date(), timelineItems),
+  );
   const progressSnapshot = session
     ? JSON.stringify({
         currentQuestionIndex: session.currentQuestionIndex,

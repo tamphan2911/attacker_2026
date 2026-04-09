@@ -3,7 +3,7 @@ import {
   isRoundFinished,
   pickCompetitionStateLabel,
 } from "@/lib/competition";
-import type { Locale, TeamProfile, UserProfile } from "@/types/site";
+import type { Locale, TeamProfile, TimelineItem, UserProfile } from "@/types/site";
 
 export function pickAdminUserRoleLabel(locale: Locale, role: UserProfile["role"]) {
   switch (role) {
@@ -23,6 +23,7 @@ export function getAdminUserCompetitionStatus(
   locale: Locale,
   user: UserProfile,
   team?: TeamProfile,
+  timelineItems?: TimelineItem[],
 ): {
   key: string;
   label: string;
@@ -60,7 +61,7 @@ export function getAdminUserCompetitionStatus(
     };
   }
 
-  if (team.stage === "round-3" && isRoundFinished("round-3")) {
+  if (team.stage === "round-3" && isRoundFinished("round-3", new Date(), timelineItems)) {
     return {
       key: "finished",
       label: locale === "en" ? "Finished" : "Hoàn thành",
@@ -68,7 +69,7 @@ export function getAdminUserCompetitionStatus(
     };
   }
 
-  if (team.stage === "round-2" && isRoundFinished("round-2")) {
+  if (team.stage === "round-2" && isRoundFinished("round-2", new Date(), timelineItems)) {
     return {
       key: "stopped",
       label: locale === "en" ? "Stopped at Round 2" : "Dừng tại Vòng 2",
@@ -76,7 +77,7 @@ export function getAdminUserCompetitionStatus(
     };
   }
 
-  if (team.stage === "round-1" && isRoundFinished("round-1")) {
+  if (team.stage === "round-1" && isRoundFinished("round-1", new Date(), timelineItems)) {
     return {
       key: "stopped",
       label: locale === "en" ? "Stopped at Round 1" : "Dừng tại Vòng 1",

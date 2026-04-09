@@ -1,9 +1,10 @@
 import { SubmissionRound, TeamSubmissionResourceSource, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
-import { isRoundFinished } from "@/lib/competition";
+import { getTimelineItemById } from "@/lib/competition";
 import { syncJudgeAccounts } from "@/server/judge-accounts";
 import { readStoredJudges } from "@/server/admin-service";
+import { readTimelineItems } from "@/server/timeline-items";
 import type {
   AdminRound2AssignedJudgeRecord,
   AdminRound2AssignmentStatus,
@@ -31,6 +32,10 @@ function ok<T>(data: T, status = 200): ServiceSuccess<T> {
 
 function fail(status: number, error: string): ServiceFailure {
   return { ok: false, status, error };
+}
+
+function endOfVietnamDay(date: string) {
+  return new Date(`${date}T23:59:59.999+07:00`);
 }
 
 function createAssignmentStatus(count: number): AdminRound2AssignmentStatus {
@@ -87,7 +92,7 @@ export async function readAdminRound2SubmissionRows(): Promise<{
   availableJudges: AdminRound2JudgeOption[];
   round2Closed: boolean;
 }> {
-  const [submissions, availableJudges] = await Promise.all([
+  const [submissions, availableJudges, timelineItems] = await Promise.all([
     prisma.teamSubmission.findMany({
       where: {
         round: SubmissionRound.ROUND_2,
@@ -126,6 +131,7 @@ export async function readAdminRound2SubmissionRows(): Promise<{
       },
     }),
     readAdminRound2JudgeOptions(),
+    readTimelineItems(),
   ]);
 
   const latestByTeam = new Map<string, (typeof submissions)[number]>();
@@ -135,7 +141,10 @@ export async function readAdminRound2SubmissionRows(): Promise<{
     }
   }
 
-  const round2Closed = isRoundFinished("round-2");
+  const round2DeadlineItem = getTimelineItemById("round-2-report-submission", timelineItems);
+  const round2Closed = round2DeadlineItem
+    ? new Date().getTime() > endOfVietnamDay(round2DeadlineItem.endDate).getTime()
+    : false;
 
   const rows = submissions.map<AdminRound2SubmissionRow>((submission) => {
     const assignedJudges = submission.judgeReviews
@@ -207,7 +216,13 @@ export async function assignJudgesToRound2Submission(
     .filter((judge) => judge.rounds.includes("round-2"))
     .map((judge) => judge.id);
 
-  if (!isRoundFinished("round-2")) {
+  const timelineItems = await readTimelineItems();
+  const round2DeadlineItem = getTimelineItemById("round-2-report-submission", timelineItems);
+  const isRound2SubmissionClosed = round2DeadlineItem
+    ? new Date().getTime() > endOfVietnamDay(round2DeadlineItem.endDate).getTime()
+    : false;
+
+  if (!isRound2SubmissionClosed) {
     return fail(409, "Judge assignment opens only after the Round 2 submission deadline.");
   }
 

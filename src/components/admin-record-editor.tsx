@@ -368,7 +368,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
 
 export function AdminTeamEditor({ teamId }: { teamId: string }) {
   const router = useRouter();
-  const { locale, teams, users, updateTeamByAdmin, deleteTeamByAdmin } = useSiteState();
+  const { locale, teams, users, timelineItems, updateTeamByAdmin, deleteTeamByAdmin } = useSiteState();
   useAdminTitleScroll();
   const team = teams.find((item) => item.id === teamId);
   const [draft, setDraft] = useState<TeamProfile | null>(team ?? null);
@@ -642,12 +642,12 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
                 {locale === "en" ? "Competition status" : "Trang thai thi dau"}
               </p>
               <div className="mt-2">
-                <StatusPill tone={pickTeamDisplayStatusTone(draft)}>
-                  {pickTeamDisplayStatusLabel(locale, draft)}
+                <StatusPill tone={pickTeamDisplayStatusTone(draft, new Date(), timelineItems)}>
+                  {pickTeamDisplayStatusLabel(locale, draft, new Date(), timelineItems)}
                 </StatusPill>
               </div>
               <p className="mt-3 text-sm leading-7 theme-text-muted">
-                {pickTeamDisplayStatusDescription(locale, draft)}
+                {pickTeamDisplayStatusDescription(locale, draft, new Date(), timelineItems)}
               </p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">

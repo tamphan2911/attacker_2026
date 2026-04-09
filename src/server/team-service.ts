@@ -16,8 +16,9 @@ import {
   type Round1Submission,
 } from "@prisma/client";
 
-import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS, competitionRoundWindows } from "@/data/site-content";
+import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import { getCompetitionRoundWindow, getTimelineItemById } from "@/lib/competition";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
   createRound1ExamPaper,
@@ -59,8 +60,14 @@ function endOfVietnamDay(date: string) {
   return new Date(`${date}T23:59:59.999+07:00`);
 }
 
-function isRound1Finished(now = new Date()) {
-  const round1Window = competitionRoundWindows.find((item) => item.round === "round-1");
+async function isRound1Finished(now = new Date()) {
+  const timelineItems = await readTimelineItems();
+  const round1Qualifier = getTimelineItemById("round-1-individual-qualifier", timelineItems);
+  if (round1Qualifier) {
+    return now.getTime() > endOfVietnamDay(round1Qualifier.endDate).getTime();
+  }
+
+  const round1Window = getCompetitionRoundWindow("round-1");
   if (!round1Window) {
     return false;
   }
@@ -79,7 +86,7 @@ async function isSubmissionRoundFinished(round: SubmissionRound, now = new Date(
   }
 
   const roundKey = round === SubmissionRound.ROUND_3 ? "round-3" : "round-2";
-  const roundWindow = competitionRoundWindows.find((item) => item.round === roundKey);
+  const roundWindow = getCompetitionRoundWindow(roundKey, timelineItems);
   if (!roundWindow) {
     return false;
   }
@@ -1131,7 +1138,7 @@ export async function startRound1Attempt(
       return fail(actorContext.status, actorContext.error);
     }
 
-    if (isRound1Finished()) {
+    if (await isRound1Finished()) {
       return fail(409, "Round 1 is finished. New Round 1 submissions are closed.");
     }
 
@@ -1311,7 +1318,7 @@ export async function submitRound1Attempt(
       return fail(409, "The team must finish the Round 1 lock protocol before any member can start the exam.");
     }
 
-    if (isRound1Finished()) {
+    if (await isRound1Finished()) {
       return fail(409, "Round 1 is finished. New Round 1 submissions are closed.");
     }
 

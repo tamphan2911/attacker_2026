@@ -45,7 +45,7 @@ function AdminUserProfileNotFound() {
 }
 
 export function AdminUserProfileView({ userId }: { userId: string }) {
-  const { locale, users, teams } = useSiteState();
+  const { locale, users, teams, timelineItems } = useSiteState();
   useAdminTitleScroll();
 
   const user = users.find((item) => item.id === userId);
@@ -55,7 +55,7 @@ export function AdminUserProfileView({ userId }: { userId: string }) {
     return <AdminUserProfileNotFound />;
   }
 
-  const competitionStatus = getAdminUserCompetitionStatus(locale, user, team);
+  const competitionStatus = getAdminUserCompetitionStatus(locale, user, team, timelineItems);
   const providerLabel = user.providers.length
     ? user.providers.map((provider) => pickProviderLabel(locale, provider)).join(" · ")
     : locale === "en"
