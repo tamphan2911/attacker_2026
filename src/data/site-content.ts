@@ -425,14 +425,8 @@ export const defaultPageContent: SitePageContent = {
   sponsors: {
     header: {
       eyebrow: { en: "Competition / Sponsors", vi: "Cuộc thi / Nhà tài trợ" },
-      title: {
-        en: "Sponsors who strengthen the competition beyond branding.",
-        vi: "Những nhà tài trợ giúp cuộc thi mạnh hơn không chỉ ở mặt hiện diện thương hiệu.",
-      },
-      description: {
-        en: "This page gives sponsors a dedicated space with clearer role definition, category positioning, and contribution context for Attacker 2026.",
-        vi: "Trang này tạo ra một không gian riêng cho nhà tài trợ, với vai trò, định vị và bối cảnh đồng hành rõ ràng hơn cho Attacker 2026.",
-      },
+      title: { en: "", vi: "" },
+      description: { en: "", vi: "" },
     },
     partnership: {
       eyebrow: { en: "Partnership structure", vi: "Cấu trúc đồng hành" },

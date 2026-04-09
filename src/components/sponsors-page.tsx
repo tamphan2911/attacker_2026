@@ -5,7 +5,7 @@ import Image from "next/image";
 import { sponsorProfiles } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { SectionHeading, Surface } from "@/components/site-ui";
+import { Surface } from "@/components/site-ui";
 import type { LocalizedText } from "@/types/site";
 
 function getSponsorTierStyle(tier: LocalizedText) {
@@ -40,11 +40,11 @@ export function SponsorsPage() {
   return (
     <div className="space-y-16">
       <section>
-        <SectionHeading
-          eyebrow={pickText(locale, pageContent.sponsors.header.eyebrow)}
-          title={pickText(locale, pageContent.sponsors.header.title)}
-          description={pickText(locale, pageContent.sponsors.header.description)}
-        />
+        <div className="max-w-3xl">
+          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
+            {pickText(locale, pageContent.sponsors.header.eyebrow)}
+          </p>
+        </div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
