@@ -218,7 +218,17 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
       }
 
       const tasks: JudgeDashboardTeamTask[] = Array.from(latestByRoundTeam.values())
-        .filter((submission) => normalizeRoundFromSubmission(submission.round) === round)
+        .filter((submission) => {
+          if (normalizeRoundFromSubmission(submission.round) !== round) {
+            return false;
+          }
+
+          if (round === "round-2") {
+            return submission.judgeReviews.length > 0;
+          }
+
+          return true;
+        })
         .sort((left, right) => right.submittedAt.getTime() - left.submittedAt.getTime())
         .map((submission) => {
           const review = submission.judgeReviews[0];
@@ -435,6 +445,10 @@ export async function getJudgeTeamSubmissionDetail(
     return fail(403, "This judge is not assigned to that round.");
   }
 
+  if (round === "round-2" && submission.judgeReviews.length === 0) {
+    return fail(403, "This judge is not assigned to this Round 2 submission.");
+  }
+
   const review = submission.judgeReviews[0];
 
   return ok({
@@ -525,5 +539,25 @@ export async function canJudgeAccessTeamSubmissionFile(
     return false;
   }
 
-  return assignment.data.rounds.includes(normalizeRoundFromSubmission(submission.round));
+  if (!assignment.data.rounds.includes(normalizeRoundFromSubmission(submission.round))) {
+    return false;
+  }
+
+  if (normalizeRoundFromSubmission(submission.round) === "round-2") {
+    const review = await prisma.teamSubmissionJudgeReview.findUnique({
+      where: {
+        judgeUserId_submissionId: {
+          judgeUserId: userId,
+          submissionId,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return Boolean(review);
+  }
+
+  return true;
 }
