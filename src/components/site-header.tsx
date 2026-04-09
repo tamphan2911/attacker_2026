@@ -73,7 +73,7 @@ const primaryNavItems: Array<{
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
   { href: "/forum", label: { en: "Forum", vi: "Diễn đàn" } },
   { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
-  { href: "/organizer", label: { en: "About Attacker", vi: "Giới thiệu Attacker" } },
+  { href: "/organizer", label: { en: "About", vi: "Giới thiệu" } },
   { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
 ];
 

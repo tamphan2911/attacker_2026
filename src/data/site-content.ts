@@ -151,7 +151,7 @@ export const navItems: NavItem[] = [
   { href: "/rules", label: { en: "Rules", vi: "Thể lệ" } },
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
   { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
-  { href: "/organizer", label: { en: "About Attacker", vi: "Giới thiệu Attacker" } },
+  { href: "/organizer", label: { en: "About", vi: "Giới thiệu" } },
   { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
 ];
 
