@@ -80,6 +80,20 @@ const outcomeMeta: Array<{
   },
 ];
 
+function getOutcomeTone(outcome: Exclude<TeamFinalOutcome, "emerging-team">) {
+  switch (outcome) {
+    case "champion":
+      return "warning" as const;
+    case "runner-up":
+      return "info" as const;
+    case "third-place":
+      return "default" as const;
+    case "fourth-place":
+    default:
+      return "success" as const;
+  }
+}
+
 function getLeader(team: TeamProfile, users: UserProfile[]) {
   return users.find((user) => user.id === team.leaderId);
 }
@@ -97,9 +111,132 @@ function getTeamsForOutcome(teams: TeamProfile[], outcome: TeamFinalOutcome, slo
     .slice(0, slots);
 }
 
+function ResultDiagramNode({
+  meta,
+  team,
+  leader,
+  locale,
+  isCurrentTeam,
+  featured = false,
+}: {
+  meta: (typeof outcomeMeta)[number];
+  team: TeamProfile | null;
+  leader?: UserProfile;
+  locale: "en" | "vi";
+  isCurrentTeam: boolean;
+  featured?: boolean;
+}) {
+  const Icon = meta.icon;
+
+  if (!team) {
+    return (
+      <div
+        className={`relative overflow-hidden rounded-[1.8rem] border px-5 py-5 ${
+          featured ? "md:px-6 md:py-6" : ""
+        } border-dashed border-slate-400/24 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,250,252,0.92))] dark:border-white/12 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.03))]`}
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.15rem] border ${meta.iconClass}`}
+          >
+            <Icon className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+              {pickText(locale, meta.title)}
+            </p>
+            <p className="mt-2 text-lg font-semibold theme-text-strong">
+              {locale === "en" ? "Awaiting official announcement" : "Đang chờ công bố chính thức"}
+            </p>
+            <p className="mt-2 text-sm leading-7 theme-text-soft">
+              {locale === "en"
+                ? "This award node will be filled when the final judging board publishes the official result."
+                : "Nút danh hiệu này sẽ được điền khi hội đồng chung kết công bố kết quả chính thức."}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`relative overflow-hidden rounded-[1.9rem] border px-5 py-5 shadow-[0_18px_42px_rgba(14,37,66,0.1)] dark:shadow-none ${
+        featured ? "md:px-6 md:py-6" : ""
+      } ${meta.shellClass} ${isCurrentTeam ? "ring-1 ring-sky-500/28 dark:ring-sky-300/20" : ""}`}
+    >
+      <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(255,255,255,0),rgba(23,114,208,0.42),rgba(255,255,255,0))]" />
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <div
+              className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.15rem] border ${meta.iconClass}`}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                {pickText(locale, meta.eyebrow)}
+              </p>
+              <h2 className={`theme-heading font-semibold theme-text-strong ${featured ? "text-2xl" : "text-xl"}`}>
+                {pickText(locale, meta.title)}
+              </h2>
+            </div>
+          </div>
+          <p className="mt-4 text-sm leading-7 theme-text-muted">{pickText(locale, meta.note)}</p>
+        </div>
+
+        <div className="flex flex-col items-end gap-2">
+          <StatusPill tone={getOutcomeTone(meta.outcome)}>{`#${team.tag}`}</StatusPill>
+          {isCurrentTeam ? (
+            <StatusPill tone="info">{locale === "en" ? "Your team" : "Đội của bạn"}</StatusPill>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mt-6 flex items-start gap-4">
+        <GradientAvatar
+          label={team.name}
+          tone={team.avatarTone}
+          imageSrc={team.avatarImageSrc}
+          className={`${featured ? "h-16 w-16 rounded-[1.2rem]" : "h-14 w-14 rounded-[1.15rem]"}`}
+        />
+        <div className="min-w-0">
+          <h3 className={`theme-heading font-semibold theme-text-strong ${featured ? "text-[1.55rem]" : "text-[1.2rem]"}`}>
+            {team.name}
+          </h3>
+          <p className="mt-2 text-sm leading-7 theme-text-body">{team.track}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <StatusPill tone={getOutcomeTone(meta.outcome)}>{pickText(locale, meta.title)}</StatusPill>
+            <StatusPill>
+              {leader?.name
+                ? `${locale === "en" ? "Leader" : "Đội trưởng"} · ${leader.name}`
+                : locale === "en"
+                  ? "Leader update pending"
+                  : "Đang cập nhật đội trưởng"}
+            </StatusPill>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function FinalResultsPage() {
   const { locale, teams, users, currentTeam } = useSiteState();
   const round3Window = competitionRoundWindows.find((window) => window.round === "round-3");
+  const championMeta = outcomeMeta.find((meta) => meta.outcome === "champion")!;
+  const runnerUpMeta = outcomeMeta.find((meta) => meta.outcome === "runner-up")!;
+  const thirdPlaceMeta = outcomeMeta.find((meta) => meta.outcome === "third-place")!;
+  const fourthPlaceMeta = outcomeMeta.find((meta) => meta.outcome === "fourth-place")!;
+
+  const championTeam = getTeamsForOutcome(teams, "champion", 1)[0] ?? null;
+  const runnerUpTeam = getTeamsForOutcome(teams, "runner-up", 1)[0] ?? null;
+  const thirdPlaceTeam = getTeamsForOutcome(teams, "third-place", 1)[0] ?? null;
+  const fourthPlaceTeams = Array.from(
+    { length: fourthPlaceMeta.slots },
+    (_, index) => getTeamsForOutcome(teams, "fourth-place", fourthPlaceMeta.slots)[index] ?? null,
+  );
 
   return (
     <div className="space-y-12 md:space-y-16">
@@ -145,112 +282,99 @@ export function FinalResultsPage() {
         </div>
       </section>
 
-      <section className="space-y-5">
-        {outcomeMeta.map((meta) => {
-          const Icon = meta.icon;
-          const teamsForOutcome = getTeamsForOutcome(teams, meta.outcome, meta.slots);
-          const slots = Array.from({ length: meta.slots }, (_, index) => teamsForOutcome[index] ?? null);
+      <Surface className="overflow-hidden px-6 py-6 md:px-8 md:py-8">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] theme-eyebrow">
+              {locale === "en" ? "Award map" : "Sơ đồ giải thưởng"}
+            </p>
+            <h2 className="theme-heading mt-3 text-3xl font-semibold tracking-tight theme-text-strong md:text-[2.7rem] md:leading-[1.06]">
+              {locale === "en"
+                ? "A diagram view of the final result structure."
+                : "Sơ đồ trực quan cho cấu trúc kết quả chung kết."}
+            </h2>
+            <p className="mt-4 text-base leading-8 theme-text-muted">
+              {locale === "en"
+                ? "The award map starts with the champion, then branches to the remaining podium places and the two shared 4th-place teams."
+                : "Sơ đồ giải thưởng bắt đầu từ quán quân, sau đó phân nhánh tới các vị trí còn lại trên bục xếp hạng và hai đội đồng hạng 4."}
+            </p>
+          </div>
 
-          return (
-            <Surface key={meta.outcome} className={`overflow-hidden px-6 py-6 md:px-7 md:py-7 ${meta.shellClass}`}>
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                <div className="max-w-2xl">
-                  <div className="flex items-center gap-3">
-                    <div className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.15rem] border ${meta.iconClass}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                        {pickText(locale, meta.eyebrow)}
-                      </p>
-                      <h2 className="theme-heading mt-1 text-2xl font-semibold theme-text-strong">
-                        {pickText(locale, meta.title)}
-                      </h2>
-                    </div>
-                  </div>
-                  <p className="mt-4 text-sm leading-8 theme-text-muted">{pickText(locale, meta.note)}</p>
-                </div>
+          <div className="flex flex-wrap gap-2">
+            <StatusPill tone="warning">{locale === "en" ? "1 Champion" : "1 Quán quân"}</StatusPill>
+            <StatusPill tone="info">{locale === "en" ? "1 Runner-up" : "1 Á quân"}</StatusPill>
+            <StatusPill>{locale === "en" ? "1 Third place" : "1 Quý quân"}</StatusPill>
+            <StatusPill tone="success">{locale === "en" ? "2 Fourth-place teams" : "2 đội hạng 4"}</StatusPill>
+          </div>
+        </div>
 
-                <StatusPill tone={meta.outcome === "fourth-place" ? "success" : meta.outcome === "third-place" ? "warning" : "info"}>
-                  {meta.slots} {locale === "en" ? (meta.slots > 1 ? "slots" : "slot") : (meta.slots > 1 ? "suất" : "suất")}
-                </StatusPill>
-              </div>
+        <div className="mt-8 lg:mt-10">
+          <div className="mx-auto max-w-[34rem]">
+            <ResultDiagramNode
+              meta={championMeta}
+              team={championTeam}
+              leader={championTeam ? getLeader(championTeam, users) : undefined}
+              locale={locale}
+              isCurrentTeam={currentTeam?.id === championTeam?.id}
+              featured
+            />
+          </div>
 
-              <div className={`mt-6 grid gap-4 ${meta.slots === 1 ? "lg:grid-cols-1" : "lg:grid-cols-2"}`}>
-                {slots.map((team, index) => {
-                  if (!team) {
-                    return (
-                      <div
-                        key={`${meta.outcome}-placeholder-${index}`}
-                        className="rounded-[1.45rem] border border-dashed border-slate-400/24 bg-white/76 px-5 py-5 dark:border-white/12 dark:bg-white/[0.04]"
-                      >
-                        <div className="flex items-start gap-4">
-                          <div className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] border ${meta.iconClass}`}>
-                            <Icon className="h-4.5 w-4.5" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-base font-semibold theme-text-strong">
-                              {locale === "en" ? "Awaiting official update" : "Đang chờ cập nhật chính thức"}
-                            </p>
-                            <p className="mt-2 text-sm leading-7 theme-text-soft">
-                              {locale === "en"
-                                ? "This result slot is ready and will be filled when the final scoring is published."
-                                : "Vị trí kết quả này đã sẵn sàng và sẽ được điền khi công bố điểm chung kết."}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
+          <div className="mx-auto hidden h-16 w-[62%] lg:block">
+            <div className="mx-auto h-8 w-px bg-[linear-gradient(180deg,rgba(23,114,208,0.42),rgba(23,114,208,0.1))]" />
+            <div className="relative h-8">
+              <div className="absolute inset-x-[14%] top-0 border-t border-dashed border-sky-500/28 dark:border-sky-300/18" />
+              <div className="absolute left-[14%] top-0 h-8 w-px bg-[linear-gradient(180deg,rgba(23,114,208,0.28),rgba(23,114,208,0.06))]" />
+              <div className="absolute right-[14%] top-0 h-8 w-px bg-[linear-gradient(180deg,rgba(23,114,208,0.28),rgba(23,114,208,0.06))]" />
+            </div>
+          </div>
 
-                  const leader = getLeader(team, users);
-                  const isCurrentTeam = currentTeam?.id === team.id;
+          <div className="grid gap-6 lg:grid-cols-2">
+            <ResultDiagramNode
+              meta={runnerUpMeta}
+              team={runnerUpTeam}
+              leader={runnerUpTeam ? getLeader(runnerUpTeam, users) : undefined}
+              locale={locale}
+              isCurrentTeam={currentTeam?.id === runnerUpTeam?.id}
+            />
+            <ResultDiagramNode
+              meta={thirdPlaceMeta}
+              team={thirdPlaceTeam}
+              leader={thirdPlaceTeam ? getLeader(thirdPlaceTeam, users) : undefined}
+              locale={locale}
+              isCurrentTeam={currentTeam?.id === thirdPlaceTeam?.id}
+            />
+          </div>
 
-                  return (
-                    <div
-                      key={team.id}
-                      className={`rounded-[1.45rem] border px-5 py-5 shadow-[0_18px_38px_rgba(14,37,66,0.08)] dark:shadow-none ${isCurrentTeam ? "border-sky-500/28 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(235,245,255,0.96))] dark:border-sky-300/22 dark:bg-[linear-gradient(135deg,rgba(11,24,45,0.9),rgba(8,20,39,0.86))]" : "border-white/55 bg-white/78 dark:border-white/10 dark:bg-white/[0.05]"}`}
-                    >
-                      <div className="flex items-start gap-4">
-                        <GradientAvatar
-                          label={team.name}
-                          tone={team.avatarTone}
-                          imageSrc={team.avatarImageSrc}
-                          className="h-14 w-14 rounded-[1.15rem]"
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="theme-heading text-xl font-semibold theme-text-strong">{team.name}</h3>
-                            <StatusPill>{`#${team.tag}`}</StatusPill>
-                            {isCurrentTeam ? (
-                              <StatusPill tone="info">
-                                {locale === "en" ? "Your team" : "Đội của bạn"}
-                              </StatusPill>
-                            ) : null}
-                          </div>
-                          <p className="mt-2 text-sm leading-7 theme-text-body">{team.track}</p>
-                          <div className="mt-3 flex flex-wrap gap-2">
-                            <StatusPill tone={meta.outcome === "fourth-place" ? "success" : meta.outcome === "third-place" ? "warning" : "info"}>
-                              {pickText(locale, meta.title)}
-                            </StatusPill>
-                            <StatusPill>
-                              {leader?.name
-                                ? `${locale === "en" ? "Leader" : "Đội trưởng"} · ${leader.name}`
-                                : locale === "en"
-                                  ? "Leader update pending"
-                                  : "Đang cập nhật đội trưởng"}
-                            </StatusPill>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </Surface>
-          );
-        })}
-      </section>
+          <div className="mx-auto hidden h-16 w-[74%] lg:block">
+            <div className="mx-auto h-8 w-px bg-[linear-gradient(180deg,rgba(23,114,208,0.36),rgba(23,114,208,0.08))]" />
+            <div className="relative h-8">
+              <div className="absolute inset-x-[10%] top-0 border-t border-dashed border-emerald-500/28 dark:border-emerald-300/18" />
+              <div className="absolute left-[10%] top-0 h-8 w-px bg-[linear-gradient(180deg,rgba(16,185,129,0.24),rgba(16,185,129,0.04))]" />
+              <div className="absolute right-[10%] top-0 h-8 w-px bg-[linear-gradient(180deg,rgba(16,185,129,0.24),rgba(16,185,129,0.04))]" />
+            </div>
+          </div>
+
+          <div className="mt-2 flex items-center justify-center">
+            <span className="inline-flex items-center rounded-full border border-emerald-500/22 bg-[linear-gradient(135deg,rgba(240,253,244,0.96),rgba(209,250,229,0.9))] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-900 dark:border-emerald-300/18 dark:bg-[linear-gradient(135deg,rgba(6,78,59,0.42),rgba(6,95,70,0.28))] dark:text-emerald-100">
+              {locale === "en" ? "Shared fourth-place branch" : "Nhánh đồng hạng 4"}
+            </span>
+          </div>
+
+          <div className="mt-5 grid gap-6 lg:grid-cols-2">
+            {fourthPlaceTeams.map((team, index) => (
+              <ResultDiagramNode
+                key={team?.id ?? `fourth-${index}`}
+                meta={fourthPlaceMeta}
+                team={team}
+                leader={team ? getLeader(team, users) : undefined}
+                locale={locale}
+                isCurrentTeam={currentTeam?.id === team?.id}
+              />
+            ))}
+          </div>
+        </div>
+      </Surface>
     </div>
   );
 }
