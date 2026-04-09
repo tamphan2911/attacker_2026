@@ -78,20 +78,6 @@ function OverviewSection() {
 
   return (
     <div className="space-y-8">
-      <SectionHeading
-        eyebrow={locale === "en" ? "Admin mode" : "Admin mode"}
-        title={
-          locale === "en"
-            ? "Restricted operations, content control, and export tools in one place."
-            : "Mot noi duy nhat cho van hanh gioi han, quan ly noi dung va cong cu xuat du lieu."
-        }
-        description={
-          locale === "en"
-            ? "This admin mode is restricted to admin and moderator accounts. It stays out of the public menu and is intended to be opened directly by link."
-            : "Admin mode này chỉ dành cho tài khoản admin và moderator. Khu vực này không nằm trong menu công khai và được mở trực tiếp bằng link."
-        }
-      />
-
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
           {
