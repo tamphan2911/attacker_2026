@@ -42,6 +42,7 @@ const timelinePhaseMeta: Array<{
   iconClass: string;
   buttonClass: string;
   statusClass: string;
+  darkStatusClass: string;
 }> = [
   {
     phase: "general",
@@ -60,6 +61,7 @@ const timelinePhaseMeta: Array<{
       "border-violet-600/24 bg-[linear-gradient(135deg,rgba(124,58,237,0.12),rgba(168,85,247,0.08))] text-violet-800 hover:border-violet-600/34 hover:bg-[linear-gradient(135deg,rgba(124,58,237,0.16),rgba(168,85,247,0.12))] dark:border-violet-300/22 dark:bg-violet-300/[0.12] dark:text-violet-100",
     statusClass:
       "border-violet-600/20 bg-violet-500/12 text-violet-800 dark:border-violet-300/22 dark:bg-violet-300/[0.12] dark:text-violet-100",
+    darkStatusClass: "dark:border-violet-300/22 dark:bg-violet-300/[0.12] dark:text-violet-100",
   },
   {
     phase: "round-1",
@@ -78,6 +80,7 @@ const timelinePhaseMeta: Array<{
       "border-sky-600/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(59,130,246,0.08))] text-sky-800 hover:border-sky-600/34 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.12))] dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
     statusClass:
       "border-sky-600/20 bg-sky-500/12 text-sky-800 dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
+    darkStatusClass: "dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100",
   },
   {
     phase: "round-2",
@@ -96,6 +99,7 @@ const timelinePhaseMeta: Array<{
       "border-emerald-600/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.12),rgba(52,211,153,0.08))] text-emerald-800 hover:border-emerald-600/34 hover:bg-[linear-gradient(135deg,rgba(16,185,129,0.16),rgba(52,211,153,0.12))] dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
     statusClass:
       "border-emerald-600/20 bg-emerald-500/12 text-emerald-800 dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
+    darkStatusClass: "dark:border-emerald-300/22 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
   },
   {
     phase: "round-3",
@@ -114,6 +118,7 @@ const timelinePhaseMeta: Array<{
       "border-amber-600/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.12),rgba(249,115,22,0.08))] text-amber-800 hover:border-amber-600/34 hover:bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(249,115,22,0.12))] dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
     statusClass:
       "border-amber-600/20 bg-amber-500/12 text-amber-800 dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
+    darkStatusClass: "dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
   },
 ];
 
@@ -250,7 +255,11 @@ function formatCountdown(locale: "en" | "vi", distanceMs: number) {
   return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
 }
 
-function getTimelineCardStatusClass(status: TimelineCardStatus, phaseStatusClass: string) {
+function getTimelineCardStatusClass(
+  status: TimelineCardStatus,
+  phaseStatusClass: string,
+  phaseDarkStatusClass: string,
+) {
   switch (status) {
     case "ongoing":
       return `${phaseStatusClass} shadow-[0_18px_34px_rgba(15,23,42,0.08)] dark:shadow-none`;
@@ -260,7 +269,7 @@ function getTimelineCardStatusClass(status: TimelineCardStatus, phaseStatusClass
       return "border-slate-300/28 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(241,245,249,0.96))] text-slate-700 dark:border-white/14 dark:bg-white/[0.06] dark:text-slate-200";
     case "not-started":
     default:
-      return "border-slate-300/24 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] text-slate-700 dark:border-white/14 dark:bg-white/[0.06] dark:text-slate-200";
+      return `border-slate-300/24 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] text-slate-700 ${phaseDarkStatusClass} dark:shadow-none`;
   }
 }
 
@@ -494,7 +503,7 @@ export function TimelinePage() {
                           </h3>
                         </div>
                         <span
-                          className={`inline-flex min-w-[12rem] flex-col items-start rounded-[1.1rem] border px-4 py-2.5 text-left ${getTimelineCardStatusClass(statusMeta.status, phase.statusClass)}`}
+                          className={`inline-flex min-w-[12rem] flex-col items-start rounded-[1.1rem] border px-4 py-2.5 text-left ${getTimelineCardStatusClass(statusMeta.status, phase.statusClass, phase.darkStatusClass)}`}
                         >
                           <span className="inline-flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em]">
                             <StatusIcon className="h-3.5 w-3.5" />
