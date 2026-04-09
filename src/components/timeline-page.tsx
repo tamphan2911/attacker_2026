@@ -8,14 +8,28 @@ import {
   CheckCircle2,
   Clock3,
   Flag,
+  FileBadge2,
+  FileUp,
+  Presentation,
   Route,
   ShieldCheck,
 } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
+import {
+  canTeamTakeRound1,
+  isRoundFinished,
+  isTeamCurrentlyCompetingRound,
+} from "@/lib/competition";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
-import type { CompetitionRoundKey, TimelineItem } from "@/types/site";
+import type {
+  CompetitionRoundKey,
+  LocalizedText,
+  TeamProfile,
+  TimelineItem,
+  UserRole,
+} from "@/types/site";
 
 const timelinePhaseMeta: Array<{
   phase: "general" | CompetitionRoundKey;
@@ -105,8 +119,104 @@ const timelinePhaseMeta: Array<{
 
 type TimelineCardStatus = "finished" | "ongoing" | "upcoming" | "not-started";
 
+interface TimelineActionLink {
+  key: string;
+  href?: string;
+  label: LocalizedText;
+  icon: typeof ArrowRight;
+  disabled?: boolean;
+  title?: LocalizedText;
+}
+
 function getTimelineItemKey(item: TimelineItem) {
   return item.id;
+}
+
+function buildTimelineActionLinks({
+  item,
+  currentUserRole,
+  currentTeam,
+  activeUserId,
+  now,
+}: {
+  item: TimelineItem;
+  currentUserRole: UserRole;
+  currentTeam?: TeamProfile;
+  activeUserId: string;
+  now: Date;
+}): TimelineActionLink[] {
+  const actionLinks: TimelineActionLink[] = [];
+
+  if (item.id === "round-2-top-5-announcement" || item.id === "round-3-grand-final") {
+    actionLinks.push({
+      key: `${item.id}-finalists`,
+      href: "/competition/finalists",
+      label: { en: "Read result update", vi: "Đọc cập nhật kết quả" },
+      icon: Presentation,
+    });
+  }
+
+  for (const supportLink of item.supportLinks ?? []) {
+    if (item.id === "round-1-individual-qualifier" && supportLink.href === "/round-1") {
+      if (currentUserRole === "student" && currentTeam && canTeamTakeRound1(currentTeam, now)) {
+        actionLinks.push({
+          key: `${item.id}-${supportLink.href}`,
+          href: supportLink.href,
+          label: supportLink.label,
+          icon: FileBadge2,
+        });
+      }
+      continue;
+    }
+
+    if (item.id === "round-2-report-submission" && supportLink.href === "/dashboard") {
+      if (
+        currentUserRole === "student" &&
+        currentTeam &&
+        currentTeam.leaderId === activeUserId &&
+        isTeamCurrentlyCompetingRound(currentTeam, "round-2")
+      ) {
+        const round2Closed = isRoundFinished("round-2", now);
+        actionLinks.push({
+          key: `${item.id}-${supportLink.href}`,
+          href: round2Closed ? undefined : "/dashboard#round-2-section",
+          label: supportLink.label,
+          icon: FileUp,
+          disabled: round2Closed,
+          title: round2Closed
+            ? {
+                en: "Round 2 submission window has closed.",
+                vi: "Hạn nộp bài Vòng 2 đã kết thúc.",
+              }
+            : undefined,
+        });
+      }
+      continue;
+    }
+
+    if (
+      (item.id === "round-2-top-5-announcement" || item.id === "round-3-grand-final") &&
+      supportLink.href === "/news"
+    ) {
+      continue;
+    }
+
+    if (item.id === "round-3-grand-final" && supportLink.href === "/competition") {
+      continue;
+    }
+
+    actionLinks.push({
+      key: `${item.id}-${supportLink.href}`,
+      href:
+        item.id === "round-2-top-5-announcement" && supportLink.href === "/news"
+          ? "/competition/finalists"
+          : supportLink.href,
+      label: supportLink.label,
+      icon: ArrowRight,
+    });
+  }
+
+  return actionLinks;
 }
 
 function parseLocalDate(value: string, endOfDay = false) {
@@ -210,7 +320,7 @@ function getTimelineCardStatusMeta(
 }
 
 export function TimelinePage() {
-  const { locale, timelineItems } = useSiteState();
+  const { locale, timelineItems, currentUser, currentTeam, activeUserId } = useSiteState();
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -375,6 +485,13 @@ export function TimelinePage() {
                   {items.map((item) => {
                     const statusMeta = getTimelineCardStatusMeta(item, now, locale, nextUpcomingKey);
                     const StatusIcon = statusMeta.icon;
+                    const actionLinks = buildTimelineActionLinks({
+                      item,
+                      currentUserRole: currentUser.role,
+                      currentTeam,
+                      activeUserId,
+                      now,
+                    });
 
                     return (
                     <Surface key={item.id} className="theme-timeline-card px-5 py-5">
@@ -432,18 +549,33 @@ export function TimelinePage() {
                         <p className="mt-2 text-sm leading-8 theme-text-soft">{pickText(locale, item.description)}</p>
                       </div>
 
-                      {item.supportLinks?.length ? (
+                      {actionLinks.length ? (
                         <div className="mt-4 flex flex-wrap gap-3">
-                          {item.supportLinks.map((supportLink) => (
-                            <Link
-                              key={`${item.id}-${supportLink.href}`}
-                              href={supportLink.href}
-                              className="theme-timeline-link inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition active:scale-[0.98]"
-                            >
-                              {pickText(locale, supportLink.label)}
-                              <ArrowRight className="h-3.5 w-3.5" />
-                            </Link>
-                          ))}
+                          {actionLinks.map((actionLink) =>
+                            actionLink.disabled ? (
+                              <button
+                                key={actionLink.key}
+                                type="button"
+                                disabled
+                                title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
+                                className="theme-timeline-link inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium opacity-75"
+                              >
+                                <actionLink.icon className="h-3.5 w-3.5" />
+                                {pickText(locale, actionLink.label)}
+                              </button>
+                            ) : (
+                              <Link
+                                key={actionLink.key}
+                                href={actionLink.href ?? "#"}
+                                title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
+                                className="theme-timeline-link inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition active:scale-[0.98]"
+                              >
+                                <actionLink.icon className="h-3.5 w-3.5" />
+                                {pickText(locale, actionLink.label)}
+                                <ArrowRight className="h-3.5 w-3.5" />
+                              </Link>
+                            ),
+                          )}
                         </div>
                       ) : null}
                     </Surface>
