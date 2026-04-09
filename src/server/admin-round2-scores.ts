@@ -105,14 +105,11 @@ export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]>
       };
     })
     .sort((left, right) => {
-      const rank: Record<AdminRound2ScoreStatus, number> = {
-        "not-scored": 0,
-        "partially-scored": 1,
-        scored: 2,
-      };
+      const leftAverage = left.averageScore ?? Number.NEGATIVE_INFINITY;
+      const rightAverage = right.averageScore ?? Number.NEGATIVE_INFINITY;
 
-      if (rank[left.status] !== rank[right.status]) {
-        return rank[left.status] - rank[right.status];
+      if (leftAverage !== rightAverage) {
+        return rightAverage - leftAverage;
       }
 
       return right.submittedAt.localeCompare(left.submittedAt);
