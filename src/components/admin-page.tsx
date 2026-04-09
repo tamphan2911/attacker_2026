@@ -5,6 +5,8 @@ import { useMemo, useState, type ReactNode } from "react";
 import {
   Download,
   FilePenLine,
+  Filter,
+  Search,
   Trash2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -559,34 +561,81 @@ function UsersTableSection() {
 function TeamsTableSection() {
   const { locale, teams, users, deleteTeamByAdmin } = useSiteState();
   useAdminTitleScroll();
+  const [search, setSearch] = useState("");
+  const [stageFilter, setStageFilter] = useState<"all" | "round-1" | "round-2" | "round-3">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "warning" | "default" | "success" | "info">("all");
+  const [trackFilter, setTrackFilter] = useState("");
 
-  const rows = teams.map((team) => {
-    const leader = users.find((user) => user.id === team.leaderId);
-    const members = team.memberIds
-      .map((memberId) => users.find((user) => user.id === memberId)?.name ?? memberId)
-      .join(", ");
+  const rows = useMemo(
+    () =>
+      teams.map((team) => {
+        const leader = users.find((user) => user.id === team.leaderId);
+        const members = team.memberIds
+          .map((memberId) => users.find((user) => user.id === memberId)?.name ?? memberId)
+          .join(", ");
 
-    return {
-      id: team.id,
-      team: team.name,
-      tag: team.tag,
-      leader: leader?.name ?? "",
-      memberCount: team.memberIds.length,
-      statusTone: pickTeamDisplayStatusTone(team),
-      status: pickTeamDisplayStatusLabel(locale, team),
-      stage: pickCompetitionStateLabel(locale, team.stage),
-      track: team.track,
-      createdAt: team.createdAt,
-      members,
-    };
-  });
+        return {
+          id: team.id,
+          team: team.name,
+          tag: team.tag,
+          leader: leader?.name ?? "",
+          memberCount: team.memberIds.length,
+          statusTone: pickTeamDisplayStatusTone(team),
+          status: pickTeamDisplayStatusLabel(locale, team),
+          stageKey: team.stage,
+          stage: pickCompetitionStateLabel(locale, team.stage),
+          track: team.track,
+          createdAt: team.createdAt,
+          members,
+        };
+      }),
+    [locale, teams, users],
+  );
+
+  const filteredRows = useMemo(
+    () =>
+      rows.filter((row) => {
+        const searchSource = [row.team, row.tag, row.leader, row.track, row.members, row.id].join(" ");
+
+        if (!tableFilterValueMatches(searchSource, search)) {
+          return false;
+        }
+
+        if (stageFilter !== "all" && row.stageKey !== stageFilter) {
+          return false;
+        }
+
+        if (statusFilter !== "all" && row.statusTone !== statusFilter) {
+          return false;
+        }
+
+        if (!tableFilterValueMatches(row.track, trackFilter)) {
+          return false;
+        }
+
+        return true;
+      }),
+    [rows, search, stageFilter, statusFilter, trackFilter],
+  );
+
+  const exportRows = filteredRows.map((row) => ({
+    id: row.id,
+    team: row.team,
+    tag: row.tag,
+    leader: row.leader,
+    members: row.memberCount,
+    status: row.status,
+    stage: row.stage,
+    track: row.track,
+    createdAt: row.createdAt,
+  }));
   const {
     page,
     setPage,
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(rows, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -599,8 +648,75 @@ function TeamsTableSection() {
             : "Xem đội trưởng, số thành viên, mức độ sẵn sàng và ngày tạo đội."
         }
         exportLabel={locale === "en" ? "Export teams.xlsx" : "Xuat teams.xlsx"}
-        onExport={() => exportRowsToWorkbook("attacker-2026-teams.xlsx", "Teams", rows)}
+        onExport={() => exportRowsToWorkbook("attacker-2026-teams.xlsx", "Teams", exportRows)}
       />
+
+      <Surface className="px-5 py-5 md:px-6">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_200px_220px_220px]">
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Search className="h-3.5 w-3.5" />
+              {locale === "en" ? "Search" : "Tìm kiếm"}
+            </span>
+            <TableFilterField
+              value={search}
+              onChange={setSearch}
+              placeholder={
+                locale === "en"
+                  ? "Search by team, tag, leader, members..."
+                  : "Tìm theo đội, tag, đội trưởng, thành viên..."
+              }
+            />
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Stage" : "Vòng"}
+            </span>
+            <select
+              value={stageFilter}
+              onChange={(event) => setStageFilter(event.target.value as typeof stageFilter)}
+              className="theme-field h-11 w-full rounded-xl border px-3 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All stages" : "Tất cả vòng"}</option>
+              <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
+              <option value="round-2">{locale === "en" ? "Round 2" : "Vòng 2"}</option>
+              <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
+            </select>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Status" : "Trạng thái"}
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+              className="theme-field h-11 w-full rounded-xl border px-3 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All statuses" : "Tất cả trạng thái"}</option>
+              <option value="warning">{locale === "en" ? "Warning" : "Cảnh báo"}</option>
+              <option value="default">{locale === "en" ? "Neutral" : "Trung tính"}</option>
+              <option value="success">{locale === "en" ? "Positive" : "Tích cực"}</option>
+              <option value="info">{locale === "en" ? "Info" : "Thông tin"}</option>
+            </select>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Track" : "Định hướng"}
+            </span>
+            <TableFilterField
+              value={trackFilter}
+              onChange={setTrackFilter}
+              placeholder={locale === "en" ? "Filter track" : "Lọc định hướng"}
+            />
+          </label>
+        </div>
+      </Surface>
 
       <Surface className="overflow-hidden">
         <div className="overflow-x-auto">
@@ -677,7 +793,7 @@ function TeamsTableSection() {
           page={page}
           pageCount={pageCount}
           pageSize={ADMIN_TABLE_PAGE_SIZE}
-          totalRows={rows.length}
+          totalRows={filteredRows.length}
           onPageChange={setPage}
         />
       </Surface>
