@@ -41,12 +41,13 @@ import {
   countWords,
   getActiveRound1Bank,
   isRound1QuestionAnswered,
+  pickRound1QuestionText,
   pickRound1TypeLabel,
   type Round1PaperQuestion,
   type Round1QuestionResponse,
 } from "@/lib/round1";
 import { estimateEssayAiLikelihood } from "@/lib/essay-ai-guard";
-import { formatDateRangeLabel, pickText } from "@/lib/site";
+import { formatDateRangeLabel } from "@/lib/site";
 import type { Round1Submission } from "@/types/site";
 
 interface Round1ExamSession {
@@ -1481,7 +1482,7 @@ export function Round1ExamPage() {
               </div>
 
               <p className="mt-6 text-2xl font-semibold leading-10 theme-text-strong">
-                {pickText(locale, currentQuestion.prompt)}
+                {pickRound1QuestionText(currentQuestion.prompt)}
               </p>
 
               {(currentQuestion.type === "true-false" || currentQuestion.type === "single-choice") &&
@@ -1520,7 +1521,7 @@ export function Round1ExamPage() {
                             {option.displayLabel}
                           </div>
                           <p className="text-sm leading-7 theme-text-body">
-                            {pickText(locale, option.text)}
+                            {pickRound1QuestionText(option.text)}
                           </p>
                         </div>
                       </button>
@@ -1578,7 +1579,7 @@ export function Round1ExamPage() {
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm leading-7 theme-text-body">
-                              {pickText(locale, option.text)}
+                              {pickRound1QuestionText(option.text)}
                             </p>
                             {isSelected ? (
                               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
@@ -1613,7 +1614,7 @@ export function Round1ExamPage() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm leading-7 theme-text-body">
-                            {pickText(locale, item.prompt)}
+                            {pickRound1QuestionText(item.prompt)}
                           </p>
                           <label className="mt-4 block space-y-2">
                             <span className="text-xs uppercase tracking-[0.18em] theme-text-soft">
@@ -1646,7 +1647,7 @@ export function Round1ExamPage() {
                               </option>
                               {(currentQuestion.options ?? []).map((option) => (
                                 <option key={option.id} value={option.id}>
-                                  {`${option.displayLabel}. ${pickText(locale, option.text)}`}
+                                  {`${option.displayLabel}. ${pickRound1QuestionText(option.text)}`}
                                 </option>
                               ))}
                             </select>
@@ -1665,7 +1666,7 @@ export function Round1ExamPage() {
                       {locale === "en" ? "Response guidance" : "Hướng dẫn trả lời"}
                     </p>
                     <p className="mt-3 text-sm leading-7 theme-text-muted">
-                      {pickText(locale, currentQuestion.rubricNote ?? { en: "", vi: "" })}
+                      {pickRound1QuestionText(currentQuestion.rubricNote ?? { en: "", vi: "" })}
                     </p>
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                       <StatusPill tone="warning">
@@ -1683,8 +1684,7 @@ export function Round1ExamPage() {
                   <textarea
                     rows={8}
                     value={currentResponse?.essayText ?? ""}
-                    placeholder={pickText(
-                      locale,
+                    placeholder={pickRound1QuestionText(
                       currentQuestion.placeholder ?? { en: "", vi: "" },
                     )}
                     onChange={(event) =>

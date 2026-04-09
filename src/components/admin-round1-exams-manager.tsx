@@ -33,6 +33,7 @@ import {
   ROUND1_ESSAY_MAX_SCORE,
   ROUND1_ESSAY_WORD_LIMIT,
   getRound1QuestionOptionPreview,
+  pickRound1QuestionText,
   pickRound1TypeLabel,
 } from "@/lib/round1";
 import { estimateEssayAiLikelihood } from "@/lib/essay-ai-guard";
@@ -496,7 +497,7 @@ function OptionAnswerList({
             )}
           >
             <span className="mr-2 font-semibold">{option.displayLabel ?? option.label}.</span>
-            {option.text[locale]}
+            {pickRound1QuestionText(option.text)}
             {isSelected ? (
               <span className="ml-2 text-xs font-medium theme-text-soft">
                 {locale === "en" ? "(Selected)" : "(Đã chọn)"}
@@ -529,14 +530,14 @@ function PairingAnswerList({
               <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
                 {locale === "en" ? "Prompt" : "Vế trái"}
               </p>
-              <p className="mt-2 leading-7 theme-text-body">{item.prompt[locale]}</p>
+              <p className="mt-2 leading-7 theme-text-body">{pickRound1QuestionText(item.prompt)}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
                 {locale === "en" ? "Selected match" : "Lựa chọn đã nối"}
               </p>
               <p className="mt-2 leading-7 theme-text-strong">
-                {chosenOption ? `${chosenOption.displayLabel ?? chosenOption.label}. ${chosenOption.text[locale]}` : locale === "en" ? "No match selected" : "Chưa chọn đáp án"}
+                {chosenOption ? `${chosenOption.displayLabel ?? chosenOption.label}. ${pickRound1QuestionText(chosenOption.text)}` : locale === "en" ? "No match selected" : "Chưa chọn đáp án"}
               </p>
             </div>
           </div>
@@ -590,7 +591,7 @@ function QuestionRecordCard({
                   : "Chưa trả lời"}
             </StatusPill>
           </div>
-          <h3 className="theme-heading text-lg font-semibold theme-text-strong">{question.prompt[locale]}</h3>
+          <h3 className="theme-heading text-lg font-semibold theme-text-strong">{pickRound1QuestionText(question.prompt)}</h3>
           <p className="text-sm leading-7 theme-text-soft">{question.topic}</p>
         </div>
 

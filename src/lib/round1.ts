@@ -100,6 +100,14 @@ export function pickRound1TypeLabel(locale: Locale, type: Round1QuestionType) {
   return round1QuestionTypeLabels[type][locale];
 }
 
+export function pickRound1QuestionText(value?: LocalizedText | null) {
+  if (!value) {
+    return "";
+  }
+
+  return value.vi.trim() || value.en.trim();
+}
+
 export function getActiveRound1Bank(
   banks: Round1TestBank[],
   bankType: Round1TestBankType,
@@ -350,7 +358,7 @@ export function getRound1QuestionOptionPreview(question: Round1Question, locale:
     case "single-choice":
     case "multiple-choice":
       return (question.options ?? [])
-        .map((option) => `${option.label}. ${option.text[locale]}`)
+        .map((option) => `${option.label}. ${pickRound1QuestionText(option.text)}`)
         .join(" · ");
     case "pairing":
       return locale === "en"
@@ -358,7 +366,7 @@ export function getRound1QuestionOptionPreview(question: Round1Question, locale:
         : `${question.pairingItems?.length ?? 0} vế trái được nối với ${question.options?.length ?? 0} lựa chọn bên phải`;
     case "essay":
       return (
-        question.rubricNote?.[locale] ||
+        pickRound1QuestionText(question.rubricNote) ||
         (locale === "en" ? "Essay rubric" : "Hướng dẫn chấm")
       );
     default:

@@ -41,6 +41,7 @@ import {
   getRound1QuestionOptionPreview,
   getRound1QuestionStructureSummary,
   isRound1EssayPending,
+  pickRound1QuestionText,
   pickRound1TypeLabel,
 } from "@/lib/round1";
 import { formatDateLabel, pickText } from "@/lib/site";
@@ -83,33 +84,31 @@ function cloneRound1Question(question: Round1Question): Round1Question {
   return JSON.parse(JSON.stringify(question)) as Round1Question;
 }
 
-function LocalizedFieldEditor({
+function QuestionContentFieldEditor({
   label,
+  locale,
   value,
   rows = 3,
   onChange,
 }: {
   label: string;
+  locale: Locale;
   value: LocalizedText;
   rows?: number;
-  onChange: (locale: Locale, nextValue: string) => void;
+  onChange: (nextValue: string) => void;
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {(["en", "vi"] as Locale[]).map((locale) => (
-        <label key={locale} className="space-y-2">
-          <span className="text-sm theme-text-muted">
-            {`${label} (${locale.toUpperCase()})`}
-          </span>
-          <textarea
-            rows={rows}
-            value={value[locale]}
-            onChange={(event) => onChange(locale, event.target.value)}
-            className={fieldClassName}
-          />
-        </label>
-      ))}
-    </div>
+    <label className="block space-y-2">
+      <span className="text-sm theme-text-muted">
+        {`${label} (${locale === "en" ? "Vietnamese only" : "Chỉ tiếng Việt"})`}
+      </span>
+      <textarea
+        rows={rows}
+        value={pickRound1QuestionText(value)}
+        onChange={(event) => onChange(event.target.value)}
+        className={fieldClassName}
+      />
+    </label>
   );
 }
 
@@ -1246,7 +1245,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     </StatusPill>
                   </td>
                   <td className="px-4 py-4 theme-text-body">
-                    <p>{pickText(locale, question.prompt)}</p>
+                    <p>{pickRound1QuestionText(question.prompt)}</p>
                     <p className="mt-2 text-xs theme-text-soft">
                       {getRound1QuestionOptionPreview(question, locale)}
                     </p>
@@ -1848,14 +1847,15 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
           </div>
 
           <div className="mt-6">
-            <LocalizedFieldEditor
+            <QuestionContentFieldEditor
               label={locale === "en" ? "Question prompt" : "Prompt cau hoi"}
+              locale={locale}
               rows={5}
               value={draft.prompt}
-              onChange={(language, value) =>
+              onChange={(value) =>
                 setDraft((current) =>
                   current
-                    ? { ...current, prompt: { ...current.prompt, [language]: value } }
+                    ? { ...current, prompt: { en: value, vi: value } }
                     : current,
                 )
               }
@@ -1947,18 +1947,19 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
                         </div>
 
                         <div className="mt-4">
-                          <LocalizedFieldEditor
+                          <QuestionContentFieldEditor
                             label={locale === "en" ? `Option ${option.label} text` : `Noi dung ${option.label}`}
+                            locale={locale}
                             rows={3}
                             value={option.text}
-                            onChange={(language, value) =>
+                            onChange={(value) =>
                               setDraft((current) =>
                                 current
                                   ? {
                                       ...current,
                                       options: (current.options ?? []).map((item) =>
                                         item.id === option.id
-                                          ? { ...item, text: { ...item.text, [language]: value } }
+                                          ? { ...item, text: { en: value, vi: value } }
                                           : item,
                                       ),
                                     }
@@ -2019,11 +2020,12 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
                           </label>
                         </div>
                         <div className="mt-4">
-                          <LocalizedFieldEditor
+                          <QuestionContentFieldEditor
                             label={locale === "en" ? `Prompt ${item.label}` : `Noi dung ${item.label}`}
+                            locale={locale}
                             rows={3}
                             value={item.prompt}
-                            onChange={(language, value) =>
+                            onChange={(value) =>
                               setDraft((current) =>
                                 current
                                   ? {
@@ -2032,7 +2034,7 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
                                         pairingItem.id === item.id
                                           ? {
                                               ...pairingItem,
-                                              prompt: { ...pairingItem.prompt, [language]: value },
+                                              prompt: { en: value, vi: value },
                                             }
                                           : pairingItem,
                                       ),
@@ -2060,36 +2062,38 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
                     : "Xac dinh noi dung sinh vien nhin thay trong o nhap va ghi chu de moderator dung khi xem bai."}
                 </p>
               </div>
-              <LocalizedFieldEditor
+              <QuestionContentFieldEditor
                 label={locale === "en" ? "Essay placeholder" : "Placeholder bai viet"}
+                locale={locale}
                 rows={3}
                 value={draft.placeholder ?? createLocalizedEmpty()}
-                onChange={(language, value) =>
+                onChange={(value) =>
                   setDraft((current) =>
                     current
                       ? {
                           ...current,
                           placeholder: {
-                            ...(current.placeholder ?? createLocalizedEmpty()),
-                            [language]: value,
+                            en: value,
+                            vi: value,
                           },
                         }
                       : current,
                   )
                 }
               />
-              <LocalizedFieldEditor
+              <QuestionContentFieldEditor
                 label={locale === "en" ? "Rubric note" : "Ghi chu rubric"}
+                locale={locale}
                 rows={4}
                 value={draft.rubricNote ?? createLocalizedEmpty()}
-                onChange={(language, value) =>
+                onChange={(value) =>
                   setDraft((current) =>
                     current
                       ? {
                           ...current,
                           rubricNote: {
-                            ...(current.rubricNote ?? createLocalizedEmpty()),
-                            [language]: value,
+                            en: value,
+                            vi: value,
                           },
                         }
                       : current,
@@ -2130,7 +2134,7 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
               {locale === "en" ? "Live preview" : "Preview"}
             </p>
             <p className="mt-5 text-lg font-semibold leading-8 theme-text-strong">
-              {pickText(locale, draft.prompt)}
+              {pickRound1QuestionText(draft.prompt)}
             </p>
             <div className="mt-3">
               <StatusPill>{pickRound1TypeLabel(locale, draft.type)}</StatusPill>
@@ -2145,7 +2149,7 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm leading-6 theme-text-body">
-                          {pickText(locale, option.text)}
+                          {pickRound1QuestionText(option.text)}
                         </p>
                         {draft.correctOptionIds?.includes(option.id) ? (
                           <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
@@ -2166,10 +2170,10 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
                   return (
                     <div key={item.id} className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
                       <p className="text-sm font-semibold theme-text-strong">
-                        {`${item.label}. ${pickText(locale, item.prompt)}`}
+                        {`${item.label}. ${pickRound1QuestionText(item.prompt)}`}
                       </p>
                       <p className="mt-2 text-sm theme-text-muted">
-                        {locale === "en" ? "Correct match" : "Cap dung"}: {matchedOption ? `${matchedOption.label}. ${pickText(locale, matchedOption.text)}` : "--"}
+                        {locale === "en" ? "Correct match" : "Cap dung"}: {matchedOption ? `${matchedOption.label}. ${pickRound1QuestionText(matchedOption.text)}` : "--"}
                       </p>
                     </div>
                   );
@@ -2183,7 +2187,7 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
                     {locale === "en" ? "Placeholder" : "Placeholder"}
                   </p>
                   <p className="mt-2 text-sm leading-6 theme-text-body">
-                    {pickText(locale, draft.placeholder ?? createLocalizedEmpty())}
+                    {pickRound1QuestionText(draft.placeholder ?? createLocalizedEmpty())}
                   </p>
                 </div>
                 <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -2191,7 +2195,7 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
                     {locale === "en" ? "Rubric note" : "Rubric"}
                   </p>
                   <p className="mt-2 text-sm leading-6 theme-text-body">
-                    {pickText(locale, draft.rubricNote ?? createLocalizedEmpty())}
+                    {pickRound1QuestionText(draft.rubricNote ?? createLocalizedEmpty())}
                   </p>
                 </div>
               </div>

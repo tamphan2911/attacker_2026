@@ -17,7 +17,8 @@ import {
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface, StatusPill } from "@/components/site-ui";
-import { formatDateLabel, pickText } from "@/lib/site";
+import { pickRound1QuestionText } from "@/lib/round1";
+import { formatDateLabel } from "@/lib/site";
 import type { JudgeRound1Detail, JudgeTeamSubmissionDetail, Locale } from "@/types/site";
 
 function formatBytes(bytes?: number) {
@@ -280,13 +281,13 @@ export function JudgeRound1ScorePage({
                       </StatusPill>
                       <StatusPill>{`${essay.wordCount} ${locale === "en" ? "words" : "từ"}`}</StatusPill>
                     </div>
-                    <p className="mt-4 text-lg font-semibold leading-8 theme-text-strong">{pickText(locale, essay.prompt)}</p>
+                    <p className="mt-4 text-lg font-semibold leading-8 theme-text-strong">{pickRound1QuestionText(essay.prompt)}</p>
                     {essay.rubricNote ? (
                       <div className="mt-4 rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4">
                         <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
                           {locale === "en" ? "Rubric note" : "Ghi chú rubric"}
                         </p>
-                        <p className="mt-3 text-sm leading-7 theme-text-muted">{pickText(locale, essay.rubricNote)}</p>
+                        <p className="mt-3 text-sm leading-7 theme-text-muted">{pickRound1QuestionText(essay.rubricNote)}</p>
                       </div>
                     ) : null}
                     <div className="mt-4 rounded-[1.5rem] border theme-border bg-white/78 px-4 py-4 dark:bg-white/[0.04]">
