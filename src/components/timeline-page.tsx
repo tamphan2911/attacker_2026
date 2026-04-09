@@ -294,7 +294,7 @@ function getTimelineCardStatusClass(
       return "border-slate-300/28 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(241,245,249,0.96))] text-slate-700 dark:border-white/14 dark:bg-white/[0.06] dark:text-slate-200";
     case "not-started":
     default:
-      return `border-slate-300/24 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] text-slate-700 ${phaseDarkStatusClass} dark:shadow-none`;
+      return `border-slate-300/24 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] text-slate-700 dark:bg-none ${phaseDarkStatusClass} dark:shadow-none`;
   }
 }
 
