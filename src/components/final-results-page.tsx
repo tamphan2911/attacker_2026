@@ -187,6 +187,12 @@ function PlaceCard({
   const leader = team ? getLeader(team, users) : undefined;
   const teamMembers = team ? getTeamMembers(team, users) : [];
   const memberSlots = Array.from({ length: MEMBER_SLOT_COUNT }, (_, index) => teamMembers[index] ?? null);
+  const memberGridClass =
+    meta.outcome === "fourth-place"
+      ? "md:grid-cols-2 xl:grid-cols-3"
+      : featured
+        ? "md:grid-cols-2 xl:grid-cols-5"
+        : "md:grid-cols-2 xl:grid-cols-5";
 
   return (
     <div
@@ -263,7 +269,7 @@ function PlaceCard({
               {locale === "en" ? "Team members" : "Thành viên đội"}
             </p>
           </div>
-          <div className={`grid gap-3 ${featured ? "md:grid-cols-2 xl:grid-cols-5" : "md:grid-cols-2 xl:grid-cols-5"}`}>
+          <div className={`grid gap-3 ${memberGridClass}`}>
             {memberSlots.map((member, index) => (
               <MemberCard
                 key={member?.id ?? `${meta.outcome}-member-${index}`}
