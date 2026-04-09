@@ -273,9 +273,8 @@ export function TimelinePage() {
           </p>
         </div>
 
-        <Surface className="overflow-hidden px-4 py-5 md:px-5">
-          <div className="overflow-x-auto pb-2">
-            <div className="flex min-w-max items-stretch gap-4 pr-1">
+        <Surface className="px-4 py-5 md:px-5">
+          <div className="grid gap-4 lg:grid-cols-4">
               {phaseSummaries.map((phase, index) => {
                 const Icon = phase.icon;
 
@@ -283,7 +282,7 @@ export function TimelinePage() {
                   <div key={phase.phase} className="flex items-center gap-4">
                     <Link
                       href={`#${phase.anchor}`}
-                      className="group relative flex w-[260px] shrink-0 flex-col rounded-[1.55rem] border theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(246,249,252,0.96))] px-4 py-4 text-left shadow-[0_18px_40px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(15,23,42,0.1)] active:scale-[0.99] dark:bg-[linear-gradient(135deg,rgba(11,20,34,0.92),rgba(17,24,39,0.88))] dark:shadow-none"
+                      className="group relative flex min-h-[15rem] flex-1 flex-col rounded-[1.55rem] border theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(246,249,252,0.96))] px-4 py-4 text-left shadow-[0_18px_40px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(15,23,42,0.1)] active:scale-[0.99] dark:bg-[linear-gradient(135deg,rgba(11,20,34,0.92),rgba(17,24,39,0.88))] dark:shadow-none"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className={`inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border ${phase.iconClass}`}>
@@ -314,15 +313,14 @@ export function TimelinePage() {
                     </Link>
 
                     {index < phaseSummaries.length - 1 ? (
-                      <div className="hidden shrink-0 items-center gap-2 lg:flex">
-                        <span className="h-px w-10 bg-[linear-gradient(90deg,rgba(148,163,184,0.35),rgba(23,114,208,0.4))] dark:bg-[linear-gradient(90deg,rgba(148,163,184,0.18),rgba(125,211,252,0.3))]" />
+                      <div className="hidden shrink-0 items-center gap-2 xl:flex">
+                        <span className="h-px w-6 bg-[linear-gradient(90deg,rgba(148,163,184,0.35),rgba(23,114,208,0.4))] dark:bg-[linear-gradient(90deg,rgba(148,163,184,0.18),rgba(125,211,252,0.3))]" />
                         <ArrowRight className="h-4 w-4 text-sky-600/70 dark:text-sky-200/70" />
                       </div>
                     ) : null}
                   </div>
                 );
               })}
-            </div>
           </div>
         </Surface>
       </section>
