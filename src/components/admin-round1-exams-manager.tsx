@@ -346,14 +346,24 @@ export function AdminRound1ExamList() {
                   <td className="px-4 py-4 font-medium theme-text-soft">{startIndex + index + 1}</td>
                   <td className="px-4 py-4">
                     <div className="space-y-1">
-                      <p className="font-semibold theme-text-strong">{row.name}</p>
+                      <Link
+                        href={`/admin/users/${row.userId}/profile`}
+                        className="font-semibold theme-text-strong transition hover:theme-accent focus-visible:theme-accent"
+                      >
+                        {row.name}
+                      </Link>
                       <p className="text-xs theme-text-soft">{row.loginId}</p>
                       <p className="text-xs theme-text-muted">{row.university}</p>
                     </div>
                   </td>
                   <td className="px-4 py-4">
                     <div className="space-y-1">
-                      <p className="font-semibold theme-text-strong">{row.teamName}</p>
+                      <Link
+                        href={`/admin/teams/${row.teamId}`}
+                        className="font-semibold theme-text-strong transition hover:theme-accent focus-visible:theme-accent"
+                      >
+                        {row.teamName}
+                      </Link>
                       <p className="text-xs theme-text-soft">{`#${row.teamTag}`}</p>
                     </div>
                   </td>
