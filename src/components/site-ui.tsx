@@ -6,23 +6,33 @@ function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
-export function BrandMark({ showText = true }: { showText?: boolean }) {
-  return <BrandMarkInner showText={showText} variant="default" />;
+export function BrandMark({
+  showText = true,
+  showIcon = true,
+}: {
+  showText?: boolean;
+  showIcon?: boolean;
+}) {
+  return <BrandMarkInner showText={showText} showIcon={showIcon} variant="default" />;
 }
 
 export function BrandMarkInner({
   showText = true,
+  showIcon = true,
   variant = "default",
 }: {
   showText?: boolean;
+  showIcon?: boolean;
   variant?: "default" | "header";
 }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="theme-brand-gradient theme-card-shadow-soft relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/25 text-lg font-black text-white">
-        <span className="relative z-10">A</span>
-        <span className="absolute inset-1 rounded-[1rem] border border-white/20" />
-      </div>
+      {showIcon ? (
+        <div className="theme-brand-gradient theme-card-shadow-soft relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/25 text-lg font-black text-white">
+          <span className="relative z-10">A</span>
+          <span className="absolute inset-1 rounded-[1rem] border border-white/20" />
+        </div>
+      ) : null}
       {showText ? (
         <div className="hidden min-w-0 sm:block">
           {variant === "header" ? (
