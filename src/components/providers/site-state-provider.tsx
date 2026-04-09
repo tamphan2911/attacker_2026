@@ -157,13 +157,14 @@ interface SiteStateValue {
   createJudgeByAdmin: (payload: JudgeProfile) => Promise<boolean>;
   updateJudgeByAdmin: (judgeId: string, payload: JudgeProfile) => Promise<boolean>;
   deleteJudgeByAdmin: (judgeId: string) => Promise<boolean>;
-  createModeratorAccountByAdmin: (payload: {
+  createOrganizerAccountByAdmin: (payload: {
     loginId: string;
     name: string;
     password: string;
+    role: "admin" | "moderator";
     avatarImageSrc?: string;
   }) => Promise<boolean>;
-  updateModeratorAccountByAdmin: (
+  updateOrganizerAccountByAdmin: (
     userId: string,
     payload: {
       loginId: string;
@@ -172,7 +173,7 @@ interface SiteStateValue {
       avatarImageSrc?: string | null;
     },
   ) => Promise<boolean>;
-  deleteModeratorAccountByAdmin: (userId: string) => Promise<boolean>;
+  deleteOrganizerAccountByAdmin: (userId: string) => Promise<boolean>;
   updateActiveUserProfile: (payload: Partial<UserProfile>) => void;
   updateUserByAdmin: (userId: string, payload: Partial<UserProfile>) => void;
   deleteUserByAdmin: (userId: string) => void;
@@ -801,17 +802,28 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createModeratorAccountByAdmin = async (payload: {
+  const createOrganizerAccountByAdmin = async (payload: {
     loginId: string;
     name: string;
     password: string;
+    role: "admin" | "moderator";
     avatarImageSrc?: string;
   }) => {
+    const roleLabel =
+      payload.role === "admin"
+        ? {
+            en: "admin account",
+            vi: "tài khoản admin",
+          }
+        : {
+            en: "moderator account",
+            vi: "tài khoản moderator",
+          };
     if (currentUser.role !== "admin") {
       pushToast(
         {
-          en: "Only admin accounts can create moderator accounts here.",
-          vi: "Chỉ tài khoản admin mới có thể tạo tài khoản moderator tại đây.",
+          en: "Only admin accounts can create organizer accounts here.",
+          vi: "Chỉ tài khoản admin mới có thể tạo tài khoản ban tổ chức tại đây.",
         },
         "warning",
       );
@@ -831,7 +843,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         const error = await extractResponseError(
           response,
-          "Could not create the moderator account.",
+          "Could not create the organizer account.",
         );
         pushToast({ en: error, vi: error }, "warning");
         return false;
@@ -840,8 +852,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       await syncWorkspace();
       pushToast(
         {
-          en: "Moderator account created.",
-          vi: "Tài khoản moderator đã được tạo.",
+          en: `${roleLabel.en.charAt(0).toUpperCase()}${roleLabel.en.slice(1)} created.`,
+          vi: `${roleLabel.vi.charAt(0).toUpperCase()}${roleLabel.vi.slice(1)} đã được tạo.`,
         },
         "success",
       );
@@ -849,8 +861,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     } catch {
       pushToast(
         {
-          en: "Could not create the moderator account right now.",
-          vi: "Hiện không thể tạo tài khoản moderator.",
+          en: "Could not create the organizer account right now.",
+          vi: "Hiện không thể tạo tài khoản ban tổ chức.",
         },
         "warning",
       );
@@ -858,7 +870,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateModeratorAccountByAdmin = async (
+  const updateOrganizerAccountByAdmin = async (
     userId: string,
     payload: {
       loginId: string;
@@ -870,8 +882,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     if (currentUser.role !== "admin") {
       pushToast(
         {
-          en: "Only admin accounts can edit moderator accounts here.",
-          vi: "Chỉ tài khoản admin mới có thể chỉnh sửa tài khoản moderator tại đây.",
+          en: "Only admin accounts can edit organizer accounts here.",
+          vi: "Chỉ tài khoản admin mới có thể chỉnh sửa tài khoản ban tổ chức tại đây.",
         },
         "warning",
       );
@@ -891,7 +903,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         const error = await extractResponseError(
           response,
-          "Could not update the moderator account.",
+          "Could not update the organizer account.",
         );
         pushToast({ en: error, vi: error }, "warning");
         return false;
@@ -900,8 +912,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       await syncWorkspace();
       pushToast(
         {
-          en: "Moderator account updated.",
-          vi: "Tài khoản moderator đã được cập nhật.",
+          en: "Organizer account updated.",
+          vi: "Tài khoản ban tổ chức đã được cập nhật.",
         },
         "success",
       );
@@ -909,8 +921,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     } catch {
       pushToast(
         {
-          en: "Could not update the moderator account right now.",
-          vi: "Hiện không thể cập nhật tài khoản moderator.",
+          en: "Could not update the organizer account right now.",
+          vi: "Hiện không thể cập nhật tài khoản ban tổ chức.",
         },
         "warning",
       );
@@ -918,12 +930,12 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const deleteModeratorAccountByAdmin = async (userId: string) => {
+  const deleteOrganizerAccountByAdmin = async (userId: string) => {
     if (currentUser.role !== "admin") {
       pushToast(
         {
-          en: "Only admin accounts can delete moderator accounts here.",
-          vi: "Chỉ tài khoản admin mới có thể xóa tài khoản moderator tại đây.",
+          en: "Only admin accounts can delete organizer accounts here.",
+          vi: "Chỉ tài khoản admin mới có thể xóa tài khoản ban tổ chức tại đây.",
         },
         "warning",
       );
@@ -939,7 +951,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         const error = await extractResponseError(
           response,
-          "Could not delete the moderator account.",
+          "Could not delete the organizer account.",
         );
         pushToast({ en: error, vi: error }, "warning");
         return false;
@@ -948,8 +960,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       await syncWorkspace();
       pushToast(
         {
-          en: "Moderator account deleted.",
-          vi: "Tài khoản moderator đã được xóa.",
+          en: "Organizer account deleted.",
+          vi: "Tài khoản ban tổ chức đã được xóa.",
         },
         "success",
       );
@@ -957,8 +969,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     } catch {
       pushToast(
         {
-          en: "Could not delete the moderator account right now.",
-          vi: "Hiện không thể xóa tài khoản moderator.",
+          en: "Could not delete the organizer account right now.",
+          vi: "Hiện không thể xóa tài khoản ban tổ chức.",
         },
         "warning",
       );
@@ -2480,9 +2492,9 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     createJudgeByAdmin,
     updateJudgeByAdmin,
     deleteJudgeByAdmin,
-    createModeratorAccountByAdmin,
-    updateModeratorAccountByAdmin,
-    deleteModeratorAccountByAdmin,
+    createOrganizerAccountByAdmin,
+    updateOrganizerAccountByAdmin,
+    deleteOrganizerAccountByAdmin,
     updateActiveUserProfile,
     updateUserByAdmin,
     deleteUserByAdmin,

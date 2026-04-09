@@ -19,6 +19,7 @@ import {
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { DEMO_ADMIN_LOGIN_ID } from "@/data/site-content";
 
 const MAX_AVATAR_FILE_BYTES = 1024 * 1024;
 const DEFAULT_AVATAR_TONE = "from-emerald-500 via-cyan-400 to-blue-400";
@@ -31,6 +32,7 @@ interface OrganizerAccountDraft {
   loginId: string;
   name: string;
   password: string;
+  role: "admin" | "moderator";
   avatarImageSrc?: string;
 }
 
@@ -39,6 +41,7 @@ function createEmptyDraft(): OrganizerAccountDraft {
     loginId: "",
     name: "",
     password: "",
+    role: "moderator",
     avatarImageSrc: undefined,
   };
 }
@@ -122,15 +125,23 @@ function OrganizerAccountModal({
 
         <SectionHeading
           eyebrow={locale === "en" ? "System / Organizer team" : "System / Ban tổ chức"}
-          title={mode === "create" ? (locale === "en" ? "Add moderator account" : "Tạo tài khoản moderator") : (locale === "en" ? "Edit moderator account" : "Chỉnh sửa tài khoản moderator")}
+          title={
+            mode === "create"
+              ? locale === "en"
+                ? "Add organizer account"
+                : "Tạo tài khoản ban tổ chức"
+              : locale === "en"
+                ? "Edit organizer account"
+                : "Chỉnh sửa tài khoản ban tổ chức"
+          }
           description={
             mode === "create"
               ? locale === "en"
-                ? "Create an internal moderation account with only the fields needed for operations."
-                : "Tạo tài khoản vận hành nội bộ chỉ với các trường cần cho công tác điều phối."
+                ? "Create an internal admin or moderator account with only the fields needed for operations."
+                : "Tạo tài khoản admin hoặc moderator nội bộ chỉ với các trường cần cho công tác vận hành."
               : locale === "en"
-                ? "Update the moderator identity, login ID, password, or avatar."
-                : "Cập nhật thông tin moderator, mã đăng nhập, mật khẩu hoặc avatar."
+                ? "Update the organizer identity, login ID, password, or avatar."
+                : "Cập nhật thông tin ban tổ chức, mã đăng nhập, mật khẩu hoặc avatar."
           }
         />
 
@@ -145,10 +156,19 @@ function OrganizerAccountModal({
               />
               <div>
                 <p className="text-base font-semibold theme-text-strong">
-                  {draft.name || (locale === "en" ? "New moderator" : "Moderator mới")}
+                  {draft.name || (locale === "en" ? "New organizer" : "Tài khoản mới")}
                 </p>
                 <p className="mt-1 text-sm theme-text-soft">
                   {draft.loginId || (locale === "en" ? "login-id" : "login-id")}
+                </p>
+                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                  {draft.role === "admin"
+                    ? locale === "en"
+                      ? "Administrator"
+                      : "Quản trị viên"
+                    : locale === "en"
+                      ? "Moderator"
+                      : "Điều phối viên"}
                 </p>
               </div>
               <label className="theme-button-secondary inline-flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold">
@@ -176,6 +196,26 @@ function OrganizerAccountModal({
           </Surface>
 
           <div className="space-y-4">
+            <label className="space-y-2">
+              <span className="text-sm theme-text-muted">
+                {locale === "en" ? "Access role" : "Vai trò truy cập"}
+              </span>
+              <select
+                value={draft.role}
+                onChange={(event) =>
+                  onChange({ role: event.target.value as OrganizerAccountDraft["role"] })
+                }
+                disabled={mode === "edit"}
+                className={fieldClassName}
+              >
+                <option value="admin">
+                  {locale === "en" ? "Administrator" : "Quản trị viên"}
+                </option>
+                <option value="moderator">
+                  {locale === "en" ? "Moderator" : "Điều phối viên"}
+                </option>
+              </select>
+            </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Full name" : "Họ và tên"}
@@ -216,8 +256,8 @@ function OrganizerAccountModal({
             <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
               <p className="text-sm leading-7 theme-text-muted">
                 {locale === "en"
-                  ? "Moderator accounts are internal-only. The system will generate a hidden internal email automatically, so this form only needs login ID, password, full name, and avatar."
-                  : "Tài khoản moderator chỉ dùng nội bộ. Hệ thống sẽ tự tạo email nội bộ ẩn, nên biểu mẫu này chỉ cần mã đăng nhập, mật khẩu, họ tên và avatar."}
+                  ? "Organizer accounts are internal-only. The system will generate a hidden internal email automatically, so this form only needs login ID, password, full name, avatar, and access role."
+                  : "Tài khoản ban tổ chức chỉ dùng nội bộ. Hệ thống sẽ tự tạo email nội bộ ẩn, nên biểu mẫu này chỉ cần mã đăng nhập, mật khẩu, họ tên, avatar và vai trò truy cập."}
               </p>
             </div>
           </div>
@@ -239,8 +279,8 @@ function OrganizerAccountModal({
             <UserCog className="h-4 w-4" />
             {mode === "create"
               ? locale === "en"
-                ? "Create moderator"
-                : "Tạo moderator"
+                ? "Create organizer account"
+                : "Tạo tài khoản ban tổ chức"
               : locale === "en"
                 ? "Save changes"
                 : "Lưu thay đổi"}
@@ -256,9 +296,9 @@ export function AdminOrganizerManager() {
     locale,
     currentUser,
     users,
-    createModeratorAccountByAdmin,
-    updateModeratorAccountByAdmin,
-    deleteModeratorAccountByAdmin,
+    createOrganizerAccountByAdmin,
+    updateOrganizerAccountByAdmin,
+    deleteOrganizerAccountByAdmin,
   } = useSiteState();
   useAdminTitleScroll();
 
@@ -281,7 +321,7 @@ export function AdminOrganizerManager() {
           id: user.id,
           loginId: user.loginId ?? user.studentId ?? user.email,
           name: user.name,
-          role: user.role,
+          role: user.role === "admin" ? "admin" : "moderator",
           roleLabel:
             user.role === "admin"
               ? locale === "en"
@@ -359,6 +399,7 @@ export function AdminOrganizerManager() {
       loginId: user.loginId,
       name: user.name,
       password: "",
+      role: user.role === "admin" ? "admin" : "moderator",
       avatarImageSrc: user.avatarImageSrc,
     });
     setEditingUserId(userId);
@@ -426,16 +467,17 @@ export function AdminOrganizerManager() {
       if (!draft.password.trim()) {
         setAvatarError(
           locale === "en"
-            ? "Password is required for a new moderator."
-            : "Mật khẩu là bắt buộc khi tạo moderator mới.",
+            ? "Password is required for a new organizer account."
+            : "Mật khẩu là bắt buộc khi tạo tài khoản ban tổ chức mới.",
         );
         return;
       }
 
-      const created = await createModeratorAccountByAdmin({
+      const created = await createOrganizerAccountByAdmin({
         loginId: draft.loginId,
         name: draft.name,
         password: draft.password,
+        role: draft.role,
         avatarImageSrc: draft.avatarImageSrc,
       });
 
@@ -446,7 +488,7 @@ export function AdminOrganizerManager() {
     }
 
     if (modalMode === "edit" && editingUserId) {
-      const saved = await updateModeratorAccountByAdmin(editingUserId, {
+      const saved = await updateOrganizerAccountByAdmin(editingUserId, {
         loginId: draft.loginId,
         name: draft.name,
         password: draft.password.trim() || undefined,
@@ -468,8 +510,8 @@ export function AdminOrganizerManager() {
         title={locale === "en" ? "Organizer team" : "Ban tổ chức"}
         description={
           locale === "en"
-            ? "Internal admin and moderator accounts used to operate the platform. Moderator accounts are managed by admin only."
-            : "Các tài khoản admin và moderator nội bộ dùng để vận hành hệ thống. Tài khoản moderator chỉ do admin quản lý."
+            ? "Internal admin and moderator accounts used to operate the platform. All organizer accounts are managed by admin only."
+            : "Các tài khoản admin và moderator nội bộ dùng để vận hành hệ thống. Toàn bộ tài khoản ban tổ chức chỉ do admin quản lý."
         }
       />
 
@@ -482,13 +524,13 @@ export function AdminOrganizerManager() {
             <div>
               <p className="text-sm font-semibold theme-text-strong">
                 {locale === "en"
-                  ? "Moderator accounts are admin-managed."
-                  : "Tài khoản moderator do admin quản lý."}
+                  ? "Organizer accounts are admin-managed."
+                  : "Tài khoản ban tổ chức do admin quản lý."}
               </p>
               <p className="mt-2 text-sm leading-7 theme-text-muted">
                 {locale === "en"
-                  ? "You can view the organizer roster here, but only admin can create, edit, or delete moderator accounts."
-                  : "Bạn có thể xem danh sách ban tổ chức tại đây, nhưng chỉ admin mới có thể tạo, sửa hoặc xóa tài khoản moderator."}
+                  ? "You can view the organizer roster here, but only admin can create, edit, or delete organizer accounts."
+                  : "Bạn có thể xem danh sách ban tổ chức tại đây, nhưng chỉ admin mới có thể tạo, sửa hoặc xóa tài khoản ban tổ chức."}
               </p>
             </div>
           </div>
@@ -503,7 +545,7 @@ export function AdminOrganizerManager() {
             </p>
             <p className="mt-2 text-sm leading-7 theme-text-muted">
               {locale === "en"
-                ? "Separate internal moderation accounts from participant records."
+                ? "Separate internal organizer accounts from participant records."
                 : "Tách riêng tài khoản vận hành nội bộ khỏi dữ liệu thí sinh."}
             </p>
           </div>
@@ -514,7 +556,7 @@ export function AdminOrganizerManager() {
               className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
             >
               <Plus className="h-4 w-4" />
-              {locale === "en" ? "New moderator" : "Moderator mới"}
+              {locale === "en" ? "New organizer account" : "Tài khoản mới"}
             </button>
           ) : null}
         </div>
@@ -587,7 +629,7 @@ export function AdminOrganizerManager() {
                       />
                       <div>
                         <p className="font-semibold theme-text-strong">{row.name}</p>
-                        <p className="mt-1 text-xs theme-text-soft">{row.id}</p>
+                        <p className="mt-1 text-xs theme-text-soft">{row.loginId}</p>
                       </div>
                     </div>
                   </td>
@@ -602,12 +644,20 @@ export function AdminOrganizerManager() {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      {canManage && row.role === "moderator" ? (
+                      {canManage && row.loginId !== DEMO_ADMIN_LOGIN_ID ? (
                         <>
                           <button
                             type="button"
-                            title={locale === "en" ? "Edit moderator" : "Chỉnh sửa moderator"}
-                            aria-label={locale === "en" ? "Edit moderator" : "Chỉnh sửa moderator"}
+                            title={
+                              locale === "en"
+                                ? "Edit organizer account"
+                                : "Chỉnh sửa tài khoản ban tổ chức"
+                            }
+                            aria-label={
+                              locale === "en"
+                                ? "Edit organizer account"
+                                : "Chỉnh sửa tài khoản ban tổ chức"
+                            }
                             onClick={() => openEditModal(row.id)}
                             className="theme-button-secondary inline-flex h-9 w-9 items-center justify-center rounded-full"
                           >
@@ -615,17 +665,25 @@ export function AdminOrganizerManager() {
                           </button>
                           <button
                             type="button"
-                            title={locale === "en" ? "Delete moderator" : "Xóa moderator"}
-                            aria-label={locale === "en" ? "Delete moderator" : "Xóa moderator"}
+                            title={
+                              locale === "en"
+                                ? "Delete organizer account"
+                                : "Xóa tài khoản ban tổ chức"
+                            }
+                            aria-label={
+                              locale === "en"
+                                ? "Delete organizer account"
+                                : "Xóa tài khoản ban tổ chức"
+                            }
                             onClick={() => {
                               const confirmed = window.confirm(
                                 locale === "en"
-                                  ? `Delete moderator ${row.name}?`
-                                  : `Xóa moderator ${row.name}?`,
+                                  ? `Delete organizer account ${row.name}?`
+                                  : `Xóa tài khoản ban tổ chức ${row.name}?`,
                               );
 
                               if (confirmed) {
-                                void deleteModeratorAccountByAdmin(row.id);
+                                void deleteOrganizerAccountByAdmin(row.id);
                               }
                             }}
                             className="theme-button-danger inline-flex h-9 w-9 items-center justify-center rounded-full"

@@ -492,18 +492,20 @@ export async function deleteUserByAdmin(
   });
 }
 
-export async function createModeratorAccountByAdmin(payload: {
+export async function createOrganizerAccountByAdmin(payload: {
   loginId: string;
   name: string;
   password: string;
+  role: "admin" | "moderator";
   avatarImageSrc?: string;
 }): Promise<ServiceResult<{ userId: string }>> {
   const loginId = normalizeOrganizerLoginId(payload.loginId);
   const name = payload.name.trim();
   const password = payload.password.trim();
+  const role = payload.role === "admin" ? UserRole.ADMIN : UserRole.MODERATOR;
 
   if (!loginId || !name || !password) {
-    return fail(400, "Login ID, full name, and password are required.");
+    return fail(400, "Login ID, full name, role, and password are required.");
   }
 
   const generatedEmail = buildOrganizerEmail(loginId);
@@ -526,7 +528,7 @@ export async function createModeratorAccountByAdmin(payload: {
       emailVerifiedAt: new Date(),
       passwordHash,
       name,
-      role: UserRole.MODERATOR,
+      role,
       studentId: null,
       phoneNumber: null,
       university: "",
@@ -542,7 +544,7 @@ export async function createModeratorAccountByAdmin(payload: {
   return ok({ userId: created.id }, 201);
 }
 
-export async function updateModeratorAccountByAdmin(
+export async function updateOrganizerAccountByAdmin(
   userId: string,
   payload: {
     loginId: string;
@@ -560,8 +562,12 @@ export async function updateModeratorAccountByAdmin(
     return fail(404, "Organizer account not found.");
   }
 
-  if (existing.role !== UserRole.MODERATOR) {
-    return fail(403, "Only moderator accounts can be edited here.");
+  if (existing.role !== UserRole.MODERATOR && existing.role !== UserRole.ADMIN) {
+    return fail(403, "Only organizer accounts can be edited here.");
+  }
+
+  if (existing.loginId === DEMO_ADMIN_LOGIN_ID) {
+    return fail(403, "The fixed admin account cannot be edited here.");
   }
 
   const loginId = normalizeOrganizerLoginId(payload.loginId);
@@ -600,20 +606,34 @@ export async function updateModeratorAccountByAdmin(
   return ok({ userId });
 }
 
-export async function deleteModeratorAccountByAdmin(
+export async function deleteOrganizerAccountByAdmin(
   userId: string,
 ): Promise<ServiceResult<{ userId: string }>> {
   const existing = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, role: true },
+    select: { id: true, role: true, loginId: true },
   });
 
   if (!existing) {
     return fail(404, "Organizer account not found.");
   }
 
-  if (existing.role !== UserRole.MODERATOR) {
-    return fail(403, "Only moderator accounts can be deleted here.");
+  if (existing.role !== UserRole.MODERATOR && existing.role !== UserRole.ADMIN) {
+    return fail(403, "Only organizer accounts can be deleted here.");
+  }
+
+  if (existing.loginId === DEMO_ADMIN_LOGIN_ID) {
+    return fail(403, "The fixed admin account cannot be deleted.");
+  }
+
+  if (existing.role === UserRole.ADMIN) {
+    const adminCount = await prisma.user.count({
+      where: { role: UserRole.ADMIN },
+    });
+
+    if (adminCount <= 1) {
+      return fail(409, "At least one admin account must remain on the system.");
+    }
   }
 
   await prisma.user.delete({
