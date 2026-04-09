@@ -150,7 +150,7 @@ function buildTimelineActionLinks({
   if (item.id === "round-2-top-5-announcement" || item.id === "round-3-grand-final") {
     actionLinks.push({
       key: `${item.id}-finalists`,
-      href: "/competition/finalists",
+      href: item.id === "round-3-grand-final" ? "/competition/final-results" : "/competition/finalists",
       label: { en: "Read result update", vi: "Đọc cập nhật kết quả" },
       icon: Presentation,
     });
@@ -370,11 +370,6 @@ export function TimelinePage() {
             <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
               {locale === "en" ? "Timeline diagram" : "Sơ đồ lịch trình"}
             </p>
-            <h2 className="theme-heading mt-3 text-2xl font-semibold theme-text-strong md:text-[2.35rem] md:leading-[1.08]">
-              {locale === "en"
-                ? "A quick horizontal view of the full competition path."
-                : "Một sơ đồ ngang tóm tắt toàn bộ hành trình của cuộc thi."}
-            </h2>
           </div>
           <p className="max-w-xl text-sm leading-7 theme-text-muted">
             {locale === "en"
@@ -385,15 +380,16 @@ export function TimelinePage() {
 
         <Surface className="px-4 py-5 md:px-5">
           <div className="grid gap-4 lg:grid-cols-4">
-              {phaseSummaries.map((phase, index) => {
+              {phaseSummaries.map((phase) => {
                 const Icon = phase.icon;
 
                 return (
-                  <div key={phase.phase} className="flex items-center gap-4">
+                  <div key={phase.phase} className="h-full">
                     <Link
                       href={`#${phase.anchor}`}
-                      className="group relative flex min-h-[15rem] flex-1 flex-col rounded-[1.55rem] border theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(246,249,252,0.96))] px-4 py-4 text-left shadow-[0_18px_40px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(15,23,42,0.1)] active:scale-[0.99] dark:bg-[linear-gradient(135deg,rgba(11,20,34,0.92),rgba(17,24,39,0.88))] dark:shadow-none"
+                      className="group relative flex h-full min-h-[15rem] flex-col rounded-[1.55rem] border theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(246,249,252,0.96))] px-4 py-4 text-left shadow-[0_18px_40px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(15,23,42,0.1)] active:scale-[0.99] dark:bg-[linear-gradient(135deg,rgba(11,20,34,0.92),rgba(17,24,39,0.88))] dark:shadow-none"
                     >
+                      <span className={`absolute inset-x-5 bottom-0 h-1 rounded-full bg-current opacity-30 ${phase.phase === "general" ? "text-violet-500 dark:text-violet-300" : phase.phase === "round-1" ? "text-sky-500 dark:text-sky-300" : phase.phase === "round-2" ? "text-emerald-500 dark:text-emerald-300" : "text-amber-500 dark:text-amber-300"}`} />
                       <div className="flex items-start justify-between gap-3">
                         <div className={`inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border ${phase.iconClass}`}>
                           <Icon className="h-4.5 w-4.5" />
@@ -421,13 +417,6 @@ export function TimelinePage() {
                         <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                       </span>
                     </Link>
-
-                    {index < phaseSummaries.length - 1 ? (
-                      <div className="hidden shrink-0 items-center gap-2 xl:flex">
-                        <span className="h-px w-6 bg-[linear-gradient(90deg,rgba(148,163,184,0.35),rgba(23,114,208,0.4))] dark:bg-[linear-gradient(90deg,rgba(148,163,184,0.18),rgba(125,211,252,0.3))]" />
-                        <ArrowRight className="h-4 w-4 text-sky-600/70 dark:text-sky-200/70" />
-                      </div>
-                    ) : null}
                   </div>
                 );
               })}
@@ -520,7 +509,7 @@ export function TimelinePage() {
                       </div>
 
                       <div className="mt-5 grid gap-3 md:grid-cols-3">
-                        <div className="theme-timeline-meta-card rounded-[1.25rem] border px-4 py-4">
+                        <div className="theme-timeline-meta-card theme-timeline-meta-card--accent rounded-[1.25rem] border px-4 py-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                             {locale === "en" ? "Time" : "Thời gian"}
                           </p>
@@ -528,7 +517,7 @@ export function TimelinePage() {
                             {formatDateRangeLabel(locale, item.startDate, item.endDate)}
                           </p>
                         </div>
-                        <div className="theme-timeline-meta-card rounded-[1.25rem] border px-4 py-4">
+                        <div className="theme-timeline-meta-card theme-timeline-meta-card--accent rounded-[1.25rem] border px-4 py-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                             {locale === "en" ? "Place" : "Địa điểm"}
                           </p>
@@ -558,7 +547,7 @@ export function TimelinePage() {
                                 type="button"
                                 disabled
                                 title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
-                                className="theme-timeline-link inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium opacity-75"
+                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium opacity-75"
                               >
                                 <actionLink.icon className="h-3.5 w-3.5" />
                                 {pickText(locale, actionLink.label)}
@@ -568,7 +557,7 @@ export function TimelinePage() {
                                 key={actionLink.key}
                                 href={actionLink.href ?? "#"}
                                 title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
-                                className="theme-timeline-link inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition active:scale-[0.98]"
+                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition active:scale-[0.98]"
                               >
                                 <actionLink.icon className="h-3.5 w-3.5" />
                                 {pickText(locale, actionLink.label)}
