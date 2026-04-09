@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
-import { readAdminRound2ScoreRows } from "@/server/admin-round2-scores";
+import { readAdminRound2ScorePageData } from "@/server/admin-round2-scores";
 
 export async function GET() {
   const user = await getCurrentDbUser();
@@ -9,5 +9,5 @@ export async function GET() {
     return NextResponse.json({ error: "Admin or moderator access required." }, { status: 403 });
   }
 
-  return NextResponse.json({ scores: await readAdminRound2ScoreRows() }, { status: 200 });
+  return NextResponse.json(await readAdminRound2ScorePageData(), { status: 200 });
 }
