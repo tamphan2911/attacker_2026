@@ -45,9 +45,11 @@ export interface AdminRound1ExamQuestionRecord {
   autoScored?: boolean;
   isCorrect?: boolean;
   wordCount?: number;
+  essayScore?: number | null;
 }
 
 export interface AdminRound1ExamDetail {
+  submissionId?: string;
   userId: string;
   loginId: string;
   name: string;

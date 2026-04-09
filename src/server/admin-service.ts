@@ -802,24 +802,113 @@ export async function updateRound1QuestionByAdmin(
 
 export async function updateRound1EssayScoreByAdmin(
   submissionId: string,
-  essayScore: number,
-): Promise<ServiceResult<{ submissionId: string }>> {
+  payload: {
+    essayScore?: number;
+    questionScores?: Record<string, number>;
+  },
+): Promise<
+  ServiceResult<{
+    submissionId: string;
+    essayScore: number | null;
+    totalScore: number | null;
+    essayQuestionScores: Record<string, number>;
+  }>
+> {
   const submission = await prisma.round1Submission.findUnique({
     where: { id: submissionId },
-    select: { id: true, objectiveScore: true },
+    select: { id: true, objectiveScore: true, answers: true },
   });
 
   if (!submission) {
     return fail(404, "Round 1 submission not found.");
   }
 
+  const archive = (() => {
+    try {
+      const parsed = submission.answers
+        ? (JSON.parse(submission.answers) as {
+            questions?: Array<{ id?: string; type?: string }>;
+            answers?: unknown;
+            essayQuestionScores?: Record<string, number>;
+          })
+        : null;
+
+      return {
+        questions: Array.isArray(parsed?.questions) ? parsed.questions : [],
+        answers: parsed?.answers && typeof parsed.answers === "object" ? parsed.answers : {},
+        essayQuestionScores:
+          parsed?.essayQuestionScores && typeof parsed.essayQuestionScores === "object"
+            ? Object.fromEntries(
+                Object.entries(parsed.essayQuestionScores).filter(
+                  ([, value]) => typeof value === "number" && Number.isFinite(value),
+                ),
+              )
+            : {},
+      };
+    } catch {
+      return {
+        questions: [] as Array<{ id?: string; type?: string }>,
+        answers: {},
+        essayQuestionScores: {} as Record<string, number>,
+      };
+    }
+  })();
+
+  const essayQuestionIds = archive.questions
+    .filter((question) => String(question.type ?? "").toLowerCase() === "essay" && question.id)
+    .map((question) => String(question.id));
+
+  if (essayQuestionIds.length === 0) {
+    return fail(409, "No archived essay questions were found for this Round 1 submission.");
+  }
+
+  let nextEssayQuestionScores: Record<string, number> = {};
+  let nextEssayScore: number | null = null;
+  let nextTotalScore: number | null = null;
+
+  if (typeof payload.essayScore === "number") {
+    nextEssayScore = payload.essayScore;
+    nextTotalScore = submission.objectiveScore + payload.essayScore;
+  } else {
+    const submittedQuestionScores = payload.questionScores ?? {};
+    const invalidQuestionId = Object.keys(submittedQuestionScores).find(
+      (questionId) => !essayQuestionIds.includes(questionId),
+    );
+
+    if (invalidQuestionId) {
+      return fail(400, "One or more essay scores do not belong to this submission.");
+    }
+
+    nextEssayQuestionScores = Object.fromEntries(
+      essayQuestionIds.flatMap((questionId) => {
+        const value = submittedQuestionScores[questionId];
+        return typeof value === "number" && Number.isFinite(value) ? [[questionId, value]] : [];
+      }),
+    );
+
+    if (Object.keys(nextEssayQuestionScores).length === essayQuestionIds.length) {
+      nextEssayScore = Object.values(nextEssayQuestionScores).reduce((total, value) => total + value, 0);
+      nextTotalScore = submission.objectiveScore + nextEssayScore;
+    }
+  }
+
   await prisma.round1Submission.update({
     where: { id: submissionId },
     data: {
-      essayScore,
-      totalScore: submission.objectiveScore + essayScore,
+      essayScore: nextEssayScore,
+      totalScore: nextTotalScore,
+      answers: JSON.stringify({
+        questions: archive.questions,
+        answers: archive.answers,
+        essayQuestionScores: nextEssayQuestionScores,
+      }),
     },
   });
 
-  return ok({ submissionId });
+  return ok({
+    submissionId,
+    essayScore: nextEssayScore,
+    totalScore: nextTotalScore,
+    essayQuestionScores: nextEssayQuestionScores,
+  });
 }

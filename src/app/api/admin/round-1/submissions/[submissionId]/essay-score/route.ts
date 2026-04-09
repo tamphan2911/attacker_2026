@@ -3,10 +3,20 @@ import { z } from "zod";
 
 import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
 import { updateRound1EssayScoreByAdmin } from "@/server/admin-service";
+import { ROUND1_ESSAY_MAX_SCORE, ROUND1_ESSAY_TOTAL } from "@/lib/round1";
 
-const essayScoreSchema = z.object({
+const totalEssayScoreSchema = z.object({
   essayScore: z.number().min(0).max(28),
 });
+
+const questionScoresSchema = z.object({
+  questionScores: z.record(
+    z.string(),
+    z.number().min(0).max(Math.round(ROUND1_ESSAY_MAX_SCORE / ROUND1_ESSAY_TOTAL)),
+  ),
+});
+
+const essayScoreSchema = z.union([totalEssayScoreSchema, questionScoresSchema]);
 
 export async function PATCH(
   request: Request,
@@ -23,7 +33,7 @@ export async function PATCH(
   }
 
   const { submissionId } = await params;
-  const result = await updateRound1EssayScoreByAdmin(submissionId, payload.data.essayScore);
+  const result = await updateRound1EssayScoreByAdmin(submissionId, payload.data);
   if (result.ok) {
     return NextResponse.json(result.data, { status: result.status });
   }

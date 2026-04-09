@@ -185,7 +185,10 @@ interface SiteStateValue {
   ) => void;
   deleteTeamByAdmin: (teamId: string) => void;
   updateRound1QuestionByAdmin: (bankId: string, questionId: string, payload: Round1Question) => void;
-  updateRound1EssayScoreByAdmin: (submissionId: string, essayScore: number) => void;
+  updateRound1EssayScoreByAdmin: (
+    submissionId: string,
+    payload: number | { questionScores: Record<string, number> },
+  ) => Promise<{ essayScore: number | null; totalScore: number | null; essayQuestionScores: Record<string, number> } | null>;
   inviteUser: (userId: string) => void;
   respondToInvitation: (invitationId: string, decision: "accept" | "decline") => void;
   initiateRound1TeamLock: () => void;
@@ -2135,7 +2138,10 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const updateRound1EssayScoreByAdmin = (submissionId: string, essayScore: number) => {
+  const updateRound1EssayScoreByAdmin = async (
+    submissionId: string,
+    payload: number | { questionScores: Record<string, number> },
+  ) => {
     if (!canAccessAdminMode) {
       pushToast(
         {
@@ -2144,10 +2150,13 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         },
         "warning",
       );
-      return;
+      return null;
     }
 
-    if (!Number.isFinite(essayScore) || essayScore < 0 || essayScore > 28) {
+    if (
+      typeof payload === "number" &&
+      (!Number.isFinite(payload) || payload < 0 || payload > 28)
+    ) {
       pushToast(
         {
           en: "Essay score must be a number between 0 and 28.",
@@ -2155,34 +2164,65 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         },
         "warning",
       );
-      return;
+      return null;
     }
 
-    void (async () => {
+    try {
       const response = await fetch(`/api/admin/round-1/submissions/${submissionId}/essay-score`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "same-origin",
-        body: JSON.stringify({ essayScore }),
+        body: JSON.stringify(
+          typeof payload === "number" ? { essayScore: payload } : payload,
+        ),
       });
 
       if (!response.ok) {
         const error = await extractResponseError(response, "Could not update the essay score.");
         pushToast({ en: error, vi: error }, "warning");
-        return;
+        return null;
       }
 
-      await syncWorkspace();
+      const result = (await response.json()) as {
+        essayScore: number | null;
+        totalScore: number | null;
+        essayQuestionScores: Record<string, number>;
+      };
+
+      setRound1Submissions((current) =>
+        current.map((submission) =>
+          submission.id === submissionId
+            ? {
+                ...submission,
+                essayScore: result.essayScore,
+                totalScore: result.totalScore,
+              }
+            : submission,
+        ),
+      );
+
       pushToast(
         {
-          en: "Essay score updated and the Round 1 total score has been recalculated.",
-          vi: "Điểm tự luận đã được cập nhật và tổng điểm Vòng 1 đã được tính lại.",
+          en:
+            result.totalScore == null
+              ? "Essay review was saved, but the final Round 1 total is still pending more essay scores."
+              : typeof payload === "number"
+                ? "Essay score updated and the Round 1 total score has been recalculated."
+                : "Essay question scores updated and the Round 1 total score has been recalculated.",
+          vi:
+            result.totalScore == null
+              ? "Đã lưu phần chấm tự luận, nhưng tổng điểm Vòng 1 vẫn đang chờ đủ điểm của các câu tự luận."
+              : typeof payload === "number"
+                ? "Điểm tự luận đã được cập nhật và tổng điểm Vòng 1 đã được tính lại."
+                : "Điểm từng câu tự luận đã được cập nhật và tổng điểm Vòng 1 đã được tính lại.",
         },
         "success",
       );
-    })().catch(() => {
+
+      return result;
+    } catch {
       pushToast(
         {
           en: "Could not update the essay score right now.",
@@ -2190,7 +2230,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         },
         "warning",
       );
-    });
+      return null;
+    }
   };
 
   const submitRound1Attempt = (

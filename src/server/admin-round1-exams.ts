@@ -95,16 +95,26 @@ function parseSubmissionArchive(rawArchive: string | null | undefined) {
       ? (JSON.parse(rawArchive) as {
           questions?: Round1PaperQuestion[];
           answers?: Record<string, Round1QuestionResponse>;
+          essayQuestionScores?: Record<string, number>;
         })
       : null;
     return {
       questions: parseQuestions(JSON.stringify(parsed?.questions ?? [])),
       answers: parsed?.answers && typeof parsed.answers === "object" ? parsed.answers : {},
+      essayQuestionScores:
+        parsed?.essayQuestionScores && typeof parsed.essayQuestionScores === "object"
+          ? Object.fromEntries(
+              Object.entries(parsed.essayQuestionScores).filter(
+                ([, value]) => typeof value === "number" && Number.isFinite(value),
+              ),
+            )
+          : {},
     };
   } catch {
     return {
       questions: [] as Round1PaperQuestion[],
       answers: {} as Record<string, Round1QuestionResponse>,
+      essayQuestionScores: {} as Record<string, number>,
     };
   }
 }
@@ -112,6 +122,7 @@ function parseSubmissionArchive(rawArchive: string | null | undefined) {
 function buildQuestionRecords(
   questions: Round1PaperQuestion[],
   answers: Record<string, Round1QuestionResponse>,
+  essayQuestionScores: Record<string, number>,
 ) {
   return questions.map<AdminRound1ExamQuestionRecord>((question) => {
     const response = answers[question.id];
@@ -133,6 +144,7 @@ function buildQuestionRecords(
       autoScored: scored.autoScored,
       isCorrect: scored.autoScored ? scored.isCorrect : undefined,
       wordCount: question.type === "essay" ? countWords(response?.essayText ?? "") : undefined,
+      essayScore: question.type === "essay" ? (essayQuestionScores[question.id] ?? null) : undefined,
     };
   });
 }
@@ -273,9 +285,11 @@ export async function readAdminRound1ExamDetail(userId: string): Promise<AdminRo
   const submissionArchive = submission ? parseSubmissionArchive(submission.answers) : null;
   const sourceQuestions = submission ? submissionArchive?.questions ?? [] : attempt ? parseQuestions(attempt.questions) : [];
   const sourceAnswers = submission ? submissionArchive?.answers ?? {} : attempt ? parseAnswers(attempt.answers) : {};
-  const questions = buildQuestionRecords(sourceQuestions, sourceAnswers);
+  const essayQuestionScores = submission ? submissionArchive?.essayQuestionScores ?? {} : {};
+  const questions = buildQuestionRecords(sourceQuestions, sourceAnswers, essayQuestionScores);
 
   return {
+    submissionId: submission?.id,
     userId: user.id,
     loginId: user.loginId,
     name: user.name,

@@ -3,17 +3,21 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  AlertTriangle,
   ArrowLeft,
-  CheckCircle2,
+  BookText,
   CircleDashed,
   Clock3,
+  FileQuestion,
   Eye,
   Filter,
   ListFilter,
+  Save,
   Search,
   ShieldCheck,
   Target,
   UserRound,
+  CheckCircle2,
 } from "lucide-react";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
@@ -26,10 +30,12 @@ import { useSiteState } from "@/components/providers/site-state-provider";
 import { PageIntro, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { pickRoundLabel } from "@/lib/competition";
 import {
+  ROUND1_ESSAY_MAX_SCORE,
   ROUND1_ESSAY_WORD_LIMIT,
   getRound1QuestionOptionPreview,
   pickRound1TypeLabel,
 } from "@/lib/round1";
+import { estimateEssayAiLikelihood } from "@/lib/essay-ai-guard";
 import { pickText } from "@/lib/site";
 import type {
   AdminRound1ExamDetail,
@@ -533,9 +539,17 @@ function PairingAnswerList({
 function QuestionRecordCard({
   locale,
   question,
+  essayDraft,
+  essayQuestionMaxScore,
+  canScoreEssay,
+  onEssayScoreChange,
 }: {
   locale: "en" | "vi";
   question: AdminRound1ExamDetail["questions"][number];
+  essayDraft?: string;
+  essayQuestionMaxScore: number;
+  canScoreEssay: boolean;
+  onEssayScoreChange?: (questionId: string, nextValue: string) => void;
 }) {
   const statusTone = question.answered
     ? question.autoScored
@@ -544,6 +558,10 @@ function QuestionRecordCard({
         : "warning"
       : "info"
     : "default";
+  const essayAiGuard =
+    question.type === "essay"
+      ? estimateEssayAiLikelihood(question.response?.essayText ?? "", locale)
+      : null;
 
   return (
     <Surface className="px-5 py-5 md:px-6">
@@ -602,12 +620,19 @@ function QuestionRecordCard({
         {question.type === "pairing" ? <PairingAnswerList locale={locale} question={question} /> : null}
 
         {question.type === "essay" ? (
-          <div className="rounded-[1.15rem] border theme-border bg-white/78 px-4 py-4 dark:bg-white/[0.04]">
+          <div className="space-y-4 rounded-[1.15rem] border theme-border bg-white/78 px-4 py-4 dark:bg-white/[0.04]">
             <div className="flex flex-wrap items-center gap-2">
               <StatusPill tone="warning">{`${ROUND1_ESSAY_WORD_LIMIT} ${locale === "en" ? "words max" : "từ tối đa"}`}</StatusPill>
               {typeof question.wordCount === "number" ? (
                 <StatusPill tone={question.wordCount > ROUND1_ESSAY_WORD_LIMIT ? "warning" : "info"}>
                   {locale === "en" ? `${question.wordCount} words` : `${question.wordCount} từ`}
+                </StatusPill>
+              ) : null}
+              {typeof question.essayScore === "number" ? (
+                <StatusPill tone="success">
+                  {locale === "en"
+                    ? `${question.essayScore} / ${essayQuestionMaxScore} scored`
+                    : `${question.essayScore} / ${essayQuestionMaxScore} đã chấm`}
                 </StatusPill>
               ) : null}
             </div>
@@ -617,6 +642,72 @@ function QuestionRecordCard({
                 : locale === "en"
                   ? "No essay answer saved."
                   : "Chưa có câu trả lời tự luận được lưu."}
+            </div>
+            {essayAiGuard && question.response?.essayText?.trim() ? (
+              <div
+                className={cn(
+                  "rounded-[1rem] border px-4 py-3.5 text-sm leading-7",
+                  essayAiGuard.shouldWarn
+                    ? "border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100"
+                    : "border-sky-600/18 bg-[linear-gradient(135deg,rgba(239,246,255,0.98),rgba(224,242,254,0.92))] text-slate-900 dark:border-sky-300/18 dark:bg-sky-300/10 dark:text-sky-100",
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                  <div className="space-y-1.5">
+                    <p className="font-semibold">
+                      {locale === "en"
+                        ? `AI-like content estimate: ${essayAiGuard.score}%`
+                        : `Ước lượng mức giống nội dung AI: ${essayAiGuard.score}%`}
+                    </p>
+                    <p>
+                      {essayAiGuard.shouldWarn
+                        ? locale === "en"
+                          ? "This answer exceeds the 50% warning threshold and should be reviewed carefully."
+                          : "Câu trả lời này vượt ngưỡng cảnh báo 50% và cần được xem xét kỹ."
+                        : locale === "en"
+                          ? "This estimate stays below the current warning threshold, but it is still shown for reviewer reference."
+                          : "Mức ước lượng này đang dưới ngưỡng cảnh báo hiện tại, nhưng vẫn được hiển thị để người chấm tham khảo."}
+                    </p>
+                    {essayAiGuard.reasons.length > 0 ? (
+                      <p className="text-xs font-medium opacity-85">
+                        {locale === "en" ? "Signals:" : "Dấu hiệu:"} {essayAiGuard.reasons.join("; ")}.
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            <div className="rounded-[1rem] border theme-border bg-white/82 px-4 py-4 dark:bg-white/[0.03]">
+              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <label className="space-y-2">
+                  <span className="text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
+                    {locale === "en" ? "Essay question score" : "Điểm câu tự luận"}
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={essayQuestionMaxScore}
+                    step="1"
+                    value={essayDraft ?? ""}
+                    onChange={(event) => onEssayScoreChange?.(question.id, event.target.value)}
+                    disabled={!canScoreEssay}
+                    placeholder={`0-${essayQuestionMaxScore}`}
+                    className="theme-placeholder w-28 rounded-xl border theme-border theme-panel px-3 py-2 text-sm theme-text-strong outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                </label>
+                <div className="text-sm leading-7 theme-text-soft md:text-right">
+                  <p>
+                    {canScoreEssay
+                      ? locale === "en"
+                        ? `Enter a score from 0 to ${essayQuestionMaxScore} for this essay.`
+                        : `Nhập điểm từ 0 đến ${essayQuestionMaxScore} cho câu tự luận này.`
+                      : locale === "en"
+                        ? "Scores are only available after the participant submits the official exam."
+                        : "Chỉ có thể nhập điểm sau khi thí sinh nộp bài thi chính thức."}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         ) : null}
@@ -632,10 +723,15 @@ function QuestionRecordCard({
 }
 
 export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
-  const { locale } = useSiteState();
+  const { locale, updateRound1EssayScoreByAdmin } = useSiteState();
   const [detail, setDetail] = useState<AdminRound1ExamDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [questionFilter, setQuestionFilter] = useState<"objective" | "essay">("objective");
+  const [essayDrafts, setEssayDrafts] = useState<Record<string, string>>({});
+  const [savePending, setSavePending] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [queuedQuestionId, setQueuedQuestionId] = useState<string | null>(null);
   useAdminTitleScroll();
 
   useEffect(() => {
@@ -674,16 +770,143 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
       active = false;
     };
   }, [locale, userId]);
+  const questions = detail?.questions ?? [];
+  const objectiveQuestions = questions.filter((question) => question.type !== "essay");
+  const essayQuestions = questions.filter((question) => question.type === "essay");
+  const essayQuestionMaxScore = essayQuestions.length
+    ? Math.round(ROUND1_ESSAY_MAX_SCORE / essayQuestions.length)
+    : ROUND1_ESSAY_MAX_SCORE;
+  const visibleQuestions = questionFilter === "essay" ? essayQuestions : objectiveQuestions;
+  const canScoreEssay = Boolean(detail?.submissionId && detail.status === "submitted" && essayQuestions.length > 0);
+  const enteredEssayScoreTotal = essayQuestions.reduce((total, question) => {
+    const rawValue = essayDrafts[question.id];
+    const value = typeof rawValue === "string" && rawValue.trim() !== "" ? Number(rawValue) : NaN;
+    return Number.isFinite(value) ? total + value : total;
+  }, 0);
+  const statusMeta = detail ? createStatusMeta(locale, detail.status) : null;
+
+  useEffect(() => {
+    if (!detail) {
+      setEssayDrafts({});
+      return;
+    }
+
+    setEssayDrafts(
+      Object.fromEntries(
+        detail.questions
+          .filter((question) => question.type === "essay")
+          .map((question) => [
+            question.id,
+            typeof question.essayScore === "number" ? String(question.essayScore) : "",
+        ]),
+      ),
+    );
+
+    setQuestionFilter((current) => {
+      const hasObjective = detail.questions.some((question) => question.type !== "essay");
+      const hasEssay = detail.questions.some((question) => question.type === "essay");
+
+      if (current === "essay" && hasEssay) {
+        return current;
+      }
+
+      if (current === "objective" && hasObjective) {
+        return current;
+      }
+
+      return hasObjective ? "objective" : "essay";
+    });
+  }, [detail]);
+
+  useEffect(() => {
+    if (!queuedQuestionId) {
+      return;
+    }
+
+    const node = document.getElementById(`admin-round1-question-${queuedQuestionId}`);
+    if (!node) {
+      return;
+    }
+
+    node.scrollIntoView({ behavior: "smooth", block: "start" });
+    setQueuedQuestionId(null);
+  }, [queuedQuestionId, questionFilter, visibleQuestions.length]);
 
   if (loading) {
     return <DetailLoading locale={locale} />;
   }
 
-  if (error || !detail) {
+  if (error || !detail || !statusMeta) {
     return <DetailError locale={locale} message={error || (locale === "en" ? "Exam detail is unavailable." : "Chi tiết bài thi hiện không khả dụng.")} />;
   }
 
-  const statusMeta = createStatusMeta(locale, detail.status);
+  const saveEssayQuestionScores = async () => {
+    if (!detail.submissionId || !canScoreEssay) {
+      return;
+    }
+
+    const nextQuestionScores: Record<string, number> = {};
+
+    for (const question of essayQuestions) {
+      const rawValue = essayDrafts[question.id]?.trim() ?? "";
+      if (!rawValue) {
+        continue;
+      }
+
+      const value = Number(rawValue);
+      if (!Number.isFinite(value) || value < 0 || value > essayQuestionMaxScore) {
+        setSaveError(
+          locale === "en"
+            ? `Each essay question score must be a whole number from 0 to ${essayQuestionMaxScore}.`
+            : `Mỗi câu tự luận phải được nhập điểm nguyên từ 0 đến ${essayQuestionMaxScore}.`,
+        );
+        return;
+      }
+
+      nextQuestionScores[question.id] = value;
+    }
+
+    if (Object.keys(nextQuestionScores).length === 0) {
+      setSaveError(
+        locale === "en"
+          ? "Enter at least one essay question score before saving."
+          : "Hãy nhập ít nhất một điểm câu tự luận trước khi lưu.",
+      );
+      return;
+    }
+
+    setSavePending(true);
+    setSaveError("");
+
+    const result = await updateRound1EssayScoreByAdmin(detail.submissionId, {
+      questionScores: nextQuestionScores,
+    });
+
+    if (result) {
+      setDetail((current) =>
+        current
+          ? {
+              ...current,
+              essayScore: result.essayScore,
+              totalScore: result.totalScore,
+              questions: current.questions.map((question) =>
+                question.type === "essay"
+                  ? {
+                      ...question,
+                      essayScore:
+                        typeof result.essayQuestionScores[question.id] === "number"
+                          ? result.essayQuestionScores[question.id]
+                          : null,
+                    }
+                  : question,
+              ),
+            }
+          : current,
+      );
+    }
+
+    setSavePending(false);
+  };
 
   return (
     <div className="space-y-8">
@@ -822,6 +1045,122 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
         </div>
       </Surface>
 
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="space-y-3">
+            <p className="theme-heading text-2xl font-semibold theme-text-strong">
+              {locale === "en" ? "Question controls" : "Điều hướng câu hỏi"}
+            </p>
+            <p className="text-sm leading-7 theme-text-muted">
+              {locale === "en"
+                ? "Switch between objective and essay sections, then jump straight to a specific saved question."
+                : "Chuyển giữa phần trắc nghiệm và phần tự luận, sau đó nhảy thẳng tới câu hỏi đã lưu cụ thể."}
+            </p>
+          </div>
+
+          {questionFilter === "essay" && essayQuestions.length > 0 ? (
+            <div className="flex flex-col items-start gap-3 xl:items-end">
+              <div className="flex flex-wrap gap-2">
+                <StatusPill tone="warning">
+                  {locale === "en"
+                    ? `Essay total ${typeof detail.essayScore === "number" ? detail.essayScore : "--"} / ${ROUND1_ESSAY_MAX_SCORE}`
+                    : `Tổng tự luận ${typeof detail.essayScore === "number" ? detail.essayScore : "--"} / ${ROUND1_ESSAY_MAX_SCORE}`}
+                </StatusPill>
+                <StatusPill tone="info">
+                  {locale === "en"
+                    ? `Draft sum ${enteredEssayScoreTotal} / ${ROUND1_ESSAY_MAX_SCORE}`
+                    : `Tổng nhập ${enteredEssayScoreTotal} / ${ROUND1_ESSAY_MAX_SCORE}`}
+                </StatusPill>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  void saveEssayQuestionScores();
+                }}
+                disabled={!canScoreEssay || savePending}
+                className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-55"
+              >
+                <Save className={`h-4 w-4 ${savePending ? "animate-pulse" : ""}`} />
+                {locale === "en" ? "Save essay scores" : "Lưu điểm tự luận"}
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => setQuestionFilter("objective")}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition",
+              questionFilter === "objective"
+                ? "border-sky-600/28 bg-[linear-gradient(135deg,rgba(14,165,233,0.14),rgba(37,99,235,0.12))] text-sky-900 dark:border-sky-300/22 dark:bg-sky-300/12 dark:text-sky-100"
+                : "theme-button-secondary border",
+            )}
+          >
+            <FileQuestion className="h-4 w-4" />
+            {locale === "en"
+              ? `Multiple choice (${objectiveQuestions.length})`
+              : `Trắc nghiệm (${objectiveQuestions.length})`}
+          </button>
+          <button
+            type="button"
+            onClick={() => setQuestionFilter("essay")}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition",
+              questionFilter === "essay"
+                ? "border-amber-600/28 bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(245,158,11,0.12))] text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100"
+                : "theme-button-secondary border",
+            )}
+          >
+            <BookText className="h-4 w-4" />
+            {locale === "en"
+              ? `Essay (${essayQuestions.length})`
+              : `Tự luận (${essayQuestions.length})`}
+          </button>
+        </div>
+
+        <div className="mt-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+            {locale === "en" ? "Question navigator" : "Bảng số câu hỏi"}
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {detail.questions.map((question) => {
+              const isEssay = question.type === "essay";
+              return (
+                <button
+                  key={question.id}
+                  type="button"
+                  onClick={() => {
+                    setQuestionFilter(isEssay ? "essay" : "objective");
+                    setQueuedQuestionId(question.id);
+                  }}
+                  className={cn(
+                    "inline-flex h-11 min-w-11 items-center justify-center rounded-[1rem] border px-3 text-sm font-semibold transition",
+                    isEssay
+                      ? "border-amber-500/24 bg-[linear-gradient(135deg,rgba(255,251,235,0.94),rgba(254,243,199,0.86))] text-amber-900 dark:border-amber-300/18 dark:bg-amber-300/10 dark:text-amber-100"
+                      : "border-sky-500/22 bg-[linear-gradient(135deg,rgba(239,246,255,0.98),rgba(224,242,254,0.88))] text-sky-900 dark:border-sky-300/18 dark:bg-sky-300/10 dark:text-sky-100",
+                  )}
+                  title={
+                    locale === "en"
+                      ? `${isEssay ? "Essay" : "Multiple choice"} question ${question.paperOrder}`
+                      : `${isEssay ? "Câu tự luận" : "Câu trắc nghiệm"} ${question.paperOrder}`
+                  }
+                >
+                  {question.paperOrder}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {saveError ? (
+          <div className="mt-5 rounded-[1.2rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+            {saveError}
+          </div>
+        ) : null}
+      </Surface>
+
       {detail.questions.length === 0 ? (
         <Surface className="px-6 py-6 md:px-8 md:py-8">
           <SectionHeading
@@ -836,8 +1175,23 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
         </Surface>
       ) : (
         <div className="space-y-4">
-          {detail.questions.map((question) => (
-            <QuestionRecordCard key={question.id} locale={locale} question={question} />
+          {visibleQuestions.map((question) => (
+            <div key={question.id} id={`admin-round1-question-${question.id}`} className="scroll-mt-28">
+              <QuestionRecordCard
+                locale={locale}
+                question={question}
+                essayDraft={essayDrafts[question.id] ?? ""}
+                essayQuestionMaxScore={essayQuestionMaxScore}
+                canScoreEssay={canScoreEssay}
+                onEssayScoreChange={(questionId, nextValue) => {
+                  setSaveError("");
+                  setEssayDrafts((current) => ({
+                    ...current,
+                    [questionId]: nextValue,
+                  }));
+                }}
+              />
+            </div>
           ))}
         </div>
       )}
