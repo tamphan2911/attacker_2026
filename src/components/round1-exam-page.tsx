@@ -505,6 +505,50 @@ export function Round1ExamPage() {
     };
   }, [persistAttemptProgress, session]);
 
+  useEffect(() => {
+    if (!session || existingSubmission) {
+      return;
+    }
+
+    document.documentElement.classList.add("theme-round1-exam-locked");
+    document.body.classList.add("theme-round1-exam-locked");
+
+    const blockEvent = (event: Event) => {
+      event.preventDefault();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      if (key === "a" || key === "c" || key === "v" || key === "x") {
+        event.preventDefault();
+      }
+    };
+
+    document.addEventListener("copy", blockEvent);
+    document.addEventListener("cut", blockEvent);
+    document.addEventListener("paste", blockEvent);
+    document.addEventListener("selectstart", blockEvent);
+    document.addEventListener("dragstart", blockEvent);
+    document.addEventListener("contextmenu", blockEvent);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.documentElement.classList.remove("theme-round1-exam-locked");
+      document.body.classList.remove("theme-round1-exam-locked");
+      document.removeEventListener("copy", blockEvent);
+      document.removeEventListener("cut", blockEvent);
+      document.removeEventListener("paste", blockEvent);
+      document.removeEventListener("selectstart", blockEvent);
+      document.removeEventListener("dragstart", blockEvent);
+      document.removeEventListener("contextmenu", blockEvent);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [existingSubmission, session]);
+
   const submitExamAttempt = useCallback(
     async (targetSession: Round1ExamSession) => {
       if (submitInFlightRef.current) {

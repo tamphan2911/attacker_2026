@@ -369,6 +369,18 @@ body {
   caret-color: var(--brand-deep);
 }
 
+.theme-round1-exam-locked,
+.theme-round1-exam-locked * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.theme-round1-exam-locked input,
+.theme-round1-exam-locked textarea,
+.theme-round1-exam-locked [contenteditable="true"] {
+  caret-color: currentColor;
+}
+
 .theme-news-search-input::placeholder {
   color: rgba(109, 131, 153, 0.74);
 }
