@@ -578,6 +578,7 @@ function TeamsTableSection() {
           id: team.id,
           team: team.name,
           tag: team.tag,
+          leaderId: leader?.id ?? "",
           leader: leader?.name ?? "",
           memberCount: team.memberIds.length,
           statusTone: pickTeamDisplayStatusTone(team),
@@ -746,7 +747,18 @@ function TeamsTableSection() {
                       </div>
                     </td>
                     <td className="px-4 py-4 theme-text-body">{row.tag}</td>
-                    <td className="px-4 py-4 theme-text-body">{row.leader || "-"}</td>
+                    <td className="px-4 py-4 theme-text-body">
+                      {row.leaderId ? (
+                        <Link
+                          href={`/admin/users/${row.leaderId}/profile`}
+                          className="font-medium theme-accent"
+                        >
+                          {row.leader}
+                        </Link>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
                     <td className="px-4 py-4 theme-text-body">{row.memberCount}</td>
                     <td className="px-4 py-4 text-center">
                       <StatusPill tone={row.statusTone}>
