@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Mail, RotateCcw, Save, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { ChevronRight, Mail, RotateCcw, Save, ShieldCheck } from "lucide-react";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -110,6 +110,58 @@ function TemplateEditorCard({
   );
 }
 
+function TemplateSelectorCard({
+  active,
+  title,
+  description,
+  icon: Icon,
+  accentClassName,
+  onClick,
+}: {
+  active: boolean;
+  title: string;
+  description: string;
+  icon: ComponentType<{ className?: string }>;
+  accentClassName: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={[
+        "group w-full rounded-[1.75rem] border px-5 py-5 text-left transition md:px-6",
+        active
+          ? "border-[var(--line-strong)] bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(235,244,255,0.96))] shadow-[0_20px_44px_var(--shadow-soft)] dark:bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))]"
+          : "theme-panel theme-border hover:border-[var(--line-strong)] hover:bg-[var(--panel-strong)]",
+      ].join(" ")}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border ${accentClassName}`}>
+            <Icon className="h-4.5 w-4.5" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold theme-text-strong">{title}</p>
+            <p className="mt-1 text-sm leading-7 theme-text-soft">{description}</p>
+          </div>
+        </div>
+        <span
+          className={[
+            "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition",
+            active
+              ? "border-sky-500/20 bg-sky-500/10 text-[var(--brand)]"
+              : "theme-border theme-panel-subtle theme-text-soft group-hover:text-[var(--brand)]",
+          ].join(" ")}
+        >
+          <ChevronRight className={`h-4 w-4 transition ${active ? "rotate-90" : ""}`} />
+        </span>
+      </div>
+    </button>
+  );
+}
+
 export function AdminEmailTemplatesManager() {
   const { locale } = useSiteState();
   useAdminTitleScroll();
@@ -123,6 +175,7 @@ export function AdminEmailTemplatesManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState<string>("");
+  const [activeTemplateKey, setActiveTemplateKey] = useState<keyof SystemEmailTemplates>("activation");
 
   useEffect(() => {
     let cancelled = false;
@@ -328,31 +381,62 @@ export function AdminEmailTemplatesManager() {
         </Surface>
       ) : (
         <div className="space-y-6">
-          <TemplateEditorCard
-            title={locale === "en" ? "Activation email template" : "Mẫu email kích hoạt"}
-            description={
-              locale === "en"
-                ? "This template is sent after email/password registration to activate a new competition account."
-                : "Mẫu này được gửi sau khi đăng ký email/mật khẩu để kích hoạt tài khoản dự thi mới."
-            }
-            template={templates.activation}
-            onChange={(field, language, value) =>
-              updateTemplateField("activation", field, language, value)
-            }
-          />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <TemplateSelectorCard
+              active={activeTemplateKey === "activation"}
+              title={locale === "en" ? "Activation email" : "Email kích hoạt"}
+              description={
+                locale === "en"
+                  ? "Sent immediately after registration and when an unverified user asks to resend."
+                  : "Được gửi ngay sau khi đăng ký và khi người dùng chưa xác thực yêu cầu gửi lại."
+              }
+              icon={Mail}
+              accentClassName="border-sky-500/18 bg-sky-500/10 text-sky-600 dark:text-sky-200"
+              onClick={() => setActiveTemplateKey("activation")}
+            />
+            <TemplateSelectorCard
+              active={activeTemplateKey === "passwordReset"}
+              title={locale === "en" ? "Password reset email" : "Email đặt lại mật khẩu"}
+              description={
+                locale === "en"
+                  ? "Sent when a verified user requests a secure link to set a new password."
+                  : "Được gửi khi người dùng đã xác thực yêu cầu nhận liên kết bảo mật để đặt mật khẩu mới."
+              }
+              icon={ShieldCheck}
+              accentClassName="border-amber-500/18 bg-amber-500/10 text-amber-600 dark:text-amber-200"
+              onClick={() => setActiveTemplateKey("passwordReset")}
+            />
+          </div>
 
-          <TemplateEditorCard
-            title={locale === "en" ? "Password reset email template" : "Mẫu email đặt lại mật khẩu"}
-            description={
-              locale === "en"
-                ? "This template is sent when a user asks to choose a new password through a time-limited secure link."
-                : "Mẫu này được gửi khi người dùng yêu cầu chọn mật khẩu mới thông qua liên kết bảo mật có thời hạn."
-            }
-            template={templates.passwordReset}
-            onChange={(field, language, value) =>
-              updateTemplateField("passwordReset", field, language, value)
-            }
-          />
+          {activeTemplateKey === "activation" ? (
+            <TemplateEditorCard
+              title={locale === "en" ? "Activation email template" : "Mẫu email kích hoạt"}
+              description={
+                locale === "en"
+                  ? "This template is sent after email/password registration to activate a new competition account."
+                  : "Mẫu này được gửi sau khi đăng ký email/mật khẩu để kích hoạt tài khoản dự thi mới."
+              }
+              template={templates.activation}
+              onChange={(field, language, value) =>
+                updateTemplateField("activation", field, language, value)
+              }
+            />
+          ) : null}
+
+          {activeTemplateKey === "passwordReset" ? (
+            <TemplateEditorCard
+              title={locale === "en" ? "Password reset email template" : "Mẫu email đặt lại mật khẩu"}
+              description={
+                locale === "en"
+                  ? "This template is sent when a user asks to choose a new password through a time-limited secure link."
+                  : "Mẫu này được gửi khi người dùng yêu cầu chọn mật khẩu mới thông qua liên kết bảo mật có thời hạn."
+              }
+              template={templates.passwordReset}
+              onChange={(field, language, value) =>
+                updateTemplateField("passwordReset", field, language, value)
+              }
+            />
+          ) : null}
         </div>
       )}
     </div>
