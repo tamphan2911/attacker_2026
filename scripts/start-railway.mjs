@@ -93,7 +93,8 @@ function startNextServer() {
 
 async function main() {
   await preparePersistentDirectories();
-  runCommand("npx prisma db push --skip-generate");
+  // Railway boots should not block on Prisma's interactive data-loss warning prompt.
+  runCommand("npx prisma db push --skip-generate --accept-data-loss");
   await maybeSeedDatabase();
   startNextServer();
 }
