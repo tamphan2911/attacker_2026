@@ -563,8 +563,6 @@ function TeamsTableSection() {
   useAdminTitleScroll();
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<"all" | "round-1" | "round-2" | "round-3">("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "warning" | "default" | "success" | "info">("all");
-  const [trackFilter, setTrackFilter] = useState("");
 
   const rows = useMemo(
     () =>
@@ -606,17 +604,9 @@ function TeamsTableSection() {
           return false;
         }
 
-        if (statusFilter !== "all" && row.statusTone !== statusFilter) {
-          return false;
-        }
-
-        if (!tableFilterValueMatches(row.track, trackFilter)) {
-          return false;
-        }
-
         return true;
       }),
-    [rows, search, stageFilter, statusFilter, trackFilter],
+    [rows, search, stageFilter],
   );
 
   const exportRows = filteredRows.map((row) => ({
@@ -653,7 +643,7 @@ function TeamsTableSection() {
       />
 
       <Surface className="px-5 py-5 md:px-6">
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_200px_220px_220px]">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.45fr)_200px]">
           <label className="space-y-2">
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
               <Search className="h-3.5 w-3.5" />
@@ -687,35 +677,6 @@ function TeamsTableSection() {
             </select>
           </label>
 
-          <label className="space-y-2">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-              <Filter className="h-3.5 w-3.5" />
-              {locale === "en" ? "Status" : "Trạng thái"}
-            </span>
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-              className="theme-field h-11 w-full rounded-xl border px-3 text-sm outline-none"
-            >
-              <option value="all">{locale === "en" ? "All statuses" : "Tất cả trạng thái"}</option>
-              <option value="warning">{locale === "en" ? "Warning" : "Cảnh báo"}</option>
-              <option value="default">{locale === "en" ? "Neutral" : "Trung tính"}</option>
-              <option value="success">{locale === "en" ? "Positive" : "Tích cực"}</option>
-              <option value="info">{locale === "en" ? "Info" : "Thông tin"}</option>
-            </select>
-          </label>
-
-          <label className="space-y-2">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-              <Filter className="h-3.5 w-3.5" />
-              {locale === "en" ? "Track" : "Định hướng"}
-            </span>
-            <TableFilterField
-              value={trackFilter}
-              onChange={setTrackFilter}
-              placeholder={locale === "en" ? "Filter track" : "Lọc định hướng"}
-            />
-          </label>
         </div>
       </Surface>
 
