@@ -135,6 +135,7 @@ const adminNavGroups: Array<{
         description: { en: "Round 2 submission review", vi: "Rà soát bài nộp Vòng 2" },
         children: [
           { href: "/admin/submissions", label: { en: "Round 2 submissions", vi: "Bài nộp Vòng 2" } },
+          { href: "/admin/submissions/scores", label: { en: "Round 2 scores", vi: "Điểm Vòng 2" } },
         ],
       },
     ],

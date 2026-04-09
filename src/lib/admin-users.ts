@@ -55,7 +55,7 @@ export function getAdminUserCompetitionStatus(
   if (!team) {
     return {
       key: "stopped",
-      label: locale === "en" ? "Stopped" : "Dừng",
+      label: locale === "en" ? "Stopped before Round 1" : "Dừng trước Vòng 1",
       tone: "warning",
     };
   }
@@ -71,7 +71,7 @@ export function getAdminUserCompetitionStatus(
   if (team.stage === "round-2" && isRoundFinished("round-2")) {
     return {
       key: "stopped",
-      label: locale === "en" ? "Stopped after Round 2" : "Dừng sau Vòng 2",
+      label: locale === "en" ? "Stopped at Round 2" : "Dừng tại Vòng 2",
       tone: "warning",
     };
   }
@@ -79,7 +79,7 @@ export function getAdminUserCompetitionStatus(
   if (team.stage === "round-1" && isRoundFinished("round-1")) {
     return {
       key: "stopped",
-      label: locale === "en" ? "Stopped after Round 1" : "Dừng sau Vòng 1",
+      label: locale === "en" ? "Stopped at Round 1" : "Dừng tại Vòng 1",
       tone: "warning",
     };
   }
@@ -90,8 +90,8 @@ export function getAdminUserCompetitionStatus(
       key: "stopped",
       label:
         locale === "en"
-          ? "Stopped (not eligible)"
-          : "Dừng (chưa đủ điều kiện)",
+          ? "Stopped before Round 1 (not eligible)"
+          : "Dừng trước Vòng 1 (chưa đủ điều kiện)",
       tone: "warning",
     };
   }

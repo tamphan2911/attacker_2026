@@ -54,6 +54,10 @@ export function AdminShell({
   return <>{children}</>;
 }
 
+function cn(...values: Array<string | undefined | false>) {
+  return values.filter(Boolean).join(" ");
+}
+
 function exportRowsToWorkbook(
   fileName: string,
   sheetName: string,
@@ -237,6 +241,12 @@ function pickAdminRoleTone(role: UserProfile["role"]) {
 function UsersTableSection() {
   const { locale, users, teams, deleteUserByAdmin } = useSiteState();
   useAdminTitleScroll();
+  const firstStickyColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
+  const secondStickyColumnClass = "sticky z-10 bg-[var(--panel)]";
+  const firstStickyHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
+  const secondStickyHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
+  const firstStickyFilterClass = "sticky left-0 z-30 bg-[var(--panel)]";
+  const secondStickyFilterClass = "sticky z-20 bg-[var(--panel)]";
   const [filters, setFilters] = useState({
     name: "",
     studentId: "",
@@ -373,14 +383,28 @@ function UsersTableSection() {
                   locale === "en" ? "Edit" : "Chỉnh sửa",
                   locale === "en" ? "Delete" : "Xóa",
                 ].map((label) => (
-                  <th key={label} className="px-4 py-3 font-medium">
+                  <th
+                    key={label}
+                    style={
+                      label === "#"
+                        ? { left: 0, width: 72, minWidth: 72 }
+                        : label === (locale === "en" ? "Name" : "Họ tên")
+                          ? { left: 72, minWidth: 260 }
+                          : undefined
+                    }
+                    className={cn(
+                      "px-4 py-3 font-medium",
+                      label === "#" ? firstStickyHeadClass : "",
+                      label === (locale === "en" ? "Name" : "Họ tên") ? secondStickyHeadClass : "",
+                    )}
+                  >
                     {label}
                   </th>
                 ))}
               </tr>
               <tr className="border-t theme-border bg-[var(--panel)]">
-                <th className="px-4 py-3" />
-                <th className="px-4 py-3">
+                <th style={{ left: 0, width: 72, minWidth: 72 }} className={cn("px-4 py-3", firstStickyFilterClass)} />
+                <th style={{ left: 72, minWidth: 260 }} className={cn("px-4 py-3", secondStickyFilterClass)}>
                   <TableFilterField
                     value={filters.name}
                     onChange={(value) => setFilters((current) => ({ ...current, name: value }))}
@@ -461,10 +485,16 @@ function UsersTableSection() {
               {paginatedRows.map((row, index) => {
                 return (
                   <tr key={row.id} className="border-b theme-border last:border-b-0">
-                    <td className="px-4 py-4 text-xs font-semibold theme-text-soft">
+                    <td
+                      style={{ left: 0, width: 72, minWidth: 72 }}
+                      className={cn("px-4 py-4 text-xs font-semibold theme-text-soft", firstStickyColumnClass)}
+                    >
                       {startIndex + index + 1}
                     </td>
-                    <td className="px-4 py-4">
+                    <td
+                      style={{ left: 72, minWidth: 260 }}
+                      className={cn("px-4 py-4", secondStickyColumnClass)}
+                    >
                       <div>
                         <Link href={`/admin/users/${row.id}/profile`} className="font-semibold theme-accent">
                           {row.name}

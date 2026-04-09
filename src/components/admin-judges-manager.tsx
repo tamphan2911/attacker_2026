@@ -773,7 +773,7 @@ export function AdminJudgesList() {
             </thead>
             <tbody>
               {paginatedRows.map((judge, index) => (
-                <tr key={judge.id} className="theme-panel-strong">
+                <tr key={judge.id} id={`judge-row-${judge.id}`} className="theme-panel-strong scroll-mt-32">
                   <td className="rounded-l-[1.4rem] border-y border-l theme-border px-4 py-4 text-xs font-semibold theme-text-soft">
                     {startIndex + index + 1}
                   </td>
