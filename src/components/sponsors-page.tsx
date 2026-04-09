@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { BadgeDollarSign, Building2, Handshake } from "lucide-react";
 
 import { sponsorProfiles } from "@/data/site-content";
 import { pickText } from "@/lib/site";
@@ -40,42 +39,12 @@ export function SponsorsPage() {
 
   return (
     <div className="space-y-16">
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+      <section>
         <SectionHeading
           eyebrow={pickText(locale, pageContent.sponsors.header.eyebrow)}
           title={pickText(locale, pageContent.sponsors.header.title)}
           description={pickText(locale, pageContent.sponsors.header.description)}
         />
-
-        <Surface className="px-5 py-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Why this section matters" : "Vì sao section này quan trọng"}
-          </p>
-          <div className="mt-5 space-y-3">
-            {[
-              {
-                icon: <Handshake className="h-4 w-4 text-cyan-300" />,
-                label: locale === "en" ? "Clarifies sponsor roles" : "Làm rõ vai trò nhà tài trợ",
-              },
-              {
-                icon: <BadgeDollarSign className="h-4 w-4 text-emerald-300" />,
-                label: locale === "en" ? "Links support to rewards and activities" : "Gắn sự đồng hành với giải thưởng và hoạt động",
-              },
-              {
-                icon: <Building2 className="h-4 w-4 text-orange-300" />,
-                label: locale === "en" ? "Makes the competition feel more established" : "Giúp cuộc thi có cảm giác trưởng thành hơn",
-              },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="flex items-center gap-3 rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-body"
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </Surface>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
