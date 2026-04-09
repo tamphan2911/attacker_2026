@@ -134,8 +134,8 @@ function MemberCard({
     return (
       <div className="rounded-[1.15rem] border border-dashed border-slate-300/70 bg-white/60 px-3 py-3 dark:border-white/12 dark:bg-white/[0.04]">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[0.95rem] border border-slate-300/70 bg-white/80 text-xs font-semibold text-slate-500 dark:border-white/12 dark:bg-white/[0.06] dark:text-slate-300">
-            {String(index + 1).padStart(2, "0")}
+          <div className="flex h-10 w-10 items-center justify-center rounded-[0.95rem] border border-slate-300/70 bg-white/80 text-slate-500 dark:border-white/12 dark:bg-white/[0.06] dark:text-slate-300">
+            <Users2 className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold theme-text-strong">
