@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -44,6 +44,7 @@ import {
   type Round1PaperQuestion,
   type Round1QuestionResponse,
 } from "@/lib/round1";
+import { estimateEssayAiLikelihood } from "@/lib/essay-ai-guard";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 import type { Round1Submission } from "@/types/site";
 
@@ -642,6 +643,15 @@ export function Round1ExamPage() {
 
     await submitExamAttempt(session);
   };
+  const currentQuestion = session?.questions[session.currentQuestionIndex];
+  const currentResponse = currentQuestion ? session?.answers[currentQuestion.id] : undefined;
+  const currentEssayAiGuard = useMemo(
+    () =>
+      currentQuestion?.type === "essay"
+        ? estimateEssayAiLikelihood(currentResponse?.essayText ?? "", locale)
+        : { score: 0, shouldWarn: false, reasons: [] },
+    [currentQuestion?.type, currentResponse?.essayText, locale],
+  );
 
   if (authStatus === "loading" || !hasHydrated) {
     return (
@@ -734,8 +744,6 @@ export function Round1ExamPage() {
     );
   }
 
-  const currentQuestion = session?.questions[session.currentQuestionIndex];
-  const currentResponse = currentQuestion ? session?.answers[currentQuestion.id] : undefined;
   const answeredCount = session
     ? session.questions.filter((question) => isRound1QuestionAnswered(question, session.answers[question.id])).length
     : 0;
@@ -1574,6 +1582,31 @@ export function Round1ExamPage() {
                           : "Hãy giữ câu trả lời trong giới hạn 200 từ cho câu tự luận này."}
                     </p>
                   </div>
+                  {currentEssayAiGuard.shouldWarn ? (
+                    <div className="rounded-[1.35rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                        <div className="space-y-1.5">
+                          <p className="font-semibold">
+                            {locale === "en"
+                              ? `AI-like wording warning (${currentEssayAiGuard.score}%)`
+                              : `Cảnh báo nội dung giống AI (${currentEssayAiGuard.score}%)`}
+                          </p>
+                          <p>
+                            {locale === "en"
+                              ? "This answer currently looks more than 50% AI-like based on phrasing patterns. Please revise it into your own wording before you continue."
+                              : "Câu trả lời này hiện có mức biểu hiện giống nội dung AI trên 50% theo mẫu diễn đạt. Hãy chỉnh lại bằng cách viết và lập luận của chính bạn trước khi tiếp tục."}
+                          </p>
+                          {currentEssayAiGuard.reasons.length > 0 ? (
+                            <p className="text-xs font-medium opacity-85">
+                              {locale === "en" ? "Signals detected:" : "Dấu hiệu được phát hiện:"}{" "}
+                              {currentEssayAiGuard.reasons.join(locale === "en" ? "; " : "; ")}.
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
 
