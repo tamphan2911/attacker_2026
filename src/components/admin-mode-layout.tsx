@@ -8,7 +8,6 @@ import {
   FileQuestion,
   LayoutDashboard,
   Mail,
-  Medal,
   Newspaper,
   TableProperties,
   Users,
@@ -69,15 +68,6 @@ const adminNavGroups: Array<{
           { href: "/admin/news", label: { en: "Article list", vi: "Danh sách bài viết" } },
         ],
       },
-      {
-        href: "/admin/judges",
-        icon: Medal,
-        label: { en: "Judges", vi: "Giám khảo" },
-        description: { en: "Panel profiles and round assignment", vi: "Hồ sơ và phân bổ theo vòng" },
-        children: [
-          { href: "/admin/judges", label: { en: "Judge list", vi: "Danh sách giám khảo" } },
-        ],
-      },
     ],
   },
   {
@@ -90,6 +80,7 @@ const adminNavGroups: Array<{
         description: { en: "Participant records", vi: "Hồ sơ thí sinh" },
         children: [
           { href: "/admin/users", label: { en: "Participant list", vi: "Danh sách thí sinh" } },
+          { href: "/admin/judges", label: { en: "Judge", vi: "Giám khảo" } },
           { href: "/admin/organizer-team", label: { en: "Organizer team", vi: "Ban tổ chức" } },
         ],
       },
