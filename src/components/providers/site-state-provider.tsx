@@ -185,6 +185,7 @@ interface SiteStateValue {
     payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio" | "leaderId" | "stage" | "finalOutcome">>,
   ) => void;
   deleteTeamByAdmin: (teamId: string) => void;
+  createRound1QuestionByAdmin: (bankId: string, payload: Round1Question) => Promise<string | null>;
   updateRound1QuestionByAdmin: (bankId: string, questionId: string, payload: Round1Question) => void;
   updateRound1EssayScoreByAdmin: (
     submissionId: string,
@@ -1402,6 +1403,142 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const validateRound1QuestionDraft = (payload: Round1Question) => {
+    if (!payload.topic.trim() || !payload.prompt.en.trim() || !payload.prompt.vi.trim()) {
+      return {
+        en: "Question topic and question content are required.",
+        vi: "Chủ đề và nội dung câu hỏi là bắt buộc.",
+      } satisfies LocalizedText;
+    }
+
+    const options = payload.options ?? [];
+    const correctOptionIds = payload.correctOptionIds ?? [];
+    const optionIds = new Set(options.map((option) => option.id));
+
+    if (options.some((option) => !option.text.en.trim() || !option.text.vi.trim())) {
+      return {
+        en: "Each configured option must include question content.",
+        vi: "Mỗi lựa chọn được cấu hình phải có nội dung.",
+      } satisfies LocalizedText;
+    }
+
+    if (payload.type === "true-false" || payload.type === "single-choice") {
+      if (options.length < 2 || correctOptionIds.length !== 1 || !optionIds.has(correctOptionIds[0])) {
+        return {
+          en: "True/False and single-choice questions need at least 2 options and exactly 1 correct answer.",
+          vi: "Câu Đúng/Sai và một đáp án cần ít nhất 2 lựa chọn và đúng 1 đáp án đúng.",
+        } satisfies LocalizedText;
+      }
+    }
+
+    if (payload.type === "multiple-choice") {
+      if (
+        options.length < 2 ||
+        correctOptionIds.length < 2 ||
+        correctOptionIds.some((optionId) => !optionIds.has(optionId))
+      ) {
+        return {
+          en: "Multiple-choice questions need at least 2 correct answers selected from the configured options.",
+          vi: "Câu nhiều đáp án cần ít nhất 2 đáp án đúng nằm trong các lựa chọn đã cấu hình.",
+        } satisfies LocalizedText;
+      }
+    }
+
+    if (payload.type === "pairing") {
+      const pairingItems = payload.pairingItems ?? [];
+      if (
+        options.length < 2 ||
+        pairingItems.length < 2 ||
+        pairingItems.some(
+          (item) =>
+            !item.prompt.en.trim() ||
+            !item.prompt.vi.trim() ||
+            !optionIds.has(item.correctOptionId),
+        )
+      ) {
+        return {
+          en: "Pairing questions need left-side prompts and valid right-side matches.",
+          vi: "Cau noi cap can co ve trai day du va dap an ben phai hop le.",
+        } satisfies LocalizedText;
+      }
+    }
+
+    if (payload.type === "essay") {
+      if (
+        !payload.placeholder?.en.trim() ||
+        !payload.placeholder?.vi.trim() ||
+        !payload.rubricNote?.en.trim() ||
+        !payload.rubricNote?.vi.trim()
+      ) {
+        return {
+          en: "Essay questions need a placeholder and rubric note.",
+          vi: "Câu tự luận cần có placeholder và ghi chú rubric.",
+        } satisfies LocalizedText;
+      }
+    }
+
+    return null;
+  };
+
+  const createRound1QuestionByAdmin = async (
+    bankId: string,
+    payload: Round1Question,
+  ) => {
+    if (!canAccessAdminMode) {
+      pushToast(
+        {
+          en: "Only admin and moderator accounts can create Round 1 questions here.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể tạo câu hỏi Vòng 1 tại đây.",
+        },
+        "warning",
+      );
+      return null;
+    }
+
+    const validationError = validateRound1QuestionDraft(payload);
+    if (validationError) {
+      pushToast(validationError, "warning");
+      return null;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/round-1/banks/${bankId}/questions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not create the Round 1 question.");
+        pushToast({ en: error, vi: error }, "warning");
+        return null;
+      }
+
+      const result = (await response.json().catch(() => null)) as { questionId?: string } | null;
+      await syncSiteData();
+      pushToast(
+        {
+          en: "Round 1 question created in admin mode.",
+          vi: "Câu hỏi Vòng 1 đã được tạo trong admin mode.",
+        },
+        "success",
+      );
+      return result?.questionId ?? null;
+    } catch {
+      pushToast(
+        {
+          en: "Could not create the Round 1 question right now.",
+          vi: "Hiện không thể tạo câu hỏi Vòng 1.",
+        },
+        "warning",
+      );
+      return null;
+    }
+  };
+
   const updateRound1QuestionByAdmin = (
     bankId: string,
     questionId: string,
@@ -1418,96 +1555,10 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!payload.topic.trim() || !payload.prompt.en.trim() || !payload.prompt.vi.trim()) {
-      pushToast(
-        {
-          en: "Question topic and bilingual prompts are required.",
-          vi: "Chu de cau hoi va prompt song ngu la bat buoc.",
-        },
-        "warning",
-      );
+    const validationError = validateRound1QuestionDraft(payload);
+    if (validationError) {
+      pushToast(validationError, "warning");
       return;
-    }
-
-    const options = payload.options ?? [];
-    const correctOptionIds = payload.correctOptionIds ?? [];
-    const optionIds = new Set(options.map((option) => option.id));
-
-    if (options.some((option) => !option.text.en.trim() || !option.text.vi.trim())) {
-      pushToast(
-        {
-          en: "Each configured option must include both EN and VI text.",
-          vi: "Mỗi lựa chọn được cấu hình phải có nội dung cả EN và VI.",
-        },
-        "warning",
-      );
-      return;
-    }
-
-    if (payload.type === "true-false" || payload.type === "single-choice") {
-      if (options.length < 2 || correctOptionIds.length !== 1 || !optionIds.has(correctOptionIds[0])) {
-        pushToast(
-          {
-            en: "True/False and single-choice questions need at least 2 options and exactly 1 correct answer.",
-            vi: "Câu Đúng/Sai và một đáp án cần ít nhất 2 lựa chọn và đúng 1 đáp án đúng.",
-          },
-          "warning",
-        );
-        return;
-      }
-    }
-
-    if (payload.type === "multiple-choice") {
-      if (
-        options.length < 2 ||
-        correctOptionIds.length < 2 ||
-        correctOptionIds.some((optionId) => !optionIds.has(optionId))
-      ) {
-        pushToast(
-          {
-            en: "Multiple-choice questions need at least 2 correct answers selected from the configured options.",
-            vi: "Câu nhiều đáp án cần ít nhất 2 đáp án đúng nằm trong các lựa chọn đã cấu hình.",
-          },
-          "warning",
-        );
-        return;
-      }
-    }
-
-    if (payload.type === "pairing") {
-      const pairingItems = payload.pairingItems ?? [];
-      if (
-        options.length < 2 ||
-        pairingItems.length < 2 ||
-        pairingItems.some(
-          (item) =>
-            !item.prompt.en.trim() ||
-            !item.prompt.vi.trim() ||
-            !optionIds.has(item.correctOptionId),
-        )
-      ) {
-        pushToast(
-          {
-            en: "Pairing questions need left-side prompts and valid right-side matches.",
-            vi: "Cau noi cap can co ve trai day du va dap an ben phai hop le.",
-          },
-          "warning",
-        );
-        return;
-      }
-    }
-
-    if (payload.type === "essay") {
-      if (!payload.placeholder?.en.trim() || !payload.placeholder?.vi.trim() || !payload.rubricNote?.en.trim() || !payload.rubricNote?.vi.trim()) {
-        pushToast(
-          {
-            en: "Essay questions need bilingual placeholder text and rubric notes.",
-            vi: "Cau tu luan can co placeholder song ngu va ghi chu rubric song ngu.",
-          },
-          "warning",
-        );
-        return;
-      }
     }
 
     void (async () => {
@@ -2545,6 +2596,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     updateCurrentTeam,
     updateTeamByAdmin,
     deleteTeamByAdmin,
+    createRound1QuestionByAdmin,
     updateRound1QuestionByAdmin,
     updateRound1EssayScoreByAdmin,
     inviteUser,

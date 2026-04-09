@@ -764,6 +764,57 @@ function normalizeQuestionForStorage(question: Round1Question) {
   };
 }
 
+function createNextRound1QuestionId(
+  bankType: "objective" | "essay",
+  questions: Round1Question[],
+) {
+  const prefix = bankType === "essay" ? "r1e-" : "r1q-";
+  const nextIndex =
+    questions.reduce((highest, question) => {
+      const match = question.id.match(new RegExp(`^${prefix}(\\d+)$`, "i"));
+      if (!match) {
+        return highest;
+      }
+
+      const value = Number.parseInt(match[1] ?? "0", 10);
+      return Number.isFinite(value) ? Math.max(highest, value) : highest;
+    }, 0) + 1;
+
+  return `${prefix}${String(nextIndex).padStart(2, "0")}`;
+}
+
+export async function createRound1QuestionByAdmin(
+  bankId: string,
+  payload: Round1Question,
+): Promise<ServiceResult<{ bankId: string; questionId: string }>> {
+  const bank = await prisma.round1TestBank.findUnique({
+    where: { id: bankId },
+    select: { id: true, bankType: true, questions: true },
+  });
+
+  if (!bank) {
+    return fail(404, "Round 1 bank not found.");
+  }
+
+  const questions = JSON.parse(bank.questions) as Round1Question[];
+  const questionId = createNextRound1QuestionId(
+    bank.bankType === "ESSAY" ? "essay" : "objective",
+    questions,
+  );
+
+  await prisma.round1TestBank.update({
+    where: { id: bankId },
+    data: {
+      questions: JSON.stringify([
+        ...questions,
+        normalizeQuestionForStorage({ ...payload, id: questionId }),
+      ]),
+    },
+  });
+
+  return ok({ bankId, questionId }, 201);
+}
+
 export async function updateRound1QuestionByAdmin(
   bankId: string,
   questionId: string,

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
@@ -256,6 +257,16 @@ function convertRound1QuestionType(question: Round1Question, nextType: Round1Que
     rubricNote: question.rubricNote ?? createLocalizedEmpty(),
     placeholder: question.placeholder ?? createLocalizedEmpty(),
   };
+}
+
+function createRound1QuestionDraftForBank(bank: Round1TestBank) {
+  const questionType: Round1QuestionType = bank.bankType === "essay" ? "essay" : "single-choice";
+
+  return createQuestionShapeForType(questionType, {
+    topic: bank.questions[0]?.topic ?? "",
+    difficulty: bank.bankType === "essay" ? "medium" : "easy",
+    prompt: createLocalizedEmpty(),
+  });
 }
 
 function exportRowsToWorkbook(
@@ -988,18 +999,27 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                 : "Trang này hiển thị cấu hình ngân hàng tự luận riêng dùng cho 2 câu cuối của mỗi đề thi sinh viên, đồng thời preview các câu hỏi đã được soạn trong prototype."
           }
         />
-        <button
-          type="button"
-          onClick={() =>
-            exportRowsToWorkbook("attacker-2026-round1-bank-detail.xlsx", "Round1Bank", bankExportRows)
-          }
-          className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
-        >
-          <span className="inline-flex items-center gap-2">
-            <Download className="h-4 w-4" />
-            {locale === "en" ? "Export bank detail" : "Xuat chi tiet bank"}
-          </span>
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href={`/admin/round-1/banks/${bank.id}/questions/new`}
+            className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+          >
+            <FileQuestion className="h-4 w-4" />
+            {locale === "en" ? "Add question" : "Them cau hoi"}
+          </Link>
+          <button
+            type="button"
+            onClick={() =>
+              exportRowsToWorkbook("attacker-2026-round1-bank-detail.xlsx", "Round1Bank", bankExportRows)
+            }
+            className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+          >
+            <span className="inline-flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              {locale === "en" ? "Export bank detail" : "Xuat chi tiet bank"}
+            </span>
+          </button>
+        </div>
       </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -1687,34 +1707,88 @@ export function AdminRound1QuestionEditor({ bankId, questionId }: { bankId: stri
     );
   }
 
-  return <AdminRound1QuestionEditorInner bankId={bankId} questionId={questionId} />;
+  return <AdminRound1QuestionEditorInner bankId={bankId} questionId={questionId} mode="edit" />;
 }
 
-function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string; questionId: string }) {
-  const { locale, round1TestBanks, updateRound1QuestionByAdmin } = useSiteState();
+export function AdminRound1QuestionCreator({ bankId }: { bankId: string }) {
+  const { hasHydrated } = useSiteState();
+  useAdminTitleScroll();
+
+  if (!hasHydrated) {
+    return (
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <SectionHeading
+          id={ADMIN_TITLE_ID}
+          className="scroll-mt-32"
+          eyebrow="Admin / Round 1 / Question"
+          title="Loading question form..."
+          description="Waiting for the local admin dataset to hydrate before opening the question editor."
+        />
+      </Surface>
+    );
+  }
+
+  return <AdminRound1QuestionEditorInner bankId={bankId} mode="create" />;
+}
+
+function AdminRound1QuestionEditorInner({
+  bankId,
+  questionId,
+  mode,
+}: {
+  bankId: string;
+  questionId?: string;
+  mode: "edit" | "create";
+}) {
+  const router = useRouter();
+  const { locale, round1TestBanks, createRound1QuestionByAdmin, updateRound1QuestionByAdmin } = useSiteState();
   const bank = round1TestBanks.find((item) => item.id === bankId);
-  const sourceQuestion = bank?.questions.find((item) => item.id === questionId);
-  const questionIndex = bank?.questions.findIndex((item) => item.id === questionId) ?? -1;
+  const sourceQuestion = mode === "edit" ? bank?.questions.find((item) => item.id === questionId) : undefined;
+  const questionIndex = mode === "edit" ? bank?.questions.findIndex((item) => item.id === questionId) ?? -1 : -1;
+  const pristineQuestion = useMemo(() => {
+    if (!bank) {
+      return null;
+    }
+
+    if (mode === "create") {
+      return createRound1QuestionDraftForBank(bank);
+    }
+
+    return sourceQuestion ? cloneRound1Question(sourceQuestion) : null;
+  }, [bank, mode, sourceQuestion]);
   const [draft, setDraft] = useState<Round1Question | null>(() =>
-    sourceQuestion ? cloneRound1Question(sourceQuestion) : null,
+    pristineQuestion ? cloneRound1Question(pristineQuestion) : null,
   );
+  const [savePending, setSavePending] = useState(false);
 
   const isDirty = useMemo(() => {
-    if (!sourceQuestion || !draft) {
+    if (!pristineQuestion || !draft) {
       return false;
     }
 
-    return JSON.stringify(sourceQuestion) !== JSON.stringify(draft);
-  }, [draft, sourceQuestion]);
+    return JSON.stringify(pristineQuestion) !== JSON.stringify(draft);
+  }, [draft, pristineQuestion]);
 
-  if (!bank || !sourceQuestion || !draft) {
+  if (!bank || !draft || (mode === "edit" && !sourceQuestion)) {
     return (
       <NotFoundState
-        title={locale === "en" ? "Round 1 question not found." : "Khong tim thay cau hoi Vong 1."}
+        title={
+          mode === "create"
+            ? locale === "en"
+              ? "Round 1 bank not found."
+              : "Khong tim thay bank Vong 1."
+            : locale === "en"
+              ? "Round 1 question not found."
+              : "Khong tim thay cau hoi Vong 1."
+        }
         description={
-          locale === "en"
-            ? "This question may not exist in the current bank dataset."
-            : "Cau hoi nay co the khong ton tai trong du lieu bank hien tai."
+          mode === "create"
+            ? locale === "en"
+              ? "This bank may not exist in the current browser dataset."
+              : "Bank nay co the khong ton tai trong bo du lieu hien tai cua trinh duyet."
+            : locale === "en"
+              ? "This question may not exist in the current bank dataset."
+              : "Cau hoi nay co the khong ton tai trong du lieu bank hien tai."
         }
         href={bank ? `/admin/round-1/banks/${bank.id}` : "/admin/round-1"}
         actionLabel={locale === "en" ? "Back to test bank" : "Quay lai test bank"}
@@ -1722,8 +1796,21 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
     );
   }
 
-  const saveDraft = () => {
-    updateRound1QuestionByAdmin(bank.id, sourceQuestion.id, draft);
+  const saveDraft = async () => {
+    if (mode === "create") {
+      setSavePending(true);
+      const createdQuestionId = await createRound1QuestionByAdmin(bank.id, draft);
+      setSavePending(false);
+
+      if (createdQuestionId) {
+        router.push(`/admin/round-1/banks/${bank.id}/questions/${createdQuestionId}`);
+      }
+      return;
+    }
+
+    if (sourceQuestion) {
+      updateRound1QuestionByAdmin(bank.id, sourceQuestion.id, draft);
+    }
   };
 
   return (
@@ -1743,34 +1830,56 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
         <SectionHeading
           id={ADMIN_TITLE_ID}
           className="scroll-mt-32"
-          eyebrow={locale === "en" ? "Admin / Round 1 / Edit question" : "Admin / Vong 1 / Sua cau hoi"}
+          eyebrow={
+            mode === "create"
+              ? locale === "en"
+                ? "Admin / Round 1 / Add question"
+                : "Admin / Vong 1 / Them cau hoi"
+              : locale === "en"
+                ? "Admin / Round 1 / Edit question"
+                : "Admin / Vong 1 / Sua cau hoi"
+          }
           title={
-            locale === "en"
-              ? `Question ${questionIndex + 1} editor`
-              : `Editor cau hoi ${questionIndex + 1}`
+            mode === "create"
+              ? locale === "en"
+                ? "New question draft"
+                : "Bản nháp câu hỏi mới"
+              : locale === "en"
+                ? `Question ${questionIndex + 1} editor`
+                : `Editor cau hoi ${questionIndex + 1}`
           }
           description={
-            locale === "en"
-              ? "Update the bilingual prompt, topic, difficulty, question type, and response structure for this question inside the selected test bank."
-              : "Cap nhat prompt song ngu, chu de, do kho, loai cau hoi va cau truc tra loi cho cau hoi nay trong test bank da chon."
+            mode === "create"
+              ? locale === "en"
+                ? "Create a new question for this test bank. The question ID is generated automatically when you save."
+                : "Tạo câu hỏi mới cho test bank này. Mã câu hỏi sẽ được tạo tự động khi bạn lưu."
+              : locale === "en"
+                ? "Update the question prompt, topic, difficulty, question type, and response structure for this question inside the selected test bank."
+                : "Cap nhat prompt, chu de, do kho, loai cau hoi va cau truc tra loi cho cau hoi nay trong test bank da chon."
           }
         />
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={() => setDraft(cloneRound1Question(sourceQuestion))}
+            onClick={() => pristineQuestion && setDraft(cloneRound1Question(pristineQuestion))}
             className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
           >
             {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
           </button>
           <button
             type="button"
-            disabled={!isDirty}
-            onClick={saveDraft}
+            disabled={savePending || !isDirty}
+            onClick={() => void saveDraft()}
             className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Save className="h-4 w-4" />
-            {locale === "en" ? "Save question" : "Luu cau hoi"}
+            {mode === "create"
+              ? locale === "en"
+                ? "Create question"
+                : "Tao cau hoi"
+              : locale === "en"
+                ? "Save question"
+                : "Luu cau hoi"}
           </button>
         </div>
       </div>
@@ -2118,7 +2227,13 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
               </div>
               <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-sm theme-text-muted">{locale === "en" ? "Question id" : "Ma cau hoi"}</p>
-                <p className="mt-2 text-sm font-semibold theme-text-strong">{sourceQuestion.id}</p>
+                <p className="mt-2 text-sm font-semibold theme-text-strong">
+                  {mode === "create"
+                    ? locale === "en"
+                      ? "Generated on save"
+                      : "Tạo khi lưu"
+                    : sourceQuestion?.id}
+                </p>
               </div>
               <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-sm theme-text-muted">{locale === "en" ? "Question type" : "Loai cau hoi"}</p>
@@ -2202,11 +2317,18 @@ function AdminRound1QuestionEditorInner({ bankId, questionId }: { bankId: string
             ) : null}
             <button
               type="button"
-              onClick={saveDraft}
-              className="theme-button-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
+              disabled={savePending || !isDirty}
+              onClick={() => void saveDraft()}
+              className="theme-button-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Save className="h-4 w-4" />
-              {locale === "en" ? "Save question" : "Luu cau hoi"}
+              {mode === "create"
+                ? locale === "en"
+                  ? "Create question"
+                  : "Tao cau hoi"
+                : locale === "en"
+                  ? "Save question"
+                  : "Luu cau hoi"}
             </button>
           </Surface>
         </div>
