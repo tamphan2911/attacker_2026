@@ -125,6 +125,7 @@ const adminNavGroups: Array<{
         description: { en: "Banks, results, and review", vi: "Ngân hàng đề, kết quả và chấm điểm" },
         children: [
           { href: "/admin/round-1", label: { en: "Round 1 test bank", vi: "Ngân hàng đề Vòng 1" } },
+          { href: "/admin/round-1/exams", label: { en: "Round 1 exam", vi: "Bài thi Vòng 1" } },
         ],
       },
       {
