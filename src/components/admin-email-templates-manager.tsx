@@ -328,43 +328,6 @@ export function AdminEmailTemplatesManager() {
           </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Surface className="px-5 py-5">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-sky-500/18 bg-sky-500/10">
-                <Mail className="h-4.5 w-4.5 text-sky-600 dark:text-sky-200" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold theme-text-strong">
-                  {locale === "en" ? "Activation email" : "Email kích hoạt"}
-                </p>
-                <p className="mt-1 text-sm theme-text-soft">
-                  {locale === "en"
-                    ? "Sent immediately after registration and when an unverified user asks to resend."
-                    : "Được gửi ngay sau khi đăng ký và khi người dùng chưa xác thực yêu cầu gửi lại."}
-                </p>
-              </div>
-            </div>
-          </Surface>
-
-          <Surface className="px-5 py-5">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-500/18 bg-amber-500/10">
-                <ShieldCheck className="h-4.5 w-4.5 text-amber-600 dark:text-amber-200" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold theme-text-strong">
-                  {locale === "en" ? "Password reset email" : "Email đặt lại mật khẩu"}
-                </p>
-                <p className="mt-1 text-sm theme-text-soft">
-                  {locale === "en"
-                    ? "Sent when a verified user requests a secure link to set a new password."
-                    : "Được gửi khi người dùng đã xác thực yêu cầu nhận liên kết bảo mật để đặt mật khẩu mới."}
-                </p>
-              </div>
-            </div>
-          </Surface>
-        </div>
       </section>
 
       {message ? (
