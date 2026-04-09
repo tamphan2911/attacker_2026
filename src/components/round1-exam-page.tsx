@@ -284,10 +284,12 @@ export function Round1ExamPage() {
   const [dialogPending, setDialogPending] = useState(false);
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
+  const [captureWarning, setCaptureWarning] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const sessionRef = useRef<Round1ExamSession | null>(null);
   const submissionRef = useRef<Round1Submission | null>(null);
   const submitInFlightRef = useRef(false);
+  const captureWarningTimeoutRef = useRef<number | null>(null);
 
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
@@ -335,8 +337,34 @@ export function Round1ExamPage() {
   }, [session]);
 
   useEffect(() => {
+    return () => {
+      if (captureWarningTimeoutRef.current) {
+        window.clearTimeout(captureWarningTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     submissionRef.current = existingSubmission ?? null;
   }, [existingSubmission]);
+
+  const showCaptureWarning = useCallback(() => {
+    const message =
+      locale === "en"
+        ? "Screen capture and print shortcuts are restricted during the active Round 1 exam."
+        : "Trong thời gian làm bài Vòng 1, các phím tắt chụp màn hình và in nội dung sẽ bị hạn chế.";
+
+    setCaptureWarning(message);
+
+    if (captureWarningTimeoutRef.current) {
+      window.clearTimeout(captureWarningTimeoutRef.current);
+    }
+
+    captureWarningTimeoutRef.current = window.setTimeout(() => {
+      setCaptureWarning(null);
+      captureWarningTimeoutRef.current = null;
+    }, 3600);
+  }, [locale]);
 
   useEffect(() => {
     if (!hasHydrated || !isAuthenticated || !currentUser.id || existingSubmission || !isStudent) {
@@ -518,14 +546,30 @@ export function Round1ExamPage() {
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (!(event.ctrlKey || event.metaKey)) {
+      const key = event.key.toLowerCase();
+      const isCommandModifier = event.ctrlKey || event.metaKey;
+      const isWindowsPrintScreen = key === "printscreen";
+      const isMacScreenshotShortcut =
+        event.metaKey && event.shiftKey && (key === "3" || key === "4" || key === "5");
+      const isPrintShortcut = isCommandModifier && key === "p";
+
+      if (isWindowsPrintScreen || isMacScreenshotShortcut || isPrintShortcut) {
+        event.preventDefault();
+        showCaptureWarning();
         return;
       }
 
-      const key = event.key.toLowerCase();
+      if (!(event.ctrlKey || event.metaKey)) {
+        return;
+      }
       if (key === "a" || key === "c" || key === "v" || key === "x") {
         event.preventDefault();
       }
+    };
+
+    const handleBeforePrint = (event: Event) => {
+      event.preventDefault();
+      showCaptureWarning();
     };
 
     document.addEventListener("copy", blockEvent);
@@ -535,6 +579,7 @@ export function Round1ExamPage() {
     document.addEventListener("dragstart", blockEvent);
     document.addEventListener("contextmenu", blockEvent);
     document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("beforeprint", handleBeforePrint);
 
     return () => {
       document.documentElement.classList.remove("theme-round1-exam-locked");
@@ -546,8 +591,9 @@ export function Round1ExamPage() {
       document.removeEventListener("dragstart", blockEvent);
       document.removeEventListener("contextmenu", blockEvent);
       document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("beforeprint", handleBeforePrint);
     };
-  }, [existingSubmission, session]);
+  }, [existingSubmission, session, showCaptureWarning]);
 
   const submitExamAttempt = useCallback(
     async (targetSession: Round1ExamSession) => {
@@ -811,6 +857,27 @@ export function Round1ExamPage() {
       ? countWords(currentResponse?.essayText ?? "")
       : 0;
   const currentEssayExceedsLimit = currentQuestion?.type === "essay" && currentEssayWordCount > round1WordLimit;
+  const watermarkLabel =
+    session && currentTeam
+      ? [
+          locale === "en" ? "Round 1 confidential" : "Bai thi Vong 1",
+          currentUser.name,
+          currentUser.id,
+          `#${currentTeam.tag}`,
+          new Date(nowMs).toLocaleString(locale === "en" ? "en-US" : "vi-VN", {
+            hour12: false,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }),
+        ].join(" • ")
+      : "";
+  const watermarkRows = watermarkLabel
+    ? Array.from({ length: 12 }, (_, index) => `${watermarkLabel} • ${index + 1}`)
+    : [];
   const navigateToQuestion = (index: number) => {
     setSession((current) =>
       current
@@ -1307,6 +1374,27 @@ export function Round1ExamPage() {
 
   return (
     <>
+      {session && !existingSubmission ? (
+        <>
+          <div aria-hidden="true" className="theme-round1-watermark-layer">
+            <div className="theme-round1-watermark-grid">
+              {watermarkRows.map((label) => (
+                <span key={label} className="theme-round1-watermark-chip">
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
+          {captureWarning ? (
+            <div className="pointer-events-none fixed bottom-5 right-5 z-[75] max-w-sm rounded-[1.4rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.98),rgba(255,237,213,0.96))] px-4 py-3.5 text-sm leading-7 text-amber-950 shadow-[0_18px_44px_rgba(122,74,12,0.16)] dark:border-amber-300/22 dark:bg-[linear-gradient(135deg,rgba(120,53,15,0.42),rgba(113,63,18,0.34))] dark:text-amber-100">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                <p>{captureWarning}</p>
+              </div>
+            </div>
+          ) : null}
+        </>
+      ) : null}
       <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
