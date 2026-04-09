@@ -61,6 +61,41 @@ const quickPolicyItems = [
   },
 ] as const;
 
+const introJumpItems = [
+  {
+    href: "#general-rules",
+    icon: Flag,
+    shortLabel: { en: "General", vi: "Chung" },
+    hoverLabel: { en: "Jump to general rules", vi: "Đi đến thể lệ chung" },
+    className:
+      "border-violet-700/22 bg-[linear-gradient(135deg,rgba(124,58,237,0.16),rgba(168,85,247,0.1))] text-violet-900 shadow-[0_14px_30px_rgba(124,58,237,0.08)] dark:border-violet-300/20 dark:bg-violet-300/[0.12] dark:text-violet-100",
+  },
+  {
+    href: "#round-1-rules",
+    icon: FileCheck2,
+    shortLabel: { en: "R1", vi: "V1" },
+    hoverLabel: { en: "Jump to Round 1 rules", vi: "Đi đến thể lệ Vòng 1" },
+    className:
+      "border-sky-700/22 bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.1))] text-sky-900 shadow-[0_14px_30px_rgba(14,165,233,0.08)] dark:border-sky-300/20 dark:bg-sky-300/[0.12] dark:text-sky-100",
+  },
+  {
+    href: "#round-2-rules",
+    icon: BadgeCheck,
+    shortLabel: { en: "R2", vi: "V2" },
+    hoverLabel: { en: "Jump to Round 2 rules", vi: "Đi đến thể lệ Vòng 2" },
+    className:
+      "border-emerald-700/22 bg-[linear-gradient(135deg,rgba(16,185,129,0.16),rgba(52,211,153,0.1))] text-emerald-900 shadow-[0_14px_30px_rgba(16,185,129,0.08)] dark:border-emerald-300/20 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
+  },
+  {
+    href: "#round-3-rules",
+    icon: Trophy,
+    shortLabel: { en: "R3", vi: "V3" },
+    hoverLabel: { en: "Jump to Final round rules", vi: "Đi đến thể lệ Chung kết" },
+    className:
+      "border-amber-700/22 bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(249,115,22,0.1))] text-amber-900 shadow-[0_14px_30px_rgba(245,158,11,0.08)] dark:border-amber-300/20 dark:bg-amber-300/[0.12] dark:text-amber-100",
+  },
+] as const;
+
 const roundRuleMeta = {
   "01": {
     anchor: "round-1-rules",
@@ -196,11 +231,35 @@ export function RulesPage() {
   return (
     <div className="space-y-16 md:space-y-20">
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-        <SectionHeading
-          eyebrow={pickText(locale, pageContent.rules.header.eyebrow)}
-          title={pickText(locale, pageContent.rules.header.title)}
-          description={pickText(locale, pageContent.rules.header.description)}
-        />
+        <div className="space-y-5">
+          <SectionHeading
+            eyebrow={pickText(locale, pageContent.rules.header.eyebrow)}
+            title={pickText(locale, pageContent.rules.header.title)}
+            description={pickText(locale, pageContent.rules.header.description)}
+          />
+
+          <div className="flex flex-wrap gap-3">
+            {introJumpItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`group relative inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition hover:-translate-y-0.5 active:scale-[0.98] ${item.className}`}
+                >
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/14 bg-white/55 dark:bg-white/[0.08]">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span>{pickText(locale, item.shortLabel)}</span>
+                  <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-20 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                    {pickText(locale, item.hoverLabel)}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
 
         <Surface className="theme-rules-shell relative overflow-hidden px-5 py-5">
           <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(23,114,208,0),rgba(23,114,208,0.92),rgba(23,114,208,0))]" />
