@@ -131,10 +131,10 @@ const adminNavGroups: Array<{
       {
         href: "/admin/submissions",
         icon: TableProperties,
-        label: { en: "Submissions", vi: "Bài nộp" },
-        description: { en: "Round 2/3 version tracking", vi: "Theo dõi phiên bản bài nộp Vòng 2/3" },
+        label: { en: "Round 2", vi: "Vòng 2" },
+        description: { en: "Round 2 submission review", vi: "Rà soát bài nộp Vòng 2" },
         children: [
-          { href: "/admin/submissions", label: { en: "Submission list", vi: "Danh sách bài nộp" } },
+          { href: "/admin/submissions", label: { en: "Round 2 submissions", vi: "Bài nộp Vòng 2" } },
         ],
       },
     ],

@@ -5,6 +5,8 @@ import { useMemo, useState, type ReactNode } from "react";
 import {
   Download,
   FilePenLine,
+  Filter,
+  Search,
   Trash2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -671,27 +673,37 @@ function TeamsTableSection() {
 function SubmissionsTableSection() {
   const { locale, submissions, teams, users } = useSiteState();
   useAdminTitleScroll();
+  const [search, setSearch] = useState("");
+  const [versionFilter, setVersionFilter] = useState<"all" | "latest" | "history">("all");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "upload" | "external">("all");
 
-  const latestByRound = new Set(
-    teams.flatMap((team) =>
-      ["round-2", "round-3"].flatMap((round) => {
-        const versions = submissions
-          .filter((submission) => submission.teamId === team.id && submission.round === round)
-          .map((submission) => submission.version);
+  const latestByRound = useMemo(
+    () =>
+      new Set(
+        teams.flatMap((team) =>
+          ["round-2"].flatMap((round) => {
+            const versions = submissions
+              .filter((submission) => submission.teamId === team.id && submission.round === round)
+              .map((submission) => submission.version);
 
-        if (versions.length === 0) {
-          return [];
-        }
+            if (versions.length === 0) {
+              return [];
+            }
 
-        return [`${team.id}:${round}:${Math.max(...versions)}`];
-      }),
-    ),
+            return [`${team.id}:${round}:${Math.max(...versions)}`];
+          }),
+        ),
+      ),
+    [submissions, teams],
   );
 
-  const rows = submissions
-    .slice()
-    .sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))
-    .map((submission) => {
+  const rows = useMemo(
+    () =>
+      submissions
+        .filter((submission) => submission.round === "round-2")
+        .slice()
+        .sort((left, right) => right.submittedAt.localeCompare(left.submittedAt))
+        .map((submission) => {
       const team = teams.find((item) => item.id === submission.teamId);
       const author = users.find((item) => item.id === submission.submittedByUserId);
       const isLatest = latestByRound.has(
@@ -700,7 +712,10 @@ function SubmissionsTableSection() {
 
       return {
         id: submission.id,
+        teamId: submission.teamId,
         team: team?.name ?? submission.teamId,
+        teamTag: team?.tag ?? "",
+        teamStage: team?.stage ?? "round-2",
         round: submission.round,
         version: submission.version,
         isLatest: isLatest ? "valid latest" : "history only",
@@ -708,40 +723,129 @@ function SubmissionsTableSection() {
         resourceSource: submission.resourceSource,
         resourceLabel: submission.resourceLabel,
         resourceUrl: submission.resourceUrl ?? "",
+        submittedByUserId: submission.submittedByUserId,
         submittedBy: author?.name ?? submission.submittedByUserId,
+        submittedByLoginId: author?.loginId ?? "",
         submittedAt: submission.submittedAt,
       };
-    });
+    }),
+    [latestByRound, submissions, teams, users],
+  );
+
+  const filteredRows = useMemo(
+    () =>
+      rows.filter((row) => {
+        const searchSource = [
+          row.team,
+          row.teamTag,
+          row.title,
+          row.resourceLabel,
+          row.submittedBy,
+          row.submittedByLoginId,
+        ].join(" ");
+
+        if (!tableFilterValueMatches(searchSource, search)) {
+          return false;
+        }
+
+        if (versionFilter === "latest" && row.isLatest !== "valid latest") {
+          return false;
+        }
+
+        if (versionFilter === "history" && row.isLatest !== "history only") {
+          return false;
+        }
+
+        if (sourceFilter !== "all" && row.resourceSource !== sourceFilter) {
+          return false;
+        }
+
+        return true;
+      }),
+    [rows, search, sourceFilter, versionFilter],
+  );
   const {
     page,
     setPage,
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(rows, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
 
   return (
     <div className="space-y-6">
       <TableHeader
         id={ADMIN_TITLE_ID}
-        title={locale === "en" ? "Submissions" : "Bai nop"}
+        title={locale === "en" ? "Round 2" : "Vòng 2"}
         description={
           locale === "en"
-            ? "All submission versions are preserved; only the latest version per team and round is marked as valid."
-            : "Tat ca phien ban bai nop duoc giu lai; chi phien ban moi nhat theo tung doi va tung vong duoc danh dau hop le."
+            ? "Review only Round 2 report submissions, filter the records quickly, and open each uploaded file directly from the table."
+            : "Chỉ rà soát bài nộp báo cáo Vòng 2, lọc dữ liệu nhanh và mở trực tiếp từng tệp đã nộp ngay từ bảng này."
         }
-        exportLabel={locale === "en" ? "Export submissions.xlsx" : "Xuat submissions.xlsx"}
+        exportLabel={locale === "en" ? "Export round2-submissions.xlsx" : "Xuất round2-submissions.xlsx"}
         onExport={() =>
-          exportRowsToWorkbook("attacker-2026-submissions.xlsx", "Submissions", rows)
+          exportRowsToWorkbook("attacker-2026-round2-submissions.xlsx", "Round 2", filteredRows)
         }
       />
+
+      <Surface className="px-5 py-5 md:px-6">
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_220px_220px]">
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Search className="h-3.5 w-3.5" />
+              {locale === "en" ? "Search" : "Tìm kiếm"}
+            </span>
+            <TableFilterField
+              value={search}
+              onChange={setSearch}
+              placeholder={
+                locale === "en"
+                  ? "Search by team, file, title, submitter..."
+                  : "Tìm theo đội, tệp, tiêu đề, người nộp..."
+              }
+            />
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Version status" : "Trạng thái phiên bản"}
+            </span>
+            <select
+              value={versionFilter}
+              onChange={(event) => setVersionFilter(event.target.value as typeof versionFilter)}
+              className="theme-field h-11 w-full rounded-xl border px-3 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All versions" : "Tất cả phiên bản"}</option>
+              <option value="latest">{locale === "en" ? "Latest only" : "Chỉ bản mới nhất"}</option>
+              <option value="history">{locale === "en" ? "History only" : "Chỉ bản lịch sử"}</option>
+            </select>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "File source" : "Nguồn tệp"}
+            </span>
+            <select
+              value={sourceFilter}
+              onChange={(event) => setSourceFilter(event.target.value as typeof sourceFilter)}
+              className="theme-field h-11 w-full rounded-xl border px-3 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All sources" : "Tất cả nguồn tệp"}</option>
+              <option value="upload">{locale === "en" ? "Uploaded file" : "Tệp tải lên"}</option>
+              <option value="external">{locale === "en" ? "External link" : "Liên kết ngoài"}</option>
+            </select>
+          </label>
+        </div>
+      </Surface>
 
       <Surface className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                {["#", "Team", "Round", "Version", "Status", "Title", "File", "Submitted by", "Submitted at"].map((label) => (
+                {["#", "Team", "Version", "Status", "Title", "File", "Submitted by", "Submitted at"].map((label) => (
                   <th key={label} className="px-4 py-3 font-medium">
                     {label}
                   </th>
@@ -752,12 +856,25 @@ function SubmissionsTableSection() {
               {paginatedRows.map((row, index) => (
                 <tr key={row.id} className="border-b theme-border last:border-b-0">
                   <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{startIndex + index + 1}</td>
-                  <td className="px-4 py-4 theme-text-body">{row.team}</td>
-                  <td className="px-4 py-4 theme-text-body">{row.round}</td>
+                  <td className="px-4 py-4">
+                    <Link
+                      href={`/admin/teams/${row.teamId}`}
+                      className="inline-flex max-w-[220px] flex-col gap-1 rounded-xl transition hover:opacity-85"
+                    >
+                      <span className="font-semibold theme-text-strong">{row.team}</span>
+                      <span className="text-xs theme-text-soft">{row.teamTag ? `#${row.teamTag}` : pickCompetitionStateLabel(locale, row.teamStage)}</span>
+                    </Link>
+                  </td>
                   <td className="px-4 py-4 theme-text-body">{row.version}</td>
                   <td className="px-4 py-4 text-center">
                     <StatusPill tone={row.isLatest === "valid latest" ? "success" : "default"}>
-                      {row.isLatest}
+                      {row.isLatest === "valid latest"
+                        ? locale === "en"
+                          ? "Latest"
+                          : "Mới nhất"
+                        : locale === "en"
+                          ? "History"
+                          : "Lịch sử"}
                     </StatusPill>
                   </td>
                   <td className="px-4 py-4 theme-text-body">{row.title}</td>
@@ -768,8 +885,9 @@ function SubmissionsTableSection() {
                         target={row.resourceSource === "external" ? "_blank" : undefined}
                         rel={row.resourceSource === "external" ? "noreferrer" : undefined}
                         download={row.resourceSource === "upload" ? row.resourceLabel : undefined}
-                        className="theme-accent underline-offset-4 hover:underline"
+                        className="theme-button-secondary inline-flex max-w-[240px] items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold"
                       >
+                        <Download className="h-4 w-4" />
                         {row.resourceLabel}
                       </a>
                     ) : (
@@ -781,7 +899,15 @@ function SubmissionsTableSection() {
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-4 theme-text-body">{row.submittedBy}</td>
+                  <td className="px-4 py-4">
+                    <Link
+                      href={`/admin/users/${row.submittedByUserId}/profile`}
+                      className="inline-flex max-w-[220px] flex-col gap-1 rounded-xl transition hover:opacity-85"
+                    >
+                      <span className="font-semibold theme-text-strong">{row.submittedBy}</span>
+                      <span className="text-xs theme-text-soft">{row.submittedByLoginId || row.submittedByUserId}</span>
+                    </Link>
+                  </td>
                   <td className="px-4 py-4 theme-text-body">
                     {formatDateLabel(locale, row.submittedAt)}
                   </td>
@@ -795,7 +921,7 @@ function SubmissionsTableSection() {
           page={page}
           pageCount={pageCount}
           pageSize={ADMIN_TABLE_PAGE_SIZE}
-          totalRows={rows.length}
+          totalRows={filteredRows.length}
           onPageChange={setPage}
         />
       </Surface>
