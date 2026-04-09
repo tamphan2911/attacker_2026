@@ -4,7 +4,6 @@ import { Crown, Medal, Sparkles, Star, Trophy } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, StatusPill, Surface } from "@/components/site-ui";
-import { competitionRoundWindows } from "@/data/site-content";
 import { pickText, formatDateRangeLabel } from "@/lib/site";
 import type { TeamFinalOutcome, TeamProfile, UserProfile } from "@/types/site";
 
@@ -223,8 +222,8 @@ function ResultDiagramNode({
 }
 
 export function FinalResultsPage() {
-  const { locale, teams, users, currentTeam } = useSiteState();
-  const round3Window = competitionRoundWindows.find((window) => window.round === "round-3");
+  const { locale, teams, users, currentTeam, timelineItems } = useSiteState();
+  const finalPresentationItem = timelineItems.find((item) => item.id === "round-3-final-presentation");
   const championMeta = outcomeMeta.find((meta) => meta.outcome === "champion")!;
   const runnerUpMeta = outcomeMeta.find((meta) => meta.outcome === "runner-up")!;
   const thirdPlaceMeta = outcomeMeta.find((meta) => meta.outcome === "third-place")!;
@@ -270,8 +269,8 @@ export function FinalResultsPage() {
                   {locale === "en" ? "Final event day" : "Ngày chung kết"}
                 </p>
                 <p className="mt-1 text-sm font-semibold theme-text-strong">
-                  {round3Window
-                    ? formatDateRangeLabel(locale, round3Window.startDate, round3Window.endDate)
+                  {finalPresentationItem
+                    ? formatDateRangeLabel(locale, finalPresentationItem.startDate, finalPresentationItem.endDate)
                     : locale === "en"
                       ? "To be announced"
                       : "Sẽ cập nhật"}

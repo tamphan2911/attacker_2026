@@ -15,10 +15,8 @@ export function getDefaultTimelineItems() {
 function normalizeTimelineItems(items: TimelineItem[]) {
   const defaults = getDefaultTimelineItems();
 
-  return defaults.map((defaultItem, index) => {
-    const storedItem =
-      items.find((item) => item.id === defaultItem.id) ??
-      items[index];
+  return defaults.map((defaultItem) => {
+    const storedItem = items.find((item) => item.id === defaultItem.id);
 
     if (!storedItem) {
       return defaultItem;

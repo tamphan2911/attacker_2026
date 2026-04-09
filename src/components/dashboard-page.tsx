@@ -19,7 +19,9 @@ import {
 
 import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import {
+  canTeamSubmitForRound,
   getCompetitionRoundWindow,
+  getSubmissionDeadlineTimelineItem,
   getTeamCompetitionState,
   hasTeamPassedRound,
   hasTeamReachedRound,
@@ -175,6 +177,7 @@ export function DashboardPage() {
     submissions,
     round1Submissions,
     pageContent,
+    timelineItems,
     authStatus,
     currentUser,
     currentTeam,
@@ -361,6 +364,15 @@ export function DashboardPage() {
   const round1Finished = isRoundFinished("round-1");
   const round2Finished = isRoundFinished("round-2");
   const round3Finished = isRoundFinished("round-3");
+  const round3SubmissionDeadlineItem = getSubmissionDeadlineTimelineItem("round-3", timelineItems);
+  const round3SubmissionClosed = Boolean(
+    currentTeam &&
+      round3SubmissionDeadlineItem &&
+      !canTeamSubmitForRound(currentTeam, "round-3", new Date(), timelineItems),
+  );
+  const round3SubmissionWindowLabel = round3SubmissionDeadlineItem
+    ? formatDateRangeLabel(locale, round3SubmissionDeadlineItem.startDate, round3SubmissionDeadlineItem.endDate)
+    : undefined;
   const showRound2Submission = currentTeam ? hasTeamReachedRound(currentTeam, "round-2") : false;
   const showRound3Submission = currentTeam ? hasTeamReachedRound(currentTeam, "round-3") : false;
 
@@ -579,10 +591,14 @@ export function DashboardPage() {
           ? locale === "en"
             ? "Round 2 is finished. The team leader can no longer submit Round 2 reports."
             : "Vòng 2 đã kết thúc. Đội trưởng không còn thể nộp báo cáo Vòng 2 nữa."
+          : currentTeam.stage === "round-3" && round3SubmissionClosed && !round3Finished
+            ? locale === "en"
+              ? "The final report deadline is closed. Finalist teams should now prepare for live presentation day."
+              : "Hạn nộp báo cáo chung kết đã khép lại. Các đội vào chung kết giờ cần chuẩn bị cho ngày thuyết trình trực tiếp."
           : currentTeam.stage === "round-3" && round3Finished
             ? locale === "en"
-              ? "Round 3 is finished. Final-round submissions are now closed."
-              : "Vòng 3 đã kết thúc. Hệ thống đã đóng việc nộp bài của vòng chung kết."
+              ? "Round 3 is finished. The final presentation and award stage is complete."
+              : "Vòng 3 đã kết thúc. Phần thuyết trình và trao giải chung kết đã hoàn tất."
             : currentTeam.stage === "round-1"
               ? locale === "en"
                 ? "Round 1 progression is based on the team-average score of individual member results."
@@ -592,8 +608,8 @@ export function DashboardPage() {
                   ? "This team passed Round 1 and is now in the judge-scored Round 2 submission stage."
                   : "Đội này đã qua Vòng 1 và đang ở giai đoạn nộp báo cáo Vòng 2 để giám khảo chấm điểm."
                 : locale === "en"
-                  ? "This team passed Round 2 and is now in the final presentation round."
-                  : "Đội này đã qua Vòng 2 và hiện đang ở vòng chung kết thuyết trình."
+                  ? "This team passed Round 2 and is now in the final stage: submit the updated report, then present live before the judges."
+                  : "Đội này đã qua Vòng 2 và hiện đang ở giai đoạn chung kết: nộp báo cáo cập nhật rồi thuyết trình trực tiếp trước hội đồng giám khảo."
     : "";
   const hasActionInbox =
     incomingInvitations.length > 0 ||
@@ -2021,6 +2037,8 @@ export function DashboardPage() {
                   isCurrentRound={isTeamCurrentlyCompetingRound(currentTeam, "round-3")}
                   hasPassedRound={hasTeamPassedRound(currentTeam, "round-3")}
                   isRoundFinished={round3Finished}
+                  isSubmissionClosed={round3SubmissionClosed || round3Finished}
+                  submissionWindowLabel={round3SubmissionWindowLabel}
                   submissions={teamSubmissions.filter((submission) => submission.round === "round-3")}
                   users={users}
                   form={submissionForms["round-3"]}
@@ -2224,6 +2242,8 @@ function SubmissionRoundCard({
   isCurrentRound,
   hasPassedRound,
   isRoundFinished,
+  isSubmissionClosed,
+  submissionWindowLabel,
   submissions,
   users,
   form,
@@ -2236,6 +2256,8 @@ function SubmissionRoundCard({
   isCurrentRound: boolean;
   hasPassedRound: boolean;
   isRoundFinished: boolean;
+  isSubmissionClosed?: boolean;
+  submissionWindowLabel?: string;
   submissions: TeamSubmission[];
   users: UserProfile[];
   form: SubmissionFormState;
@@ -2251,17 +2273,22 @@ function SubmissionRoundCard({
         ? "Round 2 report submission"
         : "Nộp báo cáo Vòng 2"
       : locale === "en"
-        ? "Final round submission"
-        : "Nộp bài vòng chung kết";
+        ? "Final report submission"
+        : "Nộp báo cáo chung kết";
   const roundWindow = getCompetitionRoundWindow(round);
-  const roundWindowLabel = roundWindow
+  const roundWindowLabel = submissionWindowLabel ?? (roundWindow
     ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate)
-    : undefined;
-  const canSubmit = isLeader && isCurrentRound && !isRoundFinished;
-  const statusPill = isRoundFinished
+    : undefined);
+  const submissionClosed = isSubmissionClosed ?? isRoundFinished;
+  const canSubmit = isLeader && isCurrentRound && !submissionClosed;
+  const statusPill = submissionClosed
     ? locale === "en"
-      ? `${pickRoundLabel(locale, round)} finished`
-      : `${pickRoundLabel(locale, round)} da ket thuc`
+      ? round === "round-3"
+        ? "Final report deadline closed"
+        : `${pickRoundLabel(locale, round)} finished`
+      : round === "round-3"
+        ? "Đã đóng hạn báo cáo chung kết"
+        : `${pickRoundLabel(locale, round)} da ket thuc`
     : hasPassedRound
       ? locale === "en"
         ? `${pickRoundLabel(locale, round)} passed`
@@ -2277,10 +2304,14 @@ function SubmissionRoundCard({
           : locale === "en"
             ? "No submission yet"
             : "Chưa có bài nộp";
-  const lockMessage = isRoundFinished
+  const lockMessage = submissionClosed
     ? locale === "en"
-      ? `${pickRoundLabel(locale, round)} is finished. You can no longer submit new versions for this round.`
-      : `${pickRoundLabel(locale, round)} đã kết thúc. Bạn không còn thể nộp phiên bản mới cho vòng này.`
+      ? round === "round-3"
+        ? "The final report deadline has passed. New finalist report versions are now closed."
+        : `${pickRoundLabel(locale, round)} is finished. You can no longer submit new versions for this round.`
+      : round === "round-3"
+        ? "Hạn nộp báo cáo chung kết đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
+        : `${pickRoundLabel(locale, round)} đã kết thúc. Bạn không còn thể nộp phiên bản mới cho vòng này.`
     : hasPassedRound
       ? locale === "en"
         ? `This team has already advanced past ${pickRoundLabel(locale, round)}. Submission history stays visible, but this round is no longer active.`
@@ -2299,7 +2330,7 @@ function SubmissionRoundCard({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <StatusPill tone={isRoundFinished ? "warning" : "success"}>
+            <StatusPill tone={submissionClosed ? "warning" : "success"}>
               {pickRoundLabel(locale, round)}
             </StatusPill>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
@@ -2311,7 +2342,7 @@ function SubmissionRoundCard({
             <p className="mt-2 text-sm theme-text-soft">{roundWindowLabel}</p>
           ) : null}
         </div>
-        <StatusPill tone={isRoundFinished ? "warning" : latestSubmission || isCurrentRound || hasPassedRound ? "success" : "warning"}>
+        <StatusPill tone={submissionClosed ? "warning" : latestSubmission || isCurrentRound || hasPassedRound ? "success" : "warning"}>
           {statusPill}
         </StatusPill>
       </div>

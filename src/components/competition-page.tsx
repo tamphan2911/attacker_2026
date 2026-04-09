@@ -96,7 +96,10 @@ export function CompetitionPage() {
                 },
                 {
                   icon: <Trophy className="h-4 w-4 text-orange-300" />,
-                  label: locale === "en" ? "Judge-scored final stages" : "Các vòng sau do giám khảo chấm điểm",
+                  label:
+                    locale === "en"
+                      ? "Final report deadline + live final judging"
+                      : "Hạn nộp báo cáo chung kết + chấm trực tiếp",
                 },
               ].map((item) => (
                 <div

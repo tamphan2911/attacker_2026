@@ -113,6 +113,16 @@ const round2Window = {
 };
 
 const round3Window = {
+  startDate: "2026-06-21",
+  endDate: "2026-07-04",
+};
+
+const round3FinalReportWindow = {
+  startDate: "2026-06-21",
+  endDate: "2026-06-28",
+};
+
+const round3PresentationWindow = {
   startDate: "2026-07-04",
   endDate: "2026-07-04",
 };
@@ -130,7 +140,7 @@ export const competitionRoundWindows: CompetitionRoundWindow[] = [
   },
   {
     round: "round-3",
-    title: { en: "Final round presentation", vi: "Vòng chung kết thuyết trình" },
+    title: { en: "Final round schedule", vi: "Lịch trình vòng chung kết" },
     ...round3Window,
   },
 ];
@@ -723,25 +733,25 @@ export const roundItems: RoundItem[] = [
     id: "03",
     label: { en: "Round 03", vi: "Vòng 03" },
     title: {
-      en: "Final Presentation & Defense",
-      vi: "Thuyết trình và bảo vệ chung kết",
+      en: "Final Report & Live Presentation",
+      vi: "Báo cáo cuối cùng và thuyết trình chung kết",
     },
     duration: {
-      en: "live final round with judges",
-      vi: "vòng chung kết trực tiếp cùng giám khảo",
+      en: "final report deadline + live presentation day",
+      vi: "hạn nộp báo cáo cuối + ngày thuyết trình trực tiếp",
     },
     description: {
-      en: "Finalist teams present the project, answer questions from the judges, and receive the final score that determines the champion, runner-up, and third place.",
-      vi: "Các đội chung kết thuyết trình dự án, trả lời câu hỏi từ hội đồng giám khảo và nhận điểm cuối cùng để xác định quán quân, á quân và giải ba.",
+      en: "The final stage starts with the deadline for the updated finalist report and deck, then ends with the live presentation, judge Q&A, and the final award decision.",
+      vi: "Giai đoạn chung kết bắt đầu bằng hạn nộp báo cáo và bộ slide cập nhật của đội vào chung kết, sau đó khép lại bằng phần thuyết trình trực tiếp, hỏi đáp cùng giám khảo và quyết định giải thưởng cuối cùng.",
     },
     deliverables: [
       {
-        en: "Live team presentation",
-        vi: "Phần thuyết trình trực tiếp của đội",
+        en: "Final report and pitch deck submission",
+        vi: "Nộp báo cáo cuối cùng và slide thuyết trình",
       },
       {
-        en: "Judge Q&A defense",
-        vi: "Bảo vệ hỏi đáp cùng giám khảo",
+        en: "Live finalist presentation and judge Q&A",
+        vi: "Thuyết trình trực tiếp và hỏi đáp cùng giám khảo",
       },
       {
         en: "Final scoring and podium ranking",
@@ -1341,26 +1351,48 @@ export const timelineItems: TimelineItem[] = [
     ],
   },
   {
-    id: "round-3-grand-final",
+    id: "round-3-final-report-submission",
     phase: "round-3",
-    startDate: round3Window.startDate,
-    endDate: round3Window.endDate,
-    title: { en: "Final presentation and awards", vi: "Chung kết thuyết trình và trao giải" },
+    startDate: round3FinalReportWindow.startDate,
+    endDate: round3FinalReportWindow.endDate,
+    title: { en: "Final report deadline", vi: "Hạn nộp báo cáo chung kết" },
     description: {
-      en: "Finalists present the project live, answer questions from the judges, and receive the final score and awards.",
-      vi: "Các đội chung kết thuyết trình dự án trực tiếp, trả lời câu hỏi từ giám khảo và nhận điểm cuối cùng cùng giải thưởng.",
+      en: "The Top 5 finalist teams submit the updated final report and presentation deck before the live defense day.",
+      vi: "Top 5 đội chung kết nộp báo cáo hoàn chỉnh và bộ slide thuyết trình trước ngày bảo vệ trực tiếp.",
+    },
+    location: {
+      en: "Team workspace submission center",
+      vi: "Trung tâm nộp bài trong không gian đội",
+    },
+    method: {
+      en: "Team leader uploads the final report package before the submission deadline",
+      vi: "Đội trưởng nộp gói báo cáo cuối cùng trước hạn chót",
+    },
+    supportLinks: [
+      { href: "/dashboard", label: { en: "Submit final report", vi: "Nộp báo cáo chung kết" } },
+      { href: "/competition/judges", label: { en: "See judging panel", vi: "Xem hội đồng giám khảo" } },
+    ],
+  },
+  {
+    id: "round-3-final-presentation",
+    phase: "round-3",
+    startDate: round3PresentationWindow.startDate,
+    endDate: round3PresentationWindow.endDate,
+    title: { en: "Final presentation and awards", vi: "Thuyết trình chung kết và trao giải" },
+    description: {
+      en: "Finalists present live, answer judge questions, and receive the final ranking announcement on stage.",
+      vi: "Các đội chung kết thuyết trình trực tiếp, trả lời câu hỏi của giám khảo và nhận công bố xếp hạng cuối cùng tại sân khấu.",
     },
     location: {
       en: "UEL main hall, Ho Chi Minh City",
       vi: "Hội trường chính UEL, TP.HCM",
     },
     method: {
-      en: "On-site presentation, judge Q&A, and live final scoring",
-      vi: "Thuyết trình trực tiếp, hỏi đáp cùng giám khảo và chấm điểm cuối tại sân khấu",
+      en: "On-site presentation, judge Q&A, and final award announcement",
+      vi: "Thuyết trình trực tiếp, hỏi đáp cùng giám khảo và công bố giải thưởng chung cuộc",
     },
     supportLinks: [
       { href: "/competition/judges", label: { en: "See judging panel", vi: "Xem hội đồng giám khảo" } },
-      { href: "/competition", label: { en: "Review rewards", vi: "Xem giải thưởng" } },
     ],
   },
 ];

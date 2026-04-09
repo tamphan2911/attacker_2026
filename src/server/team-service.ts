@@ -18,6 +18,7 @@ import {
 
 import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS, competitionRoundWindows } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import { readTimelineItems } from "@/server/timeline-items";
 import {
   createRound1ExamPaper,
   getRound1ObjectiveScore,
@@ -67,7 +68,16 @@ function isRound1Finished(now = new Date()) {
   return now.getTime() > endOfVietnamDay(round1Window.endDate).getTime();
 }
 
-function isSubmissionRoundFinished(round: SubmissionRound, now = new Date()) {
+async function isSubmissionRoundFinished(round: SubmissionRound, now = new Date()) {
+  const deadlineItemId =
+    round === SubmissionRound.ROUND_3 ? "round-3-final-report-submission" : "round-2-report-submission";
+  const timelineItems = await readTimelineItems();
+  const deadlineItem = timelineItems.find((item) => item.id === deadlineItemId);
+
+  if (deadlineItem) {
+    return now.getTime() > endOfVietnamDay(deadlineItem.endDate).getTime();
+  }
+
   const roundKey = round === SubmissionRound.ROUND_3 ? "round-3" : "round-2";
   const roundWindow = competitionRoundWindows.find((item) => item.round === roundKey);
   if (!roundWindow) {
@@ -1401,7 +1411,7 @@ export async function createTeamSubmission(
       );
     }
 
-    if (isSubmissionRoundFinished(payload.round)) {
+    if (await isSubmissionRoundFinished(payload.round)) {
       return fail(409, "This round is finished. New submissions are closed.");
     }
 

@@ -195,17 +195,17 @@ const roundRuleMeta = {
     deliverableIconClass:
       "border-amber-700/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.24),rgba(249,115,22,0.16))] text-amber-950 dark:text-amber-100",
     focus: {
-      en: "The final is a live presentation and defense stage for the top 5 teams.",
-      vi: "Vòng chung kết là giai đoạn thuyết trình và bảo vệ trực tiếp dành cho top 5 đội.",
+      en: "The final has two connected steps: final report deadline, then live presentation and defense.",
+      vi: "Vòng chung kết có hai bước liên tiếp: hạn nộp báo cáo cuối, sau đó là thuyết trình và bảo vệ trực tiếp.",
     },
     notes: [
       {
-        en: "Finalists present their project live and answer questions directly from the judging panel.",
-        vi: "Các đội chung kết thuyết trình dự án trực tiếp và trả lời câu hỏi từ hội đồng giám khảo.",
+        en: "Finalist teams must submit the updated final report and pitch deck before the final-report deadline closes.",
+        vi: "Các đội chung kết phải nộp báo cáo hoàn chỉnh và bộ slide thuyết trình trước khi hạn nộp báo cáo chung kết khép lại.",
       },
       {
-        en: "Presentation quality, feasibility, and judge Q&A performance all influence the final score.",
-        vi: "Chất lượng thuyết trình, tính khả thi và phần hỏi đáp với giám khảo đều ảnh hưởng đến điểm cuối.",
+        en: "After the report deadline, teams move into the live presentation and judge Q&A stage on final event day.",
+        vi: "Sau hạn nộp báo cáo, các đội chuyển sang giai đoạn thuyết trình trực tiếp và hỏi đáp cùng giám khảo trong ngày chung kết.",
       },
       {
         en: "Final podium awards are determined only after the live final defense is completed.",
@@ -214,12 +214,12 @@ const roundRuleMeta = {
     ],
     roundNotes: [
       {
-        en: "Teams should prepare both the formal pitch deck and a concise response plan for live judge questions.",
-        vi: "Các đội nên chuẩn bị cả slide thuyết trình chính thức và phương án trả lời ngắn gọn cho phần hỏi đáp trực tiếp với giám khảo.",
+        en: "The final report deadline closes before presentation day, so teams should freeze the submitted deck and report early enough for rehearsal.",
+        vi: "Hạn nộp báo cáo chung kết kết thúc trước ngày trình bày, vì vậy đội nên chốt bộ tài liệu và slide đủ sớm để còn thời gian tập dượt.",
       },
       {
-        en: "Final-stage logistics, presentation order, and check-in instructions should be reviewed carefully before defense day.",
-        vi: "Thông tin hậu cần, thứ tự trình bày và hướng dẫn check-in của vòng chung kết cần được xem kỹ trước ngày bảo vệ.",
+        en: "Final-stage logistics, presentation order, and check-in instructions should be reviewed carefully after the report deadline and before defense day.",
+        vi: "Thông tin hậu cần, thứ tự trình bày và hướng dẫn check-in của vòng chung kết cần được xem kỹ sau hạn nộp báo cáo và trước ngày bảo vệ.",
       },
     ],
   },

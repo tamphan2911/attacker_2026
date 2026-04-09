@@ -7,6 +7,7 @@ import type {
   SubmissionRound,
   TeamFinalOutcome,
   TeamProfile,
+  TimelineItem,
 } from "@/types/site";
 
 const stageOrder: Record<CompetitionStage, number> = {
@@ -21,6 +22,21 @@ export function getCompetitionRoundWindow(round: CompetitionRoundKey) {
 
 function endOfDay(value: string) {
   return new Date(`${value}T23:59:59.999`);
+}
+
+function getSubmissionDeadlineItemId(round: SubmissionRound) {
+  return round === "round-3" ? "round-3-final-report-submission" : "round-2-report-submission";
+}
+
+export function getSubmissionDeadlineTimelineItem(
+  round: SubmissionRound,
+  timelineItems?: TimelineItem[],
+) {
+  if (!timelineItems?.length) {
+    return undefined;
+  }
+
+  return timelineItems.find((item) => item.id === getSubmissionDeadlineItemId(round));
 }
 
 export function isRoundFinished(round: CompetitionRoundKey, now = new Date()) {
@@ -68,8 +84,14 @@ export function canTeamSubmitForRound(
   team: TeamProfile,
   round: SubmissionRound,
   now = new Date(),
+  timelineItems?: TimelineItem[],
 ) {
-  return isTeamCurrentlyCompetingRound(team, round) && !isRoundFinished(round, now);
+  const submissionDeadlineItem = getSubmissionDeadlineTimelineItem(round, timelineItems);
+  const isSubmissionWindowClosed = submissionDeadlineItem
+    ? now.getTime() > endOfDay(submissionDeadlineItem.endDate).getTime()
+    : isRoundFinished(round, now);
+
+  return isTeamCurrentlyCompetingRound(team, round) && !isSubmissionWindowClosed;
 }
 
 export function pickCompetitionStateLabel(locale: Locale, state: CompetitionState) {

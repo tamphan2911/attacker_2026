@@ -2407,7 +2407,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    if (!canTeamSubmitForRound(team, payload.round)) {
+    if (!canTeamSubmitForRound(team, payload.round, new Date(), timelineItems)) {
       pushToast(
         {
           en: `${pickRoundLabel("en", requiredStage)} is finished. New submissions are closed.`,

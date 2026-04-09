@@ -105,10 +105,10 @@ const timelinePhaseMeta: Array<{
     phase: "round-3",
     anchor: "round-3-timeline",
     eyebrow: { en: "Final round", vi: "Chung kết" },
-    title: { en: "Live presentation, defense, and awards", vi: "Thuyết trình trực tiếp, bảo vệ và trao giải" },
+    title: { en: "Final report, presentation, and awards", vi: "Báo cáo cuối, thuyết trình và trao giải" },
     description: {
-      en: "The final stage condenses presentation, Q&A, and final scoring into one live event day.",
-      vi: "Giai đoạn chung kết gói gọn phần thuyết trình, hỏi đáp và chấm điểm cuối trong một ngày sự kiện trực tiếp.",
+      en: "The final stage starts with the finalist report deadline, then moves into live presentation, judge Q&A, and the final award decision.",
+      vi: "Giai đoạn chung kết bắt đầu bằng hạn nộp báo cáo của top 5, sau đó chuyển sang thuyết trình trực tiếp, hỏi đáp cùng giám khảo và quyết định giải thưởng cuối cùng.",
     },
     icon: CalendarDays,
     ruleHref: "/rules#round-3-rules",
@@ -152,10 +152,10 @@ function buildTimelineActionLinks({
 }): TimelineActionLink[] {
   const actionLinks: TimelineActionLink[] = [];
 
-  if (item.id === "round-2-top-5-announcement" || item.id === "round-3-grand-final") {
+  if (item.id === "round-2-top-5-announcement" || item.id === "round-3-final-presentation") {
     actionLinks.push({
       key: `${item.id}-finalists`,
-      href: item.id === "round-3-grand-final" ? "/competition/final-results" : "/competition/finalists",
+      href: item.id === "round-3-final-presentation" ? "/competition/final-results" : "/competition/finalists",
       label: { en: "Read result update", vi: "Đọc cập nhật kết quả" },
       icon: Presentation,
     });
@@ -199,14 +199,39 @@ function buildTimelineActionLinks({
       continue;
     }
 
+    if (item.id === "round-3-final-report-submission" && supportLink.href === "/dashboard") {
+      if (
+        currentUserRole === "student" &&
+        currentTeam &&
+        currentTeam.leaderId === activeUserId &&
+        isTeamCurrentlyCompetingRound(currentTeam, "round-3")
+      ) {
+        const finalReportClosed = now.getTime() > parseLocalDate(item.endDate, true).getTime();
+        actionLinks.push({
+          key: `${item.id}-${supportLink.href}`,
+          href: finalReportClosed ? undefined : "/dashboard#round-3-section",
+          label: supportLink.label,
+          icon: FileUp,
+          disabled: finalReportClosed,
+          title: finalReportClosed
+            ? {
+                en: "The final report deadline has passed.",
+                vi: "Hạn nộp báo cáo chung kết đã kết thúc.",
+              }
+            : undefined,
+        });
+      }
+      continue;
+    }
+
     if (
-      (item.id === "round-2-top-5-announcement" || item.id === "round-3-grand-final") &&
+      (item.id === "round-2-top-5-announcement" || item.id === "round-3-final-presentation") &&
       supportLink.href === "/news"
     ) {
       continue;
     }
 
-    if (item.id === "round-3-grand-final" && supportLink.href === "/competition") {
+    if (item.id === "round-3-final-presentation" && supportLink.href === "/competition") {
       continue;
     }
 
