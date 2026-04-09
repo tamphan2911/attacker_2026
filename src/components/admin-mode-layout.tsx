@@ -270,7 +270,9 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                             <Icon className="h-4.5 w-4.5" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold">{pickText(locale, item.label)}</p>
+                            <p className={cn("text-sm font-semibold", active && "text-white")}>
+                              {pickText(locale, item.label)}
+                            </p>
                             <p className={cn("mt-1 text-xs leading-5", active ? "text-white/74" : "theme-text-muted")}>
                               {pickText(locale, item.description)}
                             </p>
