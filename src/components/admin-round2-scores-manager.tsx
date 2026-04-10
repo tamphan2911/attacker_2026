@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   CheckCheck,
   CircleDashed,
   Clock3,
@@ -70,6 +73,17 @@ type JudgeScoreDraft = {
   scores: [string, string];
 };
 
+type Round2SortKey =
+  | "team"
+  | "judge1"
+  | "judge2"
+  | "average"
+  | "status"
+  | "submittedAt"
+  | "version";
+
+type SortDirection = "asc" | "desc";
+
 function createDraftFromRow(row: AdminRound2ScoreRow): JudgeScoreDraft {
   return {
     judgeUserIds: [row.judges[0]?.judgeUserId ?? "", row.judges[1]?.judgeUserId ?? ""],
@@ -87,6 +101,54 @@ function parseDraftScore(value: string) {
 
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function createStringCompare(locale: "en" | "vi") {
+  const collator = new Intl.Collator(locale === "vi" ? "vi-VN" : "en-US", {
+    numeric: true,
+    sensitivity: "base",
+  });
+
+  return (left: string, right: string) => collator.compare(left, right);
+}
+
+function getDefaultSortDirection(sortKey: Round2SortKey): SortDirection {
+  switch (sortKey) {
+    case "average":
+    case "submittedAt":
+    case "version":
+      return "desc";
+    default:
+      return "asc";
+  }
+}
+
+function SortableHeader({
+  label,
+  active,
+  direction,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  direction: SortDirection;
+  onClick: () => void;
+}) {
+  const Icon = active ? (direction === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 transition",
+        active ? "theme-text-strong" : "hover:theme-text-strong",
+      )}
+    >
+      <span>{label}</span>
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
 }
 
 function createStatusMeta(locale: "en" | "vi", status: AdminRound2ScoreStatus) {
@@ -290,6 +352,8 @@ export function AdminRound2ScoresManager() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | AdminRound2ScoreStatus>("all");
+  const [sortKey, setSortKey] = useState<Round2SortKey | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   useAdminTitleScroll();
 
   const loadData = useCallback(async () => {
@@ -433,13 +497,79 @@ export function AdminRound2ScoresManager() {
     [rows, search, statusFilter],
   );
 
+  const sortedRows = useMemo(() => {
+    if (!sortKey) {
+      return filteredRows;
+    }
+
+    const compareStrings = createStringCompare(locale);
+    const statusRank: Record<AdminRound2ScoreStatus, number> = {
+      scored: 3,
+      "partially-scored": 2,
+      "not-scored": 1,
+    };
+
+    const ordered = [...filteredRows].sort((left, right) => {
+      let comparison = 0;
+
+      switch (sortKey) {
+        case "team":
+          comparison = compareStrings(left.teamName, right.teamName);
+          break;
+        case "judge1":
+          comparison = compareStrings(left.judges[0]?.judgeName ?? "", right.judges[0]?.judgeName ?? "");
+          break;
+        case "judge2":
+          comparison = compareStrings(left.judges[1]?.judgeName ?? "", right.judges[1]?.judgeName ?? "");
+          break;
+        case "average": {
+          const leftValue = left.averageScore ?? Number.NEGATIVE_INFINITY;
+          const rightValue = right.averageScore ?? Number.NEGATIVE_INFINITY;
+          comparison = leftValue === rightValue ? 0 : leftValue < rightValue ? -1 : 1;
+          break;
+        }
+        case "status":
+          comparison = statusRank[left.status] - statusRank[right.status];
+          break;
+        case "submittedAt":
+          comparison = compareStrings(left.submittedAt, right.submittedAt);
+          break;
+        case "version":
+          comparison = left.version - right.version;
+          break;
+      }
+
+      if (comparison === 0) {
+        comparison = compareStrings(left.teamName, right.teamName);
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+
+    return ordered;
+  }, [filteredRows, locale, sortDirection, sortKey]);
+
+  const toggleSort = (nextSortKey: Round2SortKey) => {
+    if (sortKey === nextSortKey) {
+      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+
+    setSortKey(nextSortKey);
+    setSortDirection(getDefaultSortDirection(nextSortKey));
+  };
+
   const {
     page,
     setPage,
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(sortedRows, ADMIN_TABLE_PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, setPage, sortDirection, sortKey, statusFilter]);
 
   if (loading) {
     return <LoadingState locale={locale} />;
@@ -532,22 +662,69 @@ export function AdminRound2ScoresManager() {
           <table className="min-w-[1480px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                {[
-                  "#",
-                  locale === "en" ? "Team" : "Đội",
-                  locale === "en" ? "Judge 1" : "Giám khảo 1",
-                  locale === "en" ? "Judge 2" : "Giám khảo 2",
-                  locale === "en" ? "Average" : "Điểm trung bình",
-                  locale === "en" ? "Status" : "Trạng thái",
-                  locale === "en" ? "File" : "Tệp",
-                  locale === "en" ? "Submitted" : "Nộp lúc",
-                  locale === "en" ? "Version" : "Phiên bản",
-                  locale === "en" ? "Action" : "Thao tác",
-                ].map((label) => (
-                  <th key={label} className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
-                    {label}
-                  </th>
-                ))}
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">#</th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Team" : "Đội"}
+                    active={sortKey === "team"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("team")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Judge 1" : "Giám khảo 1"}
+                    active={sortKey === "judge1"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("judge1")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Judge 2" : "Giám khảo 2"}
+                    active={sortKey === "judge2"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("judge2")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Average" : "Điểm trung bình"}
+                    active={sortKey === "average"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("average")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Status" : "Trạng thái"}
+                    active={sortKey === "status"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("status")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  {locale === "en" ? "File" : "Tệp"}
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Submitted" : "Nộp lúc"}
+                    active={sortKey === "submittedAt"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("submittedAt")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Version" : "Phiên bản"}
+                    active={sortKey === "version"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("version")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  {locale === "en" ? "Action" : "Thao tác"}
+                </th>
               </tr>
             </thead>
             <tbody>

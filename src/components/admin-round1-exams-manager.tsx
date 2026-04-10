@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
+  ArrowUpDown,
   BookText,
   CircleDashed,
   Clock3,
@@ -61,6 +64,78 @@ function formatDateTime(locale: "en" | "vi", value?: string) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function formatScoreValue(value?: number | null) {
+  if (typeof value !== "number") {
+    return "--";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+type Round1ExamSortKey =
+  | "participant"
+  | "team"
+  | "stage"
+  | "status"
+  | "objectiveScore"
+  | "essayScore"
+  | "totalScore"
+  | "lastUpdate";
+
+type SortDirection = "asc" | "desc";
+
+function createStringCompare(locale: "en" | "vi") {
+  const collator = new Intl.Collator(locale === "vi" ? "vi-VN" : "en-US", {
+    numeric: true,
+    sensitivity: "base",
+  });
+
+  return (left: string, right: string) => collator.compare(left, right);
+}
+
+function getDefaultSortDirection(sortKey: Round1ExamSortKey): SortDirection {
+  switch (sortKey) {
+    case "objectiveScore":
+    case "essayScore":
+    case "totalScore":
+    case "lastUpdate":
+      return "desc";
+    default:
+      return "asc";
+  }
+}
+
+function SortableHeader({
+  label,
+  active,
+  direction,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  direction: SortDirection;
+  onClick: () => void;
+}) {
+  const Icon = active ? (direction === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 transition",
+        active ? "theme-text-strong" : "hover:theme-text-strong",
+      )}
+    >
+      <span>{label}</span>
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
 }
 
 function createStageLabel(locale: "en" | "vi", stage: CompetitionStage) {
@@ -169,6 +244,8 @@ export function AdminRound1ExamList() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | AdminRound1ExamStatus>("all");
   const [stageFilter, setStageFilter] = useState<"all" | CompetitionStage>("all");
+  const [sortKey, setSortKey] = useState<Round1ExamSortKey | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   useAdminTitleScroll();
 
   useEffect(() => {
@@ -229,13 +306,94 @@ export function AdminRound1ExamList() {
     [rows, search, stageFilter, statusFilter],
   );
 
+  const sortedRows = useMemo(() => {
+    if (!sortKey) {
+      return filteredRows;
+    }
+
+    const compareStrings = createStringCompare(locale);
+    const statusRank: Record<AdminRound1ExamStatus, number> = {
+      submitted: 3,
+      "in-progress": 2,
+      "not-initiated": 1,
+    };
+    const stageRank: Record<CompetitionStage, number> = {
+      "round-1": 1,
+      "round-2": 2,
+      "round-3": 3,
+    };
+
+    return [...filteredRows].sort((left, right) => {
+      let comparison = 0;
+
+      switch (sortKey) {
+        case "participant":
+          comparison = compareStrings(left.name, right.name);
+          break;
+        case "team":
+          comparison = compareStrings(left.teamName, right.teamName);
+          break;
+        case "stage":
+          comparison = stageRank[left.teamStage] - stageRank[right.teamStage];
+          break;
+        case "status":
+          comparison = statusRank[left.status] - statusRank[right.status];
+          break;
+        case "objectiveScore": {
+          const leftValue = left.objectiveScore ?? Number.NEGATIVE_INFINITY;
+          const rightValue = right.objectiveScore ?? Number.NEGATIVE_INFINITY;
+          comparison = leftValue === rightValue ? 0 : leftValue < rightValue ? -1 : 1;
+          break;
+        }
+        case "essayScore": {
+          const leftValue = left.essayScore ?? Number.NEGATIVE_INFINITY;
+          const rightValue = right.essayScore ?? Number.NEGATIVE_INFINITY;
+          comparison = leftValue === rightValue ? 0 : leftValue < rightValue ? -1 : 1;
+          break;
+        }
+        case "totalScore": {
+          const leftValue = left.totalScore ?? Number.NEGATIVE_INFINITY;
+          const rightValue = right.totalScore ?? Number.NEGATIVE_INFINITY;
+          comparison = leftValue === rightValue ? 0 : leftValue < rightValue ? -1 : 1;
+          break;
+        }
+        case "lastUpdate":
+          comparison = compareStrings(
+            left.submittedAt ?? left.updatedAt ?? left.startedAt ?? "",
+            right.submittedAt ?? right.updatedAt ?? right.startedAt ?? "",
+          );
+          break;
+      }
+
+      if (comparison === 0) {
+        comparison = compareStrings(left.name, right.name);
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [filteredRows, locale, sortDirection, sortKey]);
+
   const {
     page,
     setPage,
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(sortedRows, ADMIN_TABLE_PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, setPage, sortDirection, sortKey, stageFilter, statusFilter]);
+
+  const toggleSort = (nextSortKey: Round1ExamSortKey) => {
+    if (sortKey === nextSortKey) {
+      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+
+    setSortKey(nextSortKey);
+    setSortDirection(getDefaultSortDirection(nextSortKey));
+  };
 
   if (loading) {
     return <ExamListLoading locale={locale} />;
@@ -322,23 +480,77 @@ export function AdminRound1ExamList() {
 
       <Surface className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
+          <table className="min-w-[1320px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                {[
-                  "#",
-                  locale === "en" ? "Participant" : "Thí sinh",
-                  locale === "en" ? "Team" : "Đội",
-                  locale === "en" ? "Current stage" : "Vị trí hiện tại",
-                  locale === "en" ? "Status" : "Trạng thái",
-                  locale === "en" ? "Progress" : "Tiến độ",
-                  locale === "en" ? "Last update" : "Cập nhật gần nhất",
-                  locale === "en" ? "Detail" : "Chi tiết",
-                ].map((label) => (
-                  <th key={label} className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
-                    {label}
-                  </th>
-                ))}
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">#</th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Participant" : "Thí sinh"}
+                    active={sortKey === "participant"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("participant")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Team" : "Đội"}
+                    active={sortKey === "team"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("team")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Current stage" : "Vị trí hiện tại"}
+                    active={sortKey === "stage"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("stage")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Status" : "Trạng thái"}
+                    active={sortKey === "status"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("status")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Multiple choice score" : "Điểm trắc nghiệm"}
+                    active={sortKey === "objectiveScore"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("objectiveScore")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Essay score" : "Điểm tự luận"}
+                    active={sortKey === "essayScore"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("essayScore")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Total score" : "Tổng điểm"}
+                    active={sortKey === "totalScore"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("totalScore")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  <SortableHeader
+                    label={locale === "en" ? "Last update" : "Cập nhật gần nhất"}
+                    active={sortKey === "lastUpdate"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("lastUpdate")}
+                  />
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  {locale === "en" ? "Detail" : "Chi tiết"}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -375,24 +587,13 @@ export function AdminRound1ExamList() {
                     <StatusIconCell locale={locale} status={row.status} />
                   </td>
                   <td className="px-4 py-4">
-                    <div className="space-y-1">
-                      <p className="font-semibold theme-text-strong">
-                        {row.totalQuestions > 0 ? `${row.answeredCount}/${row.totalQuestions}` : "--"}
-                      </p>
-                      <p className="text-xs theme-text-soft">
-                        {row.status === "submitted"
-                          ? locale === "en"
-                            ? "Archived answers"
-                            : "Đáp án đã lưu"
-                          : row.status === "in-progress"
-                            ? locale === "en"
-                              ? `Current question ${row.currentQuestionIndex != null ? row.currentQuestionIndex + 1 : 1}`
-                              : `Đang ở câu ${row.currentQuestionIndex != null ? row.currentQuestionIndex + 1 : 1}`
-                            : locale === "en"
-                              ? "No attempt yet"
-                              : "Chưa có lượt thi"}
-                      </p>
-                    </div>
+                    <p className="font-semibold theme-text-strong">{formatScoreValue(row.objectiveScore)}</p>
+                  </td>
+                  <td className="px-4 py-4">
+                    <p className="font-semibold theme-text-strong">{formatScoreValue(row.essayScore)}</p>
+                  </td>
+                  <td className="px-4 py-4">
+                    <p className="font-semibold theme-text-strong">{formatScoreValue(row.totalScore)}</p>
                   </td>
                   <td className="px-4 py-4">
                     <div className="space-y-1 text-xs">
