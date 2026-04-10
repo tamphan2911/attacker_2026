@@ -18,6 +18,7 @@ import {
   Save,
   Search,
   Shuffle,
+  SquarePen,
   Target,
   Trash2,
   Trophy,
@@ -1692,12 +1693,12 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/admin/round-1/banks/${bank.id}/questions/${question.id}`}
-                        title={locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}
-                        aria-label={locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}
+                        title={locale === "en" ? "Edit question" : "Chỉnh sửa câu hỏi"}
+                        aria-label={locale === "en" ? "Edit question" : "Chỉnh sửa câu hỏi"}
                         className="theme-button-secondary inline-flex h-9 w-9 items-center justify-center rounded-full"
                       >
-                        <ArrowRight className="h-3.5 w-3.5" />
-                        <span className="sr-only">{locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}</span>
+                        <SquarePen className="h-3.5 w-3.5" />
+                        <span className="sr-only">{locale === "en" ? "Edit question" : "Chỉnh sửa câu hỏi"}</span>
                       </Link>
                       <button
                         type="button"
