@@ -2229,7 +2229,7 @@ function AdminRound1QuestionEditorInner({
         </div>
       </div>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section>
         <Surface className="px-6 py-6 md:px-8 md:py-8">
           <div className="grid gap-4 md:grid-cols-3">
             <label className="space-y-2">
@@ -2558,125 +2558,6 @@ function AdminRound1QuestionEditorInner({
           )}
         </Surface>
 
-        <div className="space-y-6">
-          <Surface className="px-6 py-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
-              {locale === "en" ? "Question context" : "Thong tin cau hoi"}
-            </p>
-            <div className="mt-5 space-y-4">
-              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-sm theme-text-muted">{locale === "en" ? "Bank" : "Test bank"}</p>
-                <p className="mt-2 text-lg font-semibold theme-text-strong">
-                  {pickText(locale, bank.title)}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-sm theme-text-muted">{locale === "en" ? "Question id" : "Ma cau hoi"}</p>
-                <p className="mt-2 text-sm font-semibold theme-text-strong">
-                  {mode === "create"
-                    ? locale === "en"
-                      ? "Generated on save"
-                      : "Tạo khi lưu"
-                    : sourceQuestion?.id}
-                </p>
-              </div>
-              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-sm theme-text-muted">{locale === "en" ? "Question type" : "Loai cau hoi"}</p>
-                <p className="mt-2 text-lg font-semibold theme-text-strong">
-                  {pickRound1TypeLabel(locale, draft.type)}
-                </p>
-              </div>
-            </div>
-          </Surface>
-
-          <Surface className="px-6 py-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
-              {locale === "en" ? "Live preview" : "Preview"}
-            </p>
-            <p className="mt-5 text-lg font-semibold leading-8 theme-text-strong">
-              {pickRound1QuestionText(draft.prompt)}
-            </p>
-            <div className="mt-3">
-              <StatusPill>{pickRound1TypeLabel(locale, draft.type)}</StatusPill>
-            </div>
-            {draft.type !== "essay" && draft.options?.length ? (
-              <div className="mt-5 space-y-3">
-                {draft.options.map((option) => (
-                  <div key={option.id} className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                    <div className="flex items-start gap-3">
-                      <div className="theme-panel-strong flex h-8 w-8 shrink-0 items-center justify-center rounded-full border theme-border text-sm font-semibold theme-text-strong">
-                        {option.label}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm leading-6 theme-text-body">
-                          {pickRound1QuestionText(option.text)}
-                        </p>
-                        {draft.correctOptionIds?.includes(option.id) ? (
-                          <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-200">
-                            {locale === "en" ? "Correct answer" : "Dap an dung"}
-                          </p>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            {draft.type === "pairing" && draft.pairingItems?.length ? (
-              <div className="mt-5 space-y-3">
-                {draft.pairingItems.map((item) => {
-                  const matchedOption = draft.options?.find((option) => option.id === item.correctOptionId);
-
-                  return (
-                    <div key={item.id} className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                      <p className="text-sm font-semibold theme-text-strong">
-                        {`${item.label}. ${pickRound1QuestionText(item.prompt)}`}
-                      </p>
-                      <p className="mt-2 text-sm theme-text-muted">
-                        {locale === "en" ? "Correct match" : "Cap dung"}: {matchedOption ? `${matchedOption.label}. ${pickRound1QuestionText(matchedOption.text)}` : "--"}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : null}
-            {draft.type === "essay" ? (
-              <div className="mt-5 space-y-3">
-                <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                  <p className="text-xs uppercase tracking-[0.18em] theme-text-soft">
-                    {locale === "en" ? "Placeholder" : "Placeholder"}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 theme-text-body">
-                    {pickRound1QuestionText(draft.placeholder ?? createLocalizedEmpty())}
-                  </p>
-                </div>
-                <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                  <p className="text-xs uppercase tracking-[0.18em] theme-text-soft">
-                    {locale === "en" ? "Rubric note" : "Rubric"}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 theme-text-body">
-                    {pickRound1QuestionText(draft.rubricNote ?? createLocalizedEmpty())}
-                  </p>
-                </div>
-              </div>
-            ) : null}
-            <button
-              type="button"
-              disabled={savePending || !isDirty}
-              onClick={() => void saveDraft()}
-              className="theme-button-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Save className="h-4 w-4" />
-              {mode === "create"
-                ? locale === "en"
-                  ? "Create question"
-                  : "Tao cau hoi"
-                : locale === "en"
-                  ? "Save question"
-                  : "Luu cau hoi"}
-            </button>
-          </Surface>
-        </div>
       </section>
     </div>
   );
