@@ -583,7 +583,7 @@ function TeamsTableSection() {
           status: pickTeamDisplayStatusLabel(locale, team, new Date(), timelineItems),
           stageKey: team.stage,
           stage: pickCompetitionStateLabel(locale, team.stage),
-          track: team.track,
+          keyword: team.track,
           createdAt: team.createdAt,
           members,
         };
@@ -594,7 +594,7 @@ function TeamsTableSection() {
   const filteredRows = useMemo(
     () =>
       rows.filter((row) => {
-        const searchSource = [row.team, row.tag, row.leader, row.track, row.members, row.id].join(" ");
+        const searchSource = [row.team, row.tag, row.leader, row.keyword, row.members, row.id].join(" ");
 
         if (!tableFilterValueMatches(searchSource, search)) {
           return false;
@@ -617,7 +617,7 @@ function TeamsTableSection() {
     members: row.memberCount,
     status: row.status,
     stage: row.stage,
-    track: row.track,
+    keyword: row.keyword,
     createdAt: row.createdAt,
   }));
   const {
@@ -729,7 +729,7 @@ function TeamsTableSection() {
                     <td className="px-4 py-4 text-center">
                       <StatusPill>{row.stage}</StatusPill>
                     </td>
-                    <td className="px-4 py-4 theme-text-body">{row.track}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.keyword}</td>
                     <td className="px-4 py-4 theme-text-body">
                       {formatDateLabel(locale, row.createdAt)}
                     </td>
