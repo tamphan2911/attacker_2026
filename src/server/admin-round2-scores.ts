@@ -60,7 +60,7 @@ export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]>
         },
       },
       judgeReviews: {
-        orderBy: [{ scoredAt: "desc" }, { createdAt: "desc" }],
+        orderBy: [{ createdAt: "asc" }, { id: "asc" }],
         include: {
           judgeUser: {
             select: {
