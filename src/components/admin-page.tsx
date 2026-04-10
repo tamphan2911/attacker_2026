@@ -685,7 +685,7 @@ function TeamsTableSection() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                {["#", "Team", "Tag", "Leader", "Members", "Status", "Stage", "Track", "Created", "Action"].map((label) => (
+                {["#", "Team", "Tag", "Leader", "Members", "Status", "Stage", "Keyword", "Created", "Action"].map((label) => (
                   <th key={label} className="px-4 py-3 font-medium">
                     {label}
                   </th>

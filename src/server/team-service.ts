@@ -352,7 +352,7 @@ export async function createTeamForUser(
   const bio = trimInput(payload.bio);
 
   if (!name || !tag || !track || !bio) {
-    return fail(400, "Team name, tag, track, and bio are required.");
+    return fail(400, "Team name, tag, keyword, and bio are required.");
   }
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -431,7 +431,7 @@ export async function updateCurrentTeamProfile(
     const bio = trimInput(payload.bio);
 
     if (!name || !tag || !track || !bio) {
-      return fail(400, "Team name, tag, track, and bio are required.");
+      return fail(400, "Team name, tag, keyword, and bio are required.");
     }
 
     const duplicateTag = await tx.team.findFirst({

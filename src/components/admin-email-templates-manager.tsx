@@ -7,7 +7,7 @@ import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-sc
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import { defaultSystemEmailTemplates } from "@/data/system-email-templates";
-import type { Locale, SystemEmailTemplate, SystemEmailTemplates } from "@/types/site";
+import type { SystemEmailTemplate, SystemEmailTemplates } from "@/types/site";
 
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
@@ -16,33 +16,27 @@ function cloneTemplates(value: SystemEmailTemplates) {
   return JSON.parse(JSON.stringify(value)) as SystemEmailTemplates;
 }
 
-function LocalizedField({
+function VietnameseField({
   label,
   value,
   rows = 3,
   onChange,
 }: {
   label: string;
-  value: { en: string; vi: string };
+  value: string;
   rows?: number;
-  onChange: (locale: Locale, nextValue: string) => void;
+  onChange: (nextValue: string) => void;
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {(["en", "vi"] as Locale[]).map((language) => (
-        <label key={language} className="space-y-2">
-          <span className="text-sm theme-text-muted">
-            {label} ({language.toUpperCase()})
-          </span>
-          <textarea
-            rows={rows}
-            value={value[language]}
-            onChange={(event) => onChange(language, event.target.value)}
-            className={fieldClassName}
-          />
-        </label>
-      ))}
-    </div>
+    <label className="block space-y-2">
+      <span className="text-sm theme-text-muted">{label} (VI)</span>
+      <textarea
+        rows={rows}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={fieldClassName}
+      />
+    </label>
   );
 }
 
@@ -55,7 +49,7 @@ function TemplateEditorCard({
   title: string;
   description: string;
   template: SystemEmailTemplate;
-  onChange: (field: keyof SystemEmailTemplate, locale: Locale, value: string) => void;
+  onChange: (field: keyof SystemEmailTemplate, value: string) => void;
 }) {
   return (
     <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
@@ -64,47 +58,47 @@ function TemplateEditorCard({
         <p className="mt-2 text-sm leading-7 theme-text-soft">{description}</p>
       </div>
 
-      <LocalizedField
+      <VietnameseField
         label="Subject"
         rows={2}
-        value={template.subject}
-        onChange={(locale, value) => onChange("subject", locale, value)}
+        value={template.subject.vi}
+        onChange={(value) => onChange("subject", value)}
       />
-      <LocalizedField
+      <VietnameseField
         label="Preview"
         rows={3}
-        value={template.preview}
-        onChange={(locale, value) => onChange("preview", locale, value)}
+        value={template.preview.vi}
+        onChange={(value) => onChange("preview", value)}
       />
-      <LocalizedField
+      <VietnameseField
         label="Headline"
         rows={3}
-        value={template.headline}
-        onChange={(locale, value) => onChange("headline", locale, value)}
+        value={template.headline.vi}
+        onChange={(value) => onChange("headline", value)}
       />
-      <LocalizedField
+      <VietnameseField
         label="Intro"
         rows={5}
-        value={template.intro}
-        onChange={(locale, value) => onChange("intro", locale, value)}
+        value={template.intro.vi}
+        onChange={(value) => onChange("intro", value)}
       />
-      <LocalizedField
+      <VietnameseField
         label="Action label"
         rows={2}
-        value={template.actionLabel}
-        onChange={(locale, value) => onChange("actionLabel", locale, value)}
+        value={template.actionLabel.vi}
+        onChange={(value) => onChange("actionLabel", value)}
       />
-      <LocalizedField
+      <VietnameseField
         label="Action hint"
         rows={5}
-        value={template.actionHint}
-        onChange={(locale, value) => onChange("actionHint", locale, value)}
+        value={template.actionHint.vi}
+        onChange={(value) => onChange("actionHint", value)}
       />
-      <LocalizedField
+      <VietnameseField
         label="Footer"
         rows={4}
-        value={template.footer}
-        onChange={(locale, value) => onChange("footer", locale, value)}
+        value={template.footer.vi}
+        onChange={(value) => onChange("footer", value)}
       />
     </Surface>
   );
@@ -229,7 +223,6 @@ export function AdminEmailTemplatesManager() {
   const updateTemplateField = (
     key: keyof SystemEmailTemplates,
     field: keyof SystemEmailTemplate,
-    language: Locale,
     value: string,
   ) => {
     setTemplates((current) => ({
@@ -237,8 +230,8 @@ export function AdminEmailTemplatesManager() {
       [key]: {
         ...current[key],
         [field]: {
-          ...current[key][field],
-          [language]: value,
+          en: value,
+          vi: value,
         },
       },
     }));
@@ -380,8 +373,8 @@ export function AdminEmailTemplatesManager() {
                   : "Mẫu này được gửi sau khi đăng ký email/mật khẩu để kích hoạt tài khoản dự thi mới."
               }
               template={templates.activation}
-              onChange={(field, language, value) =>
-                updateTemplateField("activation", field, language, value)
+              onChange={(field, value) =>
+                updateTemplateField("activation", field, value)
               }
             />
           ) : null}
@@ -395,8 +388,8 @@ export function AdminEmailTemplatesManager() {
                   : "Mẫu này được gửi khi người dùng yêu cầu chọn mật khẩu mới thông qua liên kết bảo mật có thời hạn."
               }
               template={templates.passwordReset}
-              onChange={(field, language, value) =>
-                updateTemplateField("passwordReset", field, language, value)
+              onChange={(field, value) =>
+                updateTemplateField("passwordReset", field, value)
               }
             />
           ) : null}

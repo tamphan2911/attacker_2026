@@ -144,7 +144,9 @@ export function FinalistsPage() {
                             </StatusPill>
                           ) : null}
                         </div>
-                        <p className="mt-2 text-sm leading-7 theme-text-soft">{team.track}</p>
+                        <p className="mt-2 text-sm leading-7 theme-text-soft">
+                          {locale === "en" ? `Keyword · ${team.track}` : `Từ khóa · ${team.track}`}
+                        </p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <StatusPill tone="success">
                             {locale === "en" ? "Finalist team" : "Đội vào chung kết"}
@@ -208,7 +210,7 @@ export function FinalistsPage() {
                     {locale === "en" ? "Leader" : "Đội trưởng"}
                   </th>
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                    {locale === "en" ? "Track" : "Định hướng"}
+                    {locale === "en" ? "Keyword" : "Từ khóa"}
                   </th>
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                     {locale === "en" ? "Recognition" : "Ghi nhận"}

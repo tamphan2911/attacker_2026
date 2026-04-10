@@ -35,16 +35,15 @@ function buildAppUrl(path: string) {
 }
 
 function renderSystemEmail({
-  locale,
   template,
   actionUrl,
   name,
 }: {
-  locale: Locale;
   template: SystemEmailTemplate;
   actionUrl: string;
   name: string;
 }) {
+  const locale: Locale = "vi";
   const vars = {
     name,
     link: actionUrl,
@@ -162,6 +161,7 @@ export async function sendAccountActivationEmail({
   name: string;
   locale: Locale;
 }) {
+  void locale;
   const token = await createActionToken({
     userId,
     email,
@@ -171,7 +171,6 @@ export async function sendAccountActivationEmail({
   const templates = await readSystemEmailTemplates();
   const actionUrl = buildAppUrl(`/auth/activate?token=${encodeURIComponent(token)}`);
   const mail = renderSystemEmail({
-    locale,
     template: templates.activation,
     actionUrl,
     name,
@@ -253,6 +252,7 @@ export async function activateAccountFromToken(rawToken: string) {
 }
 
 export async function requestPasswordReset(email: string, locale: Locale) {
+  void locale;
   const user = await prisma.user.findUnique({
     where: { email: email.trim().toLowerCase() },
     select: {
@@ -278,7 +278,6 @@ export async function requestPasswordReset(email: string, locale: Locale) {
   const templates = await readSystemEmailTemplates();
   const actionUrl = buildAppUrl(`/auth/reset-password/confirm?token=${encodeURIComponent(token)}`);
   const mail = renderSystemEmail({
-    locale,
     template: templates.passwordReset,
     actionUrl,
     name: user.name,

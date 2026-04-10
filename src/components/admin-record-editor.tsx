@@ -496,7 +496,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Track" : "Track"}
+                {locale === "en" ? "Keyword" : "Từ khóa"}
               </span>
               <input
                 value={draft.track}

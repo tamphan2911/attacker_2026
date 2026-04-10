@@ -862,7 +862,7 @@ export function AdminRound1Manager() {
                       {group.team.name}
                     </Link>
                     <p className="mt-1 text-xs theme-text-soft">
-                      {group.team.tag} · {group.team.track}
+                      {group.team.tag} · {locale === "en" ? `Keyword: ${group.team.track}` : `Từ khóa: ${group.team.track}`}
                     </p>
                   </td>
                   <td className="px-4 py-4 theme-text-body">
@@ -1478,7 +1478,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Track" : "Track"}
+                {locale === "en" ? "Keyword" : "Từ khóa"}
               </p>
               <p className="mt-2 text-lg font-semibold theme-text-strong">{team.track}</p>
             </div>

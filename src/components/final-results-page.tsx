@@ -123,23 +123,21 @@ function getTeamsForOutcome(teams: TeamProfile[], outcome: TeamFinalOutcome, slo
 
 function MemberCard({
   member,
-  index,
   locale,
 }: {
   member: UserProfile | null;
-  index: number;
   locale: "en" | "vi";
 }) {
   if (!member) {
     return (
-      <div className="rounded-[1.15rem] border border-dashed border-slate-300/70 bg-white/60 px-3 py-3 dark:border-white/12 dark:bg-white/[0.04]">
+      <div className="h-full min-h-[5.75rem] rounded-[1.15rem] border border-dashed border-slate-300/70 bg-white/60 px-3 py-3 dark:border-white/12 dark:bg-white/[0.04]">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-[0.95rem] border border-slate-300/70 bg-white/80 text-slate-500 dark:border-white/12 dark:bg-white/[0.06] dark:text-slate-300">
             <Users2 className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold theme-text-strong">
-              {locale === "en" ? `Member slot ${index + 1}` : `Vị trí thành viên ${index + 1}`}
+              {locale === "en" ? "Member slot" : "Vị trí thành viên"}
             </p>
             <p className="mt-1 text-xs theme-text-soft">
               {locale === "en" ? "Awaiting official team lineup" : "Chờ cập nhật đội hình chính thức"}
@@ -151,7 +149,7 @@ function MemberCard({
   }
 
   return (
-    <div className="rounded-[1.15rem] border theme-border bg-white/68 px-3 py-3 dark:bg-white/[0.04]">
+    <div className="h-full min-h-[5.75rem] rounded-[1.15rem] border theme-border bg-white/68 px-3 py-3 dark:bg-white/[0.04]">
       <div className="flex items-center gap-3">
         <GradientAvatar
           label={member.name}
@@ -160,8 +158,8 @@ function MemberCard({
           className="h-10 w-10 rounded-[0.95rem]"
         />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold theme-text-strong">{member.name}</p>
-          <p className="mt-1 truncate text-xs theme-text-soft">{member.university}</p>
+          <p className="text-sm font-semibold leading-5 theme-text-strong">{member.name}</p>
+          <p className="mt-1 text-xs leading-5 theme-text-soft">{member.university}</p>
         </div>
       </div>
     </div>
@@ -186,11 +184,13 @@ function PlaceCard({
   const Icon = meta.icon;
   const leader = team ? getLeader(team, users) : undefined;
   const teamMembers = team ? getTeamMembers(team, users) : [];
-  const memberSlots = Array.from({ length: MEMBER_SLOT_COUNT }, (_, index) => teamMembers[index] ?? null);
+  const memberSlots = team
+    ? teamMembers
+    : Array.from({ length: MEMBER_SLOT_COUNT }, () => null);
   const memberGridClass =
     meta.outcome === "fourth-place"
       ? "md:grid-cols-2 xl:grid-cols-3"
-      : featured
+        : featured
         ? "md:grid-cols-2 xl:grid-cols-5"
         : "md:grid-cols-2 xl:grid-cols-5";
 
@@ -243,13 +243,18 @@ function PlaceCard({
               </h3>
               <p className="mt-2 text-sm leading-7 theme-text-body">
                 {team
-                  ? team.track
+                  ? team.bio
                   : locale === "en"
                     ? "This place will be replaced by the official team as soon as the final decision is published."
                     : "Vị trí này sẽ được thay bằng đội chính thức ngay khi kết quả cuối cùng được công bố."}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <StatusPill tone={meta.tone}>{pickText(locale, meta.title)}</StatusPill>
+                {team ? (
+                  <StatusPill>
+                    {locale === "en" ? `Keyword · ${team.track}` : `Từ khóa · ${team.track}`}
+                  </StatusPill>
+                ) : null}
                 <StatusPill>
                   {leader?.name
                     ? `${locale === "en" ? "Leader" : "Đội trưởng"} · ${leader.name}`
@@ -274,7 +279,6 @@ function PlaceCard({
               <MemberCard
                 key={member?.id ?? `${meta.outcome}-member-${index}`}
                 member={member}
-                index={index}
                 locale={locale}
               />
             ))}
@@ -310,25 +314,46 @@ export function FinalResultsPage() {
             {locale === "en" ? "Final standings" : "Xếp hạng chung cuộc"}
           </p>
         </div>
-        <Surface className="rounded-[1.3rem] px-4 py-4">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-[0.95rem] border border-sky-500/18 bg-[linear-gradient(135deg,rgba(56,189,248,0.2),rgba(37,99,235,0.14))] text-sky-700 dark:border-sky-300/18 dark:bg-sky-300/12 dark:text-sky-100">
-              <Sparkles className="h-4.5 w-4.5" />
-            </span>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                {locale === "en" ? "Presentation day" : "Ngày thuyết trình"}
-              </p>
-              <p className="mt-1 text-sm font-semibold theme-text-strong">
-                {finalPresentationItem
-                  ? formatDateRangeLabel(locale, finalPresentationItem.startDate, finalPresentationItem.endDate)
-                  : locale === "en"
-                    ? "To be announced"
-                    : "Sẽ cập nhật"}
-              </p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Surface className="rounded-[1.3rem] px-4 py-4">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-[0.95rem] border border-sky-500/18 bg-[linear-gradient(135deg,rgba(56,189,248,0.2),rgba(37,99,235,0.14))] text-sky-700 dark:border-sky-300/18 dark:bg-sky-300/12 dark:text-sky-100">
+                <Sparkles className="h-4.5 w-4.5" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                  {locale === "en" ? "Presentation day" : "Ngày thuyết trình"}
+                </p>
+                <p className="mt-1 text-sm font-semibold theme-text-strong">
+                  {finalPresentationItem
+                    ? formatDateRangeLabel(locale, finalPresentationItem.startDate, finalPresentationItem.endDate)
+                    : locale === "en"
+                      ? "To be announced"
+                      : "Sẽ cập nhật"}
+                </p>
+              </div>
             </div>
-          </div>
-        </Surface>
+          </Surface>
+          <Surface className="rounded-[1.3rem] px-4 py-4">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-[0.95rem] border border-fuchsia-500/18 bg-[linear-gradient(135deg,rgba(217,70,239,0.18),rgba(168,85,247,0.12))] text-fuchsia-700 dark:border-fuchsia-300/18 dark:bg-fuchsia-300/12 dark:text-fuchsia-100">
+                <Trophy className="h-4.5 w-4.5" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                  {locale === "en" ? "Presentation place" : "Địa điểm thuyết trình"}
+                </p>
+                <p className="mt-1 text-sm font-semibold theme-text-strong">
+                  {finalPresentationItem
+                    ? pickText(locale, finalPresentationItem.location)
+                    : locale === "en"
+                      ? "To be announced"
+                      : "Sẽ cập nhật"}
+                </p>
+              </div>
+            </div>
+          </Surface>
+        </div>
       </div>
 
       <div className="space-y-5">

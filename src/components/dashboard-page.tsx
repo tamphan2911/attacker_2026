@@ -1120,7 +1120,9 @@ export function DashboardPage() {
                     <p className="theme-heading mt-3 text-3xl font-semibold theme-text-strong">
                       {currentTeam.name}
                     </p>
-                    <p className="mt-2 text-sm theme-text-soft">{currentTeam.track}</p>
+                    <p className="mt-2 text-sm theme-text-soft">
+                      {locale === "en" ? `Keyword · ${currentTeam.track}` : `Từ khóa · ${currentTeam.track}`}
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -1165,7 +1167,7 @@ export function DashboardPage() {
                   />
                 </label>
                 <label className="space-y-2 md:col-span-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Track" : "Hướng thi"}</span>
+                  <span className="text-sm theme-text-muted">{locale === "en" ? "Keyword" : "Từ khóa"}</span>
                   <input
                     value={teamForm.track}
                     disabled={!isLeader}
@@ -2104,7 +2106,7 @@ export function DashboardPage() {
                 />
               </label>
               <label className="space-y-2 md:col-span-2">
-                <span className="text-sm theme-text-muted">{locale === "en" ? "Track" : "Hướng thi"}</span>
+                <span className="text-sm theme-text-muted">{locale === "en" ? "Keyword" : "Từ khóa"}</span>
                 <input
                   value={teamForm.track}
                   onChange={(event) => setTeamForm((current) => ({ ...current, track: event.target.value }))}
