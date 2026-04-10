@@ -84,6 +84,21 @@ interface TeamResultGroup {
   rank?: number;
 }
 
+interface IndividualScoreRow {
+  submissionId: string;
+  userId: string;
+  studentName: string;
+  studentLoginId?: string;
+  teamId: string;
+  teamName: string;
+  teamTag: string;
+  objectiveScore: number;
+  essayScore: number | null;
+  totalScore: number | null;
+  submittedAt: string;
+  reviewStatus: "pending" | "reviewed";
+}
+
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
 
@@ -499,38 +514,75 @@ function SortableTableHeader({
   );
 }
 
-function buildSubmissionExportRows(
-  teamGroups: TeamResultGroup[],
-  round1TestBanks: Round1TestBank[],
+function buildIndividualScoreRows(
+  submissions: Round1Submission[],
+  teams: TeamProfile[],
+  users: UserProfile[],
 ) {
-  const bankTitleById = new Map(round1TestBanks.map((bank) => [bank.id, bank.title.en]));
+  const latestByUserId = getLatestSubmissionMap(submissions);
+  const teamById = new Map(teams.map((team) => [team.id, team]));
+  const userById = new Map(users.map((user) => [user.id, user]));
 
-  return teamGroups.flatMap((group) =>
-    group.memberRows.map((row) => ({
-      teamRank: group.rank ?? "",
-      team: group.team.name,
-      teamTag: group.team.tag,
-      members: group.memberRows.length,
-      completedMembers: group.completedRows.length,
-      teamAverageObjectiveScore: Number(group.averageObjectiveScore.toFixed(2)),
-      teamAverageEssayScore: group.hasPendingEssayReview ? "" : Number(group.averageEssayScore.toFixed(2)),
-      teamAverageTotalScore: group.hasPendingEssayReview ? "" : Number(group.averageTotalScore.toFixed(2)),
-      student: row.student.name,
-      email: row.student.email,
-      university: row.student.university,
-      major: row.student.major,
-      classYear: row.student.classYear,
-      right: row.submission?.rightCount ?? "",
-      wrong: row.submission?.wrongCount ?? "",
-      objectiveScore: row.submission?.objectiveScore ?? "",
-      essayScore: row.submission?.essayScore ?? "",
-      totalScore: row.submission?.totalScore ?? "",
-      durationMinutes: row.submission?.durationMinutes ?? "",
-      submittedAt: row.submission?.submittedAt ?? "",
-      reviewStatus: row.submission ? (isRound1EssayPending(row.submission) ? "Essay pending" : "Reviewed") : "",
-      bank: row.submission ? bankTitleById.get(row.submission.bankId) ?? row.submission.bankId : "",
-    })),
-  );
+  return Array.from(latestByUserId.values())
+    .map<IndividualScoreRow | null>((submission) => {
+      const team = teamById.get(submission.teamId);
+      const user = userById.get(submission.userId);
+
+      if (!team || !user) {
+        return null;
+      }
+
+      return {
+        submissionId: submission.id,
+        userId: user.id,
+        studentName: user.name,
+        studentLoginId: user.loginId,
+        teamId: team.id,
+        teamName: team.name,
+        teamTag: team.tag,
+        objectiveScore: submission.objectiveScore,
+        essayScore: submission.essayScore,
+        totalScore: submission.totalScore,
+        submittedAt: submission.submittedAt,
+        reviewStatus: isRound1EssayPending(submission) ? "pending" : "reviewed",
+      };
+    })
+    .filter((row): row is IndividualScoreRow => Boolean(row))
+    .sort((left, right) => {
+      const leftReviewed = left.totalScore != null;
+      const rightReviewed = right.totalScore != null;
+
+      if (leftReviewed && rightReviewed) {
+        return (
+          (right.totalScore ?? 0) - (left.totalScore ?? 0) ||
+          right.objectiveScore - left.objectiveScore ||
+          right.submittedAt.localeCompare(left.submittedAt)
+        );
+      }
+
+      if (leftReviewed !== rightReviewed) {
+        return leftReviewed ? -1 : 1;
+      }
+
+      return right.objectiveScore - left.objectiveScore || right.submittedAt.localeCompare(left.submittedAt);
+    });
+}
+
+function buildTeamScoreExportRows(teamGroups: TeamResultGroup[]) {
+  return teamGroups.map((group) => ({
+    rank: group.rank ?? "",
+    team: group.team.name,
+    teamTag: group.team.tag,
+    members: group.memberRows.length,
+    completedMembers: group.completedRows.length,
+    averageObjectiveScore: group.completedRows.length ? Number(group.averageObjectiveScore.toFixed(2)) : "",
+    averageEssayScore:
+      group.completedRows.length === 0 || group.hasPendingEssayReview ? "" : Number(group.averageEssayScore.toFixed(2)),
+    averageTotalScore:
+      group.completedRows.length === 0 || group.hasPendingEssayReview ? "" : Number(group.averageTotalScore.toFixed(2)),
+    latestSubmittedAt: group.latestSubmittedAt ?? "",
+    standing: group.completedRows.length === 0 ? "Awaiting attempts" : group.hasPendingEssayReview ? "Essay pending" : "Reviewed",
+  }));
 }
 
 function getStandingTone(group: TeamResultGroup): "info" | "success" | "warning" {
@@ -627,23 +679,15 @@ function NotFoundState({
 }
 
 export function AdminRound1Manager() {
-  const { locale, round1Submissions, round1TestBanks, teams, users } = useSiteState();
+  const { locale, round1TestBanks } = useSiteState();
   useAdminTitleScroll();
 
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
-  const teamGroups = buildTeamResultGroups(round1Submissions, teams, users);
   const bankExportRows = buildBankExportRows(round1TestBanks);
-  const submissionExportRows = buildSubmissionExportRows(teamGroups, round1TestBanks);
   const draftBankCount = round1TestBanks.filter((bank) => bank.status === "draft").length;
-  const rankedTeamCount = teamGroups.filter((group) => group.rank).length;
-  const {
-    page,
-    setPage,
-    pageCount,
-    startIndex,
-    paginatedRows,
-  } = useAdminTablePagination(teamGroups, ADMIN_TABLE_PAGE_SIZE);
+  const objectivePoolCount = activeObjectiveBank?.questions.length ?? 0;
+  const essayPoolCount = activeEssayBank?.questions.length ?? 0;
 
   return (
     <div className="space-y-8">
@@ -660,23 +704,27 @@ export function AdminRound1Manager() {
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             icon={<FileQuestion className="h-5 w-5 text-cyan-300" />}
-            label={locale === "en" ? "Configured banks" : "So bank"}
+            label={locale === "en" ? "Configured banks" : "Số bank"}
             value={round1TestBanks.length.toString()}
             note={
               draftBankCount > 0
                 ? locale === "en"
                   ? `${draftBankCount} draft bank ready`
-                  : `${draftBankCount} bank nhap dang cho`
+                  : `${draftBankCount} bank nháp đang chờ`
                 : locale === "en"
                   ? "All current banks are active or archived"
-                  : "Tat ca bank hien tai dang active hoac archived"
+                  : "Tất cả bank hiện tại đang active hoặc archived"
             }
           />
           <MetricCard
             icon={<ListOrdered className="h-5 w-5 text-emerald-300" />}
             label={locale === "en" ? "Objective pool" : "Kho trắc nghiệm"}
-            value={activeObjectiveBank.questionPoolSize.toString()}
-            note={locale === "en" ? "Master 100-question bank" : "Ngân hàng gốc 100 câu"}
+            value={objectivePoolCount.toString()}
+            note={
+              locale === "en"
+                ? "Live questions currently in the objective bank"
+                : "Số câu hiện có trong ngân hàng trắc nghiệm"
+            }
           />
           <MetricCard
             icon={<Shuffle className="h-5 w-5 text-orange-300" />}
@@ -685,10 +733,14 @@ export function AdminRound1Manager() {
             note={locale === "en" ? "36 objective + 2 essay" : "36 trắc nghiệm + 2 tự luận"}
           />
           <MetricCard
-            icon={<Trophy className="h-5 w-5 text-amber-300" />}
-            label={locale === "en" ? "Ranked teams" : "Đội đã xếp hạng"}
-            value={rankedTeamCount.toString()}
-            note={locale === "en" ? "Ordered by current average score" : "Sap xep theo diem trung binh hien tai"}
+            icon={<Target className="h-5 w-5 text-amber-300" />}
+            label={locale === "en" ? "Essay pool" : "Kho tự luận"}
+            value={essayPoolCount.toString()}
+            note={
+              locale === "en"
+                ? "Live questions currently in the essay bank"
+                : "Số câu hiện có trong ngân hàng tự luận"
+            }
           />
         </section>
       ) : null}
@@ -863,28 +915,128 @@ export function AdminRound1Manager() {
           actionLabel={locale === "en" ? "Back to admin" : "Quay lai admin"}
         />
       )}
+    </div>
+  );
+}
+
+export function AdminRound1ScoresManager() {
+  const { locale, round1Submissions, teams, users } = useSiteState();
+  useAdminTitleScroll();
+
+  const teamGroups = useMemo(
+    () => buildTeamResultGroups(round1Submissions, teams, users),
+    [round1Submissions, teams, users],
+  );
+  const individualRows = useMemo(
+    () => buildIndividualScoreRows(round1Submissions, teams, users),
+    [round1Submissions, teams, users],
+  );
+  const individualExportRows = useMemo(
+    () =>
+      individualRows.map((row) => ({
+        participant: row.studentName,
+        loginId: row.studentLoginId ?? "",
+        team: row.teamName,
+        teamTag: row.teamTag,
+        objectiveScore: row.objectiveScore,
+        essayScore: row.essayScore ?? "",
+        totalScore: row.totalScore ?? "",
+        submittedAt: row.submittedAt,
+        reviewStatus: row.reviewStatus,
+      })),
+    [individualRows],
+  );
+  const teamExportRows = useMemo(() => buildTeamScoreExportRows(teamGroups), [teamGroups]);
+  const {
+    page: individualPage,
+    setPage: setIndividualPage,
+    pageCount: individualPageCount,
+    startIndex: individualStartIndex,
+    paginatedRows: paginatedIndividualRows,
+  } = useAdminTablePagination(individualRows, ADMIN_TABLE_PAGE_SIZE);
+  const {
+    page: teamPage,
+    setPage: setTeamPage,
+    pageCount: teamPageCount,
+    startIndex: teamStartIndex,
+    paginatedRows: paginatedTeamRows,
+  } = useAdminTablePagination(teamGroups, ADMIN_TABLE_PAGE_SIZE);
+
+  return (
+    <div className="space-y-8">
+      <div id={ADMIN_TITLE_ID} className="scroll-mt-32 space-y-2">
+        <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
+          {locale === "en" ? "Admin / Round 1 / Scores" : "Admin / Vòng 1 / Điểm số"}
+        </p>
+        <h1 className="theme-heading text-3xl font-semibold theme-text-strong md:text-[2.6rem]">
+          {locale === "en" ? "Round 1 scores" : "Điểm Vòng 1"}
+        </h1>
+      </div>
+
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={<UsersRound className="h-5 w-5 text-cyan-300" />}
+          label={locale === "en" ? "Submitted participants" : "Thí sinh đã nộp"}
+          value={individualRows.length.toString()}
+          note={
+            locale === "en"
+              ? "Latest official attempt per participant"
+              : "Bài làm chính thức mới nhất của từng thí sinh"
+          }
+        />
+        <MetricCard
+          icon={<Target className="h-5 w-5 text-emerald-300" />}
+          label={locale === "en" ? "Reviewed essays" : "Bài tự luận đã chấm"}
+          value={individualRows.filter((row) => row.reviewStatus === "reviewed").length.toString()}
+          note={
+            locale === "en"
+              ? "Essay and total score confirmed"
+              : "Đã xác nhận điểm tự luận và tổng điểm"
+          }
+        />
+        <MetricCard
+          icon={<Trophy className="h-5 w-5 text-amber-300" />}
+          label={locale === "en" ? "Ranked teams" : "Đội đã xếp hạng"}
+          value={teamGroups.filter((group) => group.rank).length.toString()}
+          note={
+            locale === "en"
+              ? "Based on reviewed team averages"
+              : "Tính theo điểm trung bình đội đã chấm"
+          }
+        />
+        <MetricCard
+          icon={<Clock3 className="h-5 w-5 text-orange-300" />}
+          label={locale === "en" ? "Teams with attempts" : "Đội đã có bài"}
+          value={teamGroups.filter((group) => group.completedRows.length > 0).length.toString()}
+          note={
+            locale === "en"
+              ? "At least one completed member attempt"
+              : "Có ít nhất một thành viên đã nộp bài"
+          }
+        />
+      </section>
 
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="space-y-2">
             <p className="theme-heading text-3xl font-semibold theme-text-strong">
-              {locale === "en" ? "Round 1 results" : "Kết quả Vòng 1"}
+              {locale === "en" ? "Round 1 individual score" : "Điểm cá nhân Vòng 1"}
             </p>
           </div>
           <button
             type="button"
             onClick={() =>
               exportRowsToWorkbook(
-                "attacker-2026-round1-results.xlsx",
-                "Round1Results",
-                submissionExportRows,
+                "attacker-2026-round1-individual-scores.xlsx",
+                "Round1IndividualScores",
+                individualExportRows,
               )
             }
             className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
           >
             <span className="inline-flex items-center gap-2">
               <Download className="h-4 w-4" />
-              {locale === "en" ? "Export round1-results.xlsx" : "Xuat round1-results.xlsx"}
+              {locale === "en" ? "Export individual scores" : "Xuất điểm cá nhân"}
             </span>
           </button>
         </div>
@@ -895,14 +1047,13 @@ export function AdminRound1Manager() {
               <tr>
                 {[
                   "#",
-                  locale === "en" ? "Rank" : "Hang",
-                  locale === "en" ? "Team" : "Đội",
-                  locale === "en" ? "Completed" : "Da lam",
-                  locale === "en" ? "Objective avg" : "TB trắc nghiệm",
-                  locale === "en" ? "Essay avg" : "TB tu luan",
-                  locale === "en" ? "Total avg" : "TB tong",
-                  locale === "en" ? "Latest activity" : "Cap nhat gan nhat",
-                  locale === "en" ? "Standing" : "Trang thai",
+                  locale === "en" ? "Participant" : "Thí sinh",
+                  locale === "en" ? "Team" : "Đội thi",
+                  locale === "en" ? "Multiple choice score" : "Điểm trắc nghiệm",
+                  locale === "en" ? "Essay score" : "Điểm tự luận",
+                  locale === "en" ? "Total score" : "Tổng điểm",
+                  locale === "en" ? "Submitted at" : "Thời điểm nộp",
+                  locale === "en" ? "Review" : "Chấm điểm",
                   locale === "en" ? "Detail" : "Chi tiết",
                 ].map((label) => (
                   <th key={label} className="px-4 py-3 font-medium">
@@ -912,9 +1063,141 @@ export function AdminRound1Manager() {
               </tr>
             </thead>
             <tbody>
-              {paginatedRows.map((group, index) => (
+              {paginatedIndividualRows.map((row, index) => (
+                <tr key={row.submissionId} className="border-b theme-border last:border-b-0">
+                  <td className="px-4 py-4 text-xs font-semibold theme-text-soft">
+                    {individualStartIndex + index + 1}
+                  </td>
+                  <td className="px-4 py-4">
+                    <Link href={`/admin/users/${row.userId}/profile`} className="font-semibold theme-accent">
+                      {row.studentName}
+                    </Link>
+                    <p className="mt-1 text-xs theme-text-soft">{row.studentLoginId || row.userId}</p>
+                  </td>
+                  <td className="px-4 py-4">
+                    <Link href={`/admin/teams/${row.teamId}`} className="font-semibold theme-accent">
+                      {row.teamName}
+                    </Link>
+                    <p className="mt-1 text-xs theme-text-soft">{row.teamTag}</p>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <StatusPill
+                      tone={
+                        row.objectiveScore >= ROUND1_OBJECTIVE_MAX_SCORE * 0.8
+                          ? "success"
+                          : row.objectiveScore > 0
+                            ? "info"
+                            : "warning"
+                      }
+                    >
+                      {`${row.objectiveScore.toFixed(2)} / ${ROUND1_OBJECTIVE_MAX_SCORE}`}
+                    </StatusPill>
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    {row.essayScore == null ? (
+                      <StatusPill tone="warning">{locale === "en" ? "Pending" : "Đang chờ"}</StatusPill>
+                    ) : (
+                      <StatusPill tone="info">{`${row.essayScore.toFixed(2)} / ${ROUND1_ESSAY_MAX_SCORE}`}</StatusPill>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    {row.totalScore == null ? (
+                      <StatusPill tone="warning">{locale === "en" ? "Pending" : "Đang chờ"}</StatusPill>
+                    ) : (
+                      <StatusPill
+                        tone={row.totalScore >= 80 ? "success" : row.totalScore >= 65 ? "info" : "warning"}
+                      >
+                        {`${row.totalScore.toFixed(2)} / ${ROUND1_TOTAL_MAX_SCORE}`}
+                      </StatusPill>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 theme-text-body">{formatDateLabel(locale, row.submittedAt)}</td>
+                  <td className="px-4 py-4 text-center">
+                    <StatusPill tone={row.reviewStatus === "reviewed" ? "success" : "warning"}>
+                      {row.reviewStatus === "reviewed"
+                        ? locale === "en"
+                          ? "Reviewed"
+                          : "Đã chấm"
+                        : locale === "en"
+                          ? "Essay pending"
+                          : "Chờ chấm tự luận"}
+                    </StatusPill>
+                  </td>
+                  <td className="px-4 py-4">
+                    <Link
+                      href={`/admin/round-1/exams/${row.userId}`}
+                      className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-4 py-2 text-xs font-semibold theme-text-strong"
+                    >
+                      {locale === "en" ? "Open detail" : "Mở chi tiết"}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <AdminTablePagination
+          locale={locale}
+          page={individualPage}
+          pageCount={individualPageCount}
+          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          totalRows={individualRows.length}
+          onPageChange={setIndividualPage}
+        />
+      </Surface>
+
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div className="space-y-2">
+            <p className="theme-heading text-3xl font-semibold theme-text-strong">
+              {locale === "en" ? "Round 1 team score" : "Điểm đội Vòng 1"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              exportRowsToWorkbook(
+                "attacker-2026-round1-team-scores.xlsx",
+                "Round1TeamScores",
+                teamExportRows,
+              )
+            }
+            className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+          >
+            <span className="inline-flex items-center gap-2">
+              <Download className="h-4 w-4" />
+              {locale === "en" ? "Export team scores" : "Xuất điểm đội"}
+            </span>
+          </button>
+        </div>
+
+        <div className="mt-8 overflow-x-auto">
+          <table className="min-w-full text-left text-sm">
+            <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
+              <tr>
+                {[
+                  "#",
+                  locale === "en" ? "Rank" : "Hạng",
+                  locale === "en" ? "Team" : "Đội",
+                  locale === "en" ? "Completed" : "Đã làm",
+                  locale === "en" ? "Objective avg" : "TB trắc nghiệm",
+                  locale === "en" ? "Essay avg" : "TB tự luận",
+                  locale === "en" ? "Total avg" : "TB tổng",
+                  locale === "en" ? "Latest activity" : "Cập nhật gần nhất",
+                  locale === "en" ? "Standing" : "Trạng thái",
+                  locale === "en" ? "Detail" : "Chi tiết",
+                ].map((label) => (
+                  <th key={label} className="px-4 py-3 font-medium">
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedTeamRows.map((group, index) => (
                 <tr key={group.team.id} className="border-b theme-border last:border-b-0">
-                  <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{startIndex + index + 1}</td>
+                  <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{teamStartIndex + index + 1}</td>
                   <td className="px-4 py-4 theme-text-body">{group.rank ?? "-"}</td>
                   <td className="px-4 py-4">
                     <Link href={`/admin/teams/${group.team.id}`} className="font-semibold theme-accent">
@@ -937,27 +1220,35 @@ export function AdminRound1Manager() {
                             : "warning"
                       }
                     >
-                      {group.completedRows.length > 0 ? `${group.averageObjectiveScore.toFixed(2)} / ${ROUND1_OBJECTIVE_MAX_SCORE}` : "--"}
+                      {group.completedRows.length > 0
+                        ? `${group.averageObjectiveScore.toFixed(2)} / ${ROUND1_OBJECTIVE_MAX_SCORE}`
+                        : "--"}
                     </StatusPill>
-                  </td>
-                  <td className="px-4 py-4 theme-text-body">
-                    {group.completedRows.length === 0
-                      ? "--"
-                      : group.hasPendingEssayReview
-                        ? locale === "en"
-                          ? "Pending"
-                          : "Đang chờ"
-                        : `${group.averageEssayScore.toFixed(2)} / ${ROUND1_ESSAY_MAX_SCORE}`}
                   </td>
                   <td className="px-4 py-4 text-center">
                     {group.completedRows.length === 0 ? (
                       "--"
                     ) : group.hasPendingEssayReview ? (
-                      <StatusPill tone="warning">
-                        {locale === "en" ? "Pending" : "Đang chờ"}
-                      </StatusPill>
+                      <StatusPill tone="warning">{locale === "en" ? "Pending" : "Đang chờ"}</StatusPill>
                     ) : (
-                      <StatusPill tone={group.averageTotalScore >= 80 ? "success" : group.averageTotalScore >= 65 ? "info" : "warning"}>
+                      <StatusPill tone="info">{`${group.averageEssayScore.toFixed(2)} / ${ROUND1_ESSAY_MAX_SCORE}`}</StatusPill>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    {group.completedRows.length === 0 ? (
+                      "--"
+                    ) : group.hasPendingEssayReview ? (
+                      <StatusPill tone="warning">{locale === "en" ? "Pending" : "Đang chờ"}</StatusPill>
+                    ) : (
+                      <StatusPill
+                        tone={
+                          group.averageTotalScore >= 80
+                            ? "success"
+                            : group.averageTotalScore >= 65
+                              ? "info"
+                              : "warning"
+                        }
+                      >
                         {`${group.averageTotalScore.toFixed(2)} / ${ROUND1_TOTAL_MAX_SCORE}`}
                       </StatusPill>
                     )}
@@ -972,10 +1263,10 @@ export function AdminRound1Manager() {
                   </td>
                   <td className="px-4 py-4">
                     <Link
-                      href={`/admin/round-1/results/${group.team.id}`}
+                      href={`/admin/round-1/scores/${group.team.id}`}
                       className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-4 py-2 text-xs font-semibold theme-text-strong"
                     >
-                      {locale === "en" ? "Open detail" : "Mo chi tiet"}
+                      {locale === "en" ? "Open detail" : "Mở chi tiết"}
                       <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
                   </td>
@@ -986,11 +1277,11 @@ export function AdminRound1Manager() {
         </div>
         <AdminTablePagination
           locale={locale}
-          page={page}
-          pageCount={pageCount}
+          page={teamPage}
+          pageCount={teamPageCount}
           pageSize={ADMIN_TABLE_PAGE_SIZE}
           totalRows={teamGroups.length}
-          onPageChange={setPage}
+          onPageChange={setTeamPage}
         />
       </Surface>
     </div>
@@ -1594,8 +1885,8 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
             ? "This team may no longer exist in the current admin dataset."
             : "Doi nay co the khong con ton tai trong bo du lieu admin hien tai."
         }
-        href="/admin/round-1"
-        actionLabel={locale === "en" ? "Back to Round 1" : "Quay lai Vong 1"}
+        href="/admin/round-1/scores"
+        actionLabel={locale === "en" ? "Back to Round 1 scores" : "Quay lại điểm Vòng 1"}
       />
     );
   }
@@ -1622,16 +1913,16 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
   }));
   return (
     <div className="space-y-8">
-      <Link href="/admin/round-1" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
+      <Link href="/admin/round-1/scores" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
         <ArrowLeft className="h-4 w-4" />
-        {locale === "en" ? "Back to Round 1" : "Quay lai Vong 1"}
+        {locale === "en" ? "Back to Round 1 scores" : "Quay lại điểm Vòng 1"}
       </Link>
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
           id={ADMIN_TITLE_ID}
           className="scroll-mt-32"
-          eyebrow={locale === "en" ? "Admin / Round 1 / Team result" : "Admin / Vong 1 / Ket qua doi"}
+          eyebrow={locale === "en" ? "Admin / Round 1 / Team score" : "Admin / Vòng 1 / Điểm đội"}
           title={`${group.team.name} · ${group.team.tag}`}
           description={
             locale === "en"

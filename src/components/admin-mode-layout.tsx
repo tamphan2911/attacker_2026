@@ -122,9 +122,10 @@ const adminNavGroups: Array<{
         href: "/admin/round-1",
         icon: FileQuestion,
         label: { en: "Round 1", vi: "Vòng 1" },
-        description: { en: "Banks, results, and review", vi: "Ngân hàng đề, kết quả và chấm điểm" },
+        description: { en: "Banks, scores, and review", vi: "Ngân hàng đề, điểm số và chấm bài" },
         children: [
           { href: "/admin/round-1", label: { en: "Round 1 test bank", vi: "Ngân hàng đề Vòng 1" } },
+          { href: "/admin/round-1/scores", label: { en: "Round 1 scores", vi: "Điểm Vòng 1" } },
           { href: "/admin/round-1/exams", label: { en: "Round 1 exam", vi: "Bài thi Vòng 1" } },
         ],
       },
