@@ -150,6 +150,22 @@ function isActiveRoute(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function getActiveChildHref(
+  pathname: string,
+  children: Array<{ href: string; label: LocalizedText }> | undefined,
+) {
+  if (!children?.length) {
+    return null;
+  }
+
+  const activeChildren = children.filter((child) => isActiveRoute(pathname, child.href));
+  if (!activeChildren.length) {
+    return null;
+  }
+
+  return activeChildren.sort((left, right) => right.href.length - left.href.length)[0]?.href ?? null;
+}
+
 function AccessDenied() {
   const { locale, currentUser } = useSiteState();
 
@@ -236,9 +252,8 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                   {group.items
                     .filter((item) => !item.adminOnly || currentUser.role === "admin")
                     .map((item) => {
-                    const active =
-                      isActiveRoute(pathname, item.href) ||
-                      item.children?.some((child) => isActiveRoute(pathname, child.href));
+                    const activeChildHref = getActiveChildHref(pathname, item.children);
+                    const active = isActiveRoute(pathname, item.href) || Boolean(activeChildHref);
                     const Icon = item.icon;
 
                     return (
@@ -275,7 +290,7 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                         {item.children?.length ? (
                           <div className="ml-[3.35rem] space-y-1 border-l theme-border pl-4">
                             {item.children.map((child) => {
-                              const childActive = isActiveRoute(pathname, child.href);
+                              const childActive = activeChildHref === child.href;
                               return (
                                 <Link
                                   key={child.href}
