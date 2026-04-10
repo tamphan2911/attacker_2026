@@ -851,6 +851,35 @@ export async function updateRound1QuestionByAdmin(
   return ok({ bankId, questionId });
 }
 
+export async function deleteRound1QuestionByAdmin(
+  bankId: string,
+  questionId: string,
+): Promise<ServiceResult<{ bankId: string; questionId: string }>> {
+  const bank = await prisma.round1TestBank.findUnique({
+    where: { id: bankId },
+    select: { id: true, questions: true },
+  });
+
+  if (!bank) {
+    return fail(404, "Round 1 bank not found.");
+  }
+
+  const questions = JSON.parse(bank.questions) as Round1Question[];
+  const questionExists = questions.some((question) => question.id === questionId);
+  if (!questionExists) {
+    return fail(404, "Round 1 question not found.");
+  }
+
+  await prisma.round1TestBank.update({
+    where: { id: bankId },
+    data: {
+      questions: JSON.stringify(questions.filter((question) => question.id !== questionId)),
+    },
+  });
+
+  return ok({ bankId, questionId });
+}
+
 export async function updateRound1EssayScoreByAdmin(
   submissionId: string,
   payload: {

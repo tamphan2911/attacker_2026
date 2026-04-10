@@ -187,6 +187,7 @@ interface SiteStateValue {
   deleteTeamByAdmin: (teamId: string) => void;
   createRound1QuestionByAdmin: (bankId: string, payload: Round1Question) => Promise<string | null>;
   updateRound1QuestionByAdmin: (bankId: string, questionId: string, payload: Round1Question) => void;
+  deleteRound1QuestionByAdmin: (bankId: string, questionId: string) => Promise<boolean>;
   updateRound1EssayScoreByAdmin: (
     submissionId: string,
     payload: number | { questionScores: Record<string, number> },
@@ -1596,6 +1597,51 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const deleteRound1QuestionByAdmin = async (bankId: string, questionId: string) => {
+    if (!canAccessAdminMode) {
+      pushToast(
+        {
+          en: "Only admin and moderator accounts can delete Round 1 questions here.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể xóa câu hỏi Vòng 1 tại đây.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/round-1/banks/${bankId}/questions/${questionId}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not delete the Round 1 question.");
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncSiteData();
+      pushToast(
+        {
+          en: "Round 1 question deleted from the admin dataset.",
+          vi: "Câu hỏi Vòng 1 đã được xóa khỏi dữ liệu admin.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not delete the Round 1 question right now.",
+          vi: "Hiện không thể xóa câu hỏi Vòng 1.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
   const initiateRound1TeamLock = () => {
     const team = getTeamForUser(activeUserId, teams);
 
@@ -2598,6 +2644,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     deleteTeamByAdmin,
     createRound1QuestionByAdmin,
     updateRound1QuestionByAdmin,
+    deleteRound1QuestionByAdmin,
     updateRound1EssayScoreByAdmin,
     inviteUser,
     respondToInvitation,

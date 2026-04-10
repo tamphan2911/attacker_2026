@@ -19,6 +19,7 @@ import {
   Search,
   Shuffle,
   Target,
+  Trash2,
   Trophy,
   UsersRound,
 } from "lucide-react";
@@ -1345,7 +1346,7 @@ export function AdminRound1ScoresManager() {
 }
 
 export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
-  const { locale, round1TestBanks } = useSiteState();
+  const { locale, round1TestBanks, deleteRound1QuestionByAdmin } = useSiteState();
   useAdminTitleScroll();
   const bank = round1TestBanks.find((item) => item.id === bankId);
   const questionList = useMemo(() => bank?.questions ?? [], [bank]);
@@ -1356,6 +1357,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
   const [difficultyFilter, setDifficultyFilter] = useState<"all" | Round1Question["difficulty"]>("all");
   const [sortKey, setSortKey] = useState<BankPreviewSortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [deletePendingQuestionId, setDeletePendingQuestionId] = useState<string | null>(null);
 
   const bankExportRows = bank ? buildBankExportRows([bank]) : [];
   const topicOptions = useMemo(
@@ -1651,9 +1653,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     onClick={() => toggleSort("answerKey")}
                   />
                 </th>
-                <th className="px-4 py-3 font-medium">
-                  {locale === "en" ? "Edit" : "Chỉnh sửa"}
-                </th>
+                <th className="px-4 py-3 font-medium">{locale === "en" ? "Actions" : "Thao tác"}</th>
               </tr>
             </thead>
             <tbody>
@@ -1689,15 +1689,45 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     {getRound1AnswerSummary(question, locale)}
                   </td>
                   <td className="px-4 py-4">
-                    <Link
-                      href={`/admin/round-1/banks/${bank.id}/questions/${question.id}`}
-                      title={locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}
-                      aria-label={locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}
-                      className="theme-button-secondary inline-flex h-9 w-9 items-center justify-center rounded-full"
-                    >
-                      <ArrowRight className="h-3.5 w-3.5" />
-                      <span className="sr-only">{locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}</span>
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/round-1/banks/${bank.id}/questions/${question.id}`}
+                        title={locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}
+                        aria-label={locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}
+                        className="theme-button-secondary inline-flex h-9 w-9 items-center justify-center rounded-full"
+                      >
+                        <ArrowRight className="h-3.5 w-3.5" />
+                        <span className="sr-only">{locale === "en" ? "Open question editor" : "Mở trang sửa câu hỏi"}</span>
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={deletePendingQuestionId === question.id}
+                        onClick={() => {
+                          const confirmed = window.confirm(
+                            locale === "en"
+                              ? `Delete question ${question.id} from this test bank?`
+                              : `Xóa câu hỏi ${question.id} khỏi test bank này?`,
+                          );
+
+                          if (!confirmed) {
+                            return;
+                          }
+
+                          setDeletePendingQuestionId(question.id);
+                          void deleteRound1QuestionByAdmin(bank.id, question.id).finally(() =>
+                            setDeletePendingQuestionId((current) =>
+                              current === question.id ? null : current,
+                            ),
+                          );
+                        }}
+                        title={locale === "en" ? "Delete question" : "Xóa câu hỏi"}
+                        aria-label={locale === "en" ? "Delete question" : "Xóa câu hỏi"}
+                        className="theme-button-danger inline-flex h-9 w-9 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span className="sr-only">{locale === "en" ? "Delete question" : "Xóa câu hỏi"}</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
