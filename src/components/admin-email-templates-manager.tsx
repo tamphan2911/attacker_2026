@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { ChevronRight, Mail, RotateCcw, Save, ShieldCheck } from "lucide-react";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
-import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import { defaultSystemEmailTemplates } from "@/data/system-email-templates";
 import type { SystemEmailTemplate, SystemEmailTemplates } from "@/types/site";
@@ -29,7 +28,7 @@ function VietnameseField({
 }) {
   return (
     <label className="block space-y-2">
-      <span className="text-sm theme-text-muted">{label} (VI)</span>
+      <span className="text-sm theme-text-muted">{label}</span>
       <textarea
         rows={rows}
         value={value}
@@ -59,43 +58,43 @@ function TemplateEditorCard({
       </div>
 
       <VietnameseField
-        label="Subject"
+        label="Tiêu đề"
         rows={2}
         value={template.subject.vi}
         onChange={(value) => onChange("subject", value)}
       />
       <VietnameseField
-        label="Preview"
+        label="Dòng xem trước"
         rows={3}
         value={template.preview.vi}
         onChange={(value) => onChange("preview", value)}
       />
       <VietnameseField
-        label="Headline"
+        label="Tiêu đề chính"
         rows={3}
         value={template.headline.vi}
         onChange={(value) => onChange("headline", value)}
       />
       <VietnameseField
-        label="Intro"
+        label="Mở đầu"
         rows={5}
         value={template.intro.vi}
         onChange={(value) => onChange("intro", value)}
       />
       <VietnameseField
-        label="Action label"
+        label="Nhãn nút hành động"
         rows={2}
         value={template.actionLabel.vi}
         onChange={(value) => onChange("actionLabel", value)}
       />
       <VietnameseField
-        label="Action hint"
+        label="Ghi chú hành động"
         rows={5}
         value={template.actionHint.vi}
         onChange={(value) => onChange("actionHint", value)}
       />
       <VietnameseField
-        label="Footer"
+        label="Chân trang"
         rows={4}
         value={template.footer.vi}
         onChange={(value) => onChange("footer", value)}
@@ -157,7 +156,6 @@ function TemplateSelectorCard({
 }
 
 export function AdminEmailTemplatesManager() {
-  const { locale } = useSiteState();
   useAdminTitleScroll();
 
   const [templates, setTemplates] = useState<SystemEmailTemplates>(() =>
@@ -182,11 +180,7 @@ export function AdminEmailTemplatesManager() {
 
       if (!response.ok) {
         if (!cancelled) {
-          setMessage(
-            locale === "en"
-              ? "Could not load the current system email templates."
-              : "Không thể tải mẫu email hệ thống hiện tại.",
-          );
+          setMessage("Không thể tải mẫu email hệ thống hiện tại.");
           setIsLoading(false);
         }
         return;
@@ -201,11 +195,7 @@ export function AdminEmailTemplatesManager() {
       }
     })().catch(() => {
       if (!cancelled) {
-        setMessage(
-          locale === "en"
-            ? "Could not load the current system email templates."
-            : "Không thể tải mẫu email hệ thống hiện tại.",
-        );
+        setMessage("Không thể tải mẫu email hệ thống hiện tại.");
         setIsLoading(false);
       }
     });
@@ -213,7 +203,7 @@ export function AdminEmailTemplatesManager() {
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, []);
 
   const isDirty = useMemo(
     () => JSON.stringify(templates) !== JSON.stringify(savedTemplates),
@@ -256,21 +246,13 @@ export function AdminEmailTemplatesManager() {
     });
 
     if (!response.ok) {
-      setMessage(
-        locale === "en"
-          ? "Could not save the email templates right now."
-          : "Hiện chưa thể lưu các mẫu email.",
-      );
+      setMessage("Hiện chưa thể lưu các mẫu email.");
       setIsSaving(false);
       return;
     }
 
     setSavedTemplates(cloneTemplates(templates));
-    setMessage(
-      locale === "en"
-        ? "System email templates updated."
-        : "Đã cập nhật mẫu email hệ thống.",
-    );
+    setMessage("Đã cập nhật mẫu email hệ thống.");
     setIsSaving(false);
   };
 
@@ -281,17 +263,9 @@ export function AdminEmailTemplatesManager() {
           <SectionHeading
             id={ADMIN_TITLE_ID}
             className="scroll-mt-32"
-            eyebrow={locale === "en" ? "System / Email templates" : "Hệ thống / Mẫu email"}
-            title={
-              locale === "en"
-                ? "Activation and password-reset emails live here."
-                : "Email kích hoạt và đặt lại mật khẩu được quản lý tại đây."
-            }
-            description={
-              locale === "en"
-                ? "Use placeholders {{name}}, {{link}}, {{supportEmail}}, and {{competitionName}} inside the copy. The visual email shell stays fixed; this screen edits the message content."
-                : "Dùng các biến {{name}}, {{link}}, {{supportEmail}} và {{competitionName}} trong nội dung. Phần khung email giữ cố định; màn hình này chỉ chỉnh thông điệp."
-            }
+            eyebrow="Hệ thống / Mẫu email"
+            title="Email kích hoạt và đặt lại mật khẩu được quản lý tại đây."
+            description="Dùng các biến {{name}}, {{link}}, {{supportEmail}} và {{competitionName}} trong nội dung. Phần khung email giữ cố định; màn hình này chỉ chỉnh thông điệp bằng tiếng Việt."
           />
 
           <div className="flex flex-wrap gap-3">
@@ -301,7 +275,7 @@ export function AdminEmailTemplatesManager() {
               className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
             >
               <RotateCcw className="h-4 w-4" />
-              {locale === "en" ? "Reset draft" : "Đặt lại bản nháp"}
+              Đặt lại bản nháp
             </button>
             <button
               type="button"
@@ -310,13 +284,7 @@ export function AdminEmailTemplatesManager() {
               className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Save className="h-4 w-4" />
-              {isSaving
-                ? locale === "en"
-                  ? "Saving..."
-                  : "Đang lưu..."
-                : locale === "en"
-                  ? "Save templates"
-                  : "Lưu mẫu email"}
+              {isSaving ? "Đang lưu..." : "Lưu mẫu email"}
             </button>
           </div>
         </div>
@@ -331,33 +299,23 @@ export function AdminEmailTemplatesManager() {
 
       {isLoading ? (
         <Surface className="px-6 py-8">
-          <p className="text-sm theme-text-soft">
-            {locale === "en" ? "Loading email templates..." : "Đang tải mẫu email..."}
-          </p>
+          <p className="text-sm theme-text-soft">Đang tải mẫu email...</p>
         </Surface>
       ) : (
         <div className="space-y-6">
           <div className="grid gap-4 lg:grid-cols-2">
             <TemplateSelectorCard
               active={activeTemplateKey === "activation"}
-              title={locale === "en" ? "Activation email" : "Email kích hoạt"}
-              description={
-                locale === "en"
-                  ? "Sent immediately after registration and when an unverified user asks to resend."
-                  : "Được gửi ngay sau khi đăng ký và khi người dùng chưa xác thực yêu cầu gửi lại."
-              }
+              title="Email kích hoạt"
+              description="Được gửi ngay sau khi đăng ký và khi người dùng chưa xác thực yêu cầu gửi lại."
               icon={Mail}
               accentClassName="border-sky-500/18 bg-sky-500/10 text-sky-600 dark:text-sky-200"
               onClick={() => setActiveTemplateKey("activation")}
             />
             <TemplateSelectorCard
               active={activeTemplateKey === "passwordReset"}
-              title={locale === "en" ? "Password reset email" : "Email đặt lại mật khẩu"}
-              description={
-                locale === "en"
-                  ? "Sent when a verified user requests a secure link to set a new password."
-                  : "Được gửi khi người dùng đã xác thực yêu cầu nhận liên kết bảo mật để đặt mật khẩu mới."
-              }
+              title="Email đặt lại mật khẩu"
+              description="Được gửi khi người dùng đã xác thực yêu cầu nhận liên kết bảo mật để đặt mật khẩu mới."
               icon={ShieldCheck}
               accentClassName="border-amber-500/18 bg-amber-500/10 text-amber-600 dark:text-amber-200"
               onClick={() => setActiveTemplateKey("passwordReset")}
@@ -366,12 +324,8 @@ export function AdminEmailTemplatesManager() {
 
           {activeTemplateKey === "activation" ? (
             <TemplateEditorCard
-              title={locale === "en" ? "Activation email template" : "Mẫu email kích hoạt"}
-              description={
-                locale === "en"
-                  ? "This template is sent after email/password registration to activate a new competition account."
-                  : "Mẫu này được gửi sau khi đăng ký email/mật khẩu để kích hoạt tài khoản dự thi mới."
-              }
+              title="Mẫu email kích hoạt"
+              description="Mẫu này được gửi sau khi người dùng đăng ký tài khoản bằng email và mật khẩu để kích hoạt tài khoản dự thi mới."
               template={templates.activation}
               onChange={(field, value) =>
                 updateTemplateField("activation", field, value)
@@ -381,12 +335,8 @@ export function AdminEmailTemplatesManager() {
 
           {activeTemplateKey === "passwordReset" ? (
             <TemplateEditorCard
-              title={locale === "en" ? "Password reset email template" : "Mẫu email đặt lại mật khẩu"}
-              description={
-                locale === "en"
-                  ? "This template is sent when a user asks to choose a new password through a time-limited secure link."
-                  : "Mẫu này được gửi khi người dùng yêu cầu chọn mật khẩu mới thông qua liên kết bảo mật có thời hạn."
-              }
+              title="Mẫu email đặt lại mật khẩu"
+              description="Mẫu này được gửi khi người dùng yêu cầu chọn mật khẩu mới thông qua liên kết bảo mật có thời hạn."
               template={templates.passwordReset}
               onChange={(field, value) =>
                 updateTemplateField("passwordReset", field, value)
