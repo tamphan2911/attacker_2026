@@ -2105,6 +2105,12 @@ function AdminRound1QuestionEditorInner({
     pristineQuestion ? cloneRound1Question(pristineQuestion) : null,
   );
   const [savePending, setSavePending] = useState(false);
+  const topicOptions = [...new Set(
+    [
+      ...(bank?.questions ?? []).map((question) => question.topic.trim()).filter(Boolean),
+      draft?.topic.trim() ?? "",
+    ].filter(Boolean),
+  )].sort(createStringCompare(locale));
 
   const isDirty = useMemo(() => {
     if (!pristineQuestion || !draft) {
@@ -2199,8 +2205,8 @@ function AdminRound1QuestionEditorInner({
                 ? "Create a new question for this test bank. The question ID is generated automatically when you save."
                 : "Tạo câu hỏi mới cho test bank này. Mã câu hỏi sẽ được tạo tự động khi bạn lưu."
               : locale === "en"
-                ? "Update the question prompt, topic, difficulty, question type, and response structure for this question inside the selected test bank."
-                : "Cap nhat prompt, chu de, do kho, loai cau hoi va cau truc tra loi cho cau hoi nay trong test bank da chon."
+                ? "Update the question prompt, topic, difficulty, and response structure for this question inside the selected test bank."
+                : "Cap nhat prompt, chu de, do kho va cau truc tra loi cho cau hoi nay trong test bank da chon."
           }
         />
         <div className="flex gap-3">
@@ -2236,11 +2242,27 @@ function AdminRound1QuestionEditorInner({
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Topic" : "Chu de"}
               </span>
-              <input
+              <select
                 value={draft.topic}
-                onChange={(event) => setDraft((current) => (current ? { ...current, topic: event.target.value } : current))}
+                onChange={(event) =>
+                  setDraft((current) =>
+                    current ? { ...current, topic: event.target.value } : current,
+                  )
+                }
+                disabled={topicOptions.length === 0}
                 className={fieldClassName}
-              />
+              >
+                {topicOptions.length === 0 ? (
+                  <option value="">
+                    {locale === "en" ? "No topic available" : "Chưa có chủ đề"}
+                  </option>
+                ) : null}
+                {topicOptions.map((topic) => (
+                  <option key={topic} value={topic}>
+                    {topic}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
@@ -2281,6 +2303,7 @@ function AdminRound1QuestionEditorInner({
                       : current,
                   )
                 }
+                disabled={mode === "edit"}
                 className={fieldClassName}
               >
                 {(
