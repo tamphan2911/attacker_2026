@@ -444,7 +444,7 @@ function buildBankExportRows(round1TestBanks: Round1TestBank[]) {
       questionId: question.id,
       topic: question.topic,
       type: pickRound1TypeLabel("en", question.type),
-      difficulty: question.difficulty,
+      difficulty: bank.bankType === "essay" ? "" : question.difficulty,
       prompt: question.prompt.en,
       answerKey: getRound1AnswerSummary(question, "en"),
       structure: getRound1QuestionStructureSummary(question, "en"),
@@ -490,7 +490,9 @@ function buildBankTopicSummaryRows(bank: Round1TestBank, locale: Locale) {
     };
 
     entry.types.add(pickRound1TypeLabel(locale, question.type));
-    if (question.difficulty === "easy") {
+    if (bank.bankType === "essay") {
+      entry.mediumCount += 1;
+    } else if (question.difficulty === "easy") {
       entry.easyCount += 1;
     } else if (question.difficulty === "medium") {
       entry.mediumCount += 1;
@@ -837,6 +839,7 @@ export function AdminRound1Manager() {
                     : `${ROUND1_ESSAY_TOTAL} câu được rút cho mỗi lượt thi chính thức.`,
               },
             ].map(({ bank, title, rows, note }) => {
+              const isEssayBank = bank.bankType === "essay";
               const totals = rows.reduce(
                 (result, row) => ({
                   easy: result.easy + row.easyCount,
@@ -894,10 +897,14 @@ export function AdminRound1Manager() {
                           {[
                             locale === "en" ? "Topic" : "Chủ đề",
                             locale === "en" ? "Type" : "Loại",
-                            locale === "en" ? "Easy" : "Dễ",
-                            locale === "en" ? "Medium" : "Trung bình",
-                            locale === "en" ? "Hard" : "Khó",
-                            locale === "en" ? "Total" : "Tổng số",
+                            ...(isEssayBank
+                              ? [locale === "en" ? "Total" : "Tổng số"]
+                              : [
+                                  locale === "en" ? "Easy" : "Dễ",
+                                  locale === "en" ? "Medium" : "Trung bình",
+                                  locale === "en" ? "Hard" : "Khó",
+                                  locale === "en" ? "Total" : "Tổng số",
+                                ]),
                           ].map((label) => (
                             <th key={label} className="px-4 py-3 font-medium">
                               {label}
@@ -910,15 +917,19 @@ export function AdminRound1Manager() {
                           <tr key={`${bank.id}-${row.topic}`} className="border-b theme-border last:border-b-0">
                             <td className="px-4 py-4 font-semibold theme-text-strong">{row.topic}</td>
                             <td className="px-4 py-4 theme-text-body">{row.typeLabel}</td>
-                            <td className="px-4 py-4 text-center">
-                              <StatusPill>{row.easyCount}</StatusPill>
-                            </td>
-                            <td className="px-4 py-4 text-center">
-                              <StatusPill tone="success">{row.mediumCount}</StatusPill>
-                            </td>
-                            <td className="px-4 py-4 text-center">
-                              <StatusPill tone="warning">{row.hardCount}</StatusPill>
-                            </td>
+                            {isEssayBank ? null : (
+                              <>
+                                <td className="px-4 py-4 text-center">
+                                  <StatusPill>{row.easyCount}</StatusPill>
+                                </td>
+                                <td className="px-4 py-4 text-center">
+                                  <StatusPill tone="success">{row.mediumCount}</StatusPill>
+                                </td>
+                                <td className="px-4 py-4 text-center">
+                                  <StatusPill tone="warning">{row.hardCount}</StatusPill>
+                                </td>
+                              </>
+                            )}
                             <td className="px-4 py-4 text-center">
                               <StatusPill tone="info">{row.totalCount}</StatusPill>
                             </td>
@@ -931,9 +942,13 @@ export function AdminRound1Manager() {
                           <td className="px-4 py-4 theme-text-body">
                             {locale === "en" ? `${rows.length} topics` : `${rows.length} chủ đề`}
                           </td>
-                          <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.easy}</td>
-                          <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.medium}</td>
-                          <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.hard}</td>
+                          {isEssayBank ? null : (
+                            <>
+                              <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.easy}</td>
+                              <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.medium}</td>
+                              <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.hard}</td>
+                            </>
+                          )}
                           <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.total}</td>
                         </tr>
                       </tbody>
@@ -1334,6 +1349,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
   useAdminTitleScroll();
   const bank = round1TestBanks.find((item) => item.id === bankId);
   const questionList = useMemo(() => bank?.questions ?? [], [bank]);
+  const isEssayBank = bank?.bankType === "essay";
   const [questionSearch, setQuestionSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | Round1QuestionType>("all");
   const [topicFilter, setTopicFilter] = useState("all");
@@ -1352,7 +1368,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
         const searchSource = [
           pickRound1TypeLabel(locale, question.type),
           question.topic,
-          question.difficulty,
+          ...(isEssayBank ? [] : [question.difficulty]),
           pickRound1QuestionText(question.prompt),
           getRound1AnswerSummary(question, locale),
           getRound1QuestionOptionPreview(question, locale),
@@ -1370,13 +1386,13 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           return false;
         }
 
-        if (difficultyFilter !== "all" && question.difficulty !== difficultyFilter) {
+        if (!isEssayBank && difficultyFilter !== "all" && question.difficulty !== difficultyFilter) {
           return false;
         }
 
         return true;
       }),
-    [difficultyFilter, locale, questionList, questionSearch, topicFilter, typeFilter],
+    [difficultyFilter, isEssayBank, locale, questionList, questionSearch, topicFilter, typeFilter],
   );
   const sortedQuestions = useMemo(() => {
     if (!sortKey) {
@@ -1506,7 +1522,14 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_220px_220px_220px]">
+        <div
+          className={cn(
+            "mt-6 grid gap-3",
+            isEssayBank
+              ? "xl:grid-cols-[minmax(0,1.35fr)_220px_220px]"
+              : "xl:grid-cols-[minmax(0,1.35fr)_220px_220px_220px]",
+          )}
+        >
           <label className="space-y-2">
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
               <Search className="h-3.5 w-3.5" />
@@ -1561,22 +1584,24 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
             </select>
           </label>
 
-          <label className="space-y-2">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-              <Filter className="h-3.5 w-3.5" />
-              {locale === "en" ? "Difficulty" : "Độ khó"}
-            </span>
-            <select
-              value={difficultyFilter}
-              onChange={(event) => setDifficultyFilter(event.target.value as "all" | Round1Question["difficulty"])}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
-            >
-              <option value="all">{locale === "en" ? "All levels" : "Tất cả mức độ"}</option>
-              <option value="easy">{locale === "en" ? "Easy" : "Dễ"}</option>
-              <option value="medium">{locale === "en" ? "Medium" : "Trung bình"}</option>
-              <option value="hard">{locale === "en" ? "Hard" : "Khó"}</option>
-            </select>
-          </label>
+          {isEssayBank ? null : (
+            <label className="space-y-2">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                <Filter className="h-3.5 w-3.5" />
+                {locale === "en" ? "Difficulty" : "Độ khó"}
+              </span>
+              <select
+                value={difficultyFilter}
+                onChange={(event) => setDifficultyFilter(event.target.value as "all" | Round1Question["difficulty"])}
+                className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              >
+                <option value="all">{locale === "en" ? "All levels" : "Tất cả mức độ"}</option>
+                <option value="easy">{locale === "en" ? "Easy" : "Dễ"}</option>
+                <option value="medium">{locale === "en" ? "Medium" : "Trung bình"}</option>
+                <option value="hard">{locale === "en" ? "Hard" : "Khó"}</option>
+              </select>
+            </label>
+          )}
         </div>
 
         <div className="mt-8 overflow-x-auto">
@@ -1600,14 +1625,16 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     onClick={() => toggleSort("topic")}
                   />
                 </th>
-                <th className="px-4 py-3 font-medium">
-                  <SortableTableHeader
-                    label={locale === "en" ? "Difficulty" : "Độ khó"}
-                    active={sortKey === "difficulty"}
-                    direction={sortDirection}
-                    onClick={() => toggleSort("difficulty")}
-                  />
-                </th>
+                {isEssayBank ? null : (
+                  <th className="px-4 py-3 font-medium">
+                    <SortableTableHeader
+                      label={locale === "en" ? "Difficulty" : "Độ khó"}
+                      active={sortKey === "difficulty"}
+                      direction={sortDirection}
+                      onClick={() => toggleSort("difficulty")}
+                    />
+                  </th>
+                )}
                 <th className="px-4 py-3 font-medium">
                   <SortableTableHeader
                     label={locale === "en" ? "Question" : "Câu hỏi"}
@@ -1637,19 +1664,21 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     <StatusPill>{pickRound1TypeLabel(locale, question.type)}</StatusPill>
                   </td>
                   <td className="px-4 py-4 theme-text-body">{question.topic}</td>
-                  <td className="px-4 py-4">
-                    <StatusPill
-                      tone={
-                        question.difficulty === "hard"
-                          ? "warning"
-                          : question.difficulty === "medium"
-                            ? "success"
-                            : "default"
-                      }
-                    >
-                      {question.difficulty}
-                    </StatusPill>
-                  </td>
+                  {isEssayBank ? null : (
+                    <td className="px-4 py-4">
+                      <StatusPill
+                        tone={
+                          question.difficulty === "hard"
+                            ? "warning"
+                            : question.difficulty === "medium"
+                              ? "success"
+                              : "default"
+                        }
+                      >
+                        {question.difficulty}
+                      </StatusPill>
+                    </td>
+                  )}
                   <td className="px-4 py-4 theme-text-body">
                     <p>{pickRound1QuestionText(question.prompt)}</p>
                     <p className="mt-2 text-xs theme-text-soft">
@@ -2146,12 +2175,14 @@ function AdminRound1QuestionEditorInner({
     pristineQuestion ? cloneRound1Question(pristineQuestion) : null,
   );
   const [savePending, setSavePending] = useState(false);
+  const isEssayBank = bank?.bankType === "essay";
   const topicOptions = [...new Set(
     [
       ...(bank?.questions ?? []).map((question) => question.topic.trim()).filter(Boolean),
       draft?.topic.trim() ?? "",
     ].filter(Boolean),
   )].sort(createStringCompare(locale));
+  const usesDifficulty = !isEssayBank && draft?.type !== "essay";
 
   const isDirty = useMemo(() => {
     if (!pristineQuestion || !draft) {
@@ -2189,9 +2220,17 @@ function AdminRound1QuestionEditorInner({
   }
 
   const saveDraft = async () => {
+    const normalizedDraft =
+      draft.type === "essay"
+        ? {
+            ...draft,
+            difficulty: "medium" as Round1Question["difficulty"],
+          }
+        : draft;
+
     if (mode === "create") {
       setSavePending(true);
-      const createdQuestionId = await createRound1QuestionByAdmin(bank.id, draft);
+      const createdQuestionId = await createRound1QuestionByAdmin(bank.id, normalizedDraft);
       setSavePending(false);
 
       if (createdQuestionId) {
@@ -2201,7 +2240,7 @@ function AdminRound1QuestionEditorInner({
     }
 
     if (sourceQuestion) {
-      updateRound1QuestionByAdmin(bank.id, sourceQuestion.id, draft);
+      updateRound1QuestionByAdmin(bank.id, sourceQuestion.id, normalizedDraft);
     }
   };
 
@@ -2246,8 +2285,12 @@ function AdminRound1QuestionEditorInner({
                 ? "Create a new question for this test bank. The question ID is generated automatically when you save."
                 : "Tạo câu hỏi mới cho test bank này. Mã câu hỏi sẽ được tạo tự động khi bạn lưu."
               : locale === "en"
-                ? "Update the question prompt, topic, difficulty, and response structure for this question inside the selected test bank."
-                : "Cap nhat prompt, chu de, do kho va cau truc tra loi cho cau hoi nay trong test bank da chon."
+                ? usesDifficulty
+                  ? "Update the question prompt, topic, difficulty, and response structure for this question inside the selected test bank."
+                  : "Update the question prompt, topic, and response structure for this question inside the selected test bank."
+                : usesDifficulty
+                  ? "Cap nhat prompt, chu de, do kho va cau truc tra loi cho cau hoi nay trong test bank da chon."
+                  : "Cap nhat prompt, chu de va cau truc tra loi cho cau hoi nay trong test bank da chon."
           }
         />
         <div className="flex gap-3">
@@ -2305,29 +2348,31 @@ function AdminRound1QuestionEditorInner({
                 ))}
               </select>
             </label>
-            <label className="space-y-2">
-              <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Difficulty" : "Do kho"}
-              </span>
-              <select
-                value={draft.difficulty}
-                onChange={(event) =>
-                  setDraft((current) =>
-                    current
-                      ? {
-                          ...current,
-                          difficulty: event.target.value as Round1Question["difficulty"],
-                        }
-                      : current,
-                  )
-                }
-                className={fieldClassName}
-              >
-                <option value="easy">easy</option>
-                <option value="medium">medium</option>
-                <option value="hard">hard</option>
-              </select>
-            </label>
+            {usesDifficulty ? (
+              <label className="space-y-2">
+                <span className="text-sm theme-text-muted">
+                  {locale === "en" ? "Difficulty" : "Do kho"}
+                </span>
+                <select
+                  value={draft.difficulty}
+                  onChange={(event) =>
+                    setDraft((current) =>
+                      current
+                        ? {
+                            ...current,
+                            difficulty: event.target.value as Round1Question["difficulty"],
+                          }
+                        : current,
+                    )
+                  }
+                  className={fieldClassName}
+                >
+                  <option value="easy">easy</option>
+                  <option value="medium">medium</option>
+                  <option value="hard">hard</option>
+                </select>
+              </label>
+            ) : null}
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Question type" : "Loai cau hoi"}
@@ -2344,18 +2389,18 @@ function AdminRound1QuestionEditorInner({
                       : current,
                   )
                 }
-                disabled={mode === "edit"}
+                disabled={mode === "edit" || isEssayBank}
                 className={fieldClassName}
               >
-                {(
-                  [
-                    "true-false",
-                    "single-choice",
-                    "multiple-choice",
-                    "pairing",
-                    "essay",
-                  ] as Round1QuestionType[]
-                ).map((type) => (
+                {(isEssayBank
+                  ? (["essay"] as Round1QuestionType[])
+                  : ([
+                      "true-false",
+                      "single-choice",
+                      "multiple-choice",
+                      "pairing",
+                      "essay",
+                    ] as Round1QuestionType[])).map((type) => (
                   <option key={type} value={type}>
                     {pickRound1TypeLabel(locale, type)}
                   </option>
