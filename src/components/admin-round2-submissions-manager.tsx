@@ -104,30 +104,6 @@ function createAssignmentMeta(locale: "en" | "vi", status: AdminRound2Assignment
   }
 }
 
-function AssignmentStatusCell({
-  locale,
-  status,
-}: {
-  locale: "en" | "vi";
-  status: AdminRound2AssignmentStatus;
-}) {
-  const meta = createAssignmentMeta(locale, status);
-  const Icon = meta.icon;
-
-  return (
-    <div className="flex justify-center">
-      <div className="group relative inline-flex">
-        <span className={cn("inline-flex h-11 w-11 items-center justify-center rounded-full border", meta.iconClass)}>
-          <Icon className="h-4.5 w-4.5" />
-        </span>
-        <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-30 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-          {meta.description}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function AssignmentButton({
   locale,
   row,
@@ -215,16 +191,65 @@ function DownloadCell({
 function AssignedJudgeCell({
   locale,
   row,
+  onOpen,
 }: {
   locale: "en" | "vi";
   row: AdminRound2SubmissionRow;
+  onOpen: (row: AdminRound2SubmissionRow) => void;
 }) {
+  const meta = createAssignmentMeta(locale, row.assignmentStatus);
+  const Icon = meta.icon;
+
   if (row.assignedJudges.length === 0) {
-    return <p className="text-sm font-medium theme-text-soft">{locale === "en" ? "Waiting for assignment" : "Đang chờ phân công"}</p>;
+    return (
+      <div className="min-w-[16rem] space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <div className="group relative inline-flex">
+              <span className={cn("inline-flex h-9 w-9 items-center justify-center rounded-full border", meta.iconClass)}>
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-30 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                {meta.description}
+              </span>
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                {locale === "en" ? "Assignment" : "Phân công"}
+              </p>
+              <p className="text-sm font-medium theme-text-body">{meta.label}</p>
+            </div>
+          </div>
+          <AssignmentButton locale={locale} row={row} onOpen={onOpen} />
+        </div>
+        <p className="text-sm font-medium theme-text-soft">
+          {locale === "en" ? "Waiting for assignment" : "Đang chờ phân công"}
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="min-w-[16rem] space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="group relative inline-flex">
+            <span className={cn("inline-flex h-9 w-9 items-center justify-center rounded-full border", meta.iconClass)}>
+              <Icon className="h-4 w-4" />
+            </span>
+            <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-30 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+              {meta.description}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+              {locale === "en" ? "Assignment" : "Phân công"}
+            </p>
+            <p className="text-sm font-medium theme-text-body">{meta.label}</p>
+          </div>
+        </div>
+        <AssignmentButton locale={locale} row={row} onOpen={onOpen} />
+      </div>
       {row.assignedJudges.map((judge, index) => (
         <div key={judge.judgeUserId} className="min-w-0 rounded-[1rem] border theme-border bg-white/78 px-3 py-2 dark:bg-white/[0.04]">
           {judge.judgeProfileId ? (
@@ -686,19 +711,17 @@ export function AdminRound2SubmissionsManager() {
 
       <Surface className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-[1400px] text-left text-sm">
+          <table className="min-w-[1220px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
                 {[
                   "#",
                   locale === "en" ? "Team" : "Đội",
                   locale === "en" ? "Version" : "Phiên bản",
-                  locale === "en" ? "Judge assigned" : "Phân công",
                   locale === "en" ? "Judges" : "Giám khảo",
                   locale === "en" ? "File" : "Tệp",
                   locale === "en" ? "Submitted by" : "Người nộp",
                   locale === "en" ? "Submitted at" : "Nộp lúc",
-                  locale === "en" ? "Assign" : "Phân công",
                 ].map((label) => (
                   <th key={label} className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
                     {label}
@@ -730,10 +753,7 @@ export function AdminRound2SubmissionsManager() {
                     </StatusPill>
                   </td>
                   <td className="px-4 py-4">
-                    <AssignmentStatusCell locale={locale} status={row.assignmentStatus} />
-                  </td>
-                  <td className="px-4 py-4">
-                    <AssignedJudgeCell locale={locale} row={row} />
+                    <AssignedJudgeCell locale={locale} row={row} onOpen={setActiveRow} />
                   </td>
                   <td className="px-4 py-4">
                     <DownloadCell locale={locale} row={row} />
@@ -748,9 +768,6 @@ export function AdminRound2SubmissionsManager() {
                     </Link>
                   </td>
                   <td className="px-4 py-4 theme-text-body">{formatDateTime(locale, row.submittedAt)}</td>
-                  <td className="px-4 py-4">
-                    <AssignmentButton locale={locale} row={row} onOpen={setActiveRow} />
-                  </td>
                 </tr>
               ))}
             </tbody>
