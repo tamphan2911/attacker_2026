@@ -23,7 +23,6 @@ import {
   defaultPageContent,
   homeMetrics,
   sponsorProfiles,
-  testimonialItems,
 } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -385,6 +384,7 @@ export function HomePage() {
   }));
   const currentHeroSlide = heroDeck[activeSlide] ?? heroDeck[0];
   const sponsorMarqueeItems = [...sponsorProfiles, ...sponsorProfiles];
+  const testimonialItems = pageContent.home.testimonials;
   const testimonialMarqueeItems = [...testimonialItems, ...testimonialItems];
 
   useEffect(() => {
@@ -687,6 +687,7 @@ export function HomePage() {
         </Surface>
       </section>
 
+      {testimonialItems.length > 0 ? (
       <section className="theme-home-testimonials-shell relative overflow-hidden rounded-[2.4rem] border px-6 py-8 md:px-8 md:py-10">
         <div className="absolute -right-8 top-0 h-40 w-40 rounded-full bg-sky-200/40 blur-3xl" />
         <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-cyan-200/36 blur-3xl" />
@@ -769,6 +770,7 @@ export function HomePage() {
           </div>
         </div>
       </section>
+      ) : null}
 
       <section className="mx-auto max-w-4xl text-center">
         <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">

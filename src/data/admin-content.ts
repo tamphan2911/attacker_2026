@@ -12,7 +12,7 @@ export type ContentPageId =
   | "workspace"
   | "organizer";
 
-export type ContentTypeId = "hero-slides" | "auth-notes" | "workspace-states";
+export type ContentTypeId = "hero-slides" | "home-testimonials" | "auth-notes" | "workspace-states";
 
 interface EditorCardConfig<T extends string> {
   id: T;
@@ -129,6 +129,16 @@ export const contentTypeConfigs: ContentTypeConfig[] = [
     description: {
       en: "Manage homepage hero slide image paths and bilingual text.",
       vi: "Quản lý đường dẫn hình và nội dung song ngữ của hero slides.",
+    },
+  },
+  {
+    id: "home-testimonials",
+    href: "/admin/content/types/home-testimonials",
+    parentPageId: "home",
+    label: { en: "Testimonials", vi: "Testimonial" },
+    description: {
+      en: "Manage homepage participant testimonials, avatars, and quotes.",
+      vi: "Quản lý testimonial, ảnh đại diện và trích dẫn trên trang chủ.",
     },
   },
   {

@@ -4,13 +4,17 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
+  BriefcaseBusiness,
   CircleHelp,
   FileText,
   ImageIcon,
   LayoutDashboard,
   Newspaper,
+  Plus,
+  Quote,
   ShieldCheck,
   Sparkles,
+  Trash2,
   Trophy,
   Users2,
 } from "lucide-react";
@@ -25,7 +29,7 @@ import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
-import type { Locale, LocalizedText, SitePageContent } from "@/types/site";
+import type { Locale, LocalizedText, SitePageContent, TestimonialItem } from "@/types/site";
 
 function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
@@ -45,6 +49,22 @@ function updateDraftContent(
   const next = clonePageContent(current);
   recipe(next);
   return next;
+}
+
+function createBlankLocalizedText(): LocalizedText {
+  return { en: "", vi: "" };
+}
+
+function createTestimonialDraft(index: number): TestimonialItem {
+  return {
+    id: `testimonial-${Date.now()}-${index}`,
+    name: "",
+    competitionRole: createBlankLocalizedText(),
+    university: "",
+    currentEmployment: createBlankLocalizedText(),
+    avatarImageSrc: "",
+    quote: createBlankLocalizedText(),
+  };
 }
 
 function LocalizedFieldEditor({
@@ -151,6 +171,8 @@ function iconForType(typeId: ContentTypeId) {
   switch (typeId) {
     case "hero-slides":
       return ImageIcon;
+    case "home-testimonials":
+      return Quote;
     case "auth-notes":
       return FileText;
     case "workspace-states":
@@ -174,7 +196,13 @@ const contentPageTree: Array<{
   id: ContentPageId;
   children?: ContentTreeChild[];
 }> = [
-  { id: "home", children: [{ kind: "type", id: "hero-slides" }] },
+  {
+    id: "home",
+    children: [
+      { kind: "type", id: "hero-slides" },
+      { kind: "type", id: "home-testimonials" },
+    ],
+  },
   {
     id: "competition",
     children: [
@@ -773,6 +801,182 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
                     )
                   }
                 />
+              </Surface>
+            ))}
+          </div>
+        </Surface>
+      ) : null}
+
+      {typeId === "home-testimonials" ? (
+        <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-lg font-semibold theme-text-strong">
+                {locale === "en" ? "Homepage testimonials" : "Testimonial trang chủ"}
+              </p>
+              <p className="mt-2 text-sm leading-7 theme-text-muted">
+                {locale === "en"
+                  ? "Edit each participant voice shown on the homepage slider, or add more testimonial cards."
+                  : "Chỉnh sửa từng testimonial hiển thị trong slider trang chủ hoặc thêm testimonial mới."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.home.testimonials.push(createTestimonialDraft(next.home.testimonials.length + 1));
+                  }),
+                )
+              }
+              className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+            >
+              <Plus className="h-4 w-4" />
+              {locale === "en" ? "Add testimonial" : "Thêm testimonial"}
+            </button>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            {draft.home.testimonials.map((testimonial, index) => (
+              <Surface key={testimonial.id} className="space-y-4 px-4 py-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border theme-border bg-white/70 dark:bg-white/[0.05]">
+                      <Quote className="h-4.5 w-4.5 theme-text-strong" />
+                    </span>
+                    <div>
+                      <p className="text-base font-semibold theme-text-strong">
+                        {locale === "en" ? `Testimonial ${index + 1}` : `Testimonial ${index + 1}`}
+                      </p>
+                      <p className="text-xs uppercase tracking-[0.18em] theme-text-soft">{testimonial.id}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={draft.home.testimonials.length <= 1}
+                    onClick={() =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.home.testimonials = next.home.testimonials.filter((item) => item.id !== testimonial.id);
+                        }),
+                      )
+                    }
+                    className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                    aria-label={locale === "en" ? "Delete testimonial" : "Xóa testimonial"}
+                    title={locale === "en" ? "Delete testimonial" : "Xóa testimonial"}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Participant name" : "Họ tên"}
+                    </span>
+                    <input
+                      value={testimonial.name}
+                      onChange={(event) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.home.testimonials[index].name = event.target.value;
+                          }),
+                        )
+                      }
+                      className={fieldClassName}
+                    />
+                  </label>
+                  <label className="space-y-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Avatar image path" : "Đường dẫn ảnh đại diện"}
+                    </span>
+                    <input
+                      value={testimonial.avatarImageSrc}
+                      onChange={(event) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.home.testimonials[index].avatarImageSrc = event.target.value;
+                          }),
+                        )
+                      }
+                      className={fieldClassName}
+                    />
+                  </label>
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="inline-flex items-center gap-2 text-sm theme-text-muted">
+                      <Users2 className="h-4 w-4" />
+                      {locale === "en" ? "University" : "Trường đại học"}
+                    </span>
+                    <input
+                      value={testimonial.university}
+                      onChange={(event) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.home.testimonials[index].university = event.target.value;
+                          }),
+                        )
+                      }
+                      className={fieldClassName}
+                    />
+                  </label>
+                </div>
+
+                <LocalizedFieldEditor
+                  label={locale === "en" ? "Competition role" : "Vai trò trong cuộc thi"}
+                  rows={3}
+                  value={testimonial.competitionRole}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.home.testimonials[index].competitionRole[language] = value;
+                      }),
+                    )
+                  }
+                />
+
+                <LocalizedFieldEditor
+                  label={locale === "en" ? "Current employment" : "Công việc hiện tại"}
+                  rows={3}
+                  value={testimonial.currentEmployment ?? createBlankLocalizedText()}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        const currentEmployment = next.home.testimonials[index].currentEmployment ?? createBlankLocalizedText();
+                        currentEmployment[language] = value;
+                        next.home.testimonials[index].currentEmployment = currentEmployment;
+                      }),
+                    )
+                  }
+                />
+
+                <LocalizedFieldEditor
+                  label={locale === "en" ? "Quote" : "Trích dẫn"}
+                  rows={5}
+                  value={testimonial.quote}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.home.testimonials[index].quote[language] = value;
+                      }),
+                    )
+                  }
+                />
+
+                <div className="rounded-[1.2rem] border theme-border bg-white/72 px-4 py-4 dark:bg-white/[0.04]">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
+                    <BriefcaseBusiness className="h-3.5 w-3.5" />
+                    {locale === "en" ? "Homepage card preview" : "Preview thẻ trang chủ"}
+                  </div>
+                  <p className="mt-3 text-base font-semibold theme-text-strong">
+                    {testimonial.name || (locale === "en" ? "Participant name" : "Tên nhân vật")}
+                  </p>
+                  <p className="mt-1 text-sm theme-text-soft">
+                    {pickText(locale, testimonial.competitionRole) || (locale === "en" ? "Competition role" : "Vai trò cuộc thi")}
+                  </p>
+                  <p className="mt-3 text-sm leading-7 theme-text-body">
+                    {pickText(locale, testimonial.quote) || (locale === "en" ? "Quote preview appears here." : "Nội dung trích dẫn sẽ hiển thị tại đây.")}
+                  </p>
+                </div>
               </Surface>
             ))}
           </div>

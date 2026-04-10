@@ -30,6 +30,59 @@ export const TEAM_MAX_MEMBERS = 5;
 export const DEMO_ADMIN_LOGIN_ID = "admin";
 export const DEMO_ADMIN_PASSWORD = "Aa@291189";
 
+const homepageTestimonialsSeed: TestimonialItem[] = [
+  {
+    id: "voice-nguyen-duc-phu",
+    name: "Nguyễn Đức Phú",
+    competitionRole: {
+      en: "Attacker 2025 finalist · Team lead",
+      vi: "Chung kết Attacker 2025 · Đội trưởng",
+    },
+    university: "Trường Đại học Kinh tế - Luật",
+    currentEmployment: {
+      en: "Equity research intern · Mirae Asset Vietnam",
+      vi: "Thực tập sinh phân tích cổ phiếu · Mirae Asset Việt Nam",
+    },
+    avatarImageSrc: "/testimonials/nguyen-duc-phu.svg",
+    quote: {
+      en: "The strongest value came from how close the challenge felt to real market decisions and investor feedback.",
+      vi: "Giá trị lớn nhất là cảm giác đề bài rất gần với quyết định thị trường thực tế và cách nhà đầu tư phản biện.",
+    },
+  },
+  {
+    id: "voice-tran-thi-nhan",
+    name: "Trần Thị Nhàn",
+    competitionRole: {
+      en: "Attacker 2025 champion · Strategy lead",
+      vi: "Quán quân Attacker 2025 · Trưởng nhóm chiến lược",
+    },
+    university: "Trường Đại học Ngân hàng TP. Hồ Chí Minh",
+    currentEmployment: {
+      en: "Risk management analyst · Techcombank",
+      vi: "Chuyên viên quản trị rủi ro · Techcombank",
+    },
+    avatarImageSrc: "/testimonials/tran-thi-nhan.svg",
+    quote: {
+      en: "Attacker created the right mix of academic depth, team execution, and business relevance for students who want to build in finance.",
+      vi: "Attacker tạo ra sự cân bằng rất đúng giữa chiều sâu học thuật, năng lực triển khai đội nhóm và tính thực tiễn cho sinh viên muốn đi theo tài chính.",
+    },
+  },
+  {
+    id: "voice-pham-nguyen-khanh-huy",
+    name: "Phạm Nguyễn Khánh Huy",
+    competitionRole: {
+      en: "Attacker 2025 Emerging Team · Product lead",
+      vi: "Đội tiềm năng Attacker 2025 · Trưởng nhóm sản phẩm",
+    },
+    university: "Đại học Kinh tế TP. Hồ Chí Minh",
+    avatarImageSrc: "/testimonials/pham-nguyen-khanh-huy.svg",
+    quote: {
+      en: "Even more than the ranking, the competition pushed us to think in product, data, and presentation terms at the same time.",
+      vi: "Quan trọng hơn cả thứ hạng là cuộc thi buộc đội phải trưởng thành đồng thời về sản phẩm, dữ liệu và khả năng trình bày.",
+    },
+  },
+];
+
 export const contactInfo = {
   email: "attacker@uel.edu.vn",
   phone: "0378 398 638",
@@ -239,6 +292,7 @@ export const defaultPageContent: SitePageContent = {
         },
       },
     ],
+    testimonials: homepageTestimonialsSeed,
     news: {
       eyebrow: { en: "Latest news & updates", vi: "Tin tức và cập nhật mới" },
       title: {
@@ -1444,55 +1498,44 @@ export const faqItems: FAQItem[] = [
   },
 ];
 
-export const testimonialItems: TestimonialItem[] = [
-  {
-    name: "Nguyễn Đức Phú",
-    competitionRole: {
-      en: "Attacker 2025 finalist · Team lead",
-      vi: "Chung kết Attacker 2025 · Đội trưởng",
-    },
-    university: "Trường Đại học Kinh tế - Luật",
-    currentEmployment: {
-      en: "Equity research intern · Mirae Asset Vietnam",
-      vi: "Thực tập sinh phân tích cổ phiếu · Mirae Asset Việt Nam",
-    },
-    avatarImageSrc: "/testimonials/nguyen-duc-phu.svg",
-    quote: {
-      en: "The strongest value came from how close the challenge felt to real market decisions and investor feedback.",
-      vi: "Giá trị lớn nhất là cảm giác đề bài rất gần với quyết định thị trường thực tế và cách nhà đầu tư phản biện.",
-    },
-  },
-  {
-    name: "Trần Thị Nhàn",
-    competitionRole: {
-      en: "Attacker 2025 champion · Strategy lead",
-      vi: "Quán quân Attacker 2025 · Trưởng nhóm chiến lược",
-    },
-    university: "Trường Đại học Ngân hàng TP. Hồ Chí Minh",
-    currentEmployment: {
-      en: "Risk management analyst · Techcombank",
-      vi: "Chuyên viên quản trị rủi ro · Techcombank",
-    },
-    avatarImageSrc: "/testimonials/tran-thi-nhan.svg",
-    quote: {
-      en: "Attacker created the right mix of academic depth, team execution, and business relevance for students who want to build in finance.",
-      vi: "Attacker tạo ra sự cân bằng rất đúng giữa chiều sâu học thuật, năng lực triển khai đội nhóm và tính thực tiễn cho sinh viên muốn đi theo tài chính.",
-    },
-  },
-  {
-    name: "Phạm Nguyễn Khánh Huy",
-    competitionRole: {
-      en: "Attacker 2025 Emerging Team · Product lead",
-      vi: "Đội tiềm năng Attacker 2025 · Trưởng nhóm sản phẩm",
-    },
-    university: "Đại học Kinh tế TP. Hồ Chí Minh",
-    avatarImageSrc: "/testimonials/pham-nguyen-khanh-huy.svg",
-    quote: {
-      en: "Even more than the ranking, the competition pushed us to think in product, data, and presentation terms at the same time.",
-      vi: "Quan trọng hơn cả thứ hạng là cuộc thi buộc đội phải trưởng thành đồng thời về sản phẩm, dữ liệu và khả năng trình bày.",
-    },
-  },
-];
+export const testimonialItems: TestimonialItem[] = homepageTestimonialsSeed;
+
+function cloneDefaultPageContent() {
+  return JSON.parse(JSON.stringify(defaultPageContent)) as SitePageContent;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function mergeJsonShape<T>(defaults: T, input: unknown): T {
+  if (Array.isArray(defaults)) {
+    return (Array.isArray(input) ? input : defaults) as T;
+  }
+
+  if (isPlainObject(defaults)) {
+    const source = isPlainObject(input) ? input : {};
+    const next: Record<string, unknown> = {};
+
+    for (const [key, value] of Object.entries(defaults)) {
+      next[key] = mergeJsonShape(value, source[key]);
+    }
+
+    return next as T;
+  }
+
+  if (input === undefined || input === null) {
+    return defaults;
+  }
+
+  return input as T;
+}
+
+export function mergePageContentWithDefaults(
+  content?: Partial<SitePageContent> | null,
+): SitePageContent {
+  return mergeJsonShape(cloneDefaultPageContent(), content);
+}
 
 export const featurePages = [
   {

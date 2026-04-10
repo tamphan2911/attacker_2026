@@ -17,6 +17,7 @@ import {
   TEAM_MAX_MEMBERS,
   TEAM_MIN_MEMBERS,
   defaultPageContent,
+  mergePageContentWithDefaults,
   judgeProfiles as seedJudgeProfiles,
   mockInvitations,
   mockLeadershipTransferRequests,
@@ -282,7 +283,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       setNewsPosts(snapshot.newsPosts ?? seedNewsPosts);
       setJudges(snapshot.judges ?? seedJudgeProfiles);
       setTimelineItems(snapshot.timelineItems ?? seedTimelineItems);
-      setPageContent(snapshot.pageContent ?? clonePageContent(defaultPageContent));
+      setPageContent(mergePageContentWithDefaults(snapshot.pageContent ?? clonePageContent(defaultPageContent)));
     } catch {
       window.localStorage.removeItem(STORAGE_KEY);
     } finally {
@@ -346,7 +347,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
 
     const payload = (await response.json()) as SiteDataApiPayload;
-    setPageContent(payload.pageContent);
+    setPageContent(mergePageContentWithDefaults(payload.pageContent));
     setJudges(payload.judges);
     setNewsPosts(payload.newsPosts);
     setRound1TestBanks(payload.round1TestBanks);
@@ -471,7 +472,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     setNewsPosts(snapshot.newsPosts);
     setJudges(snapshot.judges);
     setTimelineItems(snapshot.timelineItems);
-    setPageContent(snapshot.pageContent);
+    setPageContent(mergePageContentWithDefaults(snapshot.pageContent));
     pushToast(
       {
         en: "Demo state reset to the default preview.",

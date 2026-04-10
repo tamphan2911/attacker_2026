@@ -97,6 +97,7 @@ export interface JudgeProfile {
 }
 
 export interface TestimonialItem {
+  id: string;
   name: string;
   competitionRole: LocalizedText;
   university: string;
@@ -420,6 +421,7 @@ export interface EditableHeroSlide {
 export interface SitePageContent {
   home: {
     heroSlides: EditableHeroSlide[];
+    testimonials: TestimonialItem[];
     news: EditableSectionCopy;
     sponsors: EditableSectionCopy;
     destinations: EditableSectionCopy;
