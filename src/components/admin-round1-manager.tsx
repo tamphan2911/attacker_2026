@@ -2,15 +2,21 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
+  ArrowDown,
   ArrowLeft,
   ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
   Clock3,
   Download,
   FileQuestion,
+  Filter,
   ListOrdered,
+  ListFilter,
   Save,
+  Search,
   Shuffle,
   Target,
   Trophy,
@@ -80,6 +86,10 @@ interface TeamResultGroup {
 
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
+
+function cn(...values: Array<string | undefined | false>) {
+  return values.filter(Boolean).join(" ");
+}
 
 function cloneRound1Question(question: Round1Question): Round1Question {
   return JSON.parse(JSON.stringify(question)) as Round1Question;
@@ -414,7 +424,7 @@ function buildBankExportRows(round1TestBanks: Round1TestBank[]) {
       bankType: bank.bankType,
       bankTitle: bank.title.en,
       status: bank.status,
-      questionPoolSize: bank.questionPoolSize,
+      questionPoolSize: bank.questions.length,
       questionsPerAttempt: bank.questionsPerAttempt,
       wordLimit: bank.wordLimit ?? "",
       shuffleQuestions: bank.shuffleQuestions ? "Yes" : "No",
@@ -438,6 +448,55 @@ function getBankTypeLabel(locale: Locale, bankType: Round1TestBank["bankType"]) 
   }
 
   return locale === "en" ? "Objective bank" : "Ngân hàng trắc nghiệm";
+}
+
+type BankPreviewSortKey = "type" | "topic" | "difficulty" | "question" | "answerKey";
+type SortDirection = "asc" | "desc";
+
+function createStringCompare(locale: Locale) {
+  const collator = new Intl.Collator(locale === "vi" ? "vi-VN" : "en-US", {
+    numeric: true,
+    sensitivity: "base",
+  });
+
+  return (left: string, right: string) => collator.compare(left, right);
+}
+
+function getDefaultBankPreviewSortDirection(sortKey: BankPreviewSortKey): SortDirection {
+  switch (sortKey) {
+    case "difficulty":
+      return "asc";
+    default:
+      return "asc";
+  }
+}
+
+function SortableTableHeader({
+  label,
+  active,
+  direction,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  direction: SortDirection;
+  onClick: () => void;
+}) {
+  const Icon = active ? (direction === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 transition",
+        active ? "theme-text-strong" : "hover:theme-text-strong",
+      )}
+    >
+      <span>{label}</span>
+      <Icon className="h-3.5 w-3.5" />
+    </button>
+  );
 }
 
 function buildSubmissionExportRows(
@@ -942,13 +1001,122 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
   const { locale, round1TestBanks } = useSiteState();
   useAdminTitleScroll();
   const bank = round1TestBanks.find((item) => item.id === bankId);
+  const questionList = useMemo(() => bank?.questions ?? [], [bank]);
+  const [questionSearch, setQuestionSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"all" | Round1QuestionType>("all");
+  const [topicFilter, setTopicFilter] = useState("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<"all" | Round1Question["difficulty"]>("all");
+  const [sortKey, setSortKey] = useState<BankPreviewSortKey | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  const difficultyCounts = questionList.reduce(
+    (result, question) => {
+      result[question.difficulty] += 1;
+      return result;
+    },
+    { easy: 0, medium: 0, hard: 0 },
+  );
+  const questionPoolCount = questionList.length;
+  const topicCount = new Set(questionList.map((question) => question.topic)).size;
+  const bankExportRows = bank ? buildBankExportRows([bank]) : [];
+  const isObjectiveBank = bank?.bankType === "objective";
+  const topicOptions = useMemo(
+    () => [...new Set(questionList.map((question) => question.topic))].sort(createStringCompare(locale)),
+    [questionList, locale],
+  );
+  const filteredQuestions = useMemo(
+    () =>
+      questionList.filter((question) => {
+        const searchSource = [
+          pickRound1TypeLabel(locale, question.type),
+          question.topic,
+          question.difficulty,
+          pickRound1QuestionText(question.prompt),
+          getRound1AnswerSummary(question, locale),
+          getRound1QuestionOptionPreview(question, locale),
+        ].join(" ");
+
+        if (questionSearch.trim() && !searchSource.toLowerCase().includes(questionSearch.trim().toLowerCase())) {
+          return false;
+        }
+
+        if (typeFilter !== "all" && question.type !== typeFilter) {
+          return false;
+        }
+
+        if (topicFilter !== "all" && question.topic !== topicFilter) {
+          return false;
+        }
+
+        if (difficultyFilter !== "all" && question.difficulty !== difficultyFilter) {
+          return false;
+        }
+
+        return true;
+      }),
+    [difficultyFilter, locale, questionList, questionSearch, topicFilter, typeFilter],
+  );
+  const sortedQuestions = useMemo(() => {
+    if (!sortKey) {
+      return filteredQuestions;
+    }
+
+    const compareStrings = createStringCompare(locale);
+    const difficultyRank: Record<Round1Question["difficulty"], number> = {
+      easy: 1,
+      medium: 2,
+      hard: 3,
+    };
+
+    return [...filteredQuestions].sort((left, right) => {
+      let comparison = 0;
+
+      switch (sortKey) {
+        case "type":
+          comparison = compareStrings(pickRound1TypeLabel(locale, left.type), pickRound1TypeLabel(locale, right.type));
+          break;
+        case "topic":
+          comparison = compareStrings(left.topic, right.topic);
+          break;
+        case "difficulty":
+          comparison = difficultyRank[left.difficulty] - difficultyRank[right.difficulty];
+          break;
+        case "question":
+          comparison = compareStrings(pickRound1QuestionText(left.prompt), pickRound1QuestionText(right.prompt));
+          break;
+        case "answerKey":
+          comparison = compareStrings(getRound1AnswerSummary(left, locale), getRound1AnswerSummary(right, locale));
+          break;
+      }
+
+      if (comparison === 0) {
+        comparison = compareStrings(left.topic, right.topic);
+      }
+
+      return sortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [filteredQuestions, locale, sortDirection, sortKey]);
   const {
     page,
     setPage,
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(bank?.questions ?? [], ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(sortedQuestions, ADMIN_TABLE_PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [difficultyFilter, questionSearch, setPage, sortDirection, sortKey, topicFilter, typeFilter]);
+
+  const toggleSort = (nextSortKey: BankPreviewSortKey) => {
+    if (sortKey === nextSortKey) {
+      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      return;
+    }
+
+    setSortKey(nextSortKey);
+    setSortDirection(getDefaultBankPreviewSortDirection(nextSortKey));
+  };
 
   if (!bank) {
     return (
@@ -964,17 +1132,6 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
       />
     );
   }
-
-  const difficultyCounts = bank.questions.reduce(
-    (result, question) => {
-      result[question.difficulty] += 1;
-      return result;
-    },
-    { easy: 0, medium: 0, hard: 0 },
-  );
-  const topicCount = new Set(bank.questions.map((question) => question.topic)).size;
-  const bankExportRows = buildBankExportRows([bank]);
-  const isObjectiveBank = bank.bankType === "objective";
 
   return (
     <div className="space-y-8">
@@ -1032,8 +1189,8 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
         <MetricCard
           icon={<ListOrdered className="h-5 w-5 text-emerald-300" />}
           label={locale === "en" ? "Question pool" : "Kho câu hỏi"}
-          value={bank.questionPoolSize.toString()}
-          note={locale === "en" ? "Configured master bank" : "Tổng kho được cấu hình"}
+          value={questionPoolCount.toString()}
+          note={locale === "en" ? "Live questions currently in this bank" : "Số câu hiện có trong ngân hàng này"}
         />
         <MetricCard
           icon={<Shuffle className="h-5 w-5 text-orange-300" />}
@@ -1092,8 +1249,8 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     ? `${ROUND1_TOPIC_COUNT} topics × ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} objective questions`
                     : `${ROUND1_TOPIC_COUNT} chủ đề × ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu trắc nghiệm`
                   : locale === "en"
-                    ? `Random ${ROUND1_ESSAY_TOTAL} / ${bank.questionPoolSize} essay prompts`
-                    : `Rút ngẫu nhiên ${ROUND1_ESSAY_TOTAL} / ${bank.questionPoolSize} câu tự luận`}
+                    ? `Random ${ROUND1_ESSAY_TOTAL} / ${questionPoolCount} essay prompts`
+                    : `Rút ngẫu nhiên ${ROUND1_ESSAY_TOTAL} / ${questionPoolCount} câu tự luận`}
               </p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -1224,23 +1381,127 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           </div>
         </div>
 
+        <div className="mt-6 grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_220px_220px_220px]">
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Search className="h-3.5 w-3.5" />
+              {locale === "en" ? "Search" : "Tìm kiếm"}
+            </span>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
+              <input
+                value={questionSearch}
+                onChange={(event) => setQuestionSearch(event.target.value)}
+                placeholder={locale === "en" ? "Search by prompt, topic, type..." : "Tìm theo câu hỏi, chủ đề, loại..."}
+                className="theme-field h-12 w-full rounded-[1rem] border pl-10 pr-4 text-sm outline-none"
+              />
+            </div>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Type" : "Loại"}
+            </span>
+            <select
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value as "all" | Round1QuestionType)}
+              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All types" : "Tất cả loại"}</option>
+              {(["single-choice", "multiple-choice", "true-false", "pairing", "essay"] as Round1QuestionType[]).map((value) => (
+                <option key={value} value={value}>
+                  {pickRound1TypeLabel(locale, value)}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <ListFilter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Topic" : "Chủ đề"}
+            </span>
+            <select
+              value={topicFilter}
+              onChange={(event) => setTopicFilter(event.target.value)}
+              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All topics" : "Tất cả chủ đề"}</option>
+              {topicOptions.map((topic) => (
+                <option key={topic} value={topic}>
+                  {topic}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Difficulty" : "Độ khó"}
+            </span>
+            <select
+              value={difficultyFilter}
+              onChange={(event) => setDifficultyFilter(event.target.value as "all" | Round1Question["difficulty"])}
+              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All levels" : "Tất cả mức độ"}</option>
+              <option value="easy">{locale === "en" ? "Easy" : "Dễ"}</option>
+              <option value="medium">{locale === "en" ? "Medium" : "Trung bình"}</option>
+              <option value="hard">{locale === "en" ? "Hard" : "Khó"}</option>
+            </select>
+          </label>
+        </div>
+
         <div className="mt-8 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                {[
-                  "#",
-                  locale === "en" ? "Type" : "Loai",
-                  locale === "en" ? "Topic" : "Chu de",
-                  locale === "en" ? "Difficulty" : "Do kho",
-                  locale === "en" ? "Question" : "Cau hoi",
-                  locale === "en" ? "Answer key" : "Dap an",
-                  locale === "en" ? "Edit" : "Chinh sua",
-                ].map((label) => (
-                  <th key={label} className="px-4 py-3 font-medium">
-                    {label}
-                  </th>
-                ))}
+                <th className="px-4 py-3 font-medium">#</th>
+                <th className="px-4 py-3 font-medium">
+                  <SortableTableHeader
+                    label={locale === "en" ? "Type" : "Loại"}
+                    active={sortKey === "type"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("type")}
+                  />
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  <SortableTableHeader
+                    label={locale === "en" ? "Topic" : "Chủ đề"}
+                    active={sortKey === "topic"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("topic")}
+                  />
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  <SortableTableHeader
+                    label={locale === "en" ? "Difficulty" : "Độ khó"}
+                    active={sortKey === "difficulty"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("difficulty")}
+                  />
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  <SortableTableHeader
+                    label={locale === "en" ? "Question" : "Câu hỏi"}
+                    active={sortKey === "question"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("question")}
+                  />
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  <SortableTableHeader
+                    label={locale === "en" ? "Answer key" : "Đáp án"}
+                    active={sortKey === "answerKey"}
+                    direction={sortDirection}
+                    onClick={() => toggleSort("answerKey")}
+                  />
+                </th>
+                <th className="px-4 py-3 font-medium">
+                  {locale === "en" ? "Edit" : "Chỉnh sửa"}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -1294,7 +1555,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           page={page}
           pageCount={pageCount}
           pageSize={ADMIN_TABLE_PAGE_SIZE}
-          totalRows={bank.questions.length}
+          totalRows={sortedQuestions.length}
           onPageChange={setPage}
         />
       </Surface>
