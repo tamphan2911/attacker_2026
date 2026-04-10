@@ -36,13 +36,9 @@ import { TEAM_MIN_MEMBERS } from "@/data/site-content";
 import {
   ROUND1_ESSAY_TOTAL,
   ROUND1_ESSAY_MAX_SCORE,
-  ROUND1_ESSAY_WORD_LIMIT,
-  ROUND1_OBJECTIVE_DIFFICULTY_MIX,
   ROUND1_OBJECTIVE_MAX_SCORE,
-  ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC,
   ROUND1_OBJECTIVE_TOTAL,
   ROUND1_TOTAL_MAX_SCORE,
-  ROUND1_TOPIC_COUNT,
   getActiveRound1Bank,
   getRound1AnswerSummary,
   getRound1QuestionOptionPreview,
@@ -465,6 +461,58 @@ function getBankTypeLabel(locale: Locale, bankType: Round1TestBank["bankType"]) 
   return locale === "en" ? "Objective bank" : "Ngân hàng trắc nghiệm";
 }
 
+type BankTopicSummaryRow = {
+  topic: string;
+  typeLabel: string;
+  easyCount: number;
+  mediumCount: number;
+  hardCount: number;
+  totalCount: number;
+};
+
+function buildBankTopicSummaryRows(bank: Round1TestBank, locale: Locale) {
+  const topicMap = new Map<
+    string,
+    {
+      types: Set<string>;
+      easyCount: number;
+      mediumCount: number;
+      hardCount: number;
+    }
+  >();
+
+  bank.questions.forEach((question) => {
+    const entry = topicMap.get(question.topic) ?? {
+      types: new Set<string>(),
+      easyCount: 0,
+      mediumCount: 0,
+      hardCount: 0,
+    };
+
+    entry.types.add(pickRound1TypeLabel(locale, question.type));
+    if (question.difficulty === "easy") {
+      entry.easyCount += 1;
+    } else if (question.difficulty === "medium") {
+      entry.mediumCount += 1;
+    } else {
+      entry.hardCount += 1;
+    }
+
+    topicMap.set(question.topic, entry);
+  });
+
+  return [...topicMap.entries()]
+    .map<BankTopicSummaryRow>(([topic, entry]) => ({
+      topic,
+      typeLabel: [...entry.types].join(", "),
+      easyCount: entry.easyCount,
+      mediumCount: entry.mediumCount,
+      hardCount: entry.hardCount,
+      totalCount: entry.easyCount + entry.mediumCount + entry.hardCount,
+    }))
+    .sort((left, right) => createStringCompare(locale)(left.topic, right.topic));
+}
+
 type BankPreviewSortKey = "type" | "topic" | "difficulty" | "question" | "answerKey";
 type SortDirection = "asc" | "desc";
 
@@ -688,6 +736,12 @@ export function AdminRound1Manager() {
   const draftBankCount = round1TestBanks.filter((bank) => bank.status === "draft").length;
   const objectivePoolCount = activeObjectiveBank?.questions.length ?? 0;
   const essayPoolCount = activeEssayBank?.questions.length ?? 0;
+  const objectiveTopicRows = activeObjectiveBank
+    ? buildBankTopicSummaryRows(activeObjectiveBank, locale)
+    : [];
+  const essayTopicRows = activeEssayBank
+    ? buildBankTopicSummaryRows(activeEssayBank, locale)
+    : [];
 
   return (
     <div className="space-y-8">
@@ -746,163 +800,150 @@ export function AdminRound1Manager() {
       ) : null}
 
       {activeObjectiveBank && activeEssayBank ? (
-        <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-            <div className="space-y-2">
-              <p className="theme-heading text-3xl font-semibold theme-text-strong">
-                {locale === "en" ? "Round 1 test bank" : "Ngân hàng đề Vòng 1"}
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={() =>
-                  exportRowsToWorkbook("attacker-2026-round1-banks.xlsx", "Round1Banks", bankExportRows)
-                }
-                className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <Download className="h-4 w-4" />
-                  {locale === "en" ? "Export banks.xlsx" : "Xuat banks.xlsx"}
-                </span>
-              </button>
-            </div>
+        <>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() =>
+                exportRowsToWorkbook("attacker-2026-round1-banks.xlsx", "Round1Banks", bankExportRows)
+              }
+              className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                {locale === "en" ? "Export banks.xlsx" : "Xuat banks.xlsx"}
+              </span>
+            </button>
           </div>
 
-          <div className="mt-8 space-y-6">
-            {[activeObjectiveBank, activeEssayBank].map((bank) => (
-              <div key={bank.id} className="rounded-[1.75rem] border theme-border theme-panel-subtle px-6 py-6">
-                <div className="flex flex-wrap items-center gap-3">
-                  <StatusPill tone={bank.status === "active" ? "success" : "default"}>
-                    {bank.status}
-                  </StatusPill>
-                  <StatusPill>{getBankTypeLabel(locale, bank.bankType)}</StatusPill>
-                  <span className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                    {formatDateLabel(locale, bank.publishedAt)}
-                  </span>
-                </div>
-                <p className="mt-4 text-2xl font-semibold theme-text-strong">
-                  {pickText(locale, bank.title)}
-                </p>
-                <p className="mt-4 text-sm leading-7 theme-text-muted">
-                  {pickText(locale, bank.description)}
-                </p>
-                <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
-                    <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Pool size" : "Quy mô kho"}
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold theme-text-strong">
-                      {bank.questionPoolSize}
-                    </p>
+          <section className="space-y-6">
+            {[
+              {
+                bank: activeObjectiveBank,
+                title: locale === "en" ? "Multiple choice test bank" : "Ngân hàng đề trắc nghiệm",
+                rows: objectiveTopicRows,
+                note:
+                  locale === "en"
+                    ? `${ROUND1_OBJECTIVE_TOTAL} questions are drawn for each official attempt.`
+                    : `${ROUND1_OBJECTIVE_TOTAL} câu được rút cho mỗi lượt thi chính thức.`,
+              },
+              {
+                bank: activeEssayBank,
+                title: locale === "en" ? "Essay test bank" : "Ngân hàng đề tự luận",
+                rows: essayTopicRows,
+                note:
+                  locale === "en"
+                    ? `${ROUND1_ESSAY_TOTAL} prompts are drawn for each official attempt.`
+                    : `${ROUND1_ESSAY_TOTAL} câu được rút cho mỗi lượt thi chính thức.`,
+              },
+            ].map(({ bank, title, rows, note }) => {
+              const totals = rows.reduce(
+                (result, row) => ({
+                  easy: result.easy + row.easyCount,
+                  medium: result.medium + row.mediumCount,
+                  hard: result.hard + row.hardCount,
+                  total: result.total + row.totalCount,
+                }),
+                { easy: 0, medium: 0, hard: 0, total: 0 },
+              );
+
+              return (
+                <Surface key={bank.id} className="px-6 py-6 md:px-8 md:py-8">
+                  <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <StatusPill tone={bank.status === "active" ? "success" : "default"}>
+                          {bank.status}
+                        </StatusPill>
+                        <StatusPill>{getBankTypeLabel(locale, bank.bankType)}</StatusPill>
+                        <span className="text-xs uppercase tracking-[0.22em] theme-text-soft">
+                          {formatDateLabel(locale, bank.publishedAt)}
+                        </span>
+                      </div>
+                      <p className="theme-heading text-3xl font-semibold theme-text-strong">{title}</p>
+                      <p className="text-sm leading-7 theme-text-muted">
+                        {note}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <StatusPill>{`${locale === "en" ? "Pool" : "Kho"}: ${bank.questions.length}`}</StatusPill>
+                      <StatusPill tone="info">
+                        {`${locale === "en" ? "Per attempt" : "Mỗi đề"}: ${
+                          bank.bankType === "objective" ? ROUND1_OBJECTIVE_TOTAL : ROUND1_ESSAY_TOTAL
+                        }`}
+                      </StatusPill>
+                      {bank.wordLimit ? (
+                        <StatusPill tone="warning">
+                          {`${locale === "en" ? "Word limit" : "Giới hạn từ"}: ${bank.wordLimit}`}
+                        </StatusPill>
+                      ) : null}
+                      <Link
+                        href={`/admin/round-1/banks/${bank.id}`}
+                        className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                      >
+                        {locale === "en" ? "Open bank detail" : "Mở chi tiết bank"}
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
                   </div>
-                  <div className="rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
-                    <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Per paper" : "Mỗi đề"}
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold theme-text-strong">
-                      {bank.bankType === "objective" ? ROUND1_OBJECTIVE_TOTAL : ROUND1_ESSAY_TOTAL}
-                    </p>
+
+                  <div className="mt-8 overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
+                        <tr>
+                          {[
+                            locale === "en" ? "Topic" : "Chủ đề",
+                            locale === "en" ? "Type" : "Loại",
+                            locale === "en" ? "Easy" : "Dễ",
+                            locale === "en" ? "Medium" : "Trung bình",
+                            locale === "en" ? "Hard" : "Khó",
+                            locale === "en" ? "Total" : "Tổng số",
+                          ].map((label) => (
+                            <th key={label} className="px-4 py-3 font-medium">
+                              {label}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row) => (
+                          <tr key={`${bank.id}-${row.topic}`} className="border-b theme-border last:border-b-0">
+                            <td className="px-4 py-4 font-semibold theme-text-strong">{row.topic}</td>
+                            <td className="px-4 py-4 theme-text-body">{row.typeLabel}</td>
+                            <td className="px-4 py-4 text-center">
+                              <StatusPill>{row.easyCount}</StatusPill>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <StatusPill tone="success">{row.mediumCount}</StatusPill>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <StatusPill tone="warning">{row.hardCount}</StatusPill>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <StatusPill tone="info">{row.totalCount}</StatusPill>
+                            </td>
+                          </tr>
+                        ))}
+                        <tr className="bg-[var(--panel-strong)]">
+                          <td className="px-4 py-4 font-semibold theme-text-strong">
+                            {locale === "en" ? "Total" : "Tổng cộng"}
+                          </td>
+                          <td className="px-4 py-4 theme-text-body">
+                            {locale === "en" ? `${rows.length} topics` : `${rows.length} chủ đề`}
+                          </td>
+                          <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.easy}</td>
+                          <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.medium}</td>
+                          <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.hard}</td>
+                          <td className="px-4 py-4 text-center font-semibold theme-text-strong">{totals.total}</td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
-                    <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Preview items" : "Câu preview"}
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold theme-text-strong">
-                      {bank.questions.length}
-                    </p>
-                  </div>
-                  <div className="rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
-                    <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Word limit" : "Giới hạn từ"}
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold theme-text-strong">
-                      {bank.wordLimit ? `${bank.wordLimit}` : "--"}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-6 space-y-3">
-                  {bank.bankType === "objective" ? (
-                    <>
-                      <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                        <p className="text-sm font-semibold theme-text-strong">
-                          {locale === "en" ? "Topic mix per student" : "Cơ cấu theo chủ đề trên mỗi thí sinh"}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 theme-text-muted">
-                          {locale === "en"
-                            ? `${ROUND1_TOPIC_COUNT} topics × ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} questions each.`
-                            : `${ROUND1_TOPIC_COUNT} chủ đề × ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu mỗi chủ đề.`}
-                        </p>
-                      </div>
-                      <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                        <p className="text-sm font-semibold theme-text-strong">
-                          {locale === "en" ? "Difficulty rule" : "Quy tắc độ khó"}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 theme-text-muted">
-                          {locale === "en"
-                            ? `${ROUND1_OBJECTIVE_DIFFICULTY_MIX.easy} easy, ${ROUND1_OBJECTIVE_DIFFICULTY_MIX.medium} medium, ${ROUND1_OBJECTIVE_DIFFICULTY_MIX.hard} hard per topic.`
-                            : `${ROUND1_OBJECTIVE_DIFFICULTY_MIX.easy} dễ, ${ROUND1_OBJECTIVE_DIFFICULTY_MIX.medium} trung bình, ${ROUND1_OBJECTIVE_DIFFICULTY_MIX.hard} khó trên mỗi chủ đề.`}
-                        </p>
-                      </div>
-                      <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                        <p className="text-sm font-semibold theme-text-strong">
-                          {locale === "en" ? "Shuffle rule" : "Quy tắc đảo đề"}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 theme-text-muted">
-                          {locale === "en"
-                            ? "Objective questions are reordered per student, and answer options are shuffled per question."
-                            : "Các câu trắc nghiệm được đảo theo từng thí sinh và thứ tự đáp án được đảo trên từng câu."}
-                        </p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                        <p className="text-sm font-semibold theme-text-strong">
-                          {locale === "en" ? "Essay draw" : "Cơ chế rút tự luận"}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 theme-text-muted">
-                          {locale === "en"
-                            ? `${ROUND1_ESSAY_TOTAL} essay questions are randomly selected from the separate ${bank.questionPoolSize}-question essay bank.`
-                            : `${ROUND1_ESSAY_TOTAL} câu tự luận được rút ngẫu nhiên từ ngân hàng tự luận riêng gồm ${bank.questionPoolSize} câu.`}
-                        </p>
-                      </div>
-                      <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                        <p className="text-sm font-semibold theme-text-strong">
-                          {locale === "en" ? "Position in paper" : "Vị trí trong đề"}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 theme-text-muted">
-                          {locale === "en"
-                            ? "Essay prompts are appended as the last 2 questions after the objective section."
-                            : "Các câu tự luận được đặt ở 2 vị trí cuối, sau khi kết thúc phần trắc nghiệm."}
-                        </p>
-                      </div>
-                      <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                        <p className="text-sm font-semibold theme-text-strong">
-                          {locale === "en" ? "Response cap" : "Giới hạn trả lời"}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 theme-text-muted">
-                          {locale === "en"
-                            ? `Each essay answer is capped at ${bank.wordLimit ?? ROUND1_ESSAY_WORD_LIMIT} words.`
-                            : `Mỗi câu trả lời tự luận được giới hạn ${bank.wordLimit ?? ROUND1_ESSAY_WORD_LIMIT} từ.`}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div className="mt-6">
-                  <Link
-                    href={`/admin/round-1/banks/${bank.id}`}
-                    className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-                  >
-                    {locale === "en" ? "Open bank detail" : "Mở chi tiết bank"}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Surface>
+                </Surface>
+              );
+            })}
+          </section>
+        </>
       ) : (
         <NotFoundState
           title={locale === "en" ? "No Round 1 bank configured yet." : "Chưa có bank Vòng 1 nào được cấu hình."}
