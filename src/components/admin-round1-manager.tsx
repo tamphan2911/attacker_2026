@@ -1512,22 +1512,25 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
       </div>
 
       <Surface className="px-6 py-6 md:px-8 md:py-8">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className="theme-heading text-3xl font-semibold theme-text-strong">
-              {locale === "en" ? "Previewed question set" : "Tap cau hoi preview"}
-            </p>
-            <p className="mt-3 text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "These are the authored preview items available in the frontend dataset. They help the committee validate wording, topic spread, and structure before the real bank is finalized."
-                : "Đây là các câu hỏi preview đang có trong dataset frontend. Chúng giúp ban tổ chức kiểm tra wording, độ phủ chủ đề và cấu trúc trước khi bank thực tế được chốt."}
-            </p>
+        {isEssayBank ? null : (
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="theme-heading text-3xl font-semibold theme-text-strong">
+                {locale === "en" ? "Previewed question set" : "Tap cau hoi preview"}
+              </p>
+              <p className="mt-3 text-sm leading-7 theme-text-muted">
+                {locale === "en"
+                  ? "These are the authored preview items available in the frontend dataset. They help the committee validate wording, topic spread, and structure before the real bank is finalized."
+                  : "Đây là các câu hỏi preview đang có trong dataset frontend. Chúng giúp ban tổ chức kiểm tra wording, độ phủ chủ đề và cấu trúc trước khi bank thực tế được chốt."}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div
           className={cn(
-            "mt-6 grid gap-3",
+            "grid gap-3",
+            isEssayBank ? "" : "mt-6",
             isEssayBank
               ? "xl:grid-cols-[minmax(0,1.35fr)_220px_220px]"
               : "xl:grid-cols-[minmax(0,1.35fr)_220px_220px_220px]",
@@ -1646,14 +1649,16 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     onClick={() => toggleSort("question")}
                   />
                 </th>
-                <th className="px-4 py-3 font-medium">
-                  <SortableTableHeader
-                    label={locale === "en" ? "Answer key" : "Đáp án"}
-                    active={sortKey === "answerKey"}
-                    direction={sortDirection}
-                    onClick={() => toggleSort("answerKey")}
-                  />
-                </th>
+                {isEssayBank ? null : (
+                  <th className="px-4 py-3 font-medium">
+                    <SortableTableHeader
+                      label={locale === "en" ? "Answer key" : "Đáp án"}
+                      active={sortKey === "answerKey"}
+                      direction={sortDirection}
+                      onClick={() => toggleSort("answerKey")}
+                    />
+                  </th>
+                )}
                 <th className="px-4 py-3 font-medium">{locale === "en" ? "Actions" : "Thao tác"}</th>
               </tr>
             </thead>
@@ -1686,9 +1691,11 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                       {getRound1QuestionOptionPreview(question, locale)}
                     </p>
                   </td>
-                  <td className="px-4 py-4 theme-text-body">
-                    {getRound1AnswerSummary(question, locale)}
-                  </td>
+                  {isEssayBank ? null : (
+                    <td className="px-4 py-4 theme-text-body">
+                      {getRound1AnswerSummary(question, locale)}
+                    </td>
+                  )}
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
                       <Link
