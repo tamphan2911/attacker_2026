@@ -83,7 +83,11 @@ async function createUniqueThreadSlug(title: string) {
   return slug;
 }
 
-async function requireVerifiedStudentUser(userId: string) {
+function canUseForumActions(role: UserRole) {
+  return role === UserRole.STUDENT || role === UserRole.ADMIN || role === UserRole.MODERATOR;
+}
+
+async function requireForumActionUser(userId: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: {
@@ -98,11 +102,11 @@ async function requireVerifiedStudentUser(userId: string) {
     return fail(404, "User not found.");
   }
 
-  if (user.role !== UserRole.STUDENT) {
-    return fail(403, "Only participant accounts can post on the forum.");
+  if (!canUseForumActions(user.role)) {
+    return fail(403, "Only participant, admin, and moderator accounts can post on the forum.");
   }
 
-  if (!user.emailVerifiedAt) {
+  if (user.role === UserRole.STUDENT && !user.emailVerifiedAt) {
     return fail(403, "Activate the account before posting on the forum.");
   }
 
@@ -193,7 +197,7 @@ export async function createForumThreadForUser(
     contactNote?: string;
   },
 ): Promise<ServiceResult<{ slug: string }>> {
-  const userResult = await requireVerifiedStudentUser(userId);
+  const userResult = await requireForumActionUser(userId);
   if (!userResult.ok) {
     return userResult;
   }
@@ -248,7 +252,9 @@ export async function createForumThreadForUser(
       body,
       category,
       status: ForumThreadStatus.OPEN,
-      university: userResult.data.university,
+      university:
+        userResult.data.university ||
+        (userResult.data.role === UserRole.ADMIN || userResult.data.role === UserRole.MODERATOR ? "Organizer team" : ""),
       preferredRoles: JSON.stringify(preferredRoles),
       contactNote,
       lastActivityAt: new Date(),
@@ -266,7 +272,7 @@ export async function createForumReplyForUser(
     body: string;
   },
 ): Promise<ServiceResult<{ replyId: string }>> {
-  const userResult = await requireVerifiedStudentUser(userId);
+  const userResult = await requireForumActionUser(userId);
   if (!userResult.ok) {
     return userResult;
   }

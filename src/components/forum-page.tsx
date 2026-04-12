@@ -234,7 +234,9 @@ export function ForumPage() {
   });
 
   const deferredSearchValue = useDeferredValue(searchValue);
-  const canPostAsParticipant = isAuthenticated && currentUser.role === "student";
+  const canPostOnForum =
+    isAuthenticated &&
+    (currentUser.role === "student" || currentUser.role === "admin" || currentUser.role === "moderator");
 
   const loadThreads = useCallback(async () => {
     setIsLoadingThreads(true);
@@ -720,12 +722,12 @@ export function ForumPage() {
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                         {locale === "en" ? "Join the conversation" : "Tham gia trao đổi"}
                       </p>
-                      {!canPostAsParticipant ? (
+                      {!canPostOnForum ? (
                         <div className="mt-4 rounded-[1.35rem] border theme-border px-4 py-4 bg-white/76 dark:bg-white/[0.05]">
                           <p className="text-sm leading-7 theme-text-body">
                             {locale === "en"
-                              ? "Only signed-in participant accounts can reply. Browsing remains open to everyone."
-                              : "Chỉ tài khoản thí sinh đã đăng nhập mới có thể phản hồi. Việc xem nội dung vẫn mở cho mọi người."}
+                              ? "Only signed-in participant, admin, or moderator accounts can reply. Browsing remains open to everyone."
+                              : "Chỉ tài khoản thí sinh, admin hoặc moderator đã đăng nhập mới có thể phản hồi. Việc xem nội dung vẫn mở cho mọi người."}
                           </p>
                           <Link
                             href="/auth"
@@ -796,7 +798,7 @@ export function ForumPage() {
                     <button
                       type="button"
                       onClick={() => setIsComposerOpen(true)}
-                      disabled={!canPostAsParticipant}
+                      disabled={!canPostOnForum}
                       className="inline-flex items-center gap-3 rounded-full border border-sky-500/24 bg-[linear-gradient(135deg,rgba(37,99,235,0.98),rgba(14,165,233,0.9))] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_18px_34px_rgba(37,99,235,0.24)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_40px_rgba(37,99,235,0.28)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 dark:border-sky-300/18 dark:bg-[linear-gradient(135deg,rgba(14,165,233,0.88),rgba(37,99,235,0.78))] dark:shadow-[0_18px_34px_rgba(2,8,20,0.28)]"
                     >
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/18 ring-1 ring-white/18">
@@ -804,7 +806,7 @@ export function ForumPage() {
                       </span>
                       {locale === "en" ? "Open a thread" : "Mở chủ đề"}
                     </button>
-                    {!canPostAsParticipant ? (
+                    {!canPostOnForum ? (
                       <Link
                         href="/auth"
                         className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
