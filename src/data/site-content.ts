@@ -2704,8 +2704,8 @@ export const round1TestBanks: Round1TestBank[] = [
     id: "bank-2026-official-a",
     bankType: "objective",
     title: {
-      en: "Round 1 objective bank A",
-      vi: "Ngân hàng câu hỏi trắc nghiệm Vòng 1 A",
+      en: "Multiple choice test bank",
+      vi: "Ngân hàng đề trắc nghiệm",
     },
     description: {
       en: "Primary official bank for the 36 objective questions in each paper. The system randomizes 6 questions per topic across 6 topics with a 2 easy / 2 medium / 2 hard mix.",

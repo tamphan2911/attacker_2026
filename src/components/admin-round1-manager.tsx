@@ -1495,6 +1495,13 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
     );
   }
 
+  const bankDetailTitle =
+    bank.bankType === "objective"
+      ? locale === "en"
+        ? "Multiple choice test bank"
+        : "Ngân hàng đề trắc nghiệm"
+      : pickText(locale, bank.title);
+
   return (
     <div className="space-y-8">
       <Link href="/admin/round-1" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
@@ -1507,7 +1514,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           id={ADMIN_TITLE_ID}
           className="scroll-mt-32"
           eyebrow={locale === "en" ? "Admin / Round 1 / Test bank" : "Admin / Vong 1 / Test bank"}
-          title={pickText(locale, bank.title)}
+          title={bankDetailTitle}
         />
         <div className="flex flex-wrap gap-3">
           <Link
@@ -1533,25 +1540,9 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
       </div>
 
       <Surface className="px-6 py-6 md:px-8 md:py-8">
-        {isEssayBank ? null : (
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="theme-heading text-3xl font-semibold theme-text-strong">
-                {locale === "en" ? "Previewed question set" : "Tap cau hoi preview"}
-              </p>
-              <p className="mt-3 text-sm leading-7 theme-text-muted">
-                {locale === "en"
-                  ? "These are the authored preview items available in the frontend dataset. They help the committee validate wording, topic spread, and structure before the real bank is finalized."
-                  : "Đây là các câu hỏi preview đang có trong dataset frontend. Chúng giúp ban tổ chức kiểm tra wording, độ phủ chủ đề và cấu trúc trước khi bank thực tế được chốt."}
-              </p>
-            </div>
-          </div>
-        )}
-
         <div
           className={cn(
             "grid gap-3",
-            isEssayBank ? "" : "mt-6",
             isEssayBank
               ? "xl:grid-cols-[minmax(0,1.35fr)_220px_220px]"
               : "xl:grid-cols-[minmax(0,1.35fr)_220px_220px_220px]",
@@ -1634,13 +1625,11 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
         <div className="mt-8 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
-                <tr>
-                  <th className="px-4 py-3 font-medium">#</th>
-                {isEssayBank ? (
-                  <th className="px-4 py-3 font-medium">
-                    {locale === "en" ? "Question ID" : "Mã câu hỏi"}
-                  </th>
-                ) : null}
+              <tr>
+                <th className="px-4 py-3 font-medium">#</th>
+                <th className="px-4 py-3 font-medium">
+                  {locale === "en" ? "Question ID" : "Mã câu hỏi"}
+                </th>
                 <th className="px-4 py-3 font-medium">
                   <SortableTableHeader
                     label={locale === "en" ? "Type" : "Loại"}
@@ -1658,7 +1647,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                   />
                 </th>
                 {isEssayBank ? null : (
-                  <th className="px-4 py-3 font-medium">
+                  <th className="px-4 py-3 text-center font-medium">
                     <SortableTableHeader
                       label={locale === "en" ? "Difficulty" : "Độ khó"}
                       active={sortKey === "difficulty"}
@@ -1676,7 +1665,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                   />
                 </th>
                 {isEssayBank ? null : (
-                  <th className="px-4 py-3 font-medium">
+                  <th className="px-4 py-3 text-center font-medium">
                     <SortableTableHeader
                       label={locale === "en" ? "Answer key" : "Đáp án"}
                       active={sortKey === "answerKey"}
@@ -1692,11 +1681,9 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
               {paginatedRows.map((question, index) => (
                 <tr key={question.id} className="border-b theme-border last:border-b-0">
                   <td className="px-4 py-4 theme-text-body">{startIndex + index + 1}</td>
-                  {isEssayBank ? (
-                    <td className="px-4 py-4">
-                      <StatusPill tone="info">{question.id}</StatusPill>
-                    </td>
-                  ) : null}
+                  <td className="px-4 py-4">
+                    <StatusPill tone="info">{question.id}</StatusPill>
+                  </td>
                   <td className="px-4 py-4">
                     <StatusPill>{pickRound1TypeLabel(locale, question.type)}</StatusPill>
                   </td>
@@ -1728,8 +1715,8 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     </p>
                   </td>
                   {isEssayBank ? null : (
-                    <td className="px-4 py-4 theme-text-body">
-                      {getRound1AnswerSummary(question, locale)}
+                    <td className="px-4 py-4 text-center">
+                      <StatusPill tone="info">{getRound1AnswerSummary(question, locale)}</StatusPill>
                     </td>
                   )}
                   <td className="px-4 py-4">
