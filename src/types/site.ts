@@ -207,6 +207,7 @@ export interface Round1PairingItem {
 
 export interface Round1Question {
   id: string;
+  name?: string;
   prompt: LocalizedText;
   topic: string;
   difficulty: Round1QuestionDifficulty;

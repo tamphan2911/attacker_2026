@@ -165,11 +165,12 @@ function createRound1PairingItem(
 function createQuestionShapeForType(type: Round1QuestionType, seed?: Partial<Round1Question>): Round1Question {
   const base = {
     id: seed?.id ?? "",
+    name: seed?.name ?? "",
     topic: seed?.topic ?? "",
     difficulty: seed?.difficulty ?? "easy",
     prompt: seed?.prompt ?? createLocalizedEmpty(),
     type,
-  } satisfies Pick<Round1Question, "id" | "topic" | "difficulty" | "prompt" | "type">;
+  } satisfies Pick<Round1Question, "id" | "name" | "topic" | "difficulty" | "prompt" | "type">;
 
   if (type === "true-false") {
     return {
@@ -234,6 +235,7 @@ function createQuestionShapeForType(type: Round1QuestionType, seed?: Partial<Rou
 function convertRound1QuestionType(question: Round1Question, nextType: Round1QuestionType): Round1Question {
   const seed: Partial<Round1Question> = {
     id: question.id,
+    name: question.name ?? "",
     topic: question.topic,
     difficulty: question.difficulty,
     prompt: question.prompt,
@@ -286,10 +288,27 @@ function createRound1QuestionDraftForBank(bank: Round1TestBank) {
   const questionType: Round1QuestionType = bank.bankType === "essay" ? "essay" : "single-choice";
 
   return createQuestionShapeForType(questionType, {
+    id: previewNextRound1QuestionId(bank),
     topic: bank.questions[0]?.topic ?? "",
     difficulty: bank.bankType === "essay" ? "medium" : "easy",
     prompt: createLocalizedEmpty(),
   });
+}
+
+function previewNextRound1QuestionId(bank: Round1TestBank) {
+  const prefix = bank.bankType === "essay" ? "r1e-" : "r1q-";
+  const nextIndex =
+    bank.questions.reduce((highest, question) => {
+      const match = question.id.match(new RegExp(`^${prefix}(\\d+)$`, "i"));
+      if (!match) {
+        return highest;
+      }
+
+      const value = Number.parseInt(match[1] ?? "0", 10);
+      return Number.isFinite(value) ? Math.max(highest, value) : highest;
+    }, 0) + 1;
+
+  return `${prefix}${String(nextIndex).padStart(2, "0")}`;
 }
 
 function exportRowsToWorkbook(
@@ -444,6 +463,7 @@ function buildBankExportRows(round1TestBanks: Round1TestBank[]) {
       shuffleOptions: bank.shuffleOptions ? "Yes" : "No",
       previewQuestionOrder: index + 1,
       questionId: question.id,
+      questionName: question.name ?? "",
       topic: question.topic,
       type: pickRound1TypeLabel("en", question.type),
       difficulty: bank.bankType === "essay" ? "" : question.difficulty,
@@ -1370,6 +1390,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
       questionList.filter((question) => {
         const searchSource = [
           pickRound1TypeLabel(locale, question.type),
+          question.name ?? "",
           question.topic,
           ...(isEssayBank ? [] : [question.difficulty]),
           pickRound1QuestionText(question.prompt),
@@ -1686,6 +1707,11 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     </td>
                   )}
                   <td className="px-4 py-4 theme-text-body">
+                    {question.name?.trim() ? (
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                        {question.name}
+                      </p>
+                    ) : null}
                     <p>{pickRound1QuestionText(question.prompt)}</p>
                     <p className="mt-2 text-xs theme-text-soft">
                       {getRound1QuestionOptionPreview(question, locale)}
@@ -2359,7 +2385,33 @@ function AdminRound1QuestionEditorInner({
 
       <section>
         <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <label className="space-y-2">
+              <span className="text-sm theme-text-muted">
+                {locale === "en" ? "Question ID" : "Mã câu hỏi"}
+              </span>
+              <input
+                value={draft.id}
+                readOnly
+                aria-readonly="true"
+                className={`${fieldClassName} cursor-not-allowed opacity-75`}
+              />
+            </label>
+            <label className="space-y-2">
+              <span className="text-sm theme-text-muted">
+                {locale === "en" ? "Question name" : "Tên câu hỏi"}
+              </span>
+              <input
+                value={draft.name ?? ""}
+                onChange={(event) =>
+                  setDraft((current) =>
+                    current ? { ...current, name: event.target.value } : current,
+                  )
+                }
+                placeholder={locale === "en" ? "Example: Fintech basics 01" : "Ví dụ: Cơ bản fintech 01"}
+                className={fieldClassName}
+              />
+            </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Topic" : "Chu de"}
