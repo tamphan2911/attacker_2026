@@ -9,14 +9,21 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  Filter,
   ImagePlus,
   Newspaper,
   Pencil,
   Plus,
+  Search,
   Text,
   Trash2,
 } from "lucide-react";
 
+import {
+  ADMIN_LIST_TABLE_PAGE_SIZE,
+  AdminTablePagination,
+  useAdminTablePagination,
+} from "@/components/admin-table-pagination";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
@@ -82,6 +89,14 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function matchesFilter(value: string, filterValue: string) {
+  if (!filterValue.trim()) {
+    return true;
+  }
+
+  return value.toLowerCase().includes(filterValue.trim().toLowerCase());
 }
 
 function syncCoverImageBlock(post: NewsPost): NewsPost {
@@ -239,7 +254,76 @@ function NewsNotFound({ title, description }: { title: string; description: stri
 
 export function AdminNewsList() {
   const { locale, newsPosts, deleteNewsPostByAdmin } = useSiteState();
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [authorFilter, setAuthorFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
   useAdminTitleScroll();
+
+  const sortedPosts = useMemo(
+    () => [...newsPosts].sort((left, right) => right.publishedAt.localeCompare(left.publishedAt)),
+    [newsPosts],
+  );
+  const categoryOptions = useMemo(
+    () =>
+      [...new Set(newsPosts.map((post) => pickText(locale, post.category)).filter(Boolean))]
+        .sort((left, right) => left.localeCompare(right)),
+    [locale, newsPosts],
+  );
+  const authorOptions = useMemo(
+    () => [...new Set(newsPosts.map((post) => post.author).filter(Boolean))].sort((left, right) => left.localeCompare(right)),
+    [newsPosts],
+  );
+  const tagOptions = useMemo(
+    () => [...new Set(newsPosts.flatMap((post) => post.tags))].sort((left, right) => left.localeCompare(right)),
+    [newsPosts],
+  );
+  const filteredPosts = useMemo(
+    () =>
+      sortedPosts.filter((post) => {
+        const category = pickText(locale, post.category);
+        const searchSource = [
+          pickText(locale, post.title),
+          pickText(locale, post.excerpt),
+          post.slug,
+          post.author,
+          category,
+          post.publishedAt,
+          post.readTime,
+          ...post.tags,
+        ].join(" ");
+
+        if (!matchesFilter(searchSource, search)) {
+          return false;
+        }
+
+        if (categoryFilter !== "all" && category !== categoryFilter) {
+          return false;
+        }
+
+        if (authorFilter !== "all" && post.author !== authorFilter) {
+          return false;
+        }
+
+        if (tagFilter !== "all" && !post.tags.includes(tagFilter)) {
+          return false;
+        }
+
+        return true;
+      }),
+    [authorFilter, categoryFilter, locale, search, sortedPosts, tagFilter],
+  );
+  const {
+    page,
+    setPage,
+    pageCount,
+    startIndex,
+    paginatedRows,
+  } = useAdminTablePagination(filteredPosts, ADMIN_LIST_TABLE_PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [authorFilter, categoryFilter, locale, search, setPage, tagFilter]);
 
   return (
     <div className="space-y-8">
@@ -259,60 +343,198 @@ export function AdminNewsList() {
         </Link>
       </div>
 
-      <div className="grid gap-4">
-        {newsPosts.map((post) => (
-          <Surface key={post.slug} className="px-5 py-5">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-3">
-                  <StatusPill>{pickText(locale, post.category)}</StatusPill>
-                  <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                    {post.publishedAt} · {post.author}
-                  </p>
-                </div>
-                <Link href={`/admin/news/${post.slug}`} className="mt-4 block text-2xl font-semibold theme-accent">
-                  {pickText(locale, post.title)}
-                </Link>
-                <p className="mt-3 max-w-3xl text-sm leading-7 theme-text-muted">
-                  {pickText(locale, post.excerpt)}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {post.tags.map((tag) => (
-                    <span key={tag} className="rounded-full border theme-border px-3 py-1 text-xs theme-text-soft">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <IconToolLink
-                  href={`/admin/news/${post.slug}`}
-                  label={locale === "en" ? "Edit article" : "Chỉnh sửa bài viết"}
-                >
-                  <Pencil className="h-4 w-4" />
-                </IconToolLink>
-                <IconToolButton
-                  label={locale === "en" ? "Delete article" : "Xóa bài viết"}
-                  tone="danger"
-                  onClick={() => {
-                    const confirmed = window.confirm(
-                      locale === "en"
-                        ? `Delete article "${pickText(locale, post.title)}"?`
-                        : `Xóa bài viết "${pickText(locale, post.title)}"?`,
-                    );
-
-                    if (confirmed) {
-                      deleteNewsPostByAdmin(post.slug);
-                    }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </IconToolButton>
-              </div>
+      <Surface className="px-5 py-5 md:px-6">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1.4fr)_220px_220px_220px]">
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Search className="h-3.5 w-3.5" />
+              {locale === "en" ? "Search" : "Tìm kiếm"}
+            </span>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={locale === "en" ? "Search by title, slug, tag, author..." : "Tìm theo tiêu đề, slug, tag, tác giả..."}
+                className="theme-field h-12 w-full rounded-[1rem] border pl-10 pr-4 text-sm outline-none"
+              />
             </div>
-          </Surface>
-        ))}
-      </div>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Category" : "Danh mục"}
+            </span>
+            <select
+              value={categoryFilter}
+              onChange={(event) => setCategoryFilter(event.target.value)}
+              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All categories" : "Tất cả danh mục"}</option>
+              {categoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Author" : "Tác giả"}
+            </span>
+            <select
+              value={authorFilter}
+              onChange={(event) => setAuthorFilter(event.target.value)}
+              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All authors" : "Tất cả tác giả"}</option>
+              {authorOptions.map((author) => (
+                <option key={author} value={author}>
+                  {author}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              Tag
+            </span>
+            <select
+              value={tagFilter}
+              onChange={(event) => setTagFilter(event.target.value)}
+              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All tags" : "Tất cả tag"}</option>
+              {tagOptions.map((tag) => (
+                <option key={tag} value={tag}>
+                  #{tag}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </Surface>
+
+      <Surface className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-[1180px] text-left text-sm">
+            <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
+              <tr>
+                {[
+                  "#",
+                  locale === "en" ? "Cover" : "Ảnh",
+                  locale === "en" ? "Article" : "Bài viết",
+                  locale === "en" ? "Category" : "Danh mục",
+                  "Tags",
+                  locale === "en" ? "Author" : "Tác giả",
+                  locale === "en" ? "Published" : "Ngày đăng",
+                  locale === "en" ? "Actions" : "Thao tác",
+                ].map((label) => (
+                  <th key={label} className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedRows.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-8 text-center text-sm theme-text-muted">
+                    {locale === "en" ? "No matching news articles." : "Không có bài viết phù hợp."}
+                  </td>
+                </tr>
+              ) : (
+                paginatedRows.map((post, index) => (
+                  <tr key={post.slug} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{startIndex + index + 1}</td>
+                    <td className="px-4 py-4">
+                      <div className="h-16 w-24 overflow-hidden rounded-[1rem] border theme-border bg-[var(--panel-strong)]">
+                        <img
+                          src={post.coverImageSrc}
+                          alt={pickText(locale, post.coverImageAlt) || pickText(locale, post.title)}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="max-w-[26rem]">
+                        <Link href={`/admin/news/${post.slug}`} className="font-semibold theme-accent">
+                          {pickText(locale, post.title)}
+                        </Link>
+                        <p className="mt-1 text-xs theme-text-soft">{post.slug}</p>
+                        <p className="mt-2 line-clamp-2 text-xs leading-5 theme-text-muted">
+                          {pickText(locale, post.excerpt)}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <StatusPill>{pickText(locale, post.category)}</StatusPill>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex max-w-[15rem] flex-wrap gap-2">
+                        {post.tags.length ? (
+                          post.tags.map((tag) => (
+                            <span key={tag} className="rounded-full border theme-border px-2.5 py-1 text-xs theme-text-soft">
+                              #{tag}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs theme-text-soft">--</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 theme-text-body">{post.author}</td>
+                    <td className="px-4 py-4">
+                      <p className="theme-text-body">{post.publishedAt}</p>
+                      <p className="mt-1 text-xs theme-text-soft">{post.readTime}</p>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <IconToolLink
+                          href={`/admin/news/${post.slug}`}
+                          label={locale === "en" ? "Edit article" : "Chỉnh sửa bài viết"}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </IconToolLink>
+                        <IconToolButton
+                          label={locale === "en" ? "Delete article" : "Xóa bài viết"}
+                          tone="danger"
+                          onClick={() => {
+                            const confirmed = window.confirm(
+                              locale === "en"
+                                ? `Delete article "${pickText(locale, post.title)}"?`
+                                : `Xóa bài viết "${pickText(locale, post.title)}"?`,
+                            );
+
+                            if (confirmed) {
+                              deleteNewsPostByAdmin(post.slug);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </IconToolButton>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <AdminTablePagination
+          locale={locale}
+          page={page}
+          pageCount={pageCount}
+          pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
+          totalRows={filteredPosts.length}
+          onPageChange={setPage}
+        />
+      </Surface>
     </div>
   );
 }
