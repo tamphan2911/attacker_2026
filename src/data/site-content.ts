@@ -2724,8 +2724,8 @@ export const round1TestBanks: Round1TestBank[] = [
     id: "bank-2026-essay-a",
     bankType: "essay",
     title: {
-      en: "Round 1 essay bank A",
-      vi: "Ngân hàng câu hỏi tự luận Vòng 1 A",
+      en: "Essay test bank",
+      vi: "Ngân hàng đề tự luận",
     },
     description: {
       en: "Separate essay bank used for the last 2 questions in each paper. The system randomizes 2 essay prompts from a 30-question pool, with a 200-word limit for each response.",

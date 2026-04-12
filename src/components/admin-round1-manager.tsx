@@ -49,7 +49,7 @@ import {
   pickRound1QuestionText,
   pickRound1TypeLabel,
 } from "@/lib/round1";
-import { formatDateLabel, pickText } from "@/lib/site";
+import { formatDateLabel } from "@/lib/site";
 import type {
   Locale,
   LocalizedText,
@@ -1500,7 +1500,9 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
       ? locale === "en"
         ? "Multiple choice test bank"
         : "Ngân hàng đề trắc nghiệm"
-      : pickText(locale, bank.title);
+      : locale === "en"
+        ? "Essay test bank"
+        : "Ngân hàng đề tự luận";
 
   return (
     <div className="space-y-8">
