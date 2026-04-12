@@ -1634,8 +1634,13 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
         <div className="mt-8 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
-              <tr>
-                <th className="px-4 py-3 font-medium">#</th>
+                <tr>
+                  <th className="px-4 py-3 font-medium">#</th>
+                {isEssayBank ? (
+                  <th className="px-4 py-3 font-medium">
+                    {locale === "en" ? "Question ID" : "Mã câu hỏi"}
+                  </th>
+                ) : null}
                 <th className="px-4 py-3 font-medium">
                   <SortableTableHeader
                     label={locale === "en" ? "Type" : "Loại"}
@@ -1687,6 +1692,11 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
               {paginatedRows.map((question, index) => (
                 <tr key={question.id} className="border-b theme-border last:border-b-0">
                   <td className="px-4 py-4 theme-text-body">{startIndex + index + 1}</td>
+                  {isEssayBank ? (
+                    <td className="px-4 py-4">
+                      <StatusPill tone="info">{question.id}</StatusPill>
+                    </td>
+                  ) : null}
                   <td className="px-4 py-4">
                     <StatusPill>{pickRound1TypeLabel(locale, question.type)}</StatusPill>
                   </td>
