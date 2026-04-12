@@ -757,7 +757,6 @@ export function AdminRound1Manager() {
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
   const bankExportRows = buildBankExportRows(round1TestBanks);
-  const draftBankCount = round1TestBanks.filter((bank) => bank.status === "draft").length;
   const objectivePoolCount = activeObjectiveBank?.questions.length ?? 0;
   const essayPoolCount = activeEssayBank?.questions.length ?? 0;
   const objectiveTopicRows = activeObjectiveBank
@@ -779,39 +778,19 @@ export function AdminRound1Manager() {
       </div>
 
       {activeObjectiveBank && activeEssayBank ? (
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            icon={<FileQuestion className="h-5 w-5 text-cyan-300" />}
-            label={locale === "en" ? "Configured banks" : "Số bank"}
-            value={round1TestBanks.length.toString()}
-            note={
-              draftBankCount > 0
-                ? locale === "en"
-                  ? `${draftBankCount} draft bank ready`
-                  : `${draftBankCount} bank nháp đang chờ`
-                : locale === "en"
-                  ? "All current banks are active or archived"
-                  : "Tất cả bank hiện tại đang active hoặc archived"
-            }
-          />
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <MetricCard
             icon={<ListOrdered className="h-5 w-5 text-emerald-300" />}
-            label={locale === "en" ? "Objective pool" : "Kho trắc nghiệm"}
+            label={locale === "en" ? "Multiple choice pool" : "Kho trắc nghiệm"}
             value={objectivePoolCount.toString()}
             note={
               locale === "en"
-                ? "Live questions currently in the objective bank"
+                ? "Live questions currently in the multiple-choice bank"
                 : "Số câu hiện có trong ngân hàng trắc nghiệm"
             }
           />
           <MetricCard
-            icon={<Shuffle className="h-5 w-5 text-orange-300" />}
-            label={locale === "en" ? "Paper structure" : "Cấu trúc đề"}
-            value={`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL}`}
-            note={locale === "en" ? "36 objective + 2 essay" : "36 trắc nghiệm + 2 tự luận"}
-          />
-          <MetricCard
-            icon={<Target className="h-5 w-5 text-amber-300" />}
+            icon={<Target className="h-5 w-5 text-cyan-300" />}
             label={locale === "en" ? "Essay pool" : "Kho tự luận"}
             value={essayPoolCount.toString()}
             note={
@@ -819,6 +798,12 @@ export function AdminRound1Manager() {
                 ? "Live questions currently in the essay bank"
                 : "Số câu hiện có trong ngân hàng tự luận"
             }
+          />
+          <MetricCard
+            icon={<Shuffle className="h-5 w-5 text-orange-300" />}
+            label={locale === "en" ? "Exam structure" : "Cấu trúc bài thi"}
+            value={`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL}`}
+            note={locale === "en" ? "36 multiple-choice + 2 essay" : "36 trắc nghiệm + 2 tự luận"}
           />
         </section>
       ) : null}
