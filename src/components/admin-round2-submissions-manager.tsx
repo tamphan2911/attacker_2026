@@ -16,7 +16,7 @@ import * as XLSX from "xlsx";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
-  ADMIN_TABLE_PAGE_SIZE,
+  ADMIN_LIST_TABLE_PAGE_SIZE,
   AdminTablePagination,
   useAdminTablePagination,
 } from "@/components/admin-table-pagination";
@@ -594,7 +594,7 @@ export function AdminRound2SubmissionsManager() {
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(filteredRows, ADMIN_LIST_TABLE_PAGE_SIZE);
 
   if (loading) {
     return <LoadingState locale={locale} />;
@@ -778,7 +778,7 @@ export function AdminRound2SubmissionsManager() {
           locale={locale}
           page={page}
           pageCount={pageCount}
-          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
           totalRows={filteredRows.length}
           onPageChange={setPage}
         />

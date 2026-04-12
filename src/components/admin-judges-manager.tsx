@@ -17,7 +17,7 @@ import { getNewsImageValidationError } from "@/lib/news-images";
 import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
-  ADMIN_TABLE_PAGE_SIZE,
+  ADMIN_LIST_TABLE_PAGE_SIZE,
   AdminTablePagination,
   useAdminTablePagination,
 } from "@/components/admin-table-pagination";
@@ -645,7 +645,7 @@ export function AdminJudgesList() {
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(filteredJudges, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(filteredJudges, ADMIN_LIST_TABLE_PAGE_SIZE);
 
   const handleCreateJudge = async () => {
     const payload = normalizeDraftForSave(addDraft);
@@ -848,7 +848,7 @@ export function AdminJudgesList() {
           locale={locale}
           page={page}
           pageCount={pageCount}
-          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
           totalRows={filteredJudges.length}
           onPageChange={setPage}
         />

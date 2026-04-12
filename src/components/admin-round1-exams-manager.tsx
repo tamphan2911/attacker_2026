@@ -25,7 +25,7 @@ import {
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
-  ADMIN_TABLE_PAGE_SIZE,
+  ADMIN_LIST_TABLE_PAGE_SIZE,
   AdminTablePagination,
   useAdminTablePagination,
 } from "@/components/admin-table-pagination";
@@ -379,7 +379,7 @@ export function AdminRound1ExamList() {
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(sortedRows, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(sortedRows, ADMIN_LIST_TABLE_PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
@@ -643,7 +643,7 @@ export function AdminRound1ExamList() {
           locale={locale}
           page={page}
           pageCount={pageCount}
-          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
           totalRows={filteredRows.length}
           onPageChange={setPage}
         />

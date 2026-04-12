@@ -12,7 +12,7 @@ import {
 import * as XLSX from "xlsx";
 
 import {
-  ADMIN_TABLE_PAGE_SIZE,
+  ADMIN_LIST_TABLE_PAGE_SIZE,
   AdminTablePagination,
   useAdminTablePagination,
 } from "@/components/admin-table-pagination";
@@ -335,7 +335,7 @@ function UsersTableSection() {
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(filteredRows, ADMIN_LIST_TABLE_PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -549,7 +549,7 @@ function UsersTableSection() {
           locale={locale}
           page={page}
           pageCount={pageCount}
-          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
           totalRows={filteredRows.length}
           onPageChange={setPage}
         />
@@ -626,7 +626,7 @@ function TeamsTableSection() {
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(filteredRows, ADMIN_LIST_TABLE_PAGE_SIZE);
 
   return (
     <div className="space-y-6">
@@ -765,7 +765,7 @@ function TeamsTableSection() {
           locale={locale}
           page={page}
           pageCount={pageCount}
-          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
           totalRows={filteredRows.length}
           onPageChange={setPage}
         />

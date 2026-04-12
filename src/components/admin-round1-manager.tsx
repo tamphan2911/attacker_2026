@@ -28,6 +28,7 @@ import * as XLSX from "xlsx";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
+  ADMIN_LIST_TABLE_PAGE_SIZE,
   ADMIN_TABLE_PAGE_SIZE,
   AdminTablePagination,
   useAdminTablePagination,
@@ -1016,14 +1017,14 @@ export function AdminRound1ScoresManager() {
     pageCount: individualPageCount,
     startIndex: individualStartIndex,
     paginatedRows: paginatedIndividualRows,
-  } = useAdminTablePagination(individualRows, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(individualRows, ADMIN_LIST_TABLE_PAGE_SIZE);
   const {
     page: teamPage,
     setPage: setTeamPage,
     pageCount: teamPageCount,
     startIndex: teamStartIndex,
     paginatedRows: paginatedTeamRows,
-  } = useAdminTablePagination(teamGroups, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(teamGroups, ADMIN_LIST_TABLE_PAGE_SIZE);
 
   return (
     <div className="space-y-8">
@@ -1204,7 +1205,7 @@ export function AdminRound1ScoresManager() {
           locale={locale}
           page={individualPage}
           pageCount={individualPageCount}
-          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
           totalRows={individualRows.length}
           onPageChange={setIndividualPage}
         />
@@ -1342,7 +1343,7 @@ export function AdminRound1ScoresManager() {
           locale={locale}
           page={teamPage}
           pageCount={teamPageCount}
-          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
           totalRows={teamGroups.length}
           onPageChange={setTeamPage}
         />

@@ -10,6 +10,7 @@ function cn(...values: Array<string | undefined | false>) {
 }
 
 export const ADMIN_TABLE_PAGE_SIZE = 20;
+export const ADMIN_LIST_TABLE_PAGE_SIZE = 10;
 
 export function useAdminTablePagination<T>(rows: T[], pageSize = ADMIN_TABLE_PAGE_SIZE) {
   const [pageState, setPageState] = useState(1);
