@@ -1716,9 +1716,6 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     <p title={pickRound1QuestionText(question.prompt)}>
                       {truncateQuestionPreview(pickRound1QuestionText(question.prompt))}
                     </p>
-                    <p className="mt-2 text-xs theme-text-soft">
-                      {getRound1QuestionOptionPreview(question, locale)}
-                    </p>
                   </td>
                   {isEssayBank ? null : (
                     <td className="px-4 py-4 text-center">

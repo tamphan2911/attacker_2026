@@ -900,7 +900,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
         }
       />
 
-      <div className="sticky top-24 z-30">
+      <div className="sticky top-[5.75rem] z-50">
         <div className="rounded-[1.8rem] border theme-border-strong theme-panel-strong px-5 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.1)] backdrop-blur-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="min-w-0">
