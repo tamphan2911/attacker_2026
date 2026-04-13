@@ -561,6 +561,10 @@ function UsersTableSection() {
 function TeamsTableSection() {
   const { locale, teams, users, timelineItems, deleteTeamByAdmin } = useSiteState();
   useAdminTitleScroll();
+  const firstStickyColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
+  const secondStickyColumnClass = "sticky z-10 bg-[var(--panel)]";
+  const firstStickyHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
+  const secondStickyHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<"all" | "round-1" | "round-2" | "round-3">("all");
 
@@ -686,7 +690,21 @@ function TeamsTableSection() {
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
                 {["#", "Team", "Tag", "Leader", "Members", "Status", "Stage", "Keyword", "Created", "Action"].map((label) => (
-                  <th key={label} className="px-4 py-3 font-medium">
+                  <th
+                    key={label}
+                    style={
+                      label === "#"
+                        ? { left: 0, width: 72, minWidth: 72 }
+                        : label === "Team"
+                          ? { left: 72, minWidth: 260 }
+                          : undefined
+                    }
+                    className={cn(
+                      "px-4 py-3 font-medium",
+                      label === "#" ? firstStickyHeadClass : "",
+                      label === "Team" ? secondStickyHeadClass : "",
+                    )}
+                  >
                     {label}
                   </th>
                 ))}
@@ -696,10 +714,16 @@ function TeamsTableSection() {
               {paginatedRows.map((row, index) => {
                 return (
                   <tr key={row.id} className="border-b theme-border last:border-b-0">
-                    <td className="px-4 py-4 text-xs font-semibold theme-text-soft">
+                    <td
+                      style={{ left: 0, width: 72, minWidth: 72 }}
+                      className={cn("px-4 py-4 text-xs font-semibold theme-text-soft", firstStickyColumnClass)}
+                    >
                       {startIndex + index + 1}
                     </td>
-                    <td className="px-4 py-4">
+                    <td
+                      style={{ left: 72, minWidth: 260 }}
+                      className={cn("px-4 py-4", secondStickyColumnClass)}
+                    >
                       <div>
                         <Link href={`/admin/teams/${row.id}`} className="font-semibold theme-accent">
                           {row.team}

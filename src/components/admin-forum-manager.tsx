@@ -32,6 +32,15 @@ const categoryOptions: ForumThreadCategory[] = [
   "general-discussion",
 ];
 
+function cn(...values: Array<string | undefined | false>) {
+  return values.filter(Boolean).join(" ");
+}
+
+const stickyFirstColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
+const stickySecondColumnClass = "sticky z-10 bg-[var(--panel)]";
+const stickyFirstHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
+const stickySecondHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
+
 function formatAdminForumDate(locale: "en" | "vi", value: string) {
   return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
     day: "2-digit",
@@ -272,8 +281,18 @@ export function AdminForumManager() {
           <table className="w-full min-w-[980px] text-left text-sm">
             <thead className="border-b theme-border theme-panel-subtle">
               <tr className="text-xs uppercase tracking-[0.18em] theme-text-soft">
-                <th className="w-16 px-4 py-3 text-center">#</th>
-                <th className="px-4 py-3">{locale === "en" ? "Thread" : "Chủ đề"}</th>
+                <th
+                  style={{ left: 0, width: 72, minWidth: 72 }}
+                  className={cn("px-4 py-3 text-center", stickyFirstHeadClass)}
+                >
+                  #
+                </th>
+                <th
+                  style={{ left: 72, minWidth: 360 }}
+                  className={cn("px-4 py-3", stickySecondHeadClass)}
+                >
+                  {locale === "en" ? "Thread" : "Chủ đề"}
+                </th>
                 <th className="px-4 py-3">{locale === "en" ? "Owner" : "Chủ sở hữu"}</th>
                 <th className="px-4 py-3">{locale === "en" ? "Category" : "Phân loại"}</th>
                 <th className="px-4 py-3 text-center">{locale === "en" ? "Status" : "Trạng thái"}</th>
@@ -301,10 +320,16 @@ export function AdminForumManager() {
               ) : (
                 paginatedRows.map((thread, index) => (
                   <tr key={thread.id} className="transition hover:bg-[rgba(23,114,208,0.05)]">
-                    <td className="px-4 py-3 text-center font-semibold theme-text-soft">
+                    <td
+                      style={{ left: 0, width: 72, minWidth: 72 }}
+                      className={cn("px-4 py-3 text-center font-semibold theme-text-soft", stickyFirstColumnClass)}
+                    >
                       {startIndex + index + 1}
                     </td>
-                    <td className="max-w-[360px] px-4 py-3">
+                    <td
+                      style={{ left: 72, minWidth: 360 }}
+                      className={cn("max-w-[360px] px-4 py-3", stickySecondColumnClass)}
+                    >
                       <Link
                         href={`/forum?thread=${encodeURIComponent(thread.slug)}`}
                         className="group inline-flex min-w-0 flex-col rounded-xl transition hover:text-sky-700 dark:hover:text-sky-200"

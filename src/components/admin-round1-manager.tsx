@@ -105,6 +105,13 @@ function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
+const stickyFirstColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
+const stickySecondColumnClass = "sticky z-10 bg-[var(--panel)]";
+const stickyFirstHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
+const stickySecondHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
+const stickyFirstStrongColumnClass = "sticky left-0 z-20 bg-[var(--panel-strong)]";
+const stickySecondStrongColumnClass = "sticky z-10 bg-[var(--panel-strong)]";
+
 function cloneRound1Question(question: Round1Question): Round1Question {
   return JSON.parse(JSON.stringify(question)) as Round1Question;
 }
@@ -929,8 +936,22 @@ export function AdminRound1Manager() {
                                   locale === "en" ? "Hard" : "Khó",
                                   locale === "en" ? "Total" : "Tổng số",
                                 ]),
-                          ].map((label) => (
-                            <th key={label} className="px-4 py-3 font-medium">
+                          ].map((label, columnIndex) => (
+                            <th
+                              key={label}
+                              style={
+                                columnIndex === 0
+                                  ? { left: 0, minWidth: 240 }
+                                  : columnIndex === 1
+                                    ? { left: 240, minWidth: 160 }
+                                    : undefined
+                              }
+                              className={cn(
+                                "px-4 py-3 font-medium",
+                                columnIndex === 0 ? stickyFirstHeadClass : "",
+                                columnIndex === 1 ? stickySecondHeadClass : "",
+                              )}
+                            >
                               {label}
                             </th>
                           ))}
@@ -939,8 +960,18 @@ export function AdminRound1Manager() {
                       <tbody>
                         {rows.map((row) => (
                           <tr key={`${bank.id}-${row.topic}`} className="border-b theme-border last:border-b-0">
-                            <td className="px-4 py-4 font-semibold theme-text-strong">{row.topic}</td>
-                            <td className="px-4 py-4 theme-text-body">{row.typeLabel}</td>
+                            <td
+                              style={{ left: 0, minWidth: 240 }}
+                              className={cn("px-4 py-4 font-semibold theme-text-strong", stickyFirstColumnClass)}
+                            >
+                              {row.topic}
+                            </td>
+                            <td
+                              style={{ left: 240, minWidth: 160 }}
+                              className={cn("px-4 py-4 theme-text-body", stickySecondColumnClass)}
+                            >
+                              {row.typeLabel}
+                            </td>
                             {isEssayBank ? null : (
                               <>
                                 <td className="px-4 py-4 text-center">
@@ -960,10 +991,16 @@ export function AdminRound1Manager() {
                           </tr>
                         ))}
                         <tr className="bg-[var(--panel-strong)]">
-                          <td className="px-4 py-4 font-semibold theme-text-strong">
+                          <td
+                            style={{ left: 0, minWidth: 240 }}
+                            className={cn("px-4 py-4 font-semibold theme-text-strong", stickyFirstStrongColumnClass)}
+                          >
                             {locale === "en" ? "Total" : "Tổng cộng"}
                           </td>
-                          <td className="px-4 py-4 theme-text-body">
+                          <td
+                            style={{ left: 240, minWidth: 160 }}
+                            className={cn("px-4 py-4 theme-text-body", stickySecondStrongColumnClass)}
+                          >
                             {locale === "en" ? `${rows.length} topics` : `${rows.length} chủ đề`}
                           </td>
                           {isEssayBank ? null : (
@@ -1135,8 +1172,22 @@ export function AdminRound1ScoresManager() {
                   locale === "en" ? "Submitted at" : "Thời điểm nộp",
                   locale === "en" ? "Review" : "Chấm điểm",
                   locale === "en" ? "Detail" : "Chi tiết",
-                ].map((label) => (
-                  <th key={label} className="px-4 py-3 font-medium">
+                ].map((label, columnIndex) => (
+                  <th
+                    key={label}
+                    style={
+                      columnIndex === 0
+                        ? { left: 0, width: 72, minWidth: 72 }
+                        : columnIndex === 1
+                          ? { left: 72, minWidth: 260 }
+                          : undefined
+                    }
+                    className={cn(
+                      "px-4 py-3 font-medium",
+                      columnIndex === 0 ? stickyFirstHeadClass : "",
+                      columnIndex === 1 ? stickySecondHeadClass : "",
+                    )}
+                  >
                     {label}
                   </th>
                 ))}
@@ -1145,10 +1196,16 @@ export function AdminRound1ScoresManager() {
             <tbody>
               {paginatedIndividualRows.map((row, index) => (
                 <tr key={row.submissionId} className="border-b theme-border last:border-b-0">
-                  <td className="px-4 py-4 text-xs font-semibold theme-text-soft">
+                  <td
+                    style={{ left: 0, width: 72, minWidth: 72 }}
+                    className={cn("px-4 py-4 text-xs font-semibold theme-text-soft", stickyFirstColumnClass)}
+                  >
                     {individualStartIndex + index + 1}
                   </td>
-                  <td className="px-4 py-4">
+                  <td
+                    style={{ left: 72, minWidth: 260 }}
+                    className={cn("px-4 py-4", stickySecondColumnClass)}
+                  >
                     <Link href={`/admin/users/${row.userId}/profile`} className="font-semibold theme-accent">
                       {row.studentName}
                     </Link>
@@ -1267,8 +1324,22 @@ export function AdminRound1ScoresManager() {
                   locale === "en" ? "Latest activity" : "Cập nhật gần nhất",
                   locale === "en" ? "Standing" : "Trạng thái",
                   locale === "en" ? "Detail" : "Chi tiết",
-                ].map((label) => (
-                  <th key={label} className="px-4 py-3 font-medium">
+                ].map((label, columnIndex) => (
+                  <th
+                    key={label}
+                    style={
+                      columnIndex === 0
+                        ? { left: 0, width: 72, minWidth: 72 }
+                        : columnIndex === 1
+                          ? { left: 72, minWidth: 96 }
+                          : undefined
+                    }
+                    className={cn(
+                      "px-4 py-3 font-medium",
+                      columnIndex === 0 ? stickyFirstHeadClass : "",
+                      columnIndex === 1 ? stickySecondHeadClass : "",
+                    )}
+                  >
                     {label}
                   </th>
                 ))}
@@ -1277,8 +1348,18 @@ export function AdminRound1ScoresManager() {
             <tbody>
               {paginatedTeamRows.map((group, index) => (
                 <tr key={group.team.id} className="border-b theme-border last:border-b-0">
-                  <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{teamStartIndex + index + 1}</td>
-                  <td className="px-4 py-4 theme-text-body">{group.rank ?? "-"}</td>
+                  <td
+                    style={{ left: 0, width: 72, minWidth: 72 }}
+                    className={cn("px-4 py-4 text-xs font-semibold theme-text-soft", stickyFirstColumnClass)}
+                  >
+                    {teamStartIndex + index + 1}
+                  </td>
+                  <td
+                    style={{ left: 72, minWidth: 96 }}
+                    className={cn("px-4 py-4 theme-text-body", stickySecondColumnClass)}
+                  >
+                    {group.rank ?? "-"}
+                  </td>
                   <td className="px-4 py-4">
                     <Link href={`/admin/teams/${group.team.id}`} className="font-semibold theme-accent">
                       {group.team.name}
@@ -1630,8 +1711,16 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                <th className="px-4 py-3 font-medium">#</th>
-                <th className="px-4 py-3 font-medium">
+                <th
+                  style={{ left: 0, width: 72, minWidth: 72 }}
+                  className={cn("px-4 py-3 font-medium", stickyFirstHeadClass)}
+                >
+                  #
+                </th>
+                <th
+                  style={{ left: 72, minWidth: 180 }}
+                  className={cn("px-4 py-3 font-medium", stickySecondHeadClass)}
+                >
                   {locale === "en" ? "Question ID" : "Mã câu hỏi"}
                 </th>
                 <th className="px-4 py-3 font-medium">
@@ -1684,8 +1773,16 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
             <tbody>
               {paginatedRows.map((question, index) => (
                 <tr key={question.id} className="border-b theme-border last:border-b-0">
-                  <td className="px-4 py-4 theme-text-body">{startIndex + index + 1}</td>
-                  <td className="px-4 py-4">
+                  <td
+                    style={{ left: 0, width: 72, minWidth: 72 }}
+                    className={cn("px-4 py-4 theme-text-body", stickyFirstColumnClass)}
+                  >
+                    {startIndex + index + 1}
+                  </td>
+                  <td
+                    style={{ left: 72, minWidth: 180 }}
+                    className={cn("px-4 py-4", stickySecondColumnClass)}
+                  >
                     <StatusPill tone="info">{question.id}</StatusPill>
                   </td>
                   <td className="px-4 py-4">

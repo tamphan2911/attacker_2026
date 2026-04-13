@@ -32,6 +32,11 @@ function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
+const stickyFirstColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
+const stickySecondColumnClass = "sticky z-10 bg-[var(--panel)]";
+const stickyFirstHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
+const stickySecondHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
+
 function matchesFilter(value: string, query: string) {
   if (!query.trim()) {
     return true;
@@ -722,8 +727,22 @@ export function AdminRound2SubmissionsManager() {
                   locale === "en" ? "File" : "Tệp",
                   locale === "en" ? "Submitted by" : "Người nộp",
                   locale === "en" ? "Submitted at" : "Nộp lúc",
-                ].map((label) => (
-                  <th key={label} className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                ].map((label, columnIndex) => (
+                  <th
+                    key={label}
+                    style={
+                      columnIndex === 0
+                        ? { left: 0, width: 72, minWidth: 72 }
+                        : columnIndex === 1
+                          ? { left: 72, minWidth: 300 }
+                          : undefined
+                    }
+                    className={cn(
+                      "px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]",
+                      columnIndex === 0 ? stickyFirstHeadClass : "",
+                      columnIndex === 1 ? stickySecondHeadClass : "",
+                    )}
+                  >
                     {label}
                   </th>
                 ))}
@@ -732,8 +751,16 @@ export function AdminRound2SubmissionsManager() {
             <tbody>
               {paginatedRows.map((row, index) => (
                 <tr key={row.submissionId} className="border-b theme-border last:border-b-0">
-                  <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{startIndex + index + 1}</td>
-                  <td className="px-4 py-4">
+                  <td
+                    style={{ left: 0, width: 72, minWidth: 72 }}
+                    className={cn("px-4 py-4 text-xs font-semibold theme-text-soft", stickyFirstColumnClass)}
+                  >
+                    {startIndex + index + 1}
+                  </td>
+                  <td
+                    style={{ left: 72, minWidth: 300 }}
+                    className={cn("px-4 py-4", stickySecondColumnClass)}
+                  >
                     <div className="space-y-1">
                       <Link href={`/admin/teams/${row.teamId}`} className="inline-flex max-w-[260px] truncate font-semibold theme-text-strong transition hover:opacity-80">
                         {row.teamName}

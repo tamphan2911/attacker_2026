@@ -52,6 +52,11 @@ function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
+const stickyFirstColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
+const stickySecondColumnClass = "sticky z-10 bg-[var(--panel)]";
+const stickyFirstHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
+const stickySecondHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
+
 function formatDateTime(locale: "en" | "vi", value?: string) {
   if (!value) {
     return "--";
@@ -483,8 +488,16 @@ export function AdminRound1ExamList() {
           <table className="min-w-[1320px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">#</th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                <th
+                  style={{ left: 0, width: 72, minWidth: 72 }}
+                  className={cn("px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]", stickyFirstHeadClass)}
+                >
+                  #
+                </th>
+                <th
+                  style={{ left: 72, minWidth: 280 }}
+                  className={cn("px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]", stickySecondHeadClass)}
+                >
                   <SortableHeader
                     label={locale === "en" ? "Participant" : "Thí sinh"}
                     active={sortKey === "participant"}
@@ -556,8 +569,16 @@ export function AdminRound1ExamList() {
             <tbody>
               {paginatedRows.map((row, index) => (
                 <tr key={row.userId} className="border-b theme-border last:border-b-0">
-                  <td className="px-4 py-4 font-medium theme-text-soft">{startIndex + index + 1}</td>
-                  <td className="px-4 py-4">
+                  <td
+                    style={{ left: 0, width: 72, minWidth: 72 }}
+                    className={cn("px-4 py-4 font-medium theme-text-soft", stickyFirstColumnClass)}
+                  >
+                    {startIndex + index + 1}
+                  </td>
+                  <td
+                    style={{ left: 72, minWidth: 280 }}
+                    className={cn("px-4 py-4", stickySecondColumnClass)}
+                  >
                     <div className="space-y-1">
                       <Link
                         href={`/admin/users/${row.userId}/profile`}
