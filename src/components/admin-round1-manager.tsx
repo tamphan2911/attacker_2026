@@ -9,9 +9,9 @@ import {
   ArrowRight,
   ArrowUp,
   ArrowUpDown,
+  CirclePlus,
   Clock3,
   Download,
-  FileQuestion,
   Filter,
   ListOrdered,
   ListFilter,
@@ -559,6 +559,15 @@ function getDefaultBankPreviewSortDirection(sortKey: BankPreviewSortKey): SortDi
   }
 }
 
+function truncateQuestionPreview(value: string) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= 5) {
+    return value;
+  }
+
+  return `${words.slice(0, 5).join(" ")}...`;
+}
+
 function SortableTableHeader({
   label,
   active,
@@ -888,10 +897,17 @@ export function AdminRound1Manager() {
                           {`${locale === "en" ? "Word limit" : "Giới hạn từ"}: ${bank.wordLimit}`}
                         </StatusPill>
                       ) : null}
-                      <Link
-                        href={`/admin/round-1/banks/${bank.id}`}
-                        className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-                      >
+	                      <Link
+	                        href={`/admin/round-1/banks/${bank.id}/questions/new`}
+	                        className="theme-button-secondary inline-flex items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold"
+	                      >
+	                        <CirclePlus className="h-4 w-4" />
+	                        {locale === "en" ? "Add question" : "Thêm câu hỏi"}
+	                      </Link>
+	                      <Link
+	                        href={`/admin/round-1/banks/${bank.id}`}
+	                        className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+	                      >
                         {locale === "en" ? "Open bank detail" : "Mở chi tiết bank"}
                         <ArrowRight className="h-4 w-4" />
                       </Link>
@@ -1450,7 +1466,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(sortedQuestions, ADMIN_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(sortedQuestions, ADMIN_LIST_TABLE_PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
@@ -1509,7 +1525,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
             href={`/admin/round-1/banks/${bank.id}/questions/new`}
             className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
           >
-            <FileQuestion className="h-4 w-4" />
+            <CirclePlus className="h-4 w-4" />
             {locale === "en" ? "Add question" : "Them cau hoi"}
           </Link>
           <button
@@ -1697,7 +1713,9 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                         {question.name}
                       </p>
                     ) : null}
-                    <p>{pickRound1QuestionText(question.prompt)}</p>
+                    <p title={pickRound1QuestionText(question.prompt)}>
+                      {truncateQuestionPreview(pickRound1QuestionText(question.prompt))}
+                    </p>
                     <p className="mt-2 text-xs theme-text-soft">
                       {getRound1QuestionOptionPreview(question, locale)}
                     </p>
@@ -1757,7 +1775,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           locale={locale}
           page={page}
           pageCount={pageCount}
-          pageSize={ADMIN_TABLE_PAGE_SIZE}
+          pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
           totalRows={sortedQuestions.length}
           onPageChange={setPage}
         />

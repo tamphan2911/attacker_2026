@@ -646,6 +646,10 @@ export function AdminJudgesList() {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(filteredJudges, ADMIN_LIST_TABLE_PAGE_SIZE);
+  const firstStickyColumnClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
+  const secondStickyColumnClass = "sticky z-20 bg-[var(--panel-strong)]";
+  const firstStickyHeadClass = "sticky left-0 z-40 bg-[var(--panel)]";
+  const secondStickyHeadClass = "sticky z-30 bg-[var(--panel)]";
 
   const handleCreateJudge = async () => {
     const payload = normalizeDraftForSave(addDraft);
@@ -721,16 +725,16 @@ export function AdminJudgesList() {
           <table className="min-w-[1180px] border-separate border-spacing-y-3 text-sm">
             <thead>
               <tr className="text-left text-[0.72rem] font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                <th className="px-4 py-2">#</th>
-                <th className="min-w-[23rem] px-4 py-2">{locale === "en" ? "Judge" : "Giám khảo"}</th>
+	                <th style={{ left: 0, width: 72, minWidth: 72 }} className={cn("px-4 py-2", firstStickyHeadClass)}>#</th>
+	                <th style={{ left: 72, minWidth: 368 }} className={cn("px-4 py-2", secondStickyHeadClass)}>{locale === "en" ? "Judge" : "Giám khảo"}</th>
                 <th className="min-w-[16rem] px-4 py-2">{locale === "en" ? "Organization" : "Tổ chức"}</th>
                 <th className="min-w-[15rem] px-4 py-2">{locale === "en" ? "Rounds" : "Vòng"}</th>
                 <th className="min-w-[18rem] px-4 py-2">{locale === "en" ? "Expertise" : "Chuyên môn"}</th>
                 <th className="px-4 py-2 text-right">{locale === "en" ? "Actions" : "Tác vụ"}</th>
               </tr>
               <tr>
-                <th className="px-4 py-2" />
-                <th className="px-4 py-2">
+	                <th style={{ left: 0, width: 72, minWidth: 72 }} className={cn("px-4 py-2", firstStickyHeadClass)} />
+	                <th style={{ left: 72, minWidth: 368 }} className={cn("px-4 py-2", secondStickyHeadClass)}>
                   <input
                     value={filters.judge}
                     onChange={(event) => setFilters((current) => ({ ...current, judge: event.target.value }))}
@@ -774,10 +778,19 @@ export function AdminJudgesList() {
             <tbody>
               {paginatedRows.map((judge, index) => (
                 <tr key={judge.id} id={`judge-row-${judge.id}`} className="theme-panel-strong scroll-mt-32">
-                  <td className="rounded-l-[1.4rem] border-y border-l theme-border px-4 py-4 text-xs font-semibold theme-text-soft">
-                    {startIndex + index + 1}
-                  </td>
-                  <td className="border-y theme-border px-4 py-4">
+	                  <td
+	                    style={{ left: 0, width: 72, minWidth: 72 }}
+	                    className={cn(
+	                      "rounded-l-[1.4rem] border-y border-l theme-border px-4 py-4 text-xs font-semibold theme-text-soft",
+	                      firstStickyColumnClass,
+	                    )}
+	                  >
+	                    {startIndex + index + 1}
+	                  </td>
+	                  <td
+	                    style={{ left: 72, minWidth: 368 }}
+	                    className={cn("border-y theme-border px-4 py-4", secondStickyColumnClass)}
+	                  >
                     <div className="flex items-center gap-4">
                       <div
                         aria-hidden="true"

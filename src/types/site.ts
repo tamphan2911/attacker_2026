@@ -128,6 +128,10 @@ export interface ForumReply {
   body: string;
   createdAt: string;
   updatedAt: string;
+  editedAt?: string;
+  editedByName?: string;
+  deletedAt?: string;
+  deletedByName?: string;
   author: ForumAuthor;
 }
 
@@ -145,6 +149,8 @@ export interface ForumThread {
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
+  editedAt?: string;
+  editedByName?: string;
   replyCount: number;
   lastMessagePreview?: string;
   lastMessageAt?: string;

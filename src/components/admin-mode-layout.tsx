@@ -8,6 +8,7 @@ import {
   FileQuestion,
   LayoutDashboard,
   Mail,
+  MessageSquare,
   Newspaper,
   TableProperties,
   Users,
@@ -137,6 +138,15 @@ const adminNavGroups: Array<{
         children: [
           { href: "/admin/submissions", label: { en: "Round 2 submissions", vi: "Bài nộp Vòng 2" } },
           { href: "/admin/submissions/scores", label: { en: "Round 2 scores", vi: "Điểm Vòng 2" } },
+        ],
+      },
+      {
+        href: "/admin/forum",
+        icon: MessageSquare,
+        label: { en: "Forum", vi: "Diễn đàn" },
+        description: { en: "Thread moderation", vi: "Quản lý thảo luận" },
+        children: [
+          { href: "/admin/forum", label: { en: "Thread list", vi: "Danh sách chủ đề" } },
         ],
       },
     ],

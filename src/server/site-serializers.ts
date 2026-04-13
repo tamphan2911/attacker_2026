@@ -281,11 +281,32 @@ export function serializeForumReply(
   return {
     id: reply.id,
     threadId: reply.threadId,
-    body: reply.body,
+    body: reply.deletedAt ? "" : reply.body,
     createdAt: reply.createdAt.toISOString(),
     updatedAt: reply.updatedAt.toISOString(),
+    editedAt: reply.editedAt?.toISOString(),
+    editedByName: reply.editedByName ?? undefined,
+    deletedAt: reply.deletedAt?.toISOString(),
+    deletedByName: reply.deletedByName ?? undefined,
     author: serializeForumAuthor(reply.author),
   };
+}
+
+function getForumLastMessagePreview(
+  reply: (ForumReply & {
+    author: Pick<User, "id" | "name" | "role" | "university" | "avatarTone" | "avatarImageSrc">;
+  }) | undefined,
+  fallbackBody: string,
+) {
+  if (!reply) {
+    return fallbackBody;
+  }
+
+  if (reply.deletedAt) {
+    return "This reply has been deleted.";
+  }
+
+  return reply.body;
 }
 
 export function serializeForumThread(
@@ -315,10 +336,16 @@ export function serializeForumThread(
     createdAt: thread.createdAt.toISOString(),
     updatedAt: thread.updatedAt.toISOString(),
     lastActivityAt: thread.lastActivityAt.toISOString(),
+    editedAt: thread.editedAt?.toISOString(),
+    editedByName: thread.editedByName ?? undefined,
     replyCount: thread._count?.replies ?? thread.replies?.length ?? 0,
-    lastMessagePreview: thread.replies?.[0]?.body || thread.body,
-    lastMessageAt: thread.replies?.[0]?.createdAt.toISOString() ?? thread.createdAt.toISOString(),
-    lastMessageAuthorName: thread.replies?.[0]?.author.name ?? thread.author.name,
+    lastMessagePreview: getForumLastMessagePreview(thread.replies?.[0], thread.body),
+    lastMessageAt:
+      thread.replies?.[0]?.deletedAt?.toISOString() ??
+      thread.replies?.[0]?.editedAt?.toISOString() ??
+      thread.replies?.[0]?.createdAt.toISOString() ??
+      thread.createdAt.toISOString(),
+    lastMessageAuthorName: thread.replies?.[0]?.deletedByName ?? thread.replies?.[0]?.author.name ?? thread.author.name,
     author: serializeForumAuthor(thread.author),
     replies: thread.replies?.map(serializeForumReply),
   };

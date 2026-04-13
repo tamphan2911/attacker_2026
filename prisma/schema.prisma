@@ -409,6 +409,8 @@ model ForumThread {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
   lastActivityAt   DateTime            @default(now())
+  editedAt         DateTime?
+  editedByName     String?
   author           User                @relation("ForumThreadAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   replies          ForumReply[]
 
@@ -417,17 +419,22 @@ model ForumThread {
 }
 
 model ForumReply {
-  id         String      @id @default(cuid())
-  threadId    String
-  authorId    String
-  body        String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  thread      ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  author      User        @relation("ForumReplyAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  id            String      @id @default(cuid())
+  threadId      String
+  authorId      String
+  body          String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  editedAt      DateTime?
+  editedByName  String?
+  deletedAt     DateTime?
+  deletedByName String?
+  thread        ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author        User        @relation("ForumReplyAuthor", fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([threadId, createdAt])
   @@index([authorId, createdAt])
+  @@index([deletedAt])
 }
 
 model CmsEntry {
