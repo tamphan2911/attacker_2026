@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AlertTriangle,
   ArrowRight,
   Award,
   CalendarRange,
@@ -374,6 +375,10 @@ const testimonialQuoteClasses = [
 export function HomePage() {
   const { locale, pageContent } = useSiteState();
   const [activeSlide, setActiveSlide] = useState(0);
+  const [protectionWarning, setProtectionWarning] = useState<string | null>(null);
+  const [isCaptureShieldVisible, setIsCaptureShieldVisible] = useState(false);
+  const protectionWarningTimeoutRef = useRef<number | null>(null);
+  const captureShieldTimeoutRef = useRef<number | null>(null);
   const heroSlides =
     pageContent.home.heroSlides.length > 0
       ? pageContent.home.heroSlides
@@ -401,8 +406,150 @@ export function HomePage() {
     };
   }, [heroDeck.length]);
 
+  useEffect(() => {
+    return () => {
+      if (protectionWarningTimeoutRef.current) {
+        window.clearTimeout(protectionWarningTimeoutRef.current);
+      }
+
+      if (captureShieldTimeoutRef.current) {
+        window.clearTimeout(captureShieldTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showProtectionNotice = useCallback(
+    (type: "capture" | "interaction") => {
+      const message =
+        type === "capture"
+          ? locale === "en"
+            ? "Screenshot and print shortcuts are restricted on the homepage."
+            : "Phím tắt chụp màn hình và in nội dung bị hạn chế trên trang chủ."
+          : locale === "en"
+            ? "Text selection, right click, and copy shortcuts are disabled on the homepage."
+            : "Chọn văn bản, nhấp chuột phải và các phím tắt sao chép đã bị tắt trên trang chủ.";
+
+      setProtectionWarning(message);
+
+      if (protectionWarningTimeoutRef.current) {
+        window.clearTimeout(protectionWarningTimeoutRef.current);
+      }
+
+      protectionWarningTimeoutRef.current = window.setTimeout(() => {
+        setProtectionWarning(null);
+        protectionWarningTimeoutRef.current = null;
+      }, 3200);
+
+      if (type === "capture") {
+        setIsCaptureShieldVisible(true);
+
+        if (captureShieldTimeoutRef.current) {
+          window.clearTimeout(captureShieldTimeoutRef.current);
+        }
+
+        captureShieldTimeoutRef.current = window.setTimeout(() => {
+          setIsCaptureShieldVisible(false);
+          captureShieldTimeoutRef.current = null;
+        }, 1400);
+      }
+    },
+    [locale],
+  );
+
+  useEffect(() => {
+    document.documentElement.classList.add("theme-homepage-locked");
+    document.body.classList.add("theme-homepage-locked");
+
+    const blockEvent = (event: Event) => {
+      event.preventDefault();
+    };
+
+    const blockInteractiveEvent = (event: Event) => {
+      event.preventDefault();
+      showProtectionNotice("interaction");
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      const isCommandModifier = event.ctrlKey || event.metaKey;
+      const isWindowsPrintScreen = key === "printscreen";
+      const isMacScreenshotShortcut =
+        event.metaKey && event.shiftKey && (key === "3" || key === "4" || key === "5");
+      const isPrintShortcut = isCommandModifier && key === "p";
+
+      if (isWindowsPrintScreen || isMacScreenshotShortcut || isPrintShortcut) {
+        event.preventDefault();
+        showProtectionNotice("capture");
+        return;
+      }
+
+      if (!isCommandModifier) {
+        return;
+      }
+
+      if (key === "a" || key === "c" || key === "v" || key === "x" || key === "s" || key === "u") {
+        event.preventDefault();
+        showProtectionNotice("interaction");
+      }
+    };
+
+    const handleBeforePrint = (event: Event) => {
+      event.preventDefault();
+      showProtectionNotice("capture");
+    };
+
+    document.addEventListener("copy", blockInteractiveEvent);
+    document.addEventListener("cut", blockInteractiveEvent);
+    document.addEventListener("paste", blockInteractiveEvent);
+    document.addEventListener("contextmenu", blockInteractiveEvent);
+    document.addEventListener("selectstart", blockEvent);
+    document.addEventListener("dragstart", blockEvent);
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("beforeprint", handleBeforePrint);
+
+    return () => {
+      document.documentElement.classList.remove("theme-homepage-locked");
+      document.body.classList.remove("theme-homepage-locked");
+      document.removeEventListener("copy", blockInteractiveEvent);
+      document.removeEventListener("cut", blockInteractiveEvent);
+      document.removeEventListener("paste", blockInteractiveEvent);
+      document.removeEventListener("contextmenu", blockInteractiveEvent);
+      document.removeEventListener("selectstart", blockEvent);
+      document.removeEventListener("dragstart", blockEvent);
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("beforeprint", handleBeforePrint);
+    };
+  }, [showProtectionNotice]);
+
   return (
-    <div className="space-y-24 pb-8">
+    <>
+      {isCaptureShieldVisible ? (
+        <div className="pointer-events-none fixed inset-0 z-[90] bg-[rgba(7,18,35,0.82)] backdrop-blur-md">
+          <div className="flex h-full items-center justify-center px-4">
+            <div className="rounded-[1.9rem] border border-white/12 bg-[rgba(7,18,35,0.86)] px-6 py-5 text-center text-white shadow-[0_24px_54px_rgba(2,8,20,0.34)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/68">
+                {locale === "en" ? "Protected homepage" : "Trang chủ được bảo vệ"}
+              </p>
+              <p className="mt-3 text-base font-semibold">
+                {locale === "en"
+                  ? "Capture action blocked"
+                  : "Hành động chụp nội dung đã bị chặn"}
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {protectionWarning ? (
+        <div className="pointer-events-none fixed bottom-5 right-5 z-[91] max-w-sm rounded-[1.4rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.98),rgba(255,237,213,0.96))] px-4 py-3.5 text-sm leading-7 text-amber-950 shadow-[0_18px_44px_rgba(122,74,12,0.16)] dark:border-amber-300/22 dark:bg-[linear-gradient(135deg,rgba(120,53,15,0.42),rgba(113,63,18,0.34))] dark:text-amber-100">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+            <p>{protectionWarning}</p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="theme-homepage-protected space-y-24 pb-8">
       <section className="relative left-1/2 right-1/2 -mx-[50vw] -mt-6 w-screen overflow-hidden md:-mt-8">
         <div className="relative min-h-[500px] md:min-h-[560px]">
           {heroDeck.map((slide, index) => (
@@ -791,6 +938,7 @@ export function HomePage() {
           <ArrowRight className="h-4 w-4" />
         </Link>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

@@ -1155,3 +1155,25 @@ textarea {
 [data-theme="dark"] .border-slate-900\/40 {
   border-color: var(--line-strong);
 }
+
+.theme-homepage-locked,
+.theme-homepage-locked * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.theme-homepage-locked img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+.theme-homepage-protected {
+  -webkit-touch-callout: none;
+}
+
+@media print {
+  .theme-homepage-locked,
+  .theme-homepage-locked * {
+    visibility: hidden !important;
+  }
+}
