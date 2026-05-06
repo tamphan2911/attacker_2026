@@ -21,7 +21,8 @@ import type { LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
 
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA";
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || "";
+const HAS_TURNSTILE_SITE_KEY = Boolean(TURNSTILE_SITE_KEY);
 
 declare global {
   interface Window {
@@ -66,24 +67,13 @@ function normalizeSearch(value: string) {
   return value.trim().toLowerCase();
 }
 
-function GoogleMark() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
-      <path d="M21.8 12.23c0-.69-.06-1.2-.19-1.74H12v3.2h5.64c-.11.8-.69 2.01-1.98 2.82l-.02.11 2.56 1.98.18.02c1.64-1.51 2.58-3.73 2.58-6.39Z" />
-      <path d="M12 22c2.76 0 5.08-.91 6.78-2.48l-3.23-2.5c-.86.6-2.01 1.02-3.55 1.02-2.7 0-4.99-1.78-5.81-4.25l-.1.01-2.66 2.06-.03.09A10.24 10.24 0 0 0 12 22Z" />
-      <path d="M6.19 13.79A6.12 6.12 0 0 1 5.86 12c0-.62.11-1.22.31-1.79l-.01-.12L3.47 8l-.09.04A10 10 0 0 0 2.3 12c0 1.45.35 2.82 1.08 4.04l2.81-2.18Z" />
-      <path d="M12 5.96c1.94 0 3.25.84 4 1.54l2.92-2.85C17.07 2.93 14.76 2 12 2a10.24 10.24 0 0 0-8.62 4.95l2.78 2.16c.84-2.47 3.12-4.15 5.84-4.15Z" />
-    </svg>
-  );
-}
-
 const authFieldClassName =
   "theme-placeholder w-full bg-transparent text-[0.95rem] theme-text-strong outline-none placeholder:text-[0.78rem] md:placeholder:text-[0.84rem] lg:placeholder:text-[0.9rem]";
 
 const authTextareaClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3.5 text-[0.95rem] theme-text-strong outline-none placeholder:text-[0.78rem] md:placeholder:text-[0.84rem] lg:placeholder:text-[0.9rem]";
 
-export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
+export function AuthPage() {
   const router = useRouter();
   const { authStatus, canAccessAdminMode, isAuthenticated, locale, pageContent, theme } = useSiteState();
   const [mode, setMode] = useState<"signin" | "register">("register");
@@ -151,7 +141,7 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
   }, [canAccessAdminMode, isAuthenticated, router]);
 
   useEffect(() => {
-    if (mode !== "signin" || !isTurnstileReady || !turnstileContainerRef.current || !window.turnstile) {
+    if (!isTurnstileReady || !turnstileContainerRef.current || !window.turnstile || !HAS_TURNSTILE_SITE_KEY) {
       return;
     }
 
@@ -165,7 +155,7 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
     turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
       sitekey: TURNSTILE_SITE_KEY,
       theme: theme === "dark" ? "dark" : "light",
-      action: "sign_in",
+      action: mode === "register" ? "register" : "sign_in",
       callback: (token) => {
         setTurnstileToken(token);
         setSigninMessage(null);
@@ -178,8 +168,8 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
         setSigninActionLabel(null);
         setSigninMessage(
           locale === "en"
-            ? "The security check expired. Please confirm it again before signing in."
-            : "Mã xác minh bảo mật đã hết hạn. Vui lòng xác nhận lại trước khi đăng nhập.",
+            ? `The security check expired. Please confirm it again before ${mode === "register" ? "creating the account" : "signing in"}.`
+            : `Mã xác minh bảo mật đã hết hạn. Vui lòng xác nhận lại trước khi ${mode === "register" ? "tạo tài khoản" : "đăng nhập"}.`,
         );
       },
       "error-callback": () => {
@@ -338,6 +328,15 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
   };
 
   const handleRegister = async () => {
+    if (!turnstileToken) {
+      setSigninMessage(
+        locale === "en"
+          ? "Please complete the security check before creating the account."
+          : "Vui lòng hoàn tất bước xác minh bảo mật trước khi tạo tài khoản.",
+      );
+      return;
+    }
+
     if (registerForm.password !== registerForm.confirmPassword) {
       setSigninMessage(
         locale === "en"
@@ -361,13 +360,28 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
         "Content-Type": "application/json",
       },
       credentials: "same-origin",
-      body: JSON.stringify({ ...registerPayload, locale }),
+      body: JSON.stringify({ ...registerPayload, locale, turnstileToken }),
     });
 
     if (!response.ok) {
       try {
         const payload = (await response.json()) as { error?: string };
-        setSigninMessage(payload.error || (locale === "en" ? "Could not create the account." : "Không thể tạo tài khoản."));
+        if (payload.error === "CAPTCHA_FAILED") {
+          resetTurnstileWidget();
+          setSigninMessage(
+            locale === "en"
+              ? "Security verification failed. Please try the CAPTCHA again."
+              : "Xác minh bảo mật không thành công. Vui lòng thử lại CAPTCHA.",
+          );
+        } else if (payload.error === "CAPTCHA_NOT_CONFIGURED") {
+          setSigninMessage(
+            locale === "en"
+              ? "Security verification is not configured yet. Please ask the organizer to configure Cloudflare Turnstile."
+              : "Xác minh bảo mật chưa được cấu hình. Vui lòng yêu cầu ban tổ chức cấu hình Cloudflare Turnstile.",
+          );
+        } else {
+          setSigninMessage(payload.error || (locale === "en" ? "Could not create the account." : "Không thể tạo tài khoản."));
+        }
       } catch {
         setSigninMessage(locale === "en" ? "Could not create the account." : "Không thể tạo tài khoản.");
       }
@@ -420,11 +434,13 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
 
   return (
     <div className="space-y-8">
-      <Script
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
-        strategy="afterInteractive"
-        onReady={() => setIsTurnstileReady(true)}
-      />
+      {HAS_TURNSTILE_SITE_KEY ? (
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
+          strategy="afterInteractive"
+          onReady={() => setIsTurnstileReady(true)}
+        />
+      ) : null}
       <div className="mx-auto max-w-3xl">
         <Surface className="px-6 py-6 md:px-8 md:py-8 xl:px-10 xl:py-10">
           <div className="mb-6 space-y-3 text-center">
@@ -476,27 +492,6 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
           </div>
 
           <div className="mt-6 space-y-4">
-            {googleEnabled ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => void signIn("google", { callbackUrl: "/dashboard" })}
-                  className="flex w-full items-center justify-center gap-3 rounded-[1.4rem] border border-[#d93025]/25 bg-[linear-gradient(135deg,#f25f54,#ea4335,#d93025)] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(217,48,37,0.18)] transition hover:brightness-105"
-                >
-                  <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-[#ea4335] shadow-sm">
-                    <GoogleMark />
-                  </span>
-                  {locale === "en" ? "Continue with Google" : "Tiếp tục với Google"}
-                </button>
-
-                <div className="flex items-center gap-3 text-xs uppercase tracking-[0.26em] theme-text-faint">
-                  <span className="h-px flex-1 bg-[var(--line)]" />
-                  {locale === "en" ? "or" : "hoặc"}
-                  <span className="h-px flex-1 bg-[var(--line)]" />
-                </div>
-              </>
-            ) : null}
-
             {mode === "signin" ? (
               <form onSubmit={handleSignInSubmit} className="space-y-4">
                 <div className="grid gap-4 xl:grid-cols-2">
@@ -549,12 +544,22 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
                     {locale === "en" ? "Security check" : "Xác minh bảo mật"}
                   </p>
                   <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-                    <div ref={turnstileContainerRef} className="min-h-[70px]" />
-                    <p className="mt-3 text-xs leading-6 theme-text-faint">
-                      {locale === "en"
-                        ? "This CAPTCHA helps protect the login form from automated abuse."
-                        : "CAPTCHA này giúp bảo vệ biểu mẫu đăng nhập khỏi truy cập tự động."}
-                    </p>
+                    {HAS_TURNSTILE_SITE_KEY ? (
+                      <>
+                        <div ref={turnstileContainerRef} className="min-h-[70px]" />
+                        <p className="mt-3 text-xs leading-6 theme-text-faint">
+                          {locale === "en"
+                            ? "This CAPTCHA helps protect the login form from automated abuse."
+                            : "CAPTCHA này giúp bảo vệ biểu mẫu đăng nhập khỏi truy cập tự động."}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs leading-6 text-amber-700 dark:text-amber-200">
+                        {locale === "en"
+                          ? "Cloudflare Turnstile is not configured yet. Add a real site key and secret to enable sign-in."
+                          : "Cloudflare Turnstile chưa được cấu hình. Hãy thêm site key và secret thật để bật đăng nhập."}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -766,10 +771,34 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
                   </label>
                 </div>
 
+                <div className="space-y-2">
+                  <p className="text-sm theme-text-muted">
+                    {locale === "en" ? "Security check" : "Xác minh bảo mật"}
+                  </p>
+                  <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
+                    {HAS_TURNSTILE_SITE_KEY ? (
+                      <>
+                        <div ref={turnstileContainerRef} className="min-h-[70px]" />
+                        <p className="mt-3 text-xs leading-6 theme-text-faint">
+                          {locale === "en"
+                            ? "This CAPTCHA helps protect the registration form from automated abuse."
+                            : "CAPTCHA này giúp bảo vệ biểu mẫu đăng ký khỏi truy cập tự động."}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs leading-6 text-amber-700 dark:text-amber-200">
+                        {locale === "en"
+                          ? "Cloudflare Turnstile is not configured yet. Add a real site key and secret to enable registration."
+                          : "Cloudflare Turnstile chưa được cấu hình. Hãy thêm site key và secret thật để bật đăng ký."}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <button
                   type="submit"
-                  disabled={isBusy || authStatus === "loading"}
-                  className="w-full rounded-[1.4rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] px-5 py-3.5 text-sm font-semibold text-slate-950"
+                  disabled={isBusy || authStatus === "loading" || !turnstileToken}
+                  className="w-full rounded-[1.4rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] px-5 py-3.5 text-sm font-semibold text-white"
                 >
                   {isBusy
                     ? locale === "en"

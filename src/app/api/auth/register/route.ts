@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { prisma } from "@/lib/db";
 import { sendAccountActivationEmail } from "@/server/auth-email";
+import { verifyTurnstileToken } from "@/server/turnstile";
 
 const registerSchema = z.object({
   name: z.string().trim().min(1),
@@ -15,6 +16,7 @@ const registerSchema = z.object({
   classYear: z.string().trim().min(1),
   bio: z.string().trim().max(600).optional().default(""),
   password: z.string().min(8),
+  turnstileToken: z.string().trim().min(1),
   locale: z.enum(["en", "vi"]).optional().default("vi"),
 });
 
@@ -25,6 +27,25 @@ export async function POST(request: Request) {
       {
         error: "Invalid registration payload.",
         issues: payload.error.flatten(),
+      },
+      { status: 400 },
+    );
+  }
+
+  const forwardedForHeader = request.headers.get("x-forwarded-for");
+  const remoteIp = forwardedForHeader?.split(",")[0]?.trim();
+  const turnstileVerification = await verifyTurnstileToken({
+    token: payload.data.turnstileToken,
+    action: "register",
+    remoteIp,
+  });
+
+  if (!turnstileVerification.success) {
+    const primaryError = turnstileVerification.errorCodes[0];
+    return NextResponse.json(
+      {
+        error: primaryError === "turnstile-not-configured" ? "CAPTCHA_NOT_CONFIGURED" : "CAPTCHA_FAILED",
+        errorCodes: turnstileVerification.errorCodes,
       },
       { status: 400 },
     );
