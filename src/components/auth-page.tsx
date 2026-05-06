@@ -547,11 +547,6 @@ export function AuthPage() {
                     {HAS_TURNSTILE_SITE_KEY ? (
                       <>
                         <div ref={turnstileContainerRef} className="min-h-[70px]" />
-                        <p className="mt-3 text-xs leading-6 theme-text-faint">
-                          {locale === "en"
-                            ? "This CAPTCHA helps protect the login form from automated abuse."
-                            : "CAPTCHA này giúp bảo vệ biểu mẫu đăng nhập khỏi truy cập tự động."}
-                        </p>
                       </>
                     ) : (
                       <p className="text-xs leading-6 text-amber-700 dark:text-amber-200">
@@ -779,11 +774,6 @@ export function AuthPage() {
                     {HAS_TURNSTILE_SITE_KEY ? (
                       <>
                         <div ref={turnstileContainerRef} className="min-h-[70px]" />
-                        <p className="mt-3 text-xs leading-6 theme-text-faint">
-                          {locale === "en"
-                            ? "This CAPTCHA helps protect the registration form from automated abuse."
-                            : "CAPTCHA này giúp bảo vệ biểu mẫu đăng ký khỏi truy cập tự động."}
-                        </p>
                       </>
                     ) : (
                       <p className="text-xs leading-6 text-amber-700 dark:text-amber-200">
@@ -824,12 +814,6 @@ export function AuthPage() {
                 ) : null}
               </div>
             ) : null}
-
-            <p className="text-center text-sm theme-text-soft">
-              {mode === "register"
-                ? pickText(locale, pageContent.auth.registerNote)
-                : pickText(locale, pageContent.auth.signinNote)}
-            </p>
           </div>
         </Surface>
       </div>
