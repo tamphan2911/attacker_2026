@@ -230,10 +230,7 @@ export function AdminTimelineManager() {
                             <div className="flex h-10 w-10 items-center justify-center rounded-2xl border theme-border theme-panel-subtle theme-text-strong">
                               <CalendarClock className="h-4 w-4" />
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold theme-text-strong">{pickText(locale, item.title)}</p>
-                              <p className="mt-1 text-xs leading-6 theme-text-faint">{pickText(locale, item.description)}</p>
-                            </div>
+                            <p className="min-w-0 text-sm font-semibold theme-text-strong">{pickText(locale, item.title)}</p>
                           </div>
                         </div>
 

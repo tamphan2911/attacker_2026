@@ -567,13 +567,6 @@ export function TimelinePage() {
                         </div>
                       </div>
 
-                      <div className="theme-timeline-note-card mt-4 rounded-[1.25rem] border px-4 py-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                          {locale === "en" ? "Basic information" : "Thông tin cơ bản"}
-                        </p>
-                        <p className="mt-2 text-sm leading-8 theme-text-soft">{pickText(locale, item.description)}</p>
-                      </div>
-
                       {actionLinks.length ? (
                         <div className="mt-4 flex flex-wrap gap-3">
                           {actionLinks.map((actionLink) =>
