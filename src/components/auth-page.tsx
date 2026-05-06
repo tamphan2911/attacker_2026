@@ -561,7 +561,7 @@ export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
                 <button
                   type="submit"
                   disabled={isBusy || authStatus === "loading" || !turnstileToken}
-                  className="w-full rounded-[1.4rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] px-5 py-3.5 text-sm font-semibold text-slate-950"
+                  className="w-full rounded-[1.4rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] px-5 py-3.5 text-sm font-semibold text-white"
                 >
                   {isBusy
                     ? locale === "en"
