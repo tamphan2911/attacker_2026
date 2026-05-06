@@ -37,6 +37,7 @@ Optional values:
 - `SMTP_FROM`
 - `APP_STORAGE_ROOT`
 - `BOOTSTRAP_DEMO_DATA`
+- `ENSURE_PREPARATION_TEST_DATA`
 
 ## Install
 
@@ -70,6 +71,12 @@ Or run the full local setup sequence:
 npm run prisma:generate
 npm run db:setup
 npm run db:seed
+```
+
+To inject the expanded preparation-phase test accounts into an existing local database without resetting it:
+
+```bash
+npm run db:ensure:preparation
 ```
 
 Important note:
@@ -106,6 +113,7 @@ NEXTAUTH_URL="https://your-service.up.railway.app"
 NEXTAUTH_SECRET="replace-with-a-long-random-secret"
 APP_STORAGE_ROOT="/data"
 BOOTSTRAP_DEMO_DATA="true"
+ENSURE_PREPARATION_TEST_DATA="false"
 ```
 
 Optional:
@@ -119,6 +127,7 @@ SMTP_SECURE="false"
 SMTP_USER=""
 SMTP_PASSWORD=""
 SMTP_FROM="Attacker 2026 <no-reply@example.com>"
+ENSURE_PREPARATION_TEST_DATA="false"
 ```
 
 Important:
@@ -126,6 +135,8 @@ Important:
 - mount the Railway volume at `/data`
 - only leave `BOOTSTRAP_DEMO_DATA="true"` for the first boot if you want the demo dataset
 - after the database is initialized and seeded, set `BOOTSTRAP_DEMO_DATA="false"`
+- set `ENSURE_PREPARATION_TEST_DATA="true"` only when you want Railway to upsert the 20 preparation-phase student test accounts into an existing database on boot
+- after those accounts are created, set `ENSURE_PREPARATION_TEST_DATA="false"` again
 
 ### Railway commands
 
@@ -139,7 +150,8 @@ The Railway start script now does this safely:
 1. creates persistent folders inside `APP_STORAGE_ROOT`
 2. runs `prisma db push` against the configured SQLite file
 3. optionally seeds demo data when the database is empty and `BOOTSTRAP_DEMO_DATA=true`
-4. starts Next.js on Railway's `PORT`
+4. optionally upserts the preparation-phase test accounts when `ENSURE_PREPARATION_TEST_DATA=true`
+5. starts Next.js on Railway's `PORT`
 
 ### Health check
 
@@ -167,6 +179,19 @@ Backend seed currently creates these fixed demo accounts:
 - Admin: `admin / Aa@291189`
 - Moderator password: `Moderator@2026`
 - Student password: `Student@2026`
+
+There is also an optional preparation-phase test dataset with 20 student accounts covering:
+
+- solo user
+- solo user without phone
+- pending invite
+- declined / expired invite history
+- 2-member not-eligible team
+- eligible but unlocked team
+- leadership transfer pending
+- lock workflow pending
+- lock workflow declined
+- locked team ready for Round 1
 
 The seeded student and moderator emails and IDs come from the demo content in [`/Users/tamphanhuy/Documents/attacker 2026/src/data/site-content.ts`](/Users/tamphanhuy/Documents/attacker%202026/src/data/site-content.ts).
 

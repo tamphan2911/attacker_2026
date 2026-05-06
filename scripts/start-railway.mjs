@@ -65,6 +65,15 @@ async function maybeSeedDatabase() {
   runCommand("npx prisma db seed");
 }
 
+async function maybeEnsurePreparationTestData() {
+  if (process.env.ENSURE_PREPARATION_TEST_DATA !== "true") {
+    return;
+  }
+
+  process.stdout.write("[deploy] ensuring preparation test accounts\n");
+  runCommand("npx tsx scripts/ensure-preparation-test-data.ts");
+}
+
 function startNextServer() {
   const port = process.env.PORT?.trim() || "3000";
   const child = spawn(
@@ -96,6 +105,7 @@ async function main() {
   // Railway boots should not block on Prisma's interactive data-loss warning prompt.
   runCommand("npx prisma db push --skip-generate --accept-data-loss");
   await maybeSeedDatabase();
+  await maybeEnsurePreparationTestData();
   startNextServer();
 }
 

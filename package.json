@@ -12,7 +12,8 @@
     "db:init": "prisma db push",
     "db:push": "./scripts/setup-sqlite-dev-db.sh",
     "db:setup": "./scripts/setup-sqlite-dev-db.sh",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:ensure:preparation": "tsx scripts/ensure-preparation-test-data.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",

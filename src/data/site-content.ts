@@ -24,6 +24,13 @@ import type {
   UserProfile,
   SitePageContent,
 } from "@/types/site";
+import {
+  preparationTestInvitations,
+  preparationTestLeadershipTransferRequests,
+  preparationTestRound1TeamLockRequests,
+  preparationTestTeams,
+  preparationTestUsers,
+} from "@/data/preparation-test-data";
 
 export const TEAM_MIN_MEMBERS = 3;
 export const TEAM_MAX_MEMBERS = 5;
@@ -2080,6 +2087,12 @@ export const mockInvitations: TeamInvitation[] = [
 export const mockLeadershipTransferRequests: LeadershipTransferRequest[] = [];
 
 export const mockRound1TeamLockRequests: Round1TeamLockRequest[] = [];
+
+mockUsers.push(...preparationTestUsers);
+mockTeams.push(...preparationTestTeams);
+mockInvitations.push(...preparationTestInvitations);
+mockLeadershipTransferRequests.push(...preparationTestLeadershipTransferRequests);
+mockRound1TeamLockRequests.push(...preparationTestRound1TeamLockRequests);
 
 export const mockSubmissions: TeamSubmission[] = [
   {
