@@ -8,5 +8,7 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <AuthPage />;
+  const googleEnabled = Boolean(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
+
+  return <AuthPage googleEnabled={googleEnabled} />;
 }

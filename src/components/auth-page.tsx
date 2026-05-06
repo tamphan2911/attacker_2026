@@ -83,7 +83,7 @@ const authFieldClassName =
 const authTextareaClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3.5 text-[0.95rem] theme-text-strong outline-none placeholder:text-[0.78rem] md:placeholder:text-[0.84rem] lg:placeholder:text-[0.9rem]";
 
-export function AuthPage() {
+export function AuthPage({ googleEnabled }: { googleEnabled: boolean }) {
   const router = useRouter();
   const { authStatus, canAccessAdminMode, isAuthenticated, locale, pageContent, theme } = useSiteState();
   const [mode, setMode] = useState<"signin" | "register">("register");
@@ -476,22 +476,26 @@ export function AuthPage() {
           </div>
 
           <div className="mt-6 space-y-4">
-            <button
-              type="button"
-              onClick={() => void signIn("google", { callbackUrl: "/dashboard" })}
-              className="flex w-full items-center justify-center gap-3 rounded-[1.4rem] border border-[#d93025]/25 bg-[linear-gradient(135deg,#f25f54,#ea4335,#d93025)] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(217,48,37,0.18)] transition hover:brightness-105"
-            >
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-[#ea4335] shadow-sm">
-                <GoogleMark />
-              </span>
-              {locale === "en" ? "Continue with Google" : "Tiep tuc voi Google"}
-            </button>
+            {googleEnabled ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => void signIn("google", { callbackUrl: "/dashboard" })}
+                  className="flex w-full items-center justify-center gap-3 rounded-[1.4rem] border border-[#d93025]/25 bg-[linear-gradient(135deg,#f25f54,#ea4335,#d93025)] px-4 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(217,48,37,0.18)] transition hover:brightness-105"
+                >
+                  <span className="grid h-8 w-8 place-items-center rounded-full bg-white text-[#ea4335] shadow-sm">
+                    <GoogleMark />
+                  </span>
+                  {locale === "en" ? "Continue with Google" : "Tiếp tục với Google"}
+                </button>
 
-            <div className="flex items-center gap-3 text-xs uppercase tracking-[0.26em] theme-text-faint">
-              <span className="h-px flex-1 bg-[var(--line)]" />
-              {locale === "en" ? "or" : "hoac"}
-              <span className="h-px flex-1 bg-[var(--line)]" />
-            </div>
+                <div className="flex items-center gap-3 text-xs uppercase tracking-[0.26em] theme-text-faint">
+                  <span className="h-px flex-1 bg-[var(--line)]" />
+                  {locale === "en" ? "or" : "hoặc"}
+                  <span className="h-px flex-1 bg-[var(--line)]" />
+                </div>
+              </>
+            ) : null}
 
             {mode === "signin" ? (
               <form onSubmit={handleSignInSubmit} className="space-y-4">
