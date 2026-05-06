@@ -782,7 +782,7 @@ export const roundItems: RoundItem[] = [
     label: { en: "Round 03", vi: "Vòng 03" },
     title: {
       en: "Final Report & Live Presentation",
-      vi: "Báo cáo cuối cùng và thuyết trình chung kết",
+      vi: "Thuyết trình chung kết",
     },
     duration: {
       en: "final report deadline + live presentation day",
