@@ -357,6 +357,7 @@ function getTimelineCardStatusMeta(
 export function TimelinePage() {
   const { locale, timelineItems, currentUser, currentTeam, activeUserId } = useSiteState();
   const [now, setNow] = useState(() => new Date());
+  const visibleTimelineItems = timelineItems.filter((item) => item.id !== "info-session-team-clinic");
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -366,7 +367,7 @@ export function TimelinePage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const orderedTimelineItems = [...timelineItems].sort((left, right) => {
+  const orderedTimelineItems = [...visibleTimelineItems].sort((left, right) => {
     const leftStart = parseLocalDate(left.startDate).getTime();
     const rightStart = parseLocalDate(right.startDate).getTime();
     if (leftStart !== rightStart) {
@@ -379,7 +380,7 @@ export function TimelinePage() {
   const nextUpcomingItem = orderedTimelineItems.find((item) => parseLocalDate(item.startDate).getTime() > now.getTime());
   const nextUpcomingKey = nextUpcomingItem ? getTimelineItemKey(nextUpcomingItem) : null;
   const phaseSummaries = timelinePhaseMeta.map((phase) => {
-    const items = [...timelineItems]
+    const items = [...visibleTimelineItems]
       .filter((item) => item.phase === phase.phase)
       .sort((left, right) => {
         if (left.startDate !== right.startDate) {
@@ -461,7 +462,7 @@ export function TimelinePage() {
 
       <section className="space-y-6">
         {timelinePhaseMeta.map((phase) => {
-          const items = [...timelineItems]
+          const items = [...visibleTimelineItems]
             .filter((item) => item.phase === phase.phase)
             .sort((left, right) => {
               if (left.startDate !== right.startDate) {
