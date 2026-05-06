@@ -5,6 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import {
+  CircleAlert,
   Building2,
   CalendarDays,
   ChevronDown,
@@ -82,6 +83,7 @@ export function AuthPage() {
   const [turnstileToken, setTurnstileToken] = useState("");
   const [isTurnstileReady, setIsTurnstileReady] = useState(false);
   const [signinMessage, setSigninMessage] = useState<string | null>(null);
+  const [signinMessageTone, setSigninMessageTone] = useState<"info" | "success" | "warning" | "error">("info");
   const [signinActionHref, setSigninActionHref] = useState<string | null>(null);
   const [signinActionLabel, setSigninActionLabel] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -158,14 +160,12 @@ export function AuthPage() {
       action: mode === "register" ? "register" : "sign_in",
       callback: (token) => {
         setTurnstileToken(token);
-        setSigninMessage(null);
-        setSigninActionHref(null);
-        setSigninActionLabel(null);
       },
       "expired-callback": () => {
         setTurnstileToken("");
         setSigninActionHref(null);
         setSigninActionLabel(null);
+        setSigninMessageTone("warning");
         setSigninMessage(
           locale === "en"
             ? `The security check expired. Please confirm it again before ${mode === "register" ? "creating the account" : "signing in"}.`
@@ -176,6 +176,7 @@ export function AuthPage() {
         setTurnstileToken("");
         setSigninActionHref(null);
         setSigninActionLabel(null);
+        setSigninMessageTone("error");
         setSigninMessage(
           locale === "en"
             ? "The security check could not load. Please refresh and try again."
@@ -259,6 +260,7 @@ export function AuthPage() {
 
   const handleSignIn = async () => {
     if (!turnstileToken) {
+      setSigninMessageTone("warning");
       setSigninMessage(
         locale === "en"
           ? "Please complete the security check before signing in."
@@ -269,6 +271,7 @@ export function AuthPage() {
 
     setIsBusy(true);
     setSigninMessage(null);
+    setSigninMessageTone("info");
     setSigninActionHref(null);
     setSigninActionLabel(null);
 
@@ -282,6 +285,7 @@ export function AuthPage() {
     if (result?.error) {
       resetTurnstileWidget();
       if (result.error === "CAPTCHA_FAILED") {
+        setSigninMessageTone("error");
         setSigninMessage(
           locale === "en"
             ? "Security verification failed. Please try the CAPTCHA again."
@@ -300,6 +304,7 @@ export function AuthPage() {
         setSigninActionLabel(
           locale === "en" ? "Open activation help" : "Mở hướng dẫn kích hoạt",
         );
+        setSigninMessageTone("warning");
         setSigninMessage(
           locale === "en"
             ? "This account is not active yet. Please open the activation email first."
@@ -309,6 +314,7 @@ export function AuthPage() {
         return;
       }
 
+      setSigninMessageTone("error");
       setSigninMessage(
         locale === "en"
           ? "Invalid credentials. Please check your account ID or password."
@@ -318,6 +324,7 @@ export function AuthPage() {
       return;
     }
 
+    setSigninMessageTone("success");
     setSigninMessage(
       locale === "en"
         ? "Sign in successful. Redirecting..."
@@ -329,6 +336,7 @@ export function AuthPage() {
 
   const handleRegister = async () => {
     if (!turnstileToken) {
+      setSigninMessageTone("warning");
       setSigninMessage(
         locale === "en"
           ? "Please complete the security check before creating the account."
@@ -338,6 +346,7 @@ export function AuthPage() {
     }
 
     if (registerForm.password !== registerForm.confirmPassword) {
+      setSigninMessageTone("error");
       setSigninMessage(
         locale === "en"
           ? "Password confirmation does not match."
@@ -348,6 +357,7 @@ export function AuthPage() {
 
     setIsBusy(true);
     setSigninMessage(null);
+    setSigninMessageTone("info");
     setSigninActionHref(null);
     setSigninActionLabel(null);
 
@@ -368,21 +378,25 @@ export function AuthPage() {
         const payload = (await response.json()) as { error?: string };
         if (payload.error === "CAPTCHA_FAILED") {
           resetTurnstileWidget();
+          setSigninMessageTone("error");
           setSigninMessage(
             locale === "en"
               ? "Security verification failed. Please try the CAPTCHA again."
               : "Xác minh bảo mật không thành công. Vui lòng thử lại CAPTCHA.",
           );
         } else if (payload.error === "CAPTCHA_NOT_CONFIGURED") {
+          setSigninMessageTone("warning");
           setSigninMessage(
             locale === "en"
               ? "Security verification is not configured yet. Please ask the organizer to configure Cloudflare Turnstile."
               : "Xác minh bảo mật chưa được cấu hình. Vui lòng yêu cầu ban tổ chức cấu hình Cloudflare Turnstile.",
           );
         } else {
+          setSigninMessageTone("error");
           setSigninMessage(payload.error || (locale === "en" ? "Could not create the account." : "Không thể tạo tài khoản."));
         }
       } catch {
+        setSigninMessageTone("error");
         setSigninMessage(locale === "en" ? "Could not create the account." : "Không thể tạo tài khoản.");
       }
       setIsBusy(false);
@@ -404,6 +418,7 @@ export function AuthPage() {
     setMode(nextMode);
     setTurnstileToken("");
     setSigninMessage(null);
+    setSigninMessageTone("info");
     setSigninActionHref(null);
     setSigninActionLabel(null);
     setIsUniversityMenuOpen(false);
@@ -802,12 +817,60 @@ export function AuthPage() {
             )}
 
             {signinMessage ? (
-              <div className="space-y-3 text-center">
-                <p className="text-sm theme-text-soft">{signinMessage}</p>
+              <div
+                className={`space-y-3 rounded-[1.5rem] border px-4 py-4 text-left shadow-[0_12px_32px_rgba(15,23,42,0.08)] ${
+                  signinMessageTone === "success"
+                    ? "border-emerald-500/28 bg-[linear-gradient(135deg,rgba(16,185,129,0.14),rgba(52,211,153,0.08))] dark:border-emerald-300/18 dark:bg-emerald-300/10"
+                    : signinMessageTone === "warning"
+                      ? "border-amber-500/30 bg-[linear-gradient(135deg,rgba(251,191,36,0.16),rgba(245,158,11,0.08))] dark:border-amber-300/20 dark:bg-amber-300/10"
+                      : signinMessageTone === "error"
+                        ? "border-rose-500/28 bg-[linear-gradient(135deg,rgba(244,63,94,0.14),rgba(251,113,133,0.08))] dark:border-rose-300/20 dark:bg-rose-300/10"
+                        : "border-sky-500/24 bg-[linear-gradient(135deg,rgba(56,189,248,0.14),rgba(59,130,246,0.08))] dark:border-sky-300/18 dark:bg-sky-300/10"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <span
+                    className={`mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border ${
+                      signinMessageTone === "success"
+                        ? "border-emerald-500/20 bg-white/70 text-emerald-700 dark:border-emerald-300/18 dark:bg-white/5 dark:text-emerald-200"
+                        : signinMessageTone === "warning"
+                          ? "border-amber-500/24 bg-white/70 text-amber-700 dark:border-amber-300/18 dark:bg-white/5 dark:text-amber-200"
+                          : signinMessageTone === "error"
+                            ? "border-rose-500/20 bg-white/70 text-rose-700 dark:border-rose-300/18 dark:bg-white/5 dark:text-rose-200"
+                            : "border-sky-500/20 bg-white/70 text-sky-700 dark:border-sky-300/18 dark:bg-white/5 dark:text-sky-200"
+                    }`}
+                  >
+                    {signinMessageTone === "success" ? (
+                      <CircleCheck className="h-4.5 w-4.5" />
+                    ) : (
+                      <CircleAlert className="h-4.5 w-4.5" />
+                    )}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] theme-text-faint">
+                      {signinMessageTone === "success"
+                        ? locale === "en"
+                          ? "Success"
+                          : "Thành công"
+                        : signinMessageTone === "warning"
+                          ? locale === "en"
+                            ? "Attention"
+                            : "Lưu ý"
+                          : signinMessageTone === "error"
+                            ? locale === "en"
+                              ? "Action needed"
+                              : "Cần xử lý"
+                            : locale === "en"
+                              ? "Notice"
+                              : "Thông báo"}
+                    </p>
+                    <p className="mt-2 text-sm font-medium leading-7 theme-text-strong">{signinMessage}</p>
+                  </div>
+                </div>
                 {signinActionHref && signinActionLabel ? (
                   <Link
                     href={signinActionHref}
-                    className="inline-flex items-center gap-2 rounded-full border border-sky-500/22 bg-sky-500/[0.08] px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-500/34 hover:bg-sky-500/[0.12] active:scale-[0.98] dark:text-sky-100"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/72 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-sky-500/28 hover:bg-white/92 active:scale-[0.98] dark:border-white/10 dark:bg-white/6 dark:text-white dark:hover:bg-white/10"
                   >
                     {signinActionLabel}
                   </Link>
