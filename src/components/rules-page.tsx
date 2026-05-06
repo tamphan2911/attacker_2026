@@ -397,38 +397,34 @@ export function RulesPage() {
             >
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
                 <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className={`inline-flex h-11 w-11 items-center justify-center rounded-[1.2rem] border ${meta.iconClass}`}>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                    {pickText(locale, round.label)}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <span className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[1.2rem] border ${meta.iconClass}`}>
                       <Icon className="h-5 w-5" />
                     </span>
-                    <div className="flex min-w-0 flex-1 items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                          {pickText(locale, round.label)}
-                        </p>
-                        <div className="mt-2 flex flex-wrap items-center gap-3">
-                          <h3 className="theme-heading text-2xl font-semibold theme-text-strong md:text-[2.2rem]">
-                            {pickText(locale, round.title)}
-                          </h3>
-                          <div className="group relative">
-                            <Link
-                              href={`/competition/timeline#${roundKey}-timeline`}
-                              aria-label={
-                                locale === "en"
-                                  ? "Open this round on the timeline page"
-                                  : "Mở giai đoạn này trên trang lịch trình"
-                              }
-                              className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition hover:-translate-y-0.5 active:translate-y-0 ${meta.chipClass}`}
-                            >
-                              <CalendarDays className="h-4.5 w-4.5" />
-                            </Link>
-                            <span className="theme-header-tooltip pointer-events-none absolute right-0 top-full z-20 mt-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-                              {locale === "en"
-                                ? "Open this round on timeline page"
-                                : "Mở giai đoạn này trên trang lịch trình"}
-                            </span>
-                          </div>
-                        </div>
+                    <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+                      <h3 className="theme-heading min-w-0 text-2xl font-semibold theme-text-strong md:text-[2.2rem]">
+                        {pickText(locale, round.title)}
+                      </h3>
+                      <div className="group relative shrink-0">
+                        <Link
+                          href={`/competition/timeline#${roundKey}-timeline`}
+                          aria-label={
+                            locale === "en"
+                              ? "Open this round on the timeline page"
+                              : "Mở giai đoạn này trên trang lịch trình"
+                          }
+                          className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition hover:-translate-y-0.5 active:translate-y-0 ${meta.chipClass}`}
+                        >
+                          <CalendarDays className="h-4.5 w-4.5" />
+                        </Link>
+                        <span className="theme-header-tooltip pointer-events-none absolute right-0 top-full z-20 mt-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                          {locale === "en"
+                            ? "Open this round on timeline page"
+                            : "Mở giai đoạn này trên trang lịch trình"}
+                        </span>
                       </div>
                     </div>
                   </div>
