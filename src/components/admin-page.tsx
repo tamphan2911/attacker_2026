@@ -82,11 +82,11 @@ function OverviewSection() {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
           {
-            label: locale === "en" ? "Signed-in role" : "Vai tro dang dung",
+            label: locale === "en" ? "Signed-in role" : "Vai trò đang dùng",
             value: currentUser.role,
           },
           {
-            label: locale === "en" ? "Users" : "Nguoi dung",
+            label: locale === "en" ? "Users" : "Người dùng",
             value: users.length.toString(),
           },
           {
@@ -109,40 +109,40 @@ function OverviewSection() {
 
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
-          eyebrow={locale === "en" ? "Scope" : "Pham vi"}
+          eyebrow={locale === "en" ? "Scope" : "Phạm vi"}
           title={
             locale === "en"
               ? "What is already covered in this admin prototype."
-              : "Nhung gi da duoc bao phu trong prototype admin nay."
+              : "Những gì đã được bao phủ trong prototype admin này."
           }
           description={
             locale === "en"
               ? "Content editing is wired into the public pages, and each operational table supports real `.xlsx` export from the browser."
-              : "Phan sua noi dung da duoc noi vao cac trang cong khai, va moi bang van hanh deu ho tro xuat `.xlsx` truc tiep tu trinh duyet."
+              : "Phần sửa nội dung đã được nối vào các trang công khai, và mỗi bảng vận hành đều hỗ trợ xuất `.xlsx` trực tiếp từ trình duyệt."
           }
         />
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
           {[
             {
-              title: locale === "en" ? "Page content" : "Noi dung trang",
+              title: locale === "en" ? "Page content" : "Nội dung trang",
               body:
                 locale === "en"
                   ? "Update hero slides, page headings, and section copy across the main routes."
-                  : "Cap nhat hero slides, heading trang va copy cua cac section tren cac route chinh.",
+                  : "Cập nhật hero slides, heading trang và copy của các section trên các route chính.",
             },
             {
-              title: locale === "en" ? "Participant data" : "Du lieu thi sinh",
+              title: locale === "en" ? "Participant data" : "Dữ liệu thí sinh",
               body:
                 locale === "en"
                   ? "Inspect users, teams, and submissions in table form before the backend phase begins."
-                  : "Kiem tra nguoi dung, doi thi va bai nop duoi dang bang truoc khi sang giai doan backend.",
+                  : "Kiểm tra người dùng, đội thi và bài nộp dưới dạng bảng trước khi sang giai đoạn backend.",
             },
             {
-              title: locale === "en" ? "Excel exports" : "Xuat Excel",
+              title: locale === "en" ? "Excel exports" : "Xuất Excel",
               body:
                 locale === "en"
                   ? "Download `.xlsx` files for organizer review and offline reporting."
-                  : "Tai tep `.xlsx` de ban to chuc review va lap bao cao offline.",
+                  : "Tải tệp `.xlsx` để ban tổ chức review và lập báo cáo offline.",
             },
           ].map((item) => (
             <div key={item.title} className="rounded-[1.75rem] border theme-border theme-panel px-4 py-4">

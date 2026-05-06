@@ -183,7 +183,7 @@ function AccessDenied() {
   return (
     <div className="space-y-8">
       <SectionHeading
-        eyebrow={locale === "en" ? "Admin mode" : "Admin mode"}
+        eyebrow={locale === "en" ? "Admin mode" : "Chế độ admin"}
         title={
           locale === "en"
             ? "This route is restricted to admin and moderator accounts."
@@ -238,7 +238,7 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
         <Surface className="overflow-hidden px-4 py-4 md:px-5">
           <div className="rounded-[1.7rem] border border-white/12 bg-[linear-gradient(135deg,#0b3158_0%,#105892_52%,#1772d0_100%)] px-4 py-5 text-white shadow-[0_24px_44px_rgba(11,49,88,0.22)]">
             <p className="inline-flex items-center rounded-full border border-white/14 bg-white/12 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/88">
-              {locale === "en" ? "Admin mode" : "Admin mode"}
+              {locale === "en" ? "Admin mode" : "Chế độ admin"}
             </p>
             <p className="mt-3 text-xl font-semibold text-white">
               {locale === "en" ? "Control center" : "Trung tâm điều phối"}
