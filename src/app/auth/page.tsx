@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 
 import { AuthPage } from "@/components/auth-page";
 
@@ -7,6 +8,7 @@ export const metadata: Metadata = {
   description: "Frontend-ready sign in and registration experience for Attacker 2026.",
 };
 
-export default function Page() {
+export default async function Page() {
+  await connection();
   return <AuthPage />;
 }
