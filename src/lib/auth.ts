@@ -1,9 +1,10 @@
 import type { NextAuthOptions } from "next-auth";
+import type { Adapter, AdapterUser } from "next-auth/adapters";
 import { getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { UserActionTokenType } from "@prisma/client";
+import { UserActionTokenType, type User as PrismaUser } from "@prisma/client";
 import { compare } from "bcryptjs";
 import { z } from "zod";
 
@@ -17,8 +18,83 @@ const credentialsSchema = z.object({
   turnstileToken: z.string().trim().min(1),
 });
 
+function mapPrismaUserToAdapterUser(user: PrismaUser): AdapterUser {
+  return {
+    id: user.id,
+    email: user.email,
+    emailVerified: user.emailVerifiedAt,
+    name: user.name,
+    image: user.avatarImageSrc ?? null,
+  };
+}
+
+function createAppAuthAdapter(): Adapter {
+  const baseAdapter = PrismaAdapter(prisma);
+  type CreateUserInput = Parameters<NonNullable<Adapter["createUser"]>>[0];
+  type UpdateUserInput = Parameters<NonNullable<Adapter["updateUser"]>>[0];
+  type GetUserByAccountInput = Parameters<NonNullable<Adapter["getUserByAccount"]>>[0];
+
+  return {
+    ...baseAdapter,
+    async createUser(user: CreateUserInput) {
+      const createdUser = await prisma.user.create({
+        data: {
+          email: user.email,
+          name: user.name?.trim() || user.email.split("@")[0] || "Google user",
+          emailVerifiedAt: user.emailVerified ?? null,
+          avatarImageSrc: user.image ?? null,
+        },
+      });
+
+      return mapPrismaUserToAdapterUser(createdUser);
+    },
+    async getUser(id: string) {
+      const user = await prisma.user.findUnique({ where: { id } });
+      return user ? mapPrismaUserToAdapterUser(user) : null;
+    },
+    async getUserByEmail(email: string) {
+      const user = await prisma.user.findUnique({ where: { email } });
+      return user ? mapPrismaUserToAdapterUser(user) : null;
+    },
+    async getUserByAccount({ provider, providerAccountId }: GetUserByAccountInput) {
+      const account = await prisma.account.findUnique({
+        where: { provider_providerAccountId: { provider, providerAccountId } },
+        include: { user: true },
+      });
+
+      return account?.user ? mapPrismaUserToAdapterUser(account.user) : null;
+    },
+    async updateUser(user: UpdateUserInput) {
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          ...(user.email !== undefined ? { email: user.email } : {}),
+          ...(user.name !== undefined ? { name: user.name?.trim() || "Google user" } : {}),
+          ...(user.emailVerified !== undefined ? { emailVerifiedAt: user.emailVerified } : {}),
+          ...(user.image !== undefined ? { avatarImageSrc: user.image } : {}),
+        },
+      });
+
+      return mapPrismaUserToAdapterUser(updatedUser);
+    },
+    async getSessionAndUser(sessionToken: string) {
+      const userAndSession = await prisma.session.findUnique({
+        where: { sessionToken },
+        include: { user: true },
+      });
+
+      if (!userAndSession) {
+        return null;
+      }
+
+      const { user, ...session } = userAndSession;
+      return { session, user: mapPrismaUserToAdapterUser(user) };
+    },
+  };
+}
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: createAppAuthAdapter(),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/auth",
