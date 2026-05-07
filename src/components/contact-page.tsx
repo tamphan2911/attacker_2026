@@ -10,8 +10,6 @@ import {
 } from "lucide-react";
 
 import {
-  contactDeskContacts,
-  contactInfo,
   contactLocation,
 } from "@/data/site-content";
 import { pickText } from "@/lib/site";
@@ -38,12 +36,12 @@ export function ContactPage() {
               {pickText(locale, pageContent.contact.mapEyebrow)}
             </p>
             <p className="mt-3 text-2xl font-semibold theme-text-strong">
-              {pickText(locale, contactLocation.campusName)}
+              {pickText(locale, pageContent.contact.campusName)}
             </p>
           </div>
           <div className="h-[360px] w-full">
             <iframe
-              title={pickText(locale, contactLocation.campusName)}
+              title={pickText(locale, pageContent.contact.campusName)}
               src={contactLocation.mapEmbedUrl}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
@@ -55,7 +53,7 @@ export function ContactPage() {
               {pickText(locale, pageContent.contact.phoneContactsEyebrow)}
             </p>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
-              {contactDeskContacts.map((item) => (
+              {pageContent.contact.phoneContacts.map((item) => (
                 <div
                   key={item.name}
                   className="theme-panel-subtle rounded-[1.35rem] border theme-border px-4 py-4"
@@ -98,19 +96,19 @@ export function ContactPage() {
                 {
                   icon: <Mail className="h-4 w-4 text-sky-400" />,
                   label: pickText(locale, pageContent.contact.officialEmailLabel),
-                  value: contactInfo.email,
-                  href: `mailto:${contactInfo.email}`,
+                  value: pageContent.contact.officialEmailValue,
+                  href: `mailto:${pageContent.contact.officialEmailValue}`,
                 },
                 {
                   icon: <PhoneCall className="h-4 w-4 text-sky-400" />,
                   label: pickText(locale, pageContent.contact.primaryHotlineLabel),
-                  value: contactInfo.phone,
-                  href: `tel:${contactInfo.phone}`,
+                  value: pageContent.contact.primaryHotlineValue,
+                  href: `tel:${pageContent.contact.primaryHotlineValue}`,
                 },
                 {
                   icon: <Clock3 className="h-4 w-4 text-sky-400" />,
                   label: pickText(locale, pageContent.contact.supportWindowLabel),
-                  value: "24/7",
+                  value: pageContent.contact.supportWindowValue,
                 },
               ].map((item) => (
                 <div
@@ -150,10 +148,10 @@ export function ContactPage() {
                   {pickText(locale, pageContent.contact.organizerAddressEyebrow)}
                 </p>
                 <p className="mt-3 text-lg font-semibold leading-8 theme-text-strong">
-                  {pickText(locale, contactLocation.address)}
+                  {pickText(locale, pageContent.contact.organizerAddress)}
                 </p>
                 <p className="mt-4 text-sm leading-7 theme-text-muted">
-                  {pickText(locale, contactLocation.note)}
+                  {pickText(locale, pageContent.contact.organizerAddressNote)}
                 </p>
               </div>
             </div>
@@ -165,17 +163,17 @@ export function ContactPage() {
             </p>
             <div className="mt-4 space-y-3 text-sm">
               <a
-                href={`mailto:${contactInfo.email}`}
+                href={`mailto:${pageContent.contact.officialEmailValue}`}
                 className="flex items-center justify-between gap-4 rounded-[1rem] border theme-border theme-panel-subtle px-4 py-3 transition hover:border-[var(--brand)]"
               >
                 <span className="inline-flex items-center gap-3 theme-text-body">
                   <Mail className="h-4 w-4 text-sky-400" />
-                  {contactInfo.email}
+                  {pageContent.contact.officialEmailValue}
                 </span>
                 <ExternalLink className="h-4 w-4 theme-text-soft" />
               </a>
               <a
-                href={contactInfo.attackerFacebook}
+                href={pageContent.contact.attackerFacebookUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-between gap-4 rounded-[1rem] border theme-border theme-panel-subtle px-4 py-3 transition hover:border-[var(--brand)]"
@@ -187,7 +185,7 @@ export function ContactPage() {
                 <ExternalLink className="h-4 w-4 theme-text-soft" />
               </a>
               <a
-                href={contactInfo.ftcFacebook}
+                href={pageContent.contact.ftcFacebookUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-between gap-4 rounded-[1rem] border theme-border theme-panel-subtle px-4 py-3 transition hover:border-[var(--brand)]"

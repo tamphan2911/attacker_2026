@@ -82,6 +82,7 @@ export interface SponsorProfile {
   tier: LocalizedText;
   category: LocalizedText;
   description: LocalizedText;
+  contribution: LocalizedText;
 }
 
 export interface JudgeProfile {
@@ -403,6 +404,79 @@ export interface EditableSectionCopy {
   description: LocalizedText;
 }
 
+export interface EditableHeroSlideCard {
+  label: LocalizedText;
+  value: LocalizedText;
+  note: LocalizedText;
+}
+
+export interface EditableHeroSlideCta {
+  href: string;
+  label: LocalizedText;
+}
+
+export interface EditableRewardCard {
+  rank: LocalizedText;
+  title: LocalizedText;
+  amount: LocalizedText;
+  note: LocalizedText;
+}
+
+export interface EditableRewardHighlight {
+  eyebrow: LocalizedText;
+  title: LocalizedText;
+  amount: LocalizedText;
+  note: LocalizedText;
+}
+
+export interface EditablePathBlock {
+  eyebrow: LocalizedText;
+  items: LocalizedText[];
+  note: LocalizedText;
+  ctaLabel?: LocalizedText;
+  ctaHref?: string;
+}
+
+export interface EditableRulesJumpItem {
+  shortLabel: LocalizedText;
+  hoverLabel: LocalizedText;
+}
+
+export interface EditableRulesRoundSection extends RoundItem {
+  focus: LocalizedText;
+  specificRules: LocalizedText[];
+  roundNotes: LocalizedText[];
+}
+
+export interface EditableJudgeRoundSection extends EditableSectionCopy {
+  round: CompetitionRoundKey;
+  panelNote: LocalizedText;
+}
+
+export interface EditableOrganizerSeasonStory {
+  year: string;
+  image: string;
+  label: LocalizedText;
+  title: LocalizedText;
+  body: LocalizedText;
+  stats: LocalizedText[];
+}
+
+export interface EditableOrganizerGallerySlide {
+  year: string;
+  image: string;
+  label: LocalizedText;
+  title: LocalizedText;
+  description: LocalizedText;
+}
+
+export interface EditablePhoneContact {
+  name: string;
+  phone: string;
+  tel: string;
+  responsibility: LocalizedText;
+}
+
 export interface SystemEmailTemplate {
   subject: LocalizedText;
   preview: LocalizedText;
@@ -424,12 +498,25 @@ export interface EditableHeroSlide {
   eyebrow: LocalizedText;
   title: LocalizedText;
   description: LocalizedText;
+  highlights: LocalizedText[];
+  primaryCta: EditableHeroSlideCta;
+  secondaryCta: EditableHeroSlideCta;
+  cards: EditableHeroSlideCard[];
 }
 
 export interface SitePageContent {
   home: {
     heroSlides: EditableHeroSlide[];
     testimonials: TestimonialItem[];
+    metrics: MetricItem[];
+    rewards: EditableSectionCopy;
+    rewardCards: EditableRewardCard[];
+    emergingReward: EditableRewardHighlight;
+    competitionPath: EditablePathBlock;
+    sponsorsStripLinkLabel: LocalizedText;
+    testimonialsSection: EditableSectionCopy;
+    testimonialsBadgeLabel: LocalizedText;
+    testimonialsLinkLabel: LocalizedText;
     news: EditableSectionCopy;
     sponsors: EditableSectionCopy;
     destinations: EditableSectionCopy;
@@ -437,13 +524,36 @@ export interface SitePageContent {
   };
   competition: {
     intro: EditableSectionCopy;
+    pillarsTitle: LocalizedText;
+    pillars: LocalizedText[];
+    highlights: RuleItem[];
     rounds: EditableSectionCopy;
+    roundCards: RoundItem[];
     rewards: EditableSectionCopy;
+    rewardCards: EditableRewardCard[];
+    emergingReward: EditableRewardHighlight;
+    competitionPath: EditablePathBlock;
     mentors: EditableSectionCopy;
   };
   rules: {
     header: EditableSectionCopy;
     coreRules: EditableSectionCopy;
+    introJumpItems: EditableRulesJumpItem[];
+    quickReadLabel: LocalizedText;
+    quickReadItems: LocalizedText[];
+    generalHighlights: RuleItem[];
+    generalPolicyChecksLabel: LocalizedText;
+    generalPolicyChecks: RuleItem[];
+    openTimelineOverviewLabel: LocalizedText;
+    rounds: EditableRulesRoundSection[];
+    openRoundOnTimelineLabel: LocalizedText;
+    deliverablePrefix: LocalizedText;
+    specificRoundRulesLabel: LocalizedText;
+    roundNotesLabel: LocalizedText;
+    faqQuickAnswersLabel: LocalizedText;
+    faqQuickAnswers: LocalizedText[];
+    faqQuestionPrefix: LocalizedText;
+    faqItems: FAQItem[];
     timeline: EditableSectionCopy;
     faq: EditableSectionCopy;
   };
@@ -459,6 +569,8 @@ export interface SitePageContent {
   };
   judges: {
     header: EditableSectionCopy;
+    panelSizeLabel: LocalizedText;
+    roundSections: EditableJudgeRoundSection[];
     clarity: EditableSectionCopy;
   };
   auth: {
@@ -474,21 +586,44 @@ export interface SitePageContent {
   };
   organizer: {
     header: EditableSectionCopy;
+    heroBadges: LocalizedText[];
+    heroCard: EditableSectionCopy;
+    heroImage: string;
+    metrics: MetricItem[];
     contentModules: EditableSectionCopy;
+    competitionLinkLabel: LocalizedText;
+    seasonBadgeLabel: LocalizedText;
+    seasonStories: EditableOrganizerSeasonStory[];
     flags: EditableSectionCopy;
+    gallerySlides: EditableOrganizerGallerySlide[];
+    galleryCurrentFrame: EditableSectionCopy;
+    galleryNotes: LocalizedText[];
+    openFullViewLabel: LocalizedText;
+    previousPhotoLabel: LocalizedText;
+    nextPhotoLabel: LocalizedText;
+    closeGalleryLabel: LocalizedText;
   };
   contact: {
     mapEyebrow: LocalizedText;
+    campusName: LocalizedText;
     phoneContactsEyebrow: LocalizedText;
+    phoneContacts: EditablePhoneContact[];
     responseRhythmEyebrow: LocalizedText;
     responseRhythmDescription: LocalizedText;
     officialEmailLabel: LocalizedText;
+    officialEmailValue: string;
     primaryHotlineLabel: LocalizedText;
+    primaryHotlineValue: string;
     supportWindowLabel: LocalizedText;
+    supportWindowValue: string;
     organizerAddressEyebrow: LocalizedText;
+    organizerAddress: LocalizedText;
+    organizerAddressNote: LocalizedText;
     officialChannelsEyebrow: LocalizedText;
     attackerFacebookLabel: LocalizedText;
+    attackerFacebookUrl: string;
     ftcFacebookLabel: LocalizedText;
+    ftcFacebookUrl: string;
     openNewsroomLabel: LocalizedText;
   };
   timelinePage: {
@@ -497,6 +632,9 @@ export interface SitePageContent {
     scheduleToBeUpdated: LocalizedText;
     openDetailLabel: LocalizedText;
     openRuleBlockLabel: LocalizedText;
+    readResultUpdateLabel: LocalizedText;
+    round2SubmissionClosedTitle: LocalizedText;
+    finalReportClosedTitle: LocalizedText;
     stepsLabel: LocalizedText;
     timeLabel: LocalizedText;
     placeLabel: LocalizedText;
@@ -687,6 +825,7 @@ export interface AppSnapshot {
   round1TestBanks: Round1TestBank[];
   round1Submissions: Round1Submission[];
   newsPosts: NewsPost[];
+  sponsors: SponsorProfile[];
   judges: JudgeProfile[];
   timelineItems: TimelineItem[];
   pageContent: SitePageContent;

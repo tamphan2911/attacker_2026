@@ -58,6 +58,7 @@ const adminNavGroups: Array<{
         description: { en: "Page copy and reusable content", vi: "Copy trang và nội dung dùng chung" },
         children: [
           { href: "/admin/content", label: { en: "Pages & types", vi: "Trang và nhóm nội dung" } },
+          { href: "/admin/content/sponsors", label: { en: "Sponsors", vi: "Nhà tài trợ" } },
         ],
       },
       {

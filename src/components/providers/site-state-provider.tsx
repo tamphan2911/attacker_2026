@@ -25,6 +25,7 @@ import {
   newsPosts as seedNewsPosts,
   round1IndividualSubmissions as seedRound1Submissions,
   round1TestBanks as seedRound1TestBanks,
+  sponsorProfiles as seedSponsorProfiles,
   timelineItems as seedTimelineItems,
   mockSubmissions,
   mockTeams,
@@ -61,6 +62,7 @@ import type {
   Round1TeamLockRequest,
   Round1TestBank,
   SitePageContent,
+  SponsorProfile,
   TeamInvitation,
   TeamProfile,
   TeamSubmission,
@@ -69,7 +71,7 @@ import type {
   UserProfile,
 } from "@/types/site";
 
-const STORAGE_KEY = "attacker-2026-site-state-v17";
+const STORAGE_KEY = "attacker-2026-site-state-v18";
 
 const GUEST_USER: UserProfile = {
   id: "",
@@ -110,6 +112,7 @@ interface WorkspaceApiPayload {
 
 interface SiteDataApiPayload {
   pageContent: SitePageContent;
+  sponsors: SponsorProfile[];
   judges: JudgeProfile[];
   newsPosts: NewsPost[];
   round1TestBanks: Round1TestBank[];
@@ -141,6 +144,7 @@ interface SiteStateValue {
   round1TestBanks: Round1TestBank[];
   round1Submissions: Round1Submission[];
   newsPosts: NewsPost[];
+  sponsors: SponsorProfile[];
   judges: JudgeProfile[];
   timelineItems: TimelineItem[];
   pageContent: SitePageContent;
@@ -154,6 +158,7 @@ interface SiteStateValue {
   signOutCurrentUser: () => Promise<void>;
   resetDemoData: () => void;
   savePageContent: (nextPageContent: SitePageContent) => void;
+  saveSponsorsByAdmin: (nextSponsors: SponsorProfile[]) => void;
   createNewsPostByAdmin: (payload: NewsPost) => void;
   updateNewsPostByAdmin: (slug: string, payload: NewsPost) => void;
   deleteNewsPostByAdmin: (slug: string) => void;
@@ -217,6 +222,17 @@ function clonePageContent(content: SitePageContent): SitePageContent {
   return JSON.parse(JSON.stringify(content)) as SitePageContent;
 }
 
+function normalizeSponsorProfile(sponsor: SponsorProfile): SponsorProfile {
+  return {
+    ...sponsor,
+    contribution: sponsor.contribution ?? sponsor.description,
+  };
+}
+
+function normalizeSponsorProfiles(sponsors: SponsorProfile[]): SponsorProfile[] {
+  return sponsors.map(normalizeSponsorProfile);
+}
+
 function createInitialSnapshot(): AppSnapshot {
   return {
     locale: "vi",
@@ -231,6 +247,7 @@ function createInitialSnapshot(): AppSnapshot {
     round1TestBanks: seedRound1TestBanks,
     round1Submissions: seedRound1Submissions,
     newsPosts: seedNewsPosts,
+    sponsors: seedSponsorProfiles,
     judges: seedJudgeProfiles,
     timelineItems: seedTimelineItems,
     pageContent: clonePageContent(defaultPageContent),
@@ -253,6 +270,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
   const [round1TestBanks, setRound1TestBanks] = useState<Round1TestBank[]>(seedRound1TestBanks);
   const [round1Submissions, setRound1Submissions] = useState<Round1Submission[]>(seedRound1Submissions);
   const [newsPosts, setNewsPosts] = useState<NewsPost[]>(seedNewsPosts);
+  const [sponsors, setSponsors] = useState<SponsorProfile[]>(seedSponsorProfiles);
   const [judges, setJudges] = useState<JudgeProfile[]>(seedJudgeProfiles);
   const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(seedTimelineItems);
   const [pageContent, setPageContent] = useState<SitePageContent>(() => clonePageContent(defaultPageContent));
@@ -283,6 +301,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       setRound1TestBanks(snapshot.round1TestBanks ?? seedRound1TestBanks);
       setRound1Submissions(snapshot.round1Submissions ?? seedRound1Submissions);
       setNewsPosts(snapshot.newsPosts ?? seedNewsPosts);
+      setSponsors(normalizeSponsorProfiles(snapshot.sponsors ?? seedSponsorProfiles));
       setJudges(snapshot.judges ?? seedJudgeProfiles);
       setTimelineItems(snapshot.timelineItems ?? seedTimelineItems);
       setPageContent(mergePageContentWithDefaults(snapshot.pageContent ?? clonePageContent(defaultPageContent)));
@@ -315,11 +334,12 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       round1TestBanks,
       round1Submissions,
       newsPosts,
+      sponsors,
       judges,
       timelineItems,
       pageContent,
     });
-  }, [activeUserId, hasHydrated, invitations, judges, leadershipTransferRequests, locale, newsPosts, pageContent, round1Submissions, round1TestBanks, submissions, teamLockRequests, theme, timelineItems, teams, users]);
+  }, [activeUserId, hasHydrated, invitations, judges, leadershipTransferRequests, locale, newsPosts, pageContent, round1Submissions, round1TestBanks, sponsors, submissions, teamLockRequests, theme, timelineItems, teams, users]);
 
   const pushToast = (message: LocalizedText, tone: ToastTone = "info") => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -350,6 +370,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
 
     const payload = (await response.json()) as SiteDataApiPayload;
     setPageContent(mergePageContentWithDefaults(payload.pageContent));
+    setSponsors(normalizeSponsorProfiles(payload.sponsors));
     setJudges(payload.judges);
     setNewsPosts(payload.newsPosts);
     setRound1TestBanks(payload.round1TestBanks);
@@ -472,6 +493,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     setRound1TestBanks(snapshot.round1TestBanks);
     setRound1Submissions(snapshot.round1Submissions);
     setNewsPosts(snapshot.newsPosts);
+    setSponsors(normalizeSponsorProfiles(snapshot.sponsors));
     setJudges(snapshot.judges);
     setTimelineItems(snapshot.timelineItems);
     setPageContent(mergePageContentWithDefaults(snapshot.pageContent));
@@ -525,6 +547,53 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         {
           en: "Could not save the page content right now.",
           vi: "Hiện không thể lưu nội dung trang.",
+        },
+        "warning",
+      );
+    });
+  };
+
+  const saveSponsorsByAdmin = (nextSponsors: SponsorProfile[]) => {
+    if (!canAccessAdminMode) {
+      pushToast(
+        {
+          en: "Only admin and moderator accounts can update sponsors.",
+          vi: "Chi tai khoan admin va moderator moi co the cap nhat nha tai tro.",
+        },
+        "warning",
+      );
+      return;
+    }
+
+    void (async () => {
+      const response = await fetch("/api/admin/content/sponsors", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(nextSponsors),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not save sponsor records.");
+        pushToast({ en: error, vi: error }, "warning");
+        return;
+      }
+
+      await syncSiteData();
+      pushToast(
+        {
+          en: "Sponsor records updated in admin mode.",
+          vi: "Danh sach nha tai tro da duoc cap nhat trong admin mode.",
+        },
+        "success",
+      );
+    })().catch(() => {
+      pushToast(
+        {
+          en: "Could not save sponsor records right now.",
+          vi: "Hien khong the luu danh sach nha tai tro.",
         },
         "warning",
       );
@@ -2615,6 +2684,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     round1TestBanks,
     round1Submissions,
     newsPosts,
+    sponsors,
     judges,
     timelineItems,
     pageContent,
@@ -2628,6 +2698,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     signOutCurrentUser,
     resetDemoData,
     savePageContent,
+    saveSponsorsByAdmin,
     createNewsPostByAdmin,
     updateNewsPostByAdmin,
     deleteNewsPostByAdmin,

@@ -2,10 +2,6 @@
 
 import { Award, BadgeCheck, Crown, Medal, Sparkles, Star, Trophy, Users2 } from "lucide-react";
 
-import {
-  audienceHighlights,
-  roundItems,
-} from "@/data/site-content";
 import { getCompetitionRoundWindow } from "@/lib/competition";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -62,18 +58,24 @@ const competitionRewardItems = [
   },
 ] as const;
 
-const competitionEmergingReward = {
-  eyebrow: { en: "Side recognition", vi: "Danh hiệu bổ sung" },
-  title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
-  amount: { en: "Top 10 teams", vi: "Top 10 đội" },
-  note: {
-    en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
-    vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
-  },
-} as const;
-
 export function CompetitionPage() {
   const { locale, pageContent, timelineItems } = useSiteState();
+  const highlightItems =
+    pageContent.competition.highlights.length > 0
+      ? pageContent.competition.highlights
+      : [];
+  const roundCards =
+    pageContent.competition.roundCards.length > 0
+      ? pageContent.competition.roundCards
+      : [];
+  const rewardCards =
+    pageContent.competition.rewardCards.length > 0
+      ? pageContent.competition.rewardCards
+      : [];
+  const rewardSection = pageContent.competition.rewards;
+  const competitionPath = pageContent.competition.competitionPath;
+  const emergingReward = pageContent.competition.emergingReward;
+  const pillars = pageContent.competition.pillars;
 
   return (
     <div className="space-y-20">
@@ -83,24 +85,21 @@ export function CompetitionPage() {
         aside={
           <Surface className="px-5 py-5">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-              {locale === "en" ? "Competition pillars" : "Tru cot cuoc thi"}
+              {pickText(locale, pageContent.competition.pillarsTitle)}
             </p>
             <div className="mt-5 space-y-3">
               {[
                 {
                   icon: <Sparkles className="h-4 w-4 text-cyan-300" />,
-                  label: locale === "en" ? "36 objective + 2 essay questions" : "36 câu trắc nghiệm + 2 câu tự luận",
+                  label: pickText(locale, pillars[0]),
                 },
                 {
                   icon: <Users2 className="h-4 w-4 text-emerald-300" />,
-                  label: locale === "en" ? "Team-average progression" : "Di tiep theo diem trung binh doi",
+                  label: pickText(locale, pillars[1]),
                 },
                 {
                   icon: <Trophy className="h-4 w-4 text-orange-300" />,
-                  label:
-                    locale === "en"
-                      ? "Final report deadline + live final judging"
-                      : "Hạn nộp báo cáo chung kết + chấm trực tiếp",
+                  label: pickText(locale, pillars[2]),
                 },
               ].map((item) => (
                 <div
@@ -117,7 +116,7 @@ export function CompetitionPage() {
       />
 
       <section className="grid gap-4 lg:grid-cols-3">
-        {audienceHighlights.map((item) => (
+        {highlightItems.map((item) => (
           <Surface key={item.title.en} className="px-6 py-6">
             <InfoKicker>{pickText(locale, item.title)}</InfoKicker>
             <p className="mt-4 text-sm leading-7 theme-text-muted">{pickText(locale, item.description)}</p>
@@ -133,7 +132,7 @@ export function CompetitionPage() {
         />
 
         <div className="space-y-6">
-          {roundItems.map((item, index) => (
+          {roundCards.map((item, index) => (
             (() => {
               const roundKey = item.id === "01" ? "round-1" : item.id === "02" ? "round-2" : "round-3";
               const roundWindow = getCompetitionRoundWindow(roundKey, timelineItems);
@@ -191,30 +190,27 @@ export function CompetitionPage() {
         <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_320px] xl:items-start">
           <div>
             <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
-              {pickText(locale, pageContent.competition.rewards.eyebrow)}
+              {pickText(locale, rewardSection.eyebrow)}
             </p>
             <h2 className="theme-heading mt-5 max-w-3xl text-3xl font-semibold leading-[1.08] theme-text-strong md:text-[3rem]">
-              {locale === "en"
-                ? "A reward structure that makes every result band clear."
-                : "Cấu trúc giải thưởng giúp từng nhóm kết quả được nhìn rõ ngay lập tức."}
+              {pickText(locale, rewardSection.title)}
             </h2>
             <p className="theme-text-muted mt-5 max-w-3xl text-base leading-8">
-              {locale === "en"
-                ? "The main awards are separated by final ranking from 1st to 4th, while Emerging Teams stay in their own smaller recognition block after Round 2."
-                : "Các giải chính được tách rõ theo thứ hạng chung kết từ hạng 1 đến hạng 4, trong khi Đội tiềm năng nằm ở một block riêng nhỏ hơn sau Vòng 2."}
+              {pickText(locale, rewardSection.description)}
             </p>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              {competitionRewardItems.map((item) => {
-                const Icon = item.icon;
+              {rewardCards.map((item, index) => {
+                const rewardStyle = competitionRewardItems[index] ?? competitionRewardItems[0];
+                const Icon = rewardStyle.icon;
 
                 return (
                   <div
                     key={item.rank.en}
-                    className={`theme-home-reward-card rounded-[1.8rem] border px-5 py-5 backdrop-blur-md ${item.borderClass}`}
+                    className={`theme-home-reward-card rounded-[1.8rem] border px-5 py-5 backdrop-blur-md ${rewardStyle.borderClass}`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.iconClass}`}>
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${rewardStyle.iconClass}`}>
                         <Icon className="h-5 w-5" />
                       </div>
                       <div>
@@ -246,43 +242,37 @@ export function CompetitionPage() {
                 </div>
                 <div>
                   <p className="theme-text-soft text-[0.72rem] font-semibold uppercase tracking-[0.24em]">
-                    {pickText(locale, competitionEmergingReward.eyebrow)}
+                    {pickText(locale, emergingReward.eyebrow)}
                   </p>
                   <p className="theme-text-strong mt-1 text-lg font-semibold">
-                    {pickText(locale, competitionEmergingReward.title)}
+                    {pickText(locale, emergingReward.title)}
                   </p>
                 </div>
               </div>
               <p className="theme-text-strong mt-5 text-2xl font-semibold">
-                {pickText(locale, competitionEmergingReward.amount)}
+                {pickText(locale, emergingReward.amount)}
               </p>
               <p className="theme-text-muted mt-3 text-sm leading-7">
-                {pickText(locale, competitionEmergingReward.note)}
+                {pickText(locale, emergingReward.note)}
               </p>
             </div>
 
             <div className="theme-home-reward-aside rounded-[2rem] border px-5 py-5 backdrop-blur-md">
               <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
-                {locale === "en" ? "Competition path" : "Lộ trình cuộc thi"}
+                {pickText(locale, competitionPath.eyebrow)}
               </p>
               <div className="mt-5 space-y-3">
-                {[
-                  locale === "en" ? "Round 1 selects the top 50 teams." : "Vòng 1 chọn ra top 50 đội.",
-                  locale === "en" ? "Round 2 selects the top 5 finalists." : "Vòng 2 chọn ra top 5 đội chung kết.",
-                  locale === "en" ? "The next 10 teams are named Emerging Teams." : "10 đội tiếp theo được gọi tên là Đội tiềm năng.",
-                ].map((item) => (
+                {competitionPath.items.map((item) => (
                   <div
-                    key={item}
+                    key={item.en}
                     className="theme-home-path-item theme-text-body rounded-2xl border px-4 py-3 text-sm"
                   >
-                    {item}
+                    {pickText(locale, item)}
                   </div>
                 ))}
               </div>
               <p className="theme-text-muted mt-4 text-sm leading-7">
-                {locale === "en"
-                  ? "In addition to cash awards, teams may also receive sponsor-supported gifts, scholarships, and other non-cash opportunities."
-                  : "Bên cạnh tiền thưởng, các đội còn có thể nhận thêm quà tặng, học bổng và những quyền lợi phi tiền mặt từ nhà tài trợ."}
+                {pickText(locale, competitionPath.note)}
               </p>
             </div>
           </div>

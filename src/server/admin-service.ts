@@ -8,7 +8,7 @@ import {
 } from "@prisma/client";
 import { hash } from "bcryptjs";
 
-import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles } from "@/data/site-content";
+import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, sponsorProfiles } from "@/data/site-content";
 import { prisma } from "@/lib/db";
 import { deleteJudgeImageFile, getJudgeImageStorageKeyFromUrl } from "@/server/judge-image-storage";
 import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/news-image-storage";
@@ -17,6 +17,7 @@ import type {
   NewsPost,
   Round1Question,
   SitePageContent,
+  SponsorProfile,
   TeamProfile,
   UserProfile,
 } from "@/types/site";
@@ -114,9 +115,38 @@ export async function savePageContentByAdmin(
 }
 
 const JUDGES_SCOPE = "site-judges";
+const SPONSORS_SCOPE = "site-sponsors";
 
 export function getDefaultJudges() {
   return judgeProfiles;
+}
+
+export function getDefaultSponsors() {
+  return sponsorProfiles;
+}
+
+export async function readStoredSponsors() {
+  const cmsEntry = await prisma.cmsEntry.findUnique({
+    where: { scope: SPONSORS_SCOPE },
+    select: { payload: true },
+  });
+
+  return cmsEntry ? (JSON.parse(cmsEntry.payload) as SponsorProfile[]) : getDefaultSponsors();
+}
+
+export async function saveSponsorsByAdmin(
+  payload: SponsorProfile[],
+): Promise<ServiceResult<{ saved: true }>> {
+  await prisma.cmsEntry.upsert({
+    where: { scope: SPONSORS_SCOPE },
+    update: { payload: JSON.stringify(payload) },
+    create: {
+      scope: SPONSORS_SCOPE,
+      payload: JSON.stringify(payload),
+    },
+  });
+
+  return ok({ saved: true });
 }
 
 export async function readStoredJudges() {

@@ -254,52 +254,289 @@ export const defaultPageContent: SitePageContent = {
         id: "signal",
         image: "/theme-hero-1.jpg",
         eyebrow: {
-          en: "Student fintech competition 2026",
-          vi: "Cuộc thi fintech sinh viên 2026",
+          en: "General overview",
+          vi: "Tổng quan cuộc thi",
         },
         title: {
-          en: "Sharper market thinking for the next generation of fintech builders.",
-          vi: "Tư duy thị trường sắc nét hơn cho thế hệ builder fintech tiếp theo.",
+          en: "National fintech challenge for student teams",
+          vi: "Sân chơi fintech toàn quốc dành cho đội thi sinh viên",
         },
         description: {
-          en: "Attacker 2026 combines competition storytelling, bilingual communication, and student team formation into one cleaner launch platform.",
-          vi: "Attacker 2026 kết hợp truyền thông cuộc thi, giao tiếp song ngữ và tạo đội sinh viên thành một nền tảng ra mắt mạch lạc hơn.",
+          en: "Attacker 2026 brings students into a three-round journey where finance, strategy, product thinking, and presentation all matter.",
+          vi: "Attacker 2026 đưa sinh viên vào hành trình ba vòng thi, nơi tư duy tài chính, chiến lược, sản phẩm và khả năng trình bày đều quan trọng.",
         },
+        highlights: [
+          { en: "Students nationwide", vi: "Sinh viên trên toàn quốc" },
+          { en: "Teams of 3-5", vi: "Đội hình 3-5 người" },
+          { en: "Finance + product + data", vi: "Tài chính + sản phẩm + dữ liệu" },
+        ],
+        primaryCta: {
+          href: "/competition",
+          label: { en: "Competition overview", vi: "Tổng quan cuộc thi" },
+        },
+        secondaryCta: {
+          href: "/organizer",
+          label: { en: "About Attacker", vi: "Giới thiệu Attacker" },
+        },
+        cards: [
+          {
+            label: { en: "Participants", vi: "Đối tượng" },
+            value: { en: "University students", vi: "Sinh viên đại học" },
+            note: {
+              en: "Built for teams who want to test ideas in fintech and innovation.",
+              vi: "Dành cho các đội muốn thử sức với ý tưởng fintech và đổi mới.",
+            },
+          },
+          {
+            label: { en: "Format", vi: "Cấu trúc" },
+            value: { en: "3 competition rounds", vi: "3 vòng thi" },
+            note: {
+              en: "Individual qualifier, project report, and live final defense.",
+              vi: "Thi cá nhân, báo cáo dự án và thuyết trình bảo vệ ở chung kết.",
+            },
+          },
+          {
+            label: { en: "Focus", vi: "Trọng tâm" },
+            value: { en: "Think, build, defend", vi: "Tư duy, triển khai, bảo vệ" },
+            note: {
+              en: "A serious challenge for students interested in finance, data, and products.",
+              vi: "Một sân chơi nghiêm túc cho sinh viên quan tâm tài chính, dữ liệu và sản phẩm.",
+            },
+          },
+        ],
       },
       {
         id: "teams",
         image: "/theme-hero-2.jpg",
         eyebrow: {
-          en: "Teams can build before the backend arrives",
-          vi: "Đội thi có thể vận hành trước khi có backend",
+          en: "Rewards snapshot",
+          vi: "Tóm tắt giải thưởng",
         },
         title: {
-          en: "Create a team, invite members, and preview organizer-ready flows from day one.",
-          vi: "Tạo đội, mời thành viên và preview các luồng sẵn sàng cho BTC ngay từ đầu.",
+          en: "Top 5 finalist awards with sponsor-backed benefits",
+          vi: "Giải thưởng cho top 5 cùng các quyền lợi đồng hành từ nhà tài trợ",
         },
         description: {
-          en: "The frontend already reflects your core rules: one team at a time, transferable leadership, and clear progression from signup to eligibility.",
-          vi: "Frontend đã phản ánh các quy tắc cốt lõi của bạn: mỗi người chỉ thuộc một đội, có thể chuyển đội trưởng và có lộ trình rõ từ đăng ký đến đủ điều kiện.",
+          en: "The prize structure rewards the final ranking clearly, while sponsor gifts, scholarships, and other non-cash benefits expand the value beyond cash awards.",
+          vi: "Cấu trúc giải thưởng tách bạch theo thứ hạng chung kết, đồng thời quà tặng, học bổng và quyền lợi phi tiền mặt từ nhà tài trợ giúp giá trị cuộc thi vượt ra ngoài tiền thưởng.",
         },
+        highlights: [
+          { en: "30M champion prize", vi: "30 triệu cho quán quân" },
+          { en: "Top 10 Emerging Teams", vi: "Top 10 đội tiềm năng" },
+          { en: "Gifts and scholarships", vi: "Quà tặng và học bổng" },
+        ],
+        primaryCta: {
+          href: "/competition",
+          label: { en: "View reward structure", vi: "Xem cơ cấu giải thưởng" },
+        },
+        secondaryCta: {
+          href: "/competition/sponsors",
+          label: { en: "Sponsor partners", vi: "Đối tác tài trợ" },
+        },
+        cards: [
+          {
+            label: { en: "Champion", vi: "Quán quân" },
+            value: { en: "30,000,000 VND", vi: "30.000.000 VND" },
+            note: {
+              en: "Followed by runner-up, third place, and two finalist teams sharing 4th place awards.",
+              vi: "Tiếp theo là á quân, hạng 3 và hai đội đồng hạng 4 ở vòng chung kết.",
+            },
+          },
+          {
+            label: { en: "Emerging Teams", vi: "Đội tiềm năng" },
+            value: { en: "Next 10 teams", vi: "10 đội tiếp theo" },
+            note: {
+              en: "Recognized after Round 2 with certificates and partner-side opportunities.",
+              vi: "Được ghi nhận sau Vòng 2 cùng giấy chứng nhận và các cơ hội từ đối tác.",
+            },
+          },
+          {
+            label: { en: "Sponsor benefits", vi: "Quyền lợi tài trợ" },
+            value: { en: "Scholarships, gifts, access", vi: "Học bổng, quà tặng, cơ hội" },
+            note: {
+              en: "The reward pool can include non-cash benefits in addition to prize money.",
+              vi: "Quỹ giải thưởng có thể bao gồm quyền lợi phi tiền mặt bên cạnh tiền thưởng.",
+            },
+          },
+        ],
       },
       {
         id: "launch",
         image: "/theme-feature-1.jpg",
         eyebrow: {
-          en: "A more international competition look",
-          vi: "Diện mạo cuộc thi quốc tế hơn",
+          en: "Timeline overview",
+          vi: "Tổng quan lịch trình",
         },
         title: {
-          en: "A lighter, more established visual rhythm without losing Attacker's blue identity.",
-          vi: "Nhịp điệu thị giác sáng hơn, trưởng thành hơn nhưng vẫn giữ bản sắc xanh của Attacker.",
+          en: "From May registration to a July final-round defense",
+          vi: "Từ đăng ký trong tháng 5 đến bảo vệ chung kết vào tháng 7",
         },
         description: {
-          en: "Large photography, utility sections, structured content bands, and simpler calls to action make the platform feel closer to a professional fintech event site.",
-          vi: "Ảnh lớn, các band nội dung rõ ràng và CTA đơn giản hơn giúp nền tảng tiến gần một website sự kiện fintech chuyên nghiệp.",
+          en: "Attacker 2026 runs through a compact season with clear handoff points between team formation, the Round 1 test, Round 2 report submission, and the final presentation day.",
+          vi: "Attacker 2026 diễn ra trong một mùa giải gọn gàng với các mốc chuyển tiếp rõ ràng giữa giai đoạn tạo đội, bài thi Vòng 1, nộp báo cáo Vòng 2 và ngày thuyết trình chung kết.",
         },
+        highlights: [
+          { en: "May registration", vi: "Đăng ký tháng 5" },
+          { en: "Round 1 qualifier", vi: "Vòng loại cá nhân" },
+          { en: "July final day", vi: "Chung kết tháng 7" },
+        ],
+        primaryCta: {
+          href: "/competition/timeline",
+          label: { en: "Full timeline", vi: "Xem lịch trình" },
+        },
+        secondaryCta: {
+          href: "/rules#round-1-rules",
+          label: { en: "Round rules", vi: "Luật theo vòng" },
+        },
+        cards: [
+          {
+            label: { en: "May 2026", vi: "Tháng 5/2026" },
+            value: { en: "Registration and Round 1", vi: "Đăng ký và Vòng 1" },
+            note: {
+              en: "Teams finalize roster first, then members take the individual qualifier.",
+              vi: "Đội thi chốt đội hình trước, sau đó từng thành viên làm bài thi cá nhân.",
+            },
+          },
+          {
+            label: { en: "June 2026", vi: "Tháng 6/2026" },
+            value: { en: "Round 2 project reports", vi: "Báo cáo dự án Vòng 2" },
+            note: {
+              en: "Top 50 teams move forward to submit and defend their project direction on paper.",
+              vi: "Top 50 đội bước tiếp để nộp và bảo vệ định hướng dự án qua báo cáo.",
+            },
+          },
+          {
+            label: { en: "July 2026", vi: "Tháng 7/2026" },
+            value: { en: "Live final presentation", vi: "Chung kết thuyết trình" },
+            note: {
+              en: "Top 5 teams present live, answer judges, and compete for the final ranking.",
+              vi: "Top 5 đội thuyết trình trực tiếp, trả lời giám khảo và tranh thứ hạng cuối cùng.",
+            },
+          },
+        ],
       },
     ],
     testimonials: homepageTestimonialsSeed,
+    metrics: [
+      {
+        value: "03",
+        label: { en: "competition rounds", vi: "vòng thi" },
+        note: {
+          en: "Individual qualifier, report judging, and final defense",
+          vi: "Vòng loại cá nhân, chấm báo cáo và bảo vệ chung kết",
+        },
+      },
+      {
+        value: "3-5",
+        label: { en: "members per team", vi: "thành viên mỗi đội" },
+        note: {
+          en: "At least 3 members are required before Round 1 access",
+          vi: "Cần ít nhất 3 thành viên trước khi vào Vòng 1",
+        },
+      },
+      {
+        value: "50",
+        label: { en: "teams to Round 2", vi: "đội vào Vòng 2" },
+        note: {
+          en: "Advanced by the highest average score from Round 1",
+          vi: "Đi tiếp theo điểm trung bình cao nhất của Vòng 1",
+        },
+      },
+      {
+        value: "05",
+        label: { en: "finalist teams", vi: "đội chung kết" },
+        note: {
+          en: "Round 2 also recognizes the next 10 teams as Emerging Teams",
+          vi: "Vòng 2 đồng thời ghi nhận 10 đội tiếp theo là Đội tiềm năng",
+        },
+      },
+    ],
+    rewards: {
+      eyebrow: { en: "Rewards", vi: "Giải thưởng" },
+      title: {
+        en: "A prize structure that makes the top 5 instantly clear.",
+        vi: "Cấu trúc giải thưởng giúp top 5 được nhìn ra ngay lập tức.",
+      },
+      description: {
+        en: "The main awards are separated by final ranking from 1st to 4th, while Emerging Teams stay in their own smaller recognition block after Round 2.",
+        vi: "Các giải chính được tách rõ theo thứ hạng chung kết từ hạng 1 đến hạng 4, trong khi Đội tiềm năng nằm ở một block riêng nhỏ hơn sau Vòng 2.",
+      },
+    },
+    rewardCards: [
+      {
+        rank: { en: "1st place", vi: "Hạng 1" },
+        title: { en: "Champion", vi: "Quán quân" },
+        amount: { en: "30,000,000 VND", vi: "30.000.000 VND" },
+        note: {
+          en: "Awarded to the team with the highest final-round score.",
+          vi: "Trao cho đội có điểm cao nhất ở vòng chung kết.",
+        },
+      },
+      {
+        rank: { en: "2nd place", vi: "Hạng 2" },
+        title: { en: "Runner-up", vi: "Á quân" },
+        amount: { en: "15,000,000 VND", vi: "15.000.000 VND" },
+        note: {
+          en: "Awarded to the team with the second-highest final-round score.",
+          vi: "Trao cho đội có điểm cao thứ hai ở vòng chung kết.",
+        },
+      },
+      {
+        rank: { en: "3rd place", vi: "Hạng 3" },
+        title: { en: "Third place", vi: "Quý quân" },
+        amount: { en: "10,000,000 VND", vi: "10.000.000 VND" },
+        note: {
+          en: "Awarded to the team with the third-highest final-round score.",
+          vi: "Trao cho đội có điểm cao thứ ba ở vòng chung kết.",
+        },
+      },
+      {
+        rank: { en: "4th place", vi: "Hạng 4" },
+        title: { en: "Two finalist teams", vi: "Hai đội đồng hạng 4" },
+        amount: { en: "2 x 5,000,000 VND", vi: "2 x 5.000.000 VND" },
+        note: {
+          en: "The remaining two finalists each receive the fourth-place award.",
+          vi: "Hai đội còn lại trong top 5 chung kết, mỗi đội nhận giải hạng 4.",
+        },
+      },
+    ],
+    emergingReward: {
+      eyebrow: { en: "Side recognition", vi: "Danh hieu bo sung" },
+      title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
+      amount: { en: "Top 10 teams", vi: "Top 10 đội" },
+      note: {
+        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
+        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
+      },
+    },
+    competitionPath: {
+      eyebrow: { en: "Competition path", vi: "Lộ trình cuộc thi" },
+      items: [
+        { en: "Round 1 selects the top 50 teams.", vi: "Vòng 1 chọn ra top 50 đội." },
+        { en: "Round 2 selects the top 5 finalists.", vi: "Vòng 2 chọn ra top 5 đội chung kết." },
+        { en: "The next 10 teams are named Emerging Teams.", vi: "10 đội tiếp theo được gọi tên là Đội tiềm năng." },
+      ],
+      note: {
+        en: "In addition to cash awards, teams may also receive sponsor-supported gifts, scholarships, and other non-cash opportunities.",
+        vi: "Bên cạnh tiền thưởng, các đội còn có thể nhận thêm quà tặng, học bổng và những quyền lợi phi tiền mặt từ nhà tài trợ.",
+      },
+      ctaLabel: { en: "Open full competition page", vi: "Mở trang cuộc thi đầy đủ" },
+      ctaHref: "/competition",
+    },
+    sponsorsStripLinkLabel: { en: "Open sponsors page", vi: "Mở trang nhà tài trợ" },
+    testimonialsSection: {
+      eyebrow: { en: "Testimonial", vi: "Cảm nhận" },
+      title: {
+        en: "What Attacker 2025 participants think about the journey",
+        vi: "Những gì thí sinh Attacker 2025 cảm nhận sau hành trình cuộc thi",
+      },
+      description: {
+        en: "A sliding collection of short voices from finalists, champions, and emerging teams across last season.",
+        vi: "Một cụm trích dẫn dạng slider, tổng hợp cảm nhận ngắn từ các đội chung kết, quán quân và đội tiềm năng của mùa trước.",
+      },
+    },
+    testimonialsBadgeLabel: { en: "Auto-sliding voices", vi: "Trích dẫn tự động" },
+    testimonialsLinkLabel: { en: "About Attacker", vi: "Giới thiệu Attacker" },
     news: {
       eyebrow: { en: "Latest news & updates", vi: "Tin tức và cập nhật mới" },
       title: {
@@ -357,6 +594,35 @@ export const defaultPageContent: SitePageContent = {
         vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 36 câu hỏi trắc nghiệm trải đều trên 6 chủ đề và 2 câu tự luận, sau đó đưa các đội tốt nhất vào giai đoạn đánh giá dự án bởi giám khảo và vòng chung kết bảo vệ trực tiếp. Việc đi tiếp được quyết định bởi kết quả của đội, không chỉ bởi từng cá nhân riêng lẻ.",
       },
     },
+    pillarsTitle: { en: "Competition pillars", vi: "Trụ cột cuộc thi" },
+    pillars: [
+      { en: "36 objective + 2 essay questions", vi: "36 câu trắc nghiệm + 2 câu tự luận" },
+      { en: "Team-average progression", vi: "Đi tiếp theo điểm trung bình đội" },
+      { en: "Final report deadline + live final judging", vi: "Hạn nộp báo cáo chung kết + chấm trực tiếp" },
+    ],
+    highlights: [
+      {
+        title: { en: "Eligible participants", vi: "Đối tượng tham gia" },
+        description: {
+          en: "University and college students with interest in fintech, data, product, trading, or entrepreneurship.",
+          vi: "Sinh viên đại học và cao đẳng quan tâm đến fintech, dữ liệu, sản phẩm, giao dịch hoặc khởi nghiệp.",
+        },
+      },
+      {
+        title: { en: "Registration format", vi: "Hình thức đăng ký" },
+        description: {
+          en: "Each user owns one profile, can belong to one team at a time, and joins a team through self-creation or invitation.",
+          vi: "Mỗi người dùng có một hồ sơ, chỉ thuộc một đội tại một thời điểm và có thể vào đội bằng cách tự tạo hoặc nhận lời mời.",
+        },
+      },
+      {
+        title: { en: "Readiness checkpoint", vi: "Mốc sẵn sàng" },
+        description: {
+          en: "Teams may form with one leader first, but only teams with 3 to 5 members are eligible for the individual Round 1 qualifier and team-average ranking.",
+          vi: "Đội có thể được tạo bởi một đội trưởng trước, nhưng chỉ những đội có từ 3 đến 5 thành viên mới đủ điều kiện vào bài thi cá nhân của Vòng 1 và được xếp hạng theo điểm trung bình đội.",
+        },
+      },
+    ],
     rounds: {
       eyebrow: { en: "Round architecture", vi: "Kiến trúc vòng thi" },
       title: {
@@ -368,15 +634,130 @@ export const defaultPageContent: SitePageContent = {
         vi: "Thí sinh trước tiên hoàn thành một bài thi cá nhân gồm 36 câu trắc nghiệm và 2 câu tự luận, sau đó các đội đủ điều kiện nộp báo cáo, và các đội vào sâu sẽ bảo vệ dự án trực tiếp trước hội đồng giám khảo.",
       },
     },
+    roundCards: [
+      {
+        id: "01",
+        label: { en: "Round 01", vi: "Vòng 01" },
+        title: { en: "Individual Qualifier", vi: "Vòng loại cá nhân" },
+        duration: {
+          en: "36 objective questions + 2 essay questions online",
+          vi: "36 câu trắc nghiệm + 2 câu tự luận trực tuyến",
+        },
+        description: {
+          en: "Each eligible member receives a personalized paper with 36 objective questions drawn by topic and difficulty, followed by 2 essay questions. The average score of the team is used for ranking, and the top 50 teams proceed to Round 2.",
+          vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 36 câu hỏi trắc nghiệm được rút theo chủ đề và độ khó, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
+        },
+        deliverables: [
+          { en: "36 objective questions across 6 topics", vi: "36 câu trắc nghiệm trên 6 chủ đề" },
+          { en: "2 essay responses with 200-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 200 từ" },
+          { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
+        ],
+      },
+      {
+        id: "02",
+        label: { en: "Round 02", vi: "Vòng 02" },
+        title: { en: "Project Report Review", vi: "Chấm báo cáo dự án" },
+        duration: {
+          en: "judge-scored team report stage",
+          vi: "giai đoạn nộp báo cáo đội được giám khảo chấm điểm",
+        },
+        description: {
+          en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 10 teams are recognized as Emerging Teams.",
+          vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 10 đội tiếp theo được ghi nhận là Đội tiềm năng.",
+        },
+        deliverables: [
+          { en: "Project report submission", vi: "Báo cáo dự án" },
+          { en: "Judge scoring and feedback", vi: "Điểm và nhận xét từ giám khảo" },
+          { en: "Top 5 finalists + next 10 Emerging Teams", vi: "Top 5 chung kết + 10 Đội tiềm năng tiếp theo" },
+        ],
+      },
+      {
+        id: "03",
+        label: { en: "Round 03", vi: "Vòng 03" },
+        title: { en: "Final Report & Live Presentation", vi: "Thuyết trình chung kết" },
+        duration: {
+          en: "final report deadline + live presentation day",
+          vi: "hạn nộp báo cáo cuối + ngày thuyết trình trực tiếp",
+        },
+        description: {
+          en: "The final stage starts with the deadline for the updated finalist report and deck, then ends with the live presentation, judge Q&A, and the final award decision.",
+          vi: "Giai đoạn chung kết bắt đầu bằng hạn nộp báo cáo và bộ slide cập nhật của đội vào chung kết, sau đó khép lại bằng phần thuyết trình trực tiếp, hỏi đáp cùng giám khảo và quyết định giải thưởng cuối cùng.",
+        },
+        deliverables: [
+          { en: "Final report and pitch deck submission", vi: "Nộp báo cáo cuối cùng và slide thuyết trình" },
+          { en: "Live finalist presentation and judge Q&A", vi: "Thuyết trình trực tiếp và hỏi đáp cùng giám khảo" },
+          { en: "Final scoring and podium ranking", vi: "Chấm điểm cuối cùng và xếp hạng giải thưởng" },
+        ],
+      },
+    ],
     rewards: {
       eyebrow: { en: "Rewards", vi: "Giải thưởng" },
       title: {
-        en: "A clearer structure for finalists and Emerging Teams.",
-        vi: "Cấu trúc rõ ràng hơn cho các đội chung kết và Đội tiềm năng.",
+        en: "A reward structure that makes every result band clear.",
+        vi: "Cấu trúc giải thưởng giúp từng nhóm kết quả được nhìn rõ ngay lập tức.",
       },
       description: {
-        en: "Round 2 selects the top 5 finalist teams, while the next 10 teams are recognized as Emerging Teams before the final round determines the podium.",
-        vi: "Vòng 2 sẽ chọn ra 5 đội vào chung kết, trong khi 10 đội tiếp theo được ghi nhận là Đội tiềm năng trước khi vòng chung kết xác định thứ hạng cao nhất.",
+        en: "The main awards are separated by final ranking from 1st to 4th, while Emerging Teams stay in their own smaller recognition block after Round 2.",
+        vi: "Các giải chính được tách rõ theo thứ hạng chung kết từ hạng 1 đến hạng 4, trong khi Đội tiềm năng nằm ở một block riêng nhỏ hơn sau Vòng 2.",
+      },
+    },
+    rewardCards: [
+      {
+        rank: { en: "1st place", vi: "Hạng 1" },
+        title: { en: "Champion", vi: "Quán quân" },
+        amount: { en: "30,000,000 VND", vi: "30.000.000 VND" },
+        note: {
+          en: "Awarded to the team with the highest final-round score.",
+          vi: "Trao cho đội có điểm cao nhất ở vòng chung kết.",
+        },
+      },
+      {
+        rank: { en: "2nd place", vi: "Hạng 2" },
+        title: { en: "Runner-up", vi: "Á quân" },
+        amount: { en: "15,000,000 VND", vi: "15.000.000 VND" },
+        note: {
+          en: "Awarded to the team with the second-highest final-round score.",
+          vi: "Trao cho đội có điểm cao thứ hai ở vòng chung kết.",
+        },
+      },
+      {
+        rank: { en: "3rd place", vi: "Hạng 3" },
+        title: { en: "Third place", vi: "Quý quân" },
+        amount: { en: "10,000,000 VND", vi: "10.000.000 VND" },
+        note: {
+          en: "Awarded to the team with the third-highest final-round score.",
+          vi: "Trao cho đội có điểm cao thứ ba ở vòng chung kết.",
+        },
+      },
+      {
+        rank: { en: "4th place", vi: "Hạng 4" },
+        title: { en: "Two finalist teams", vi: "Hai đội đồng hạng 4" },
+        amount: { en: "2 x 5,000,000 VND", vi: "2 x 5.000.000 VND" },
+        note: {
+          en: "The remaining two finalists each receive the fourth-place award.",
+          vi: "Hai đội còn lại trong top 5 chung kết, mỗi đội nhận giải hạng 4.",
+        },
+      },
+    ],
+    emergingReward: {
+      eyebrow: { en: "Side recognition", vi: "Danh hiệu bổ sung" },
+      title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
+      amount: { en: "Top 10 teams", vi: "Top 10 đội" },
+      note: {
+        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
+        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
+      },
+    },
+    competitionPath: {
+      eyebrow: { en: "Competition path", vi: "Lộ trình cuộc thi" },
+      items: [
+        { en: "Round 1 selects the top 50 teams.", vi: "Vòng 1 chọn ra top 50 đội." },
+        { en: "Round 2 selects the top 5 finalists.", vi: "Vòng 2 chọn ra top 5 đội chung kết." },
+        { en: "The next 10 teams are named Emerging Teams.", vi: "10 đội tiếp theo được gọi tên là Đội tiềm năng." },
+      ],
+      note: {
+        en: "In addition to cash awards, teams may also receive sponsor-supported gifts, scholarships, and other non-cash opportunities.",
+        vi: "Bên cạnh tiền thưởng, các đội còn có thể nhận thêm quà tặng, học bổng và những quyền lợi phi tiền mặt từ nhà tài trợ.",
       },
     },
     mentors: {
@@ -414,6 +795,306 @@ export const defaultPageContent: SitePageContent = {
         vi: "Các chính sách này chi phối việc sở hữu tài khoản, hình thành đội, khóa đội, điều kiện dự thi và cơ chế đi tiếp xuyên suốt trên nền tảng.",
       },
     },
+    introJumpItems: [
+      {
+        shortLabel: { en: "General", vi: "Chung" },
+        hoverLabel: { en: "Jump to general rules", vi: "Đi đến thể lệ chung" },
+      },
+      {
+        shortLabel: { en: "R1", vi: "V1" },
+        hoverLabel: { en: "Jump to Round 1 rules", vi: "Đi đến thể lệ Vòng 1" },
+      },
+      {
+        shortLabel: { en: "R2", vi: "V2" },
+        hoverLabel: { en: "Jump to Round 2 rules", vi: "Đi đến thể lệ Vòng 2" },
+      },
+      {
+        shortLabel: { en: "R3", vi: "V3" },
+        hoverLabel: { en: "Jump to Final round rules", vi: "Đi đến thể lệ Chung kết" },
+      },
+    ],
+    quickReadLabel: { en: "Quick policy read", vi: "Đọc nhanh" },
+    quickReadItems: [
+      {
+        en: `Round 1 requires a team of ${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} members`,
+        vi: `Vòng 1 yêu cầu đội có ${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} thành viên`,
+      },
+      {
+        en: "Team lock must be approved by all members before Round 1 starts",
+        vi: "Khóa đội phải được toàn bộ thành viên đồng thuận trước khi bắt đầu Vòng 1",
+      },
+      {
+        en: "Progression is determined by team ranking at every stage",
+        vi: "Việc đi tiếp được quyết định theo xếp hạng đội ở từng giai đoạn",
+      },
+    ],
+    generalHighlights: [
+      {
+        title: { en: "Eligible participants", vi: "Đối tượng tham gia" },
+        description: {
+          en: "University and college students with interest in fintech, data, product, trading, or entrepreneurship.",
+          vi: "Sinh viên đại học và cao đẳng quan tâm đến fintech, dữ liệu, sản phẩm, giao dịch hoặc khởi nghiệp.",
+        },
+      },
+      {
+        title: { en: "Registration format", vi: "Hình thức đăng ký" },
+        description: {
+          en: "Each user owns one profile, can belong to one team at a time, and joins a team through self-creation or invitation.",
+          vi: "Mỗi người dùng có một hồ sơ, chỉ thuộc một đội tại một thời điểm và có thể vào đội bằng cách tự tạo hoặc nhận lời mời.",
+        },
+      },
+      {
+        title: { en: "Readiness checkpoint", vi: "Mốc sẵn sàng" },
+        description: {
+          en: "Teams may form with one leader first, but only teams with 3 to 5 members are eligible for the individual Round 1 qualifier and team-average ranking.",
+          vi: "Đội có thể được tạo bởi một đội trưởng trước, nhưng chỉ những đội có từ 3 đến 5 thành viên mới đủ điều kiện vào bài thi cá nhân của Vòng 1 và được xếp hạng theo điểm trung bình đội.",
+        },
+      },
+    ],
+    generalPolicyChecksLabel: { en: "General policy checks", vi: "Điểm kiểm soát chung" },
+    generalPolicyChecks: [
+      {
+        title: { en: "One account per participant", vi: "Mỗi thí sinh một tài khoản" },
+        description: {
+          en: "Each participant must keep one verified account and may not sit in multiple teams at the same time.",
+          vi: "Mỗi thí sinh phải duy trì một tài khoản đã xác thực và không được đồng thời đứng trong nhiều đội.",
+        },
+      },
+      {
+        title: { en: "Team lock before Round 1", vi: "Khóa đội trước Vòng 1" },
+        description: {
+          en: "The Round 1 roster becomes official only after the team lock request is approved by all current members.",
+          vi: "Đội hình dùng cho Vòng 1 chỉ chính thức khi yêu cầu khóa đội được toàn bộ thành viên hiện tại chấp thuận.",
+        },
+      },
+      {
+        title: { en: "Leader responsibilities", vi: "Trách nhiệm đội trưởng" },
+        description: {
+          en: "The team leader manages invitations, confirms the final roster, and handles official submission actions for later rounds.",
+          vi: "Đội trưởng quản lý lời mời, xác nhận đội hình cuối cùng và thực hiện các thao tác nộp bài chính thức ở các vòng sau.",
+        },
+      },
+      {
+        title: { en: "Team-based progression", vi: "Đi tiếp theo kết quả đội" },
+        description: {
+          en: "Although Round 1 is taken individually, qualification and advancement are calculated from team outcomes, not isolated personal results.",
+          vi: "Dù Vòng 1 được làm theo cá nhân, việc đủ điều kiện và đi tiếp vẫn được tính theo kết quả đội chứ không chỉ theo từng cá nhân riêng lẻ.",
+        },
+      },
+    ],
+    openTimelineOverviewLabel: { en: "Open timeline overview", vi: "Mở lịch trình tổng quan" },
+    rounds: [
+      {
+        id: "01",
+        label: { en: "Round 01", vi: "Vòng 01" },
+        title: { en: "Individual Qualifier", vi: "Vòng loại cá nhân" },
+        duration: {
+          en: "36 objective questions + 2 essay questions online",
+          vi: "36 câu trắc nghiệm + 2 câu tự luận trực tuyến",
+        },
+        description: {
+          en: "Each eligible member receives a personalized paper with 36 objective questions drawn by topic and difficulty, followed by 2 essay questions. The average score of the team is used for ranking, and the top 50 teams proceed to Round 2.",
+          vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 36 câu hỏi trắc nghiệm được rút theo chủ đề và độ khó, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
+        },
+        deliverables: [
+          { en: "36 objective questions across 6 topics", vi: "36 câu trắc nghiệm trên 6 chủ đề" },
+          { en: "2 essay responses with 200-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 200 từ" },
+          { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
+        ],
+        focus: {
+          en: "Round 1 is individual at paper level but ranked at team level.",
+          vi: "Vòng 1 làm bài theo cá nhân nhưng xếp hạng ở cấp độ đội.",
+        },
+        specificRules: [
+          {
+            en: "Only locked teams with 3 to 5 members may enter the official exam.",
+            vi: "Chỉ các đội đã khóa đội và có từ 3 đến 5 thành viên mới được vào bài thi chính thức.",
+          },
+          {
+            en: "Every member takes one timed paper consisting of 36 objective questions and 2 essay questions.",
+            vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 36 câu trắc nghiệm và 2 câu tự luận.",
+          },
+          {
+            en: "Top 50 teams are selected by the average score of eligible team members.",
+            vi: "Top 50 đội được chọn theo điểm trung bình của các thành viên đủ điều kiện trong đội.",
+          },
+        ],
+        roundNotes: [
+          {
+            en: "Each student only has one official Round 1 attempt. Once the exam starts, it cannot be paused or restarted.",
+            vi: "Mỗi sinh viên chỉ có một lượt thi Vòng 1 chính thức. Khi bài thi bắt đầu, không thể tạm dừng hoặc làm lại.",
+          },
+          {
+            en: "Objective score is available first, while essay score stays pending until admin or moderator review is completed.",
+            vi: "Điểm phần trắc nghiệm có trước, còn điểm tự luận vẫn ở trạng thái chờ cho đến khi admin hoặc moderator chấm xong.",
+          },
+        ],
+      },
+      {
+        id: "02",
+        label: { en: "Round 02", vi: "Vòng 02" },
+        title: { en: "Project Report Review", vi: "Chấm báo cáo dự án" },
+        duration: {
+          en: "judge-scored team report stage",
+          vi: "giai đoạn nộp báo cáo đội được giám khảo chấm điểm",
+        },
+        description: {
+          en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 10 teams are recognized as Emerging Teams.",
+          vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 10 đội tiếp theo được ghi nhận là Đội tiềm năng.",
+        },
+        deliverables: [
+          { en: "Project report submission", vi: "Báo cáo dự án" },
+          { en: "Judge scoring and feedback", vi: "Điểm và nhận xét từ giám khảo" },
+          { en: "Top 5 finalists + next 10 Emerging Teams", vi: "Top 5 chung kết + 10 Đội tiềm năng tiếp theo" },
+        ],
+        focus: {
+          en: "Round 2 is a judged report stage with versioned file submission.",
+          vi: "Vòng 2 là giai đoạn chấm báo cáo với cơ chế nộp tệp theo phiên bản.",
+        },
+        specificRules: [
+          {
+            en: "Only teams qualified from Round 1 can access the Round 2 submission center.",
+            vi: "Chỉ các đội vượt qua Vòng 1 mới được truy cập khu vực nộp bài Vòng 2.",
+          },
+          {
+            en: "Team leaders submit the official report file, while all previous versions remain visible for tracking.",
+            vi: "Đội trưởng nộp tệp báo cáo chính thức, còn các phiên bản trước vẫn được lưu để theo dõi.",
+          },
+          {
+            en: "Judge scoring selects the top 5 teams for the final and recognizes the next 10 as Emerging Teams.",
+            vi: "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và ghi nhận 10 đội tiếp theo là Đội tiềm năng.",
+          },
+        ],
+        roundNotes: [
+          {
+            en: "The team leader is responsible for the official upload, but all members should align on the final report version before submission.",
+            vi: "Đội trưởng chịu trách nhiệm nộp bài chính thức, nhưng toàn bộ thành viên nên thống nhất phiên bản báo cáo cuối cùng trước khi nộp.",
+          },
+          {
+            en: "Only the latest valid submission version is used for judging once the Round 2 deadline closes.",
+            vi: "Khi hạn nộp Vòng 2 kết thúc, chỉ phiên bản hợp lệ mới nhất mới được dùng để chấm điểm.",
+          },
+        ],
+      },
+      {
+        id: "03",
+        label: { en: "Round 03", vi: "Vòng 03" },
+        title: { en: "Final Report & Live Presentation", vi: "Chung kết" },
+        duration: {
+          en: "final report deadline + live presentation day",
+          vi: "hạn nộp báo cáo cuối + ngày thuyết trình trực tiếp",
+        },
+        description: {
+          en: "The final stage starts with the deadline for the updated finalist report and deck, then ends with the live presentation, judge Q&A, and the final award decision.",
+          vi: "Giai đoạn chung kết bắt đầu bằng hạn nộp báo cáo và bộ slide cập nhật của đội vào chung kết, sau đó khép lại bằng phần thuyết trình trực tiếp, hỏi đáp cùng giám khảo và quyết định giải thưởng cuối cùng.",
+        },
+        deliverables: [
+          { en: "Final report and pitch deck submission", vi: "Nộp báo cáo cuối cùng và slide thuyết trình" },
+          { en: "Live finalist presentation and judge Q&A", vi: "Thuyết trình trực tiếp và hỏi đáp cùng giám khảo" },
+          { en: "Final scoring and podium ranking", vi: "Chấm điểm cuối cùng và xếp hạng giải thưởng" },
+        ],
+        focus: {
+          en: "The final has two connected steps: final report deadline, then live presentation and defense.",
+          vi: "Vòng chung kết có hai bước liên tiếp: hạn nộp báo cáo cuối, sau đó là thuyết trình và bảo vệ trực tiếp.",
+        },
+        specificRules: [
+          {
+            en: "Finalist teams must submit the updated final report and pitch deck before the final-report deadline closes.",
+            vi: "Các đội chung kết phải nộp báo cáo hoàn chỉnh và bộ slide thuyết trình trước khi hạn nộp báo cáo chung kết khép lại.",
+          },
+          {
+            en: "After the report deadline, teams move into the live presentation and judge Q&A stage on final event day.",
+            vi: "Sau hạn nộp báo cáo, các đội chuyển sang giai đoạn thuyết trình trực tiếp và hỏi đáp cùng giám khảo trong ngày chung kết.",
+          },
+          {
+            en: "Final podium awards are determined only after the live final defense is completed.",
+            vi: "Thứ hạng chung cuộc chỉ được xác định sau khi hoàn tất phần bảo vệ trực tiếp tại vòng chung kết.",
+          },
+        ],
+        roundNotes: [
+          {
+            en: "The final report deadline closes before presentation day, so teams should freeze the submitted deck and report early enough for rehearsal.",
+            vi: "Hạn nộp báo cáo chung kết kết thúc trước ngày trình bày, vì vậy đội nên chốt bộ tài liệu và slide đủ sớm để còn thời gian tập dượt.",
+          },
+          {
+            en: "Final-stage logistics, presentation order, and check-in instructions should be reviewed carefully after the report deadline and before defense day.",
+            vi: "Thông tin hậu cần, thứ tự trình bày và hướng dẫn check-in của vòng chung kết cần được xem kỹ sau hạn nộp báo cáo và trước ngày bảo vệ.",
+          },
+        ],
+      },
+    ],
+    openRoundOnTimelineLabel: { en: "Open this round on timeline page", vi: "Mở giai đoạn này trên trang lịch trình" },
+    deliverablePrefix: { en: "Deliverable", vi: "Đầu việc" },
+    specificRoundRulesLabel: { en: "Specific round rules", vi: "Quy định riêng của vòng" },
+    roundNotesLabel: { en: "Round notes", vi: "Lưu ý của vòng" },
+    faqQuickAnswersLabel: { en: "Quick answers", vi: "Trả lời nhanh" },
+    faqQuickAnswers: [
+      {
+        en: `Round 1 requires a team of ${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} members`,
+        vi: `Vòng 1 yêu cầu đội có ${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} thành viên`,
+      },
+      {
+        en: "A leader must transfer leadership before leaving",
+        vi: "Đội trưởng phải chuyển quyền trước khi rời đội",
+      },
+      {
+        en: "Round 1 ranks teams by average member score",
+        vi: "Vòng 1 xếp hạng đội theo điểm trung bình thành viên",
+      },
+    ],
+    faqQuestionPrefix: { en: "Question", vi: "Câu hỏi" },
+    faqItems: [
+      {
+        question: {
+          en: "Can I register first and decide on teammates later?",
+          vi: "Tôi có thể đăng ký trước rồi tìm đồng đội sau không?",
+        },
+        answer: {
+          en: "Yes. You can create a student account first, then either open your own team or accept an invitation later. However, only teams that complete team lock with 3 to 5 members can enter the official Round 1 paper.",
+          vi: "Có. Bạn có thể tạo tài khoản trước, sau đó tự mở đội hoặc nhận lời mời vào đội sau. Tuy nhiên, chỉ các đội đã hoàn tất khóa đội với từ 3 đến 5 thành viên mới được vào bài thi Vòng 1 chính thức.",
+        },
+      },
+      {
+        question: {
+          en: "If I am the team leader, can I leave the team directly?",
+          vi: "Nếu tôi là đội trưởng thì có thể rời đội ngay không?",
+        },
+        answer: {
+          en: "No. A leader must transfer leadership to another confirmed member before leaving. The platform protects team ownership so the team is never left without a leader.",
+          vi: "Không. Đội trưởng phải chuyển quyền đội trưởng cho một thành viên đã xác nhận khác trước khi rời đội. Hệ thống bảo vệ quyền sở hữu đội để đội không bao giờ rơi vào trạng thái không có đội trưởng.",
+        },
+      },
+      {
+        question: {
+          en: "Does Round 1 select individuals or teams?",
+          vi: "Vòng 1 chọn theo cá nhân hay theo đội?",
+        },
+        answer: {
+          en: "Round 1 is taken individually, but selection is made at the team level. The average score of eligible members in each locked team is used to rank teams and determine the top 50.",
+          vi: "Vòng 1 được làm theo từng cá nhân, nhưng việc chọn đi tiếp được tính ở cấp độ đội. Điểm trung bình của các thành viên đủ điều kiện trong mỗi đội đã khóa sẽ được dùng để xếp hạng và chọn top 50 đội.",
+        },
+      },
+      {
+        question: {
+          en: "Can our team upload more than one Round 2 report version?",
+          vi: "Đội tôi có thể nộp nhiều phiên bản báo cáo Vòng 2 không?",
+        },
+        answer: {
+          en: "Yes. The platform keeps version history for Round 2 submissions, but only the latest valid version before the deadline is used for judging.",
+          vi: "Có. Nền tảng lưu lịch sử các phiên bản nộp bài ở Vòng 2, nhưng chỉ phiên bản hợp lệ mới nhất trước hạn chót mới được dùng để chấm điểm.",
+        },
+      },
+      {
+        question: {
+          en: "When do finalist teams know the final ranking?",
+          vi: "Khi nào các đội vào chung kết biết thứ hạng cuối cùng?",
+        },
+        answer: {
+          en: "Final ranking is determined only after the live final defense. Before that point, the finalist list simply shows the top 5 teams without any ranking order.",
+          vi: "Thứ hạng chung cuộc chỉ được xác định sau phần bảo vệ trực tiếp ở chung kết. Trước thời điểm đó, danh sách finalist chỉ thể hiện 5 đội vào chung kết mà không mang ý nghĩa xếp hạng.",
+        },
+      },
+    ],
     timeline: {
       eyebrow: { en: "Competition timeline", vi: "Lịch trình cuộc thi" },
       title: {
@@ -513,6 +1194,57 @@ export const defaultPageContent: SitePageContent = {
         vi: "Trang này giúp Attacker 2026 có câu chuyện đánh giá rõ ràng hơn bằng cách cho thấy vì sao mỗi giám khảo quan trọng với sản phẩm fintech, thị trường và năng lực thực thi.",
       },
     },
+    panelSizeLabel: { en: "Panel size", vi: "Quy mô hội đồng" },
+    roundSections: [
+      {
+        round: "round-3",
+        eyebrow: { en: "Final round judges", vi: "Giám khảo vòng chung kết" },
+        title: {
+          en: "The panel for live presentation, defense, and final ranking.",
+          vi: "Hội đồng cho phần thuyết trình trực tiếp, hỏi đáp và xếp hạng cuối cùng.",
+        },
+        description: {
+          en: "These judges focus on stage presence, strategic clarity, execution quality, and final competition performance.",
+          vi: "Nhóm giám khảo này tập trung vào bản lĩnh trình bày, độ rõ chiến lược, chất lượng thực thi và hiệu suất thi đấu ở chặng cuối.",
+        },
+        panelNote: {
+          en: "Final-round judges visible for the live pitch and Q&A stage.",
+          vi: "Số giám khảo xuất hiện cho chặng pitch và hỏi đáp của vòng chung kết.",
+        },
+      },
+      {
+        round: "round-2",
+        eyebrow: { en: "Round 2 judges", vi: "Giám khảo vòng 2" },
+        title: {
+          en: "The review panel for project reports and shortlist decisions.",
+          vi: "Hội đồng chấm báo cáo dự án và quyết định danh sách vào chung kết.",
+        },
+        description: {
+          en: "Round 2 judges concentrate on structure, feasibility, compliance, and the quality of project documentation.",
+          vi: "Giám khảo vòng 2 tập trung vào cấu trúc, tính khả thi, tuân thủ và chất lượng hồ sơ dự án.",
+        },
+        panelNote: {
+          en: "Report-evaluation judges focused on shortlist and depth.",
+          vi: "Số giám khảo chấm báo cáo, tập trung vào shortlist và chiều sâu dự án.",
+        },
+      },
+      {
+        round: "round-1",
+        eyebrow: { en: "Round 1 judges", vi: "Giám khảo vòng 1" },
+        title: {
+          en: "The specialist layer behind the individual qualifier and scoring logic.",
+          vi: "Lớp chuyên môn phía sau vòng loại cá nhân và logic chấm điểm ban đầu.",
+        },
+        description: {
+          en: "This group shapes question-bank quality, quantitative thinking, and the academic rigor of the first checkpoint.",
+          vi: "Nhóm này định hình chất lượng ngân hàng câu hỏi, tư duy định lượng và độ chặt chẽ học thuật của chốt kiểm tra đầu tiên.",
+        },
+        panelNote: {
+          en: "Question-bank and scoring specialists for the first round.",
+          vi: "Số chuyên gia phụ trách ngân hàng câu hỏi và logic chấm điểm của vòng đầu.",
+        },
+      },
+    ],
     clarity: {
       eyebrow: { en: "Judging clarity", vi: "Độ rõ của hội đồng" },
       title: {
@@ -583,6 +1315,42 @@ export const defaultPageContent: SitePageContent = {
         vi: "Trang này giới thiệu cuộc thi thông qua hành trình nhiều mùa, cộng đồng builder và định hướng nền tảng 2026 rõ ràng hơn thay vì các công cụ vận hành nội bộ.",
       },
     },
+    heroBadges: [
+      { en: "multi-season legacy", vi: "di sản nhiều mùa" },
+      { en: "student fintech builders", vi: "builder fintech sinh viên" },
+      { en: "industry-linked judging", vi: "hội đồng gắn với doanh nghiệp" },
+    ],
+    heroCard: {
+      eyebrow: { en: "Attacker legacy", vi: "Di sản Attacker" },
+      title: {
+        en: "A competition that has grown from campus energy into a stronger fintech stage.",
+        vi: "Một cuộc thi đã đi từ năng lượng học đường đến một sân chơi fintech vững vàng hơn.",
+      },
+      description: { en: "", vi: "" },
+    },
+    heroImage: "/theme-hero-1.jpg",
+    metrics: [
+      {
+        label: { en: "seasons shaped", vi: "mùa thi đã đi qua" },
+        value: "04",
+        note: { en: "", vi: "" },
+      },
+      {
+        label: { en: "student builders reached", vi: "lượt builder tiếp cận" },
+        value: "1,200+",
+        note: { en: "", vi: "" },
+      },
+      {
+        label: { en: "universities & communities", vi: "trường và cộng đồng" },
+        value: "35+",
+        note: { en: "", vi: "" },
+      },
+      {
+        label: { en: "partners & judges engaged", vi: "đối tác và giám khảo đồng hành" },
+        value: "50+",
+        note: { en: "", vi: "" },
+      },
+    ],
     contentModules: {
       eyebrow: { en: "Season highlights", vi: "Điểm nhấn qua từng mùa" },
       title: {
@@ -594,33 +1362,220 @@ export const defaultPageContent: SitePageContent = {
         vi: "Khu vực này được dùng để cho thấy cuộc thi không bắt đầu từ số 0. Nó đã có đà tăng trưởng, có câu chuyện chung kết và một bản sắc hướng công chúng rõ hơn.",
       },
     },
+    competitionLinkLabel: { en: "Explore competition page", vi: "Mở trang cuộc thi" },
+    seasonBadgeLabel: { en: "Season", vi: "Mùa" },
+    seasonStories: [
+      {
+        year: "2023",
+        image: "/theme-feature-1.jpg",
+        label: {
+          en: "Early market-building phase",
+          vi: "Giai đoạn xây nền tảng ban đầu",
+        },
+        title: {
+          en: "Attacker started as a student arena for sharper fintech thinking.",
+          vi: "Attacker bắt đầu như một sân chơi sinh viên cho tư duy fintech sắc nét hơn.",
+        },
+        body: {
+          en: "The first seasons proved there was demand for a competition that sits between finance, product reasoning, and practical execution.",
+          vi: "Những mùa đầu cho thấy có nhu cầu rõ ràng cho một cuộc thi nằm giữa tài chính, tư duy sản phẩm và năng lực thực thi.",
+        },
+        stats: [
+          { en: "300+ participants", vi: "300+ thí sinh" },
+          { en: "multi-campus reach", vi: "phủ nhiều trường" },
+        ],
+      },
+      {
+        year: "2024",
+        image: "/theme-hero-2.jpg",
+        label: {
+          en: "Cross-skill teams gained momentum",
+          vi: "Đội đa kỹ năng bắt đầu bùng lên",
+        },
+        title: {
+          en: "The team format matured with stronger product, data, and strategy roles.",
+          vi: "Định dạng đội thi trưởng thành hơn với vai trò sản phẩm, dữ liệu và chiến lược rõ ràng hơn.",
+        },
+        body: {
+          en: "Participants arrived with a more complete builder mindset, not only technical strength. That gave the competition better stories, better finals, and stronger peer learning.",
+          vi: "Thí sinh đến với một tư duy builder đầy đủ hơn, không chỉ là sức mạnh kỹ thuật. Điều đó tạo nên những câu chuyện hay hơn, vòng chung kết tốt hơn và khả năng học hỏi lẫn nhau mạnh hơn.",
+        },
+        stats: [
+          { en: "top finalist showcases", vi: "các showcase chung kết" },
+          { en: "industry-facing judges", vi: "giám khảo gần doanh nghiệp" },
+        ],
+      },
+      {
+        year: "2025",
+        image: "/theme-hero-1.jpg",
+        label: {
+          en: "The competition reached a broader ecosystem",
+          vi: "Cuộc thi mở rộng ra hệ sinh thái lớn hơn",
+        },
+        title: {
+          en: "Sponsors, judges, and student communities gave Attacker a stronger public presence.",
+          vi: "Nhà tài trợ, giám khảo và cộng đồng sinh viên giúp Attacker có độ hiện diện công khai mạnh hơn.",
+        },
+        body: {
+          en: "By this point the competition already felt bigger than a campus event. It started to behave like a real launch platform for student fintech talent.",
+          vi: "Đến giai đoạn này, cuộc thi đã lớn hơn một sự kiện nội bộ trong trường. Nó bắt đầu vận hành như một launch platform thực sự cho tài năng fintech sinh viên.",
+        },
+        stats: [
+          { en: "partner visibility", vi: "độ hiện diện đối tác" },
+          { en: "clearer public narrative", vi: "câu chuyện công khai rõ hơn" },
+        ],
+      },
+      {
+        year: "2026",
+        image: "/theme-feature-2.jpg",
+        label: {
+          en: "A cleaner international-facing stage",
+          vi: "Một sân chơi sạch hơn, hướng ra bên ngoài hơn",
+        },
+        title: {
+          en: "This season reframes Attacker as a more modern competition platform.",
+          vi: "Mùa này tái định vị Attacker thành một nền tảng cuộc thi hiện đại hơn.",
+        },
+        body: {
+          en: "The bilingual website, team workspace, newsroom, and admin mode together make the competition easier to trust, easier to navigate, and easier to scale.",
+          vi: "Website song ngữ, team workspace, newsroom và admin mode kết hợp lại giúp cuộc thi dễ tạo niềm tin hơn, dễ điều hướng hơn và dễ mở rộng hơn.",
+        },
+        stats: [
+          { en: "frontend team workflow", vi: "luồng đội frontend" },
+          { en: "editorial newsroom system", vi: "hệ newsroom dạng biên tập" },
+        ],
+      },
+    ],
     flags: {
-      eyebrow: { en: "2026 momentum", vi: "Động lực 2026" },
+      eyebrow: { en: "Photo slider", vi: "Photo slider" },
       title: {
-        en: "The current season already has visible signs of activity and momentum.",
-        vi: "Mùa hiện tại đã có những dấu hiệu rõ ràng về mức độ hoạt động và đà tăng trưởng.",
+        en: "A visual archive that keeps Attacker in motion.",
+        vi: "Một kho hình ảnh giúp Attacker luôn chuyển động.",
       },
       description: {
-        en: "Mixing live frontend indicators with the broader competition story helps the page feel current, not purely retrospective.",
-        vi: "Kết hợp các chỉ số đang sống trên frontend với câu chuyện tổng thể của cuộc thi giúp trang này có cảm giác hiện tại, không chỉ nhìn lại quá khứ.",
+        en: "Use this block to move between seasons, open a larger image, and connect each visual to the competition story.",
+        vi: "Dùng block này để di chuyển giữa các mùa, mở ảnh lớn hơn và nối từng hình ảnh với câu chuyện của cuộc thi.",
       },
     },
+    gallerySlides: [
+      {
+        image: "/theme-hero-2.jpg",
+        year: "2023",
+        label: {
+          en: "Kickoff atmosphere",
+          vi: "Không khí khởi động",
+        },
+        title: {
+          en: "Students entered Attacker through an energetic campus launch format.",
+          vi: "Sinh viên bước vào Attacker qua một format khởi động giàu năng lượng học đường.",
+        },
+        description: {
+          en: "This opening moment should feel like a real competition brand reveal, not just an internal event photo.",
+          vi: "Khoảnh khắc mở đầu này nên mang cảm giác ra mắt thương hiệu cuộc thi thật sự, không chỉ là một tấm hình sự kiện nội bộ.",
+        },
+      },
+      {
+        image: "/theme-hero-1.jpg",
+        year: "2024",
+        label: {
+          en: "Final-round focus",
+          vi: "Không khí vòng chung kết",
+        },
+        title: {
+          en: "Each season pushed the event closer to a stronger, more public-facing stage.",
+          vi: "Mỗi mùa thi đều đẩy sự kiện đến gần hơn với một sân khấu mạnh hơn và hướng công chúng hơn.",
+        },
+        description: {
+          en: "Use this type of visual to show the pressure, polish, and seriousness of the finalist experience.",
+          vi: "Dùng kiểu hình ảnh này để cho thấy áp lực, độ chỉn chu và sự nghiêm túc của trải nghiệm dành cho đội vào chung kết.",
+        },
+      },
+      {
+        image: "/theme-feature-1.jpg",
+        year: "2025",
+        label: {
+          en: "Team and audience energy",
+          vi: "Năng lượng đội thi và khán giả",
+        },
+        title: {
+          en: "Attacker grew into a competition with stronger team identity and broader visibility.",
+          vi: "Attacker phát triển thành một cuộc thi có bản sắc đội thi rõ hơn và độ hiện diện rộng hơn.",
+        },
+        description: {
+          en: "This visual works well for showing community density, reactions, and the scale of participation around the event.",
+          vi: "Hình ảnh này phù hợp để cho thấy mật độ cộng đồng, phản ứng tại sự kiện và quy mô tham gia xoay quanh cuộc thi.",
+        },
+      },
+      {
+        image: "/theme-feature-2.jpg",
+        year: "2026",
+        label: {
+          en: "New-generation presentation",
+          vi: "Ngôn ngữ trình bày thế hệ mới",
+        },
+        title: {
+          en: "The 2026 direction should feel cleaner, more international, and more visual-first.",
+          vi: "Định hướng 2026 nên mang cảm giác sạch hơn, quốc tế hơn và ưu tiên hình ảnh hơn.",
+        },
+        description: {
+          en: "This is the kind of imagery that can connect the legacy of the competition with the new website direction.",
+          vi: "Đây là kiểu hình ảnh có thể kết nối di sản của cuộc thi với hướng website mới.",
+        },
+      },
+    ],
+    galleryCurrentFrame: {
+      eyebrow: { en: "Current frame", vi: "Khung hình hiện tại" },
+      title: { en: "", vi: "" },
+      description: { en: "", vi: "" },
+    },
+    galleryNotes: [
+      {
+        en: "Autoplay keeps the section moving without feeling static.",
+        vi: "Autoplay giúp section chuyển động mà không tạo cảm giác tĩnh.",
+      },
+      {
+        en: "Thumbnail clicks let users jump directly to a specific season moment.",
+        vi: "Bấm thumbnail cho phép người xem nhảy thẳng đến một khoảnh khắc cụ thể.",
+      },
+      {
+        en: "Fullscreen mode gives each image more stage and more context.",
+        vi: "Chế độ toàn màn hình giúp mỗi hình có nhiều sân khấu và nhiều ngữ cảnh hơn.",
+      },
+    ],
+    openFullViewLabel: { en: "Open full view", vi: "Mở toàn màn hình" },
+    previousPhotoLabel: { en: "Previous photo", vi: "Ảnh trước" },
+    nextPhotoLabel: { en: "Next photo", vi: "Ảnh tiếp theo" },
+    closeGalleryLabel: { en: "Close gallery", vi: "Đóng thư viện" },
   },
   contact: {
     mapEyebrow: { en: "Contact", vi: "Liên hệ" },
+    campusName: contactLocation.campusName,
     phoneContactsEyebrow: { en: "Phone contacts", vi: "Đầu mối điện thoại" },
+    phoneContacts: contactDeskContacts.map((item) => ({
+      name: item.name,
+      phone: item.phone,
+      tel: item.tel,
+      responsibility: item.responsibility,
+    })),
     responseRhythmEyebrow: { en: "Response rhythm", vi: "Nhịp phản hồi" },
     responseRhythmDescription: {
       en: "Support channels stay open 24/7 for registration, team, and technical coordination.",
       vi: "Các kênh hỗ trợ luôn mở 24/7 cho nhu cầu đăng ký, đội thi và phối hợp kỹ thuật.",
     },
     officialEmailLabel: { en: "Official email", vi: "Email chính thức" },
+    officialEmailValue: contactInfo.email,
     primaryHotlineLabel: { en: "Primary hotline", vi: "Hotline chính" },
+    primaryHotlineValue: contactInfo.phone,
     supportWindowLabel: { en: "Support window", vi: "Khung giờ hỗ trợ" },
+    supportWindowValue: "24/7",
     organizerAddressEyebrow: { en: "Organizer address", vi: "Địa chỉ ban tổ chức" },
+    organizerAddress: contactLocation.address,
+    organizerAddressNote: contactLocation.note,
     officialChannelsEyebrow: { en: "Official channels", vi: "Kênh chính thức" },
     attackerFacebookLabel: { en: "Attacker facebook page", vi: "Fanpage Attacker" },
+    attackerFacebookUrl: contactInfo.attackerFacebook,
     ftcFacebookLabel: { en: "FTC facebook page", vi: "Fanpage FTC" },
+    ftcFacebookUrl: contactInfo.ftcFacebook,
     openNewsroomLabel: { en: "Open newsroom", vi: "Mở trang tin tức" },
   },
   timelinePage: {
@@ -632,6 +1587,15 @@ export const defaultPageContent: SitePageContent = {
     scheduleToBeUpdated: { en: "Schedule to be updated", vi: "Lịch sẽ được cập nhật" },
     openDetailLabel: { en: "Open detail", vi: "Mở chi tiết" },
     openRuleBlockLabel: { en: "Open rule block", vi: "Mở khối thể lệ" },
+    readResultUpdateLabel: { en: "Read result update", vi: "Đọc cập nhật kết quả" },
+    round2SubmissionClosedTitle: {
+      en: "Round 2 submission window has closed.",
+      vi: "Hạn nộp bài Vòng 2 đã kết thúc.",
+    },
+    finalReportClosedTitle: {
+      en: "The final report deadline has passed.",
+      vi: "Hạn nộp báo cáo chung kết đã kết thúc.",
+    },
     stepsLabel: { en: "steps", vi: "bước" },
     timeLabel: { en: "Time", vi: "Thời gian" },
     placeLabel: { en: "Place", vi: "Địa điểm" },
@@ -1125,6 +2089,10 @@ export const sponsorProfiles: SponsorProfile[] = [
       en: "Supports the champion award, founder office hours, and investor-facing coaching for the final teams.",
       vi: "Đồng hành cùng giải thưởng quán quân, các buổi office hours và huấn luyện theo góc nhìn nhà đầu tư cho các đội vào sâu.",
     },
+    contribution: {
+      en: "Supports prize positioning, visibility, and credibility.",
+      vi: "Đồng hành ở mức độ giải thưởng, hình ảnh và độ tin cậy.",
+    },
   },
   {
     name: "NextBank Lab",
@@ -1134,6 +2102,10 @@ export const sponsorProfiles: SponsorProfile[] = [
     description: {
       en: "Contributes challenge framing around consumer finance, digital onboarding, and regulated fintech experiences.",
       vi: "Đóng góp các góc đề bài xoay quanh tài chính cá nhân, onboarding số và các trải nghiệm fintech trong môi trường tuân thủ.",
+    },
+    contribution: {
+      en: "Shapes challenge framing and industry context.",
+      vi: "Định hình đề bài và bối cảnh trong ngành.",
     },
   },
   {
@@ -1145,6 +2117,10 @@ export const sponsorProfiles: SponsorProfile[] = [
       en: "Provides market-data perspectives, evaluation logic, and analyst mentors for Round 1 and Round 2.",
       vi: "Đóng góp góc nhìn về dữ liệu thị trường, logic chấm điểm và đội ngũ mentor phân tích cho Vòng 1 và Vòng 2.",
     },
+    contribution: {
+      en: "Adds specialist knowledge and evaluation depth.",
+      vi: "Bổ sung chuyên môn và chiều sâu đánh giá.",
+    },
   },
   {
     name: "Finverse",
@@ -1154,6 +2130,10 @@ export const sponsorProfiles: SponsorProfile[] = [
     description: {
       en: "Helps extend the competition reach through community activations, student promotion, and workshop support.",
       vi: "Hỗ trợ mở rộng độ phủ của cuộc thi thông qua các hoạt động cộng đồng, quảng bá đến sinh viên và hỗ trợ workshop.",
+    },
+    contribution: {
+      en: "Expands reach through community and student channels.",
+      vi: "Mở rộng độ phủ thông qua cộng đồng và kênh sinh viên.",
     },
   },
 ];

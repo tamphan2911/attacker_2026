@@ -19,11 +19,7 @@ import {
   Users2,
 } from "lucide-react";
 
-import {
-  defaultPageContent,
-  homeMetrics,
-  sponsorProfiles,
-} from "@/data/site-content";
+import { defaultPageContent } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
@@ -79,284 +75,10 @@ const homepageRewardItems = [
   },
 ] as const;
 
-const homepageEmergingReward = {
-  eyebrow: { en: "Side recognition", vi: "Danh hieu bo sung" },
-  title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
-  amount: { en: "Top 10 teams", vi: "Top 10 đội" },
-  note: {
-    en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
-    vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
-  },
-} as const;
-
-const heroExperienceSlides = [
-  {
-    eyebrow: {
-      en: "General overview",
-      vi: "Tổng quan cuộc thi",
-    },
-    title: {
-      en: "National fintech challenge for student teams",
-      vi: "Sân chơi fintech toàn quốc dành cho đội thi sinh viên",
-    },
-    description: {
-      en: "Attacker 2026 brings students into a three-round journey where finance, strategy, product thinking, and presentation all matter.",
-      vi: "Attacker 2026 đưa sinh viên vào hành trình ba vòng thi, nơi tư duy tài chính, chiến lược, sản phẩm và khả năng trình bày đều quan trọng.",
-    },
-    highlights: [
-      {
-        en: "Students nationwide",
-        vi: "Sinh viên trên toàn quốc",
-      },
-      {
-        en: "Teams of 3-5",
-        vi: "Đội hình 3-5 người",
-      },
-      {
-        en: "Finance + product + data",
-        vi: "Tài chính + sản phẩm + dữ liệu",
-      },
-    ],
-    primaryCta: {
-      href: "/competition",
-      label: {
-        en: "Competition overview",
-        vi: "Tổng quan cuộc thi",
-      },
-    },
-    secondaryCta: {
-      href: "/organizer",
-      label: {
-        en: "About Attacker",
-        vi: "Giới thiệu Attacker",
-      },
-    },
-    cards: [
-      {
-        icon: Users2,
-        label: {
-          en: "Participants",
-          vi: "Đối tượng",
-        },
-        value: {
-          en: "University students",
-          vi: "Sinh viên đại học",
-        },
-        note: {
-          en: "Built for teams who want to test ideas in fintech and innovation.",
-          vi: "Dành cho các đội muốn thử sức với ý tưởng fintech và đổi mới.",
-        },
-      },
-      {
-        icon: ShieldCheck,
-        label: {
-          en: "Format",
-          vi: "Cấu trúc",
-        },
-        value: {
-          en: "3 competition rounds",
-          vi: "3 vòng thi",
-        },
-        note: {
-          en: "Individual qualifier, project report, and live final defense.",
-          vi: "Thi cá nhân, báo cáo dự án và thuyết trình bảo vệ ở chung kết.",
-        },
-      },
-      {
-        icon: TrendingUp,
-        label: {
-          en: "Focus",
-          vi: "Trọng tâm",
-        },
-        value: {
-          en: "Think, build, defend",
-          vi: "Tư duy, triển khai, bảo vệ",
-        },
-        note: {
-          en: "A serious challenge for students interested in finance, data, and products.",
-          vi: "Một sân chơi nghiêm túc cho sinh viên quan tâm tài chính, dữ liệu và sản phẩm.",
-        },
-      },
-    ],
-  },
-  {
-    eyebrow: {
-      en: "Rewards snapshot",
-      vi: "Tóm tắt giải thưởng",
-    },
-    title: {
-      en: "Top 5 finalist awards with sponsor-backed benefits",
-      vi: "Giải thưởng cho top 5 cùng các quyền lợi đồng hành từ nhà tài trợ",
-    },
-    description: {
-      en: "The prize structure rewards the final ranking clearly, while sponsor gifts, scholarships, and other non-cash benefits expand the value beyond cash awards.",
-      vi: "Cấu trúc giải thưởng tách bạch theo thứ hạng chung kết, đồng thời quà tặng, học bổng và quyền lợi phi tiền mặt từ nhà tài trợ giúp giá trị cuộc thi vượt ra ngoài tiền thưởng.",
-    },
-    highlights: [
-      {
-        en: "30M champion prize",
-        vi: "30 triệu cho quán quân",
-      },
-      {
-        en: "Top 10 Emerging Teams",
-        vi: "Top 10 đội tiềm năng",
-      },
-      {
-        en: "Gifts and scholarships",
-        vi: "Quà tặng và học bổng",
-      },
-    ],
-    primaryCta: {
-      href: "/competition",
-      label: {
-        en: "View reward structure",
-        vi: "Xem cơ cấu giải thưởng",
-      },
-    },
-    secondaryCta: {
-      href: "/competition/sponsors",
-      label: {
-        en: "Sponsor partners",
-        vi: "Đối tác tài trợ",
-      },
-    },
-    cards: [
-      {
-        icon: Crown,
-        label: {
-          en: "Champion",
-          vi: "Quán quân",
-        },
-        value: {
-          en: "30,000,000 VND",
-          vi: "30.000.000 VND",
-        },
-        note: {
-          en: "Followed by runner-up, third place, and two finalist teams sharing 4th place awards.",
-          vi: "Tiếp theo là á quân, hạng 3 và hai đội đồng hạng 4 ở vòng chung kết.",
-        },
-      },
-      {
-        icon: Star,
-        label: {
-          en: "Emerging Teams",
-          vi: "Đội tiềm năng",
-        },
-        value: {
-          en: "Next 10 teams",
-          vi: "10 đội tiếp theo",
-        },
-        note: {
-          en: "Recognized after Round 2 with certificates and partner-side opportunities.",
-          vi: "Được ghi nhận sau Vòng 2 cùng giấy chứng nhận và các cơ hội từ đối tác.",
-        },
-      },
-      {
-        icon: Award,
-        label: {
-          en: "Sponsor benefits",
-          vi: "Quyền lợi tài trợ",
-        },
-        value: {
-          en: "Scholarships, gifts, access",
-          vi: "Học bổng, quà tặng, cơ hội",
-        },
-        note: {
-          en: "The reward pool can include non-cash benefits in addition to prize money.",
-          vi: "Quỹ giải thưởng có thể bao gồm quyền lợi phi tiền mặt bên cạnh tiền thưởng.",
-        },
-      },
-    ],
-  },
-  {
-    eyebrow: {
-      en: "Timeline overview",
-      vi: "Tổng quan lịch trình",
-    },
-    title: {
-      en: "From May registration to a July final-round defense",
-      vi: "Từ đăng ký trong tháng 5 đến bảo vệ chung kết vào tháng 7",
-    },
-    description: {
-      en: "Attacker 2026 runs through a compact season with clear handoff points between team formation, the Round 1 test, Round 2 report submission, and the final presentation day.",
-      vi: "Attacker 2026 diễn ra trong một mùa giải gọn gàng với các mốc chuyển tiếp rõ ràng giữa giai đoạn tạo đội, bài thi Vòng 1, nộp báo cáo Vòng 2 và ngày thuyết trình chung kết.",
-    },
-    highlights: [
-      {
-        en: "May registration",
-        vi: "Đăng ký tháng 5",
-      },
-      {
-        en: "Round 1 qualifier",
-        vi: "Vòng loại cá nhân",
-      },
-      {
-        en: "July final day",
-        vi: "Chung kết tháng 7",
-      },
-    ],
-    primaryCta: {
-      href: "/competition/timeline",
-      label: {
-        en: "Full timeline",
-        vi: "Xem lịch trình",
-      },
-    },
-    secondaryCta: {
-      href: "/rules#round-1-rules",
-      label: {
-        en: "Round rules",
-        vi: "Luật theo vòng",
-      },
-    },
-    cards: [
-      {
-        icon: CalendarRange,
-        label: {
-          en: "May 2026",
-          vi: "Tháng 5/2026",
-        },
-        value: {
-          en: "Registration and Round 1",
-          vi: "Đăng ký và Vòng 1",
-        },
-        note: {
-          en: "Teams finalize roster first, then members take the individual qualifier.",
-          vi: "Đội thi chốt đội hình trước, sau đó từng thành viên làm bài thi cá nhân.",
-        },
-      },
-      {
-        icon: TrendingUp,
-        label: {
-          en: "June 2026",
-          vi: "Tháng 6/2026",
-        },
-        value: {
-          en: "Round 2 project reports",
-          vi: "Báo cáo dự án Vòng 2",
-        },
-        note: {
-          en: "Top 50 teams move forward to submit and defend their project direction on paper.",
-          vi: "Top 50 đội bước tiếp để nộp và bảo vệ định hướng dự án qua báo cáo.",
-        },
-      },
-      {
-        icon: Medal,
-        label: {
-          en: "July 2026",
-          vi: "Tháng 7/2026",
-        },
-        value: {
-          en: "Live final presentation",
-          vi: "Chung kết thuyết trình",
-        },
-        note: {
-          en: "Top 5 teams present live, answer judges, and compete for the final ranking.",
-          vi: "Top 5 đội thuyết trình trực tiếp, trả lời giám khảo và tranh thứ hạng cuối cùng.",
-        },
-      },
-    ],
-  },
+const heroCardIcons = [
+  [Users2, ShieldCheck, TrendingUp],
+  [Crown, Star, Award],
+  [CalendarRange, TrendingUp, Medal],
 ] as const;
 
 const heroCardIconClasses = [
@@ -372,18 +94,23 @@ const testimonialQuoteClasses = [
 ] as const;
 
 export function HomePage() {
-  const { locale, pageContent } = useSiteState();
+  const { locale, pageContent, sponsors } = useSiteState();
   const [activeSlide, setActiveSlide] = useState(0);
   const heroSlides =
     pageContent.home.heroSlides.length > 0
       ? pageContent.home.heroSlides
       : defaultPageContent.home.heroSlides;
-  const heroDeck = heroExperienceSlides.map((item, index) => ({
-    ...item,
-    image: heroSlides[index % heroSlides.length]?.image ?? defaultPageContent.home.heroSlides[0].image,
-  }));
+  const heroDeck = heroSlides;
+  const metricItems =
+    pageContent.home.metrics.length > 0 ? pageContent.home.metrics : defaultPageContent.home.metrics;
+  const rewardCards =
+    pageContent.home.rewardCards.length > 0 ? pageContent.home.rewardCards : defaultPageContent.home.rewardCards;
+  const rewardSection = pageContent.home.rewards;
+  const emergingReward = pageContent.home.emergingReward;
+  const competitionPath = pageContent.home.competitionPath;
+  const testimonialsSection = pageContent.home.testimonialsSection;
   const currentHeroSlide = heroDeck[activeSlide] ?? heroDeck[0];
-  const sponsorMarqueeItems = [...sponsorProfiles, ...sponsorProfiles];
+  const sponsorMarqueeItems = [...sponsors, ...sponsors];
   const testimonialItems = pageContent.home.testimonials;
   const testimonialMarqueeItems = [...testimonialItems, ...testimonialItems];
 
@@ -477,7 +204,7 @@ export function HomePage() {
 
               <div className="grid gap-2.5 sm:grid-cols-3 lg:grid-cols-1">
                 {currentHeroSlide.cards.map((item, index) => {
-                  const Icon = item.icon;
+                  const Icon = heroCardIcons[activeSlide % heroCardIcons.length]?.[index] ?? Sparkles;
 
                   return (
                     <div
@@ -526,7 +253,7 @@ export function HomePage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {homeMetrics.map((item) => {
+        {metricItems.map((item) => {
           return (
           <div
             key={item.value + item.label.en}
@@ -549,30 +276,27 @@ export function HomePage() {
         <div className="relative grid gap-8 xl:grid-cols-[minmax(0,1.15fr)_320px] xl:items-start">
           <div>
             <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
-              {pickText(locale, pageContent.competition.rewards.eyebrow)}
+              {pickText(locale, rewardSection.eyebrow)}
             </p>
             <h2 className="theme-heading mt-5 max-w-3xl text-3xl font-semibold leading-[1.08] theme-text-strong md:text-[3rem]">
-              {locale === "en"
-                ? "A prize structure that makes the top 5 instantly clear."
-                : "Cấu trúc giải thưởng giúp top 5 được nhìn ra ngay lập tức."}
+              {pickText(locale, rewardSection.title)}
             </h2>
             <p className="theme-text-muted mt-5 max-w-3xl text-base leading-8">
-              {locale === "en"
-                ? "The main awards are separated by final ranking from 1st to 4th, while Emerging Teams stay in their own smaller recognition block after Round 2."
-                : "Các giải chính được tách rõ theo thứ hạng chung kết từ hạng 1 đến hạng 4, trong khi Đội tiềm năng nằm ở một block riêng nhỏ hơn sau Vòng 2."}
+              {pickText(locale, rewardSection.description)}
             </p>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              {homepageRewardItems.map((item) => {
-                const Icon = item.icon;
+              {rewardCards.map((item, index) => {
+                const rewardStyle = homepageRewardItems[index] ?? homepageRewardItems[0];
+                const Icon = rewardStyle.icon;
 
                 return (
                   <div
                     key={item.rank.en}
-                    className={`theme-home-reward-card rounded-[1.8rem] border px-5 py-5 backdrop-blur-md ${item.borderClass}`}
+                    className={`theme-home-reward-card rounded-[1.8rem] border px-5 py-5 backdrop-blur-md ${rewardStyle.borderClass}`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.iconClass}`}>
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${rewardStyle.iconClass}`}>
                         <Icon className="h-5 w-5" />
                       </div>
                       <div>
@@ -604,50 +328,44 @@ export function HomePage() {
                 </div>
                 <div>
                   <p className="theme-text-soft text-[0.72rem] font-semibold uppercase tracking-[0.24em]">
-                    {pickText(locale, homepageEmergingReward.eyebrow)}
+                    {pickText(locale, emergingReward.eyebrow)}
                   </p>
                   <p className="theme-text-strong mt-1 text-lg font-semibold">
-                    {pickText(locale, homepageEmergingReward.title)}
+                    {pickText(locale, emergingReward.title)}
                   </p>
                 </div>
               </div>
               <p className="theme-text-strong mt-5 text-2xl font-semibold">
-                {pickText(locale, homepageEmergingReward.amount)}
+                {pickText(locale, emergingReward.amount)}
               </p>
               <p className="theme-text-muted mt-3 text-sm leading-7">
-                {pickText(locale, homepageEmergingReward.note)}
+                {pickText(locale, emergingReward.note)}
               </p>
             </div>
 
             <div className="theme-home-reward-aside rounded-[2rem] border px-5 py-5 backdrop-blur-md">
               <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
-                {locale === "en" ? "Competition path" : "Lộ trình cuộc thi"}
+                {pickText(locale, competitionPath.eyebrow)}
               </p>
               <div className="mt-5 space-y-3">
-                {[
-                  locale === "en" ? "Round 1 selects the top 50 teams." : "Vòng 1 chọn ra top 50 đội.",
-                  locale === "en" ? "Round 2 selects the top 5 finalists." : "Vòng 2 chọn ra top 5 đội chung kết.",
-                  locale === "en" ? "The next 10 teams are named Emerging Teams." : "10 đội tiếp theo được gọi tên là Đội tiềm năng.",
-                ].map((item) => (
+                {competitionPath.items.map((item) => (
                   <div
-                    key={item}
+                    key={item.en}
                     className="theme-home-path-item theme-text-body rounded-2xl border px-4 py-3 text-sm"
                   >
-                    {item}
+                    {pickText(locale, item)}
                   </div>
                 ))}
               </div>
               <Link
-                href="/competition"
+                href={competitionPath.ctaHref ?? "/competition"}
                 className="theme-button-secondary mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
               >
-                {locale === "en" ? "Open full competition page" : "Mở trang cuộc thi đầy đủ"}
+                {pickText(locale, competitionPath.ctaLabel ?? defaultPageContent.home.competitionPath.ctaLabel!)}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <p className="theme-text-muted mt-4 text-sm leading-7">
-                {locale === "en"
-                  ? "In addition to cash awards, teams may also receive sponsor-supported gifts, scholarships, and other non-cash opportunities."
-                  : "Bên cạnh tiền thưởng, các đội còn có thể nhận thêm quà tặng, học bổng và những quyền lợi phi tiền mặt từ nhà tài trợ."}
+                {pickText(locale, competitionPath.note)}
               </p>
             </div>
           </div>
@@ -657,7 +375,7 @@ export function HomePage() {
       <section className="space-y-5">
         <div className="flex justify-end">
           <Link href="/competition/sponsors" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {locale === "en" ? "Open sponsors page" : "Mở trang nhà tài trợ"}
+            {pickText(locale, pageContent.home.sponsorsStripLinkLabel)}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -671,7 +389,7 @@ export function HomePage() {
                 <div
                   key={`${sponsor.name}-${index}`}
                   className="flex min-h-[108px] min-w-[210px] shrink-0 items-center justify-center rounded-[2rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,249,255,0.94))] px-6 py-5 shadow-[0_22px_44px_rgba(148,163,184,0.12)] md:min-h-[122px] md:min-w-[248px] md:px-7 md:py-6"
-                  aria-hidden={index >= sponsorProfiles.length}
+                  aria-hidden={index >= sponsors.length}
                 >
                   <Image
                     src={sponsor.logoSrc}
@@ -696,21 +414,17 @@ export function HomePage() {
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="max-w-3xl">
               <p className="text-center text-xs font-semibold uppercase tracking-[0.3em] theme-eyebrow md:text-left">
-                {locale === "en" ? "Testimonial" : "Cảm nhận"}
+                {pickText(locale, testimonialsSection.eyebrow)}
               </p>
               <h2 className="theme-heading mt-3 text-center text-3xl font-semibold leading-[1.08] theme-text-strong md:text-left md:text-[2.75rem]">
-                {locale === "en"
-                  ? "What Attacker 2025 participants think about the journey"
-                  : "Những gì thí sinh Attacker 2025 cảm nhận sau hành trình cuộc thi"}
+                {pickText(locale, testimonialsSection.title)}
               </h2>
               <p className="mt-3 text-center text-sm leading-7 theme-text-muted md:text-left md:text-base">
-                {locale === "en"
-                  ? "A sliding collection of short voices from finalists, champions, and emerging teams across last season."
-                  : "Một cụm trích dẫn dạng slider, tổng hợp cảm nhận ngắn từ các đội chung kết, quán quân và đội tiềm năng của mùa trước."}
+                {pickText(locale, testimonialsSection.description)}
               </p>
             </div>
             <div className="rounded-full border theme-border bg-white/70 px-4 py-2 text-center text-[0.72rem] font-semibold uppercase tracking-[0.18em] theme-text-soft dark:bg-white/[0.05]">
-              {locale === "en" ? "Auto-sliding voices" : "Trích dẫn tự động"}
+              {pickText(locale, pageContent.home.testimonialsBadgeLabel)}
             </div>
           </div>
 
@@ -764,7 +478,7 @@ export function HomePage() {
 
           <div className="flex justify-end">
             <Link href="/organizer" className="inline-flex items-center justify-center gap-2 text-sm font-semibold theme-accent md:justify-end">
-              {locale === "en" ? "About Attacker" : "Giới thiệu Attacker"}
+              {pickText(locale, pageContent.home.testimonialsLinkLabel)}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

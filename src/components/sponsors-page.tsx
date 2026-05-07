@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 
-import { sponsorProfiles } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
@@ -35,7 +34,7 @@ function getSponsorTierStyle(tier: LocalizedText) {
 }
 
 export function SponsorsPage() {
-  const { locale, pageContent } = useSiteState();
+  const { locale, pageContent, sponsors } = useSiteState();
 
   return (
     <div className="space-y-16">
@@ -48,8 +47,8 @@ export function SponsorsPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        {sponsorProfiles.map((sponsor, index) => (
-          <Surface key={sponsor.name} className="overflow-hidden px-6 py-6">
+        {sponsors.map((sponsor, index) => (
+          <Surface key={`${sponsor.name}-${index}`} className="overflow-hidden px-6 py-6">
             <div className="space-y-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="w-full max-w-[290px] rounded-[1.5rem] border theme-border bg-white px-4 py-4 shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
@@ -79,21 +78,7 @@ export function SponsorsPage() {
                   {locale === "en" ? "Contribution" : "Đồng hành"}
                 </p>
                 <p className="mt-3 text-sm leading-7 theme-text-muted">
-                  {index === 0
-                    ? locale === "en"
-                      ? "Supports prize positioning, visibility, and credibility."
-                      : "Đồng hành ở mức độ giải thưởng, hình ảnh và độ tin cậy."
-                    : index === 1
-                      ? locale === "en"
-                        ? "Shapes challenge framing and industry context."
-                        : "Định hình đề bài và bối cảnh trong ngành."
-                      : index === 2
-                        ? locale === "en"
-                          ? "Adds specialist knowledge and evaluation depth."
-                          : "Bổ sung chuyên môn và chiều sâu đánh giá."
-                        : locale === "en"
-                          ? "Expands reach through community and student channels."
-                          : "Mở rộng độ phủ thông qua cộng đồng và kênh sinh viên."}
+                  {pickText(locale, sponsor.contribution)}
                 </p>
               </div>
             </div>

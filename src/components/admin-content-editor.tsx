@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import {
   ArrowLeft,
   BriefcaseBusiness,
@@ -20,6 +21,7 @@ import {
   Sparkles,
   Trash2,
   Trophy,
+  Upload,
   Users2,
 } from "lucide-react";
 
@@ -34,6 +36,7 @@ import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-sc
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import type { Locale, LocalizedText, SitePageContent, TestimonialItem } from "@/types/site";
+import type { SponsorProfile } from "@/types/site";
 
 function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
@@ -41,6 +44,31 @@ function cn(...values: Array<string | undefined | false>) {
 
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
+const MAX_TESTIMONIAL_AVATAR_FILE_BYTES = 2 * 1024 * 1024;
+
+function formatFileSize(bytes: number) {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  }
+
+  return `${Math.ceil(bytes / 1024)}KB`;
+}
+
+function readImageFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Unable to read image file."));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error("Unable to read image file."));
+    reader.readAsDataURL(file);
+  });
+}
 
 function clonePageContent(content: SitePageContent): SitePageContent {
   return JSON.parse(JSON.stringify(content)) as SitePageContent;
@@ -68,6 +96,64 @@ function createTestimonialDraft(index: number): TestimonialItem {
     currentEmployment: createBlankLocalizedText(),
     avatarImageSrc: "",
     quote: createBlankLocalizedText(),
+  };
+}
+
+function cloneSponsors(sponsors: SponsorProfile[]): SponsorProfile[] {
+  return JSON.parse(JSON.stringify(sponsors)) as SponsorProfile[];
+}
+
+function createSponsorDraft(index: number): SponsorProfile {
+  return {
+    name: `Sponsor ${index + 1}`,
+    logoSrc: "",
+    tier: createBlankLocalizedText(),
+    category: createBlankLocalizedText(),
+    description: createBlankLocalizedText(),
+    contribution: createBlankLocalizedText(),
+  };
+}
+
+function createFaqDraft(index: number) {
+  return {
+    question: {
+      en: `New FAQ question ${index}`,
+      vi: `Câu hỏi FAQ mới ${index}`,
+    },
+    answer: createBlankLocalizedText(),
+  };
+}
+
+function createPhoneContactDraft(index: number) {
+  return {
+    name: "",
+    phone: "",
+    tel: "",
+    responsibility: {
+      en: `Phone contact ${index + 1} responsibility`,
+      vi: `Phạm vi hỗ trợ đầu mối ${index + 1}`,
+    },
+  };
+}
+
+function createOrganizerSeasonStoryDraft(index: number) {
+  return {
+    year: `${2027 + index}`,
+    image: "",
+    label: createBlankLocalizedText(),
+    title: createBlankLocalizedText(),
+    body: createBlankLocalizedText(),
+    stats: [createBlankLocalizedText(), createBlankLocalizedText()],
+  };
+}
+
+function createOrganizerGallerySlideDraft(index: number) {
+  return {
+    year: `${2027 + index}`,
+    image: "",
+    label: createBlankLocalizedText(),
+    title: createBlankLocalizedText(),
+    description: createBlankLocalizedText(),
   };
 }
 
@@ -146,6 +232,95 @@ function CopySectionEditor({
   );
 }
 
+function BlockIntro({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <div>
+      <p className="text-sm font-semibold theme-text-strong">{title}</p>
+      <p className="mt-2 text-sm leading-7 theme-text-soft">{description}</p>
+    </div>
+  );
+}
+
+function LocalizedListBlockEditor({
+  title,
+  description,
+  items,
+  itemLabelPrefix,
+  rows = 3,
+  onChange,
+  onAdd,
+  addLabel,
+  onRemove,
+  removeLabel,
+  minItems = 0,
+}: {
+  title: string;
+  description: string;
+  items: LocalizedText[];
+  itemLabelPrefix: string;
+  rows?: number;
+  onChange: (index: number, language: Locale, value: string) => void;
+  onAdd?: () => void;
+  addLabel?: string;
+  onRemove?: (index: number) => void;
+  removeLabel?: string;
+  minItems?: number;
+}) {
+  return (
+    <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <BlockIntro title={title} description={description} />
+        {onAdd ? (
+          <button
+            type="button"
+            onClick={onAdd}
+            className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+          >
+            <Plus className="h-4 w-4" />
+            {addLabel}
+          </button>
+        ) : null}
+      </div>
+
+      <div className="space-y-4">
+        {items.map((item, index) => (
+          <div key={`${itemLabelPrefix}-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold theme-text-strong">
+                {itemLabelPrefix} {index + 1}
+              </p>
+              {onRemove ? (
+                <button
+                  type="button"
+                  disabled={items.length <= minItems}
+                  onClick={() => onRemove(index)}
+                  className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label={removeLabel}
+                  title={removeLabel}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
+            <LocalizedFieldEditor
+              label={`${itemLabelPrefix} ${index + 1}`}
+              rows={rows}
+              value={item}
+              onChange={(language, value) => onChange(index, language, value)}
+            />
+          </div>
+        ))}
+      </div>
+    </Surface>
+  );
+}
+
 function iconForPage(pageId: ContentPageId) {
   switch (pageId) {
     case "home":
@@ -210,13 +385,7 @@ const contentPageTree: Array<{
   id: ContentPageId;
   children?: ContentTreeChild[];
 }> = [
-  {
-    id: "home",
-    children: [
-      { kind: "type", id: "hero-slides" },
-      { kind: "type", id: "home-testimonials" },
-    ],
-  },
+  { id: "home" },
   {
     id: "competition",
     children: [
@@ -231,8 +400,8 @@ const contentPageTree: Array<{
   },
   { id: "news" },
   { id: "forum" },
-  { id: "auth", children: [{ kind: "type", id: "auth-notes" }] },
-  { id: "workspace", children: [{ kind: "type", id: "workspace-states" }] },
+  { id: "auth" },
+  { id: "workspace" },
   { id: "organizer" },
   { id: "contact" },
 ];
@@ -393,6 +562,60 @@ export function ContentIndexSection() {
           })}
         </Surface>
       </section>
+
+      <section className="space-y-5">
+        <p className="scroll-mt-32 theme-heading text-2xl font-semibold uppercase tracking-[0.16em] theme-text-strong md:text-[1.75rem]">
+          {locale === "en" ? "Types" : "Nhóm nội dung"}
+        </p>
+        <Surface className="space-y-3 px-5 py-5 md:px-6">
+          {contentTypeConfigs.map((item) => {
+            const Icon = iconForType(item.id);
+
+            return (
+              <Link key={item.id} href={item.href}>
+                <div className="group flex items-start gap-3 rounded-[1.2rem] px-3 py-3 transition hover:bg-[rgba(23,114,208,0.05)]">
+                  <div className="theme-panel-strong flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border theme-border text-[var(--brand)]">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-base font-semibold theme-text-strong">
+                      {pickText(locale, item.label)}
+                    </p>
+                    <p className="mt-1 text-sm leading-6 theme-text-soft">
+                      {pickText(locale, item.description)}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </Surface>
+      </section>
+
+      <section className="space-y-5">
+        <p className="scroll-mt-32 theme-heading text-2xl font-semibold uppercase tracking-[0.16em] theme-text-strong md:text-[1.75rem]">
+          {locale === "en" ? "Sponsors" : "Nhà tài trợ"}
+        </p>
+        <Surface className="space-y-3 px-5 py-5 md:px-6">
+          <Link href="/admin/content/sponsors">
+            <div className="group flex items-start gap-4 rounded-[1.4rem] px-3 py-3 transition hover:bg-[rgba(23,114,208,0.06)]">
+              <div className="theme-brand-gradient flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_16px_34px_rgba(23,114,208,0.18)]">
+                <BriefcaseBusiness className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="theme-heading text-xl font-semibold theme-text-strong">
+                  {locale === "en" ? "Sponsor records" : "Danh sách nhà tài trợ"}
+                </p>
+                <p className="mt-1 text-sm leading-7 theme-text-muted">
+                  {locale === "en"
+                    ? "Add, edit, or remove sponsor cards used by the sponsor page and homepage sponsor strip."
+                    : "Thêm, sửa hoặc xóa các thẻ nhà tài trợ dùng cho trang nhà tài trợ và dải logo trên trang chủ."}
+                </p>
+              </div>
+            </div>
+          </Link>
+        </Surface>
+      </section>
     </div>
   );
 }
@@ -424,53 +647,331 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
         onSave={() => savePageContent(draft)}
       />
 
-      <div className={cn("grid gap-4", pageId === "auth" ? "xl:grid-cols-1" : "xl:grid-cols-2")}>
+      <div className="grid gap-4 xl:grid-cols-1">
         {pageId === "home" ? (
           <>
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Home / Metrics"
+                description="These four cards appear directly below the homepage slider."
+              />
+              <div className="space-y-4">
+                {draft.home.metrics.map((metric, index) => (
+                  <div key={`home-metric-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)]">
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Value</span>
+                        <input
+                          value={metric.value}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.home.metrics[index].value = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                      <LocalizedFieldEditor
+                        label={`Metric ${index + 1} label`}
+                        rows={2}
+                        value={metric.label}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.home.metrics[index].label[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="mt-4">
+                      <LocalizedFieldEditor
+                        label={`Metric ${index + 1} note`}
+                        rows={3}
+                        value={metric.note}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.home.metrics[index].note[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
             <CopySectionEditor
-              title="Home / News"
-              section={draft.home.news}
+              title="Home / Rewards heading"
+              section={draft.home.rewards}
               onChange={(field, language, value) =>
                 setDraft((current) =>
                   updateDraftContent(current, (next) => {
-                    next.home.news[field][language] = value;
+                    next.home.rewards[field][language] = value;
                   }),
                 )
               }
             />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Home / Reward cards"
+                description="These four cards are the main prize breakdown in the homepage rewards block."
+              />
+              <div className="space-y-4">
+                {draft.home.rewardCards.map((reward, index) => (
+                  <div key={`home-reward-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <p className="mb-4 text-sm font-semibold theme-text-strong">Reward card {index + 1}</p>
+                    <div className="space-y-4">
+                      <LocalizedFieldEditor
+                        label="Rank"
+                        rows={2}
+                        value={reward.rank}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.home.rewardCards[index].rank[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedFieldEditor
+                        label="Title"
+                        rows={2}
+                        value={reward.title}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.home.rewardCards[index].title[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedFieldEditor
+                        label="Amount"
+                        rows={2}
+                        value={reward.amount}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.home.rewardCards[index].amount[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedFieldEditor
+                        label="Note"
+                        rows={4}
+                        value={reward.note}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.home.rewardCards[index].note[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Home / Emerging team spotlight"
+                description="This smaller highlight card appears on the right side of the rewards block."
+              />
+              <LocalizedFieldEditor
+                label="Eyebrow"
+                rows={2}
+                value={draft.home.emergingReward.eyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.emergingReward.eyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Title"
+                rows={2}
+                value={draft.home.emergingReward.title}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.emergingReward.title[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Amount"
+                rows={2}
+                value={draft.home.emergingReward.amount}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.emergingReward.amount[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Note"
+                rows={4}
+                value={draft.home.emergingReward.note}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.emergingReward.note[language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Home / Competition path"
+                description="This is the smaller roadmap card in the rewards block, including the CTA label."
+              />
+              <LocalizedFieldEditor
+                label="Eyebrow"
+                rows={2}
+                value={draft.home.competitionPath.eyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.competitionPath.eyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedListBlockEditor
+                title="Path items"
+                description="These three lines appear inside the competition path card."
+                items={draft.home.competitionPath.items}
+                itemLabelPrefix="Path item"
+                rows={2}
+                onChange={(itemIndex, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.competitionPath.items[itemIndex][language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Supporting note"
+                rows={4}
+                value={draft.home.competitionPath.note}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.competitionPath.note[language] = value;
+                    }),
+                  )
+                }
+              />
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="space-y-2">
+                  <span className="text-sm theme-text-muted">CTA href</span>
+                  <input
+                    value={draft.home.competitionPath.ctaHref ?? ""}
+                    onChange={(event) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.home.competitionPath.ctaHref = event.target.value;
+                        }),
+                      )
+                    }
+                    className={fieldClassName}
+                  />
+                </label>
+                <LocalizedFieldEditor
+                  label="CTA label"
+                  rows={2}
+                  value={draft.home.competitionPath.ctaLabel ?? createBlankLocalizedText()}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        const ctaLabel = next.home.competitionPath.ctaLabel ?? createBlankLocalizedText();
+                        ctaLabel[language] = value;
+                        next.home.competitionPath.ctaLabel = ctaLabel;
+                      }),
+                    )
+                  }
+                />
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Home / Sponsors logo strip"
+                description="Sponsor logos are managed from Sponsors. This block only edits the visible link label on the homepage."
+              />
+              <LocalizedFieldEditor
+                label="Open sponsors label"
+                rows={2}
+                value={draft.home.sponsorsStripLinkLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.sponsorsStripLinkLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
+
             <CopySectionEditor
-              title="Home / Sponsors"
-              section={draft.home.sponsors}
+              title="Home / Testimonial section"
+              section={draft.home.testimonialsSection}
               onChange={(field, language, value) =>
                 setDraft((current) =>
                   updateDraftContent(current, (next) => {
-                    next.home.sponsors[field][language] = value;
+                    next.home.testimonialsSection[field][language] = value;
                   }),
                 )
               }
             />
-            <CopySectionEditor
-              title="Home / Destinations"
-              section={draft.home.destinations}
-              onChange={(field, language, value) =>
-                setDraft((current) =>
-                  updateDraftContent(current, (next) => {
-                    next.home.destinations[field][language] = value;
-                  }),
-                )
-              }
-            />
-            <CopySectionEditor
-              title="Home / CTA"
-              section={draft.home.cta}
-              onChange={(field, language, value) =>
-                setDraft((current) =>
-                  updateDraftContent(current, (next) => {
-                    next.home.cta[field][language] = value;
-                  }),
-                )
-              }
-            />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Home / Testimonial section labels"
+                description="These smaller labels appear in the testimonial section header and link."
+              />
+              <LocalizedFieldEditor
+                label="Badge label"
+                rows={2}
+                value={draft.home.testimonialsBadgeLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.testimonialsBadgeLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="About link label"
+                rows={2}
+                value={draft.home.testimonialsLinkLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.testimonialsLinkLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
           </>
         ) : null}
 
@@ -487,8 +988,81 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Competition / Pillars"
+                description="These three short lines appear inside the intro-side panel of the competition page."
+              />
+              <LocalizedFieldEditor
+                label="Pillars title"
+                rows={2}
+                value={draft.competition.pillarsTitle}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.pillarsTitle[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedListBlockEditor
+                title="Pillar items"
+                description="These are the three bullet-like labels in the competition intro aside."
+                items={draft.competition.pillars}
+                itemLabelPrefix="Pillar"
+                rows={2}
+                onChange={(itemIndex, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.pillars[itemIndex][language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Competition / Audience highlight cards"
+                description="These three cards appear directly below the competition page intro."
+              />
+              <div className="space-y-4">
+                {draft.competition.highlights.map((item, index) => (
+                  <div key={`competition-highlight-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <p className="mb-4 text-sm font-semibold theme-text-strong">Highlight card {index + 1}</p>
+                    <LocalizedFieldEditor
+                      label="Title"
+                      rows={2}
+                      value={item.title}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.competition.highlights[index].title[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <div className="mt-4">
+                      <LocalizedFieldEditor
+                        label="Description"
+                        rows={4}
+                        value={item.description}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.highlights[index].description[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
             <CopySectionEditor
-              title="Competition / Rounds"
+              title="Competition / Rounds heading"
               section={draft.competition.rounds}
               onChange={(field, language, value) =>
                 setDraft((current) =>
@@ -498,8 +1072,89 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Competition / Round cards"
+                description="Each competition round card appears as one long block on the public competition page."
+              />
+              <div className="space-y-4">
+                {draft.competition.roundCards.map((round, index) => (
+                  <div key={`competition-round-${round.id}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <p className="mb-4 text-sm font-semibold theme-text-strong">
+                      {`Round ${round.id}`}
+                    </p>
+                    <div className="space-y-4">
+                      <LocalizedFieldEditor
+                        label="Round label"
+                        rows={2}
+                        value={round.label}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.roundCards[index].label[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedFieldEditor
+                        label="Round title"
+                        rows={2}
+                        value={round.title}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.roundCards[index].title[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedFieldEditor
+                        label="Duration fallback"
+                        rows={2}
+                        value={round.duration}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.roundCards[index].duration[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedFieldEditor
+                        label="Description"
+                        rows={4}
+                        value={round.description}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.roundCards[index].description[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedListBlockEditor
+                        title="Deliverables"
+                        description="These are the three deliverable cards inside the round block."
+                        items={round.deliverables}
+                        itemLabelPrefix="Deliverable"
+                        rows={2}
+                        onChange={(itemIndex, language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.roundCards[index].deliverables[itemIndex][language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
             <CopySectionEditor
-              title="Competition / Rewards"
+              title="Competition / Rewards heading"
               section={draft.competition.rewards}
               onChange={(field, language, value) =>
                 setDraft((current) =>
@@ -509,32 +1164,300 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
-            <CopySectionEditor
-              title="Competition / Mentors"
-              section={draft.competition.mentors}
-              onChange={(field, language, value) =>
-                setDraft((current) =>
-                  updateDraftContent(current, (next) => {
-                    next.competition.mentors[field][language] = value;
-                  }),
-                )
-              }
-            />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Competition / Reward cards"
+                description="These cards explain the main final-ranking prizes."
+              />
+              <div className="space-y-4">
+                {draft.competition.rewardCards.map((reward, index) => (
+                  <div key={`competition-reward-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <p className="mb-4 text-sm font-semibold theme-text-strong">Reward card {index + 1}</p>
+                    <div className="space-y-4">
+                      <LocalizedFieldEditor
+                        label="Rank"
+                        rows={2}
+                        value={reward.rank}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.rewardCards[index].rank[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedFieldEditor
+                        label="Title"
+                        rows={2}
+                        value={reward.title}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.rewardCards[index].title[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedFieldEditor
+                        label="Amount"
+                        rows={2}
+                        value={reward.amount}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.rewardCards[index].amount[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedFieldEditor
+                        label="Note"
+                        rows={4}
+                        value={reward.note}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.competition.rewardCards[index].note[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Competition / Emerging team spotlight"
+                description="This is the smaller recognition block on the right side of the competition rewards section."
+              />
+              <LocalizedFieldEditor
+                label="Eyebrow"
+                rows={2}
+                value={draft.competition.emergingReward.eyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.emergingReward.eyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Title"
+                rows={2}
+                value={draft.competition.emergingReward.title}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.emergingReward.title[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Amount"
+                rows={2}
+                value={draft.competition.emergingReward.amount}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.emergingReward.amount[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Note"
+                rows={4}
+                value={draft.competition.emergingReward.note}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.emergingReward.note[language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Competition / Path block"
+                description="This is the smaller roadmap note shown under the reward summary."
+              />
+              <LocalizedFieldEditor
+                label="Eyebrow"
+                rows={2}
+                value={draft.competition.competitionPath.eyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.competitionPath.eyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedListBlockEditor
+                title="Path items"
+                description="These three path lines appear in the competition page reward aside."
+                items={draft.competition.competitionPath.items}
+                itemLabelPrefix="Path item"
+                rows={2}
+                onChange={(itemIndex, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.competitionPath.items[itemIndex][language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Supporting note"
+                rows={4}
+                value={draft.competition.competitionPath.note}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.competitionPath.note[language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
           </>
         ) : null}
 
         {pageId === "faq" ? (
-          <CopySectionEditor
-            title="FAQ / Header"
-            section={draft.rules.faq}
-            onChange={(field, language, value) =>
-              setDraft((current) =>
-                updateDraftContent(current, (next) => {
-                  next.rules.faq[field][language] = value;
-                }),
-              )
-            }
-          />
+          <>
+            <CopySectionEditor
+              title="FAQ / Header"
+              section={draft.rules.faq}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.rules.faq[field][language] = value;
+                  }),
+                )
+              }
+            />
+
+            <LocalizedListBlockEditor
+              title="FAQ / Quick answers"
+              description="These short helper lines appear in the side block above the full question list."
+              items={draft.rules.faqQuickAnswers}
+              itemLabelPrefix="Quick answer"
+              rows={2}
+              onChange={(itemIndex, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.rules.faqQuickAnswers[itemIndex][language] = value;
+                  }),
+                )
+              }
+            />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="FAQ / Question cards"
+                description="Manage the full list of FAQ cards shown on the public FAQ page."
+              />
+              <LocalizedFieldEditor
+                label="Quick answers label"
+                rows={2}
+                value={draft.rules.faqQuickAnswersLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.rules.faqQuickAnswersLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Question prefix"
+                rows={2}
+                value={draft.rules.faqQuestionPrefix}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.rules.faqQuestionPrefix[language] = value;
+                    }),
+                  )
+                }
+              />
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.rules.faqItems.push(createFaqDraft(next.rules.faqItems.length + 1));
+                      }),
+                    )
+                  }
+                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                >
+                  <Plus className="h-4 w-4" />
+                  {locale === "en" ? "Add question" : "Thêm câu hỏi"}
+                </button>
+              </div>
+              <div className="space-y-4">
+                {draft.rules.faqItems.map((item, index) => (
+                  <div key={`faq-item-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold theme-text-strong">FAQ item {index + 1}</p>
+                      <button
+                        type="button"
+                        disabled={draft.rules.faqItems.length <= 1}
+                        onClick={() =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.rules.faqItems = next.rules.faqItems.filter((_, currentIndex) => currentIndex !== index);
+                            }),
+                          )
+                        }
+                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={locale === "en" ? "Delete FAQ item" : "Xóa câu hỏi FAQ"}
+                        title={locale === "en" ? "Delete FAQ item" : "Xóa câu hỏi FAQ"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <LocalizedFieldEditor
+                      label="Question"
+                      rows={3}
+                      value={item.question}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.rules.faqItems[index].question[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <div className="mt-4">
+                      <LocalizedFieldEditor
+                        label="Answer"
+                        rows={5}
+                        value={item.answer}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.rules.faqItems[index].answer[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+          </>
         ) : null}
 
         {pageId === "rules" ? (
@@ -550,6 +1473,74 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Rules / Intro jump buttons"
+                description="These are the shortcut buttons shown below the rules page header."
+              />
+              <div className="space-y-4">
+                {draft.rules.introJumpItems.map((item, index) => (
+                  <div key={`rules-jump-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <p className="mb-4 text-sm font-semibold theme-text-strong">Jump button {index + 1}</p>
+                    <LocalizedFieldEditor
+                      label="Short label"
+                      rows={2}
+                      value={item.shortLabel}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.rules.introJumpItems[index].shortLabel[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <div className="mt-4">
+                      <LocalizedFieldEditor
+                        label="Hover label"
+                        rows={2}
+                        value={item.hoverLabel}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.rules.introJumpItems[index].hoverLabel[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
+            <LocalizedListBlockEditor
+              title="Rules / Quick policy read"
+              description="These short rules appear in the quick-read card near the page top."
+              items={draft.rules.quickReadItems}
+              itemLabelPrefix="Quick rule"
+              rows={2}
+              onChange={(itemIndex, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.rules.quickReadItems[itemIndex][language] = value;
+                  }),
+                )
+              }
+            />
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <LocalizedFieldEditor
+                label="Quick read label"
+                rows={2}
+                value={draft.rules.quickReadLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.rules.quickReadLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
             <CopySectionEditor
               title="Rules / Core rules"
               section={draft.rules.coreRules}
@@ -561,17 +1552,277 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
-            <CopySectionEditor
-              title="Rules / Timeline"
-              section={draft.rules.timeline}
-              onChange={(field, language, value) =>
-                setDraft((current) =>
-                  updateDraftContent(current, (next) => {
-                    next.rules.timeline[field][language] = value;
-                  }),
-                )
-              }
-            />
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Rules / General highlight cards"
+                description="These three cards sit in the first large general-rules block."
+              />
+              <div className="space-y-4">
+                {draft.rules.generalHighlights.map((item, index) => (
+                  <div key={`rules-highlight-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <p className="mb-4 text-sm font-semibold theme-text-strong">General highlight {index + 1}</p>
+                    <LocalizedFieldEditor
+                      label="Title"
+                      rows={2}
+                      value={item.title}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.rules.generalHighlights[index].title[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <div className="mt-4">
+                      <LocalizedFieldEditor
+                        label="Description"
+                        rows={4}
+                        value={item.description}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.rules.generalHighlights[index].description[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Rules / General policy checks"
+                description="This section controls the checklist cards and the timeline link label in the general rules block."
+              />
+              <LocalizedFieldEditor
+                label="Policy checks label"
+                rows={2}
+                value={draft.rules.generalPolicyChecksLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.rules.generalPolicyChecksLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Open timeline overview label"
+                rows={2}
+                value={draft.rules.openTimelineOverviewLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.rules.openTimelineOverviewLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <div className="space-y-4">
+                {draft.rules.generalPolicyChecks.map((item, index) => (
+                  <div key={`rules-policy-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <p className="mb-4 text-sm font-semibold theme-text-strong">Policy card {index + 1}</p>
+                    <LocalizedFieldEditor
+                      label="Title"
+                      rows={2}
+                      value={item.title}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.rules.generalPolicyChecks[index].title[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <div className="mt-4">
+                      <LocalizedFieldEditor
+                        label="Description"
+                        rows={4}
+                        value={item.description}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.rules.generalPolicyChecks[index].description[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Rules / Shared round labels"
+                description="These shared labels are reused across the three round rule blocks."
+              />
+              <LocalizedFieldEditor
+                label="Open round on timeline label"
+                rows={2}
+                value={draft.rules.openRoundOnTimelineLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.rules.openRoundOnTimelineLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Deliverable prefix"
+                rows={2}
+                value={draft.rules.deliverablePrefix}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.rules.deliverablePrefix[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Specific round rules label"
+                rows={2}
+                value={draft.rules.specificRoundRulesLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.rules.specificRoundRulesLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Round notes label"
+                rows={2}
+                value={draft.rules.roundNotesLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.rules.roundNotesLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
+
+            <div className="space-y-5">
+              {draft.rules.rounds.map((round, index) => (
+                <Surface key={`rules-round-${round.id}`} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                  <BlockIntro
+                    title={`Rules / Round ${round.id}`}
+                    description="This full-width block controls the round-specific rules section on the public rules page."
+                  />
+                  <LocalizedFieldEditor
+                    label="Round label"
+                    rows={2}
+                    value={round.label}
+                    onChange={(language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.rounds[index].label[language] = value;
+                        }),
+                      )
+                    }
+                  />
+                  <LocalizedFieldEditor
+                    label="Round title"
+                    rows={2}
+                    value={round.title}
+                    onChange={(language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.rounds[index].title[language] = value;
+                        }),
+                      )
+                    }
+                  />
+                  <LocalizedFieldEditor
+                    label="Duration fallback"
+                    rows={2}
+                    value={round.duration}
+                    onChange={(language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.rounds[index].duration[language] = value;
+                        }),
+                      )
+                    }
+                  />
+                  <LocalizedFieldEditor
+                    label="Focus note"
+                    rows={3}
+                    value={round.focus}
+                    onChange={(language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.rounds[index].focus[language] = value;
+                        }),
+                      )
+                    }
+                  />
+                  <LocalizedFieldEditor
+                    label="Description"
+                    rows={4}
+                    value={round.description}
+                    onChange={(language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.rounds[index].description[language] = value;
+                        }),
+                      )
+                    }
+                  />
+                  <LocalizedListBlockEditor
+                    title="Deliverables"
+                    description="These cards appear inside the main content area of the round block."
+                    items={round.deliverables}
+                    itemLabelPrefix="Deliverable"
+                    rows={2}
+                    onChange={(itemIndex, language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.rounds[index].deliverables[itemIndex][language] = value;
+                        }),
+                      )
+                    }
+                  />
+                  <LocalizedListBlockEditor
+                    title="Specific round rules"
+                    description="These note cards appear in the right-side specific-rule panel."
+                    items={round.specificRules}
+                    itemLabelPrefix="Rule"
+                    rows={3}
+                    onChange={(itemIndex, language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.rounds[index].specificRules[itemIndex][language] = value;
+                        }),
+                      )
+                    }
+                  />
+                  <LocalizedListBlockEditor
+                    title="Round notes"
+                    description="These notes appear in the full-width note block below each round."
+                    items={round.roundNotes}
+                    itemLabelPrefix="Note"
+                    rows={3}
+                    onChange={(itemIndex, language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.rounds[index].roundNotes[itemIndex][language] = value;
+                        }),
+                      )
+                    }
+                  />
+                </Surface>
+              ))}
+            </div>
           </>
         ) : null}
 
@@ -720,6 +1971,73 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+            <LocalizedTextEditorCard
+              title="Judges / Panel size label"
+              value={draft.judges.panelSizeLabel}
+              onChange={(language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.judges.panelSizeLabel[language] = value;
+                  }),
+                )
+              }
+            />
+            {draft.judges.roundSections.map((section, index) => (
+              <Surface key={`judge-round-section-${section.round}`} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                <BlockIntro
+                  title={`Judges / ${section.round}`}
+                  description="These texts appear above the judge cards for this round and in the panel-size summary card."
+                />
+                <LocalizedFieldEditor
+                  label="Eyebrow"
+                  rows={2}
+                  value={section.eyebrow}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.judges.roundSections[index].eyebrow[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <LocalizedFieldEditor
+                  label="Title"
+                  rows={3}
+                  value={section.title}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.judges.roundSections[index].title[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <LocalizedFieldEditor
+                  label="Description"
+                  rows={4}
+                  value={section.description}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.judges.roundSections[index].description[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <LocalizedFieldEditor
+                  label="Panel note"
+                  rows={3}
+                  value={section.panelNote}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.judges.roundSections[index].panelNote[language] = value;
+                      }),
+                    )
+                  }
+                />
+              </Surface>
+            ))}
             <CopySectionEditor
               title="Judges / Clarity"
               section={draft.judges.clarity}
@@ -776,8 +2094,96 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Organizer / Hero block"
+                description="Edit the chips, hero card text, and the main hero image used on the organizer page."
+              />
+              <label className="space-y-2">
+                <span className="text-sm theme-text-muted">Hero image path</span>
+                <input
+                  value={draft.organizer.heroImage}
+                  onChange={(event) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.organizer.heroImage = event.target.value;
+                      }),
+                    )
+                  }
+                  className={fieldClassName}
+                />
+              </label>
+              <LocalizedListBlockEditor
+                title="Hero chips"
+                description="These chips appear below the organizer header."
+                items={draft.organizer.heroBadges}
+                itemLabelPrefix="Hero chip"
+                rows={2}
+                onChange={(itemIndex, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.heroBadges[itemIndex][language] = value;
+                    }),
+                  )
+                }
+              />
+              <CopySectionEditor
+                title="Organizer / Hero image card"
+                section={draft.organizer.heroCard}
+                className="px-0 py-0 shadow-none"
+                onChange={(field, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.heroCard[field][language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Organizer / Metrics"
+                description="These four metrics appear under the organizer hero block."
+              />
+              <div className="space-y-4">
+                {draft.organizer.metrics.map((metric, index) => (
+                  <div key={`organizer-metric-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)]">
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Value</span>
+                        <input
+                          value={metric.value}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.organizer.metrics[index].value = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                      <LocalizedFieldEditor
+                        label={`Metric ${index + 1} label`}
+                        rows={2}
+                        value={metric.label}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.organizer.metrics[index].label[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
             <CopySectionEditor
-              title="Organizer / Content modules"
+              title="Organizer / Season highlights"
               section={draft.organizer.contentModules}
               onChange={(field, language, value) =>
                 setDraft((current) =>
@@ -787,8 +2193,186 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+
+            <LocalizedTextEditorCard
+              title="Organizer / Competition link label"
+              value={draft.organizer.competitionLinkLabel}
+              onChange={(language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.organizer.competitionLinkLabel[language] = value;
+                  }),
+                )
+              }
+            />
+
+            <LocalizedTextEditorCard
+              title="Organizer / Season badge label"
+              value={draft.organizer.seasonBadgeLabel}
+              onChange={(language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.organizer.seasonBadgeLabel[language] = value;
+                  }),
+                )
+              }
+            />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <BlockIntro
+                  title="Organizer / Season story blocks"
+                  description="Each block controls one season card in the highlights grid."
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.organizer.seasonStories.push(
+                          createOrganizerSeasonStoryDraft(next.organizer.seasonStories.length),
+                        );
+                      }),
+                    )
+                  }
+                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                >
+                  <Plus className="h-4 w-4" />
+                  {locale === "en" ? "Add season story" : "Thêm block mùa thi"}
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {draft.organizer.seasonStories.map((story, index) => (
+                  <Surface key={`organizer-season-${index}`} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-lg font-semibold theme-text-strong">
+                        {locale === "en" ? `Season block ${index + 1}` : `Block mùa ${index + 1}`}
+                      </p>
+                      <button
+                        type="button"
+                        disabled={draft.organizer.seasonStories.length <= 1}
+                        onClick={() =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.organizer.seasonStories = next.organizer.seasonStories.filter(
+                                (_, currentIndex) => currentIndex !== index,
+                              );
+                            }),
+                          )
+                        }
+                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={locale === "en" ? "Delete season block" : "Xóa block mùa"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-[140px_minmax(0,1fr)]">
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Year</span>
+                        <input
+                          value={story.year}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.organizer.seasonStories[index].year = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Image path</span>
+                        <input
+                          value={story.image}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.organizer.seasonStories[index].image = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                    </div>
+                    <LocalizedFieldEditor
+                      label="Label"
+                      rows={2}
+                      value={story.label}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].label[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <LocalizedFieldEditor
+                      label="Title"
+                      rows={3}
+                      value={story.title}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].title[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <LocalizedFieldEditor
+                      label="Body"
+                      rows={5}
+                      value={story.body}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].body[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <LocalizedListBlockEditor
+                      title="Stats"
+                      description="Short chips shown at the bottom of this season block."
+                      items={story.stats}
+                      itemLabelPrefix="Stat"
+                      rows={2}
+                      onChange={(itemIndex, language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].stats[itemIndex][language] = value;
+                          }),
+                        )
+                      }
+                      onAdd={() =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].stats.push(createBlankLocalizedText());
+                          }),
+                        )
+                      }
+                      addLabel={locale === "en" ? "Add stat" : "Thêm nhãn"}
+                      onRemove={(itemIndex) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].stats = next.organizer.seasonStories[index].stats.filter(
+                              (_, currentIndex) => currentIndex !== itemIndex,
+                            );
+                          }),
+                        )
+                      }
+                      removeLabel={locale === "en" ? "Remove stat" : "Xóa nhãn"}
+                      minItems={1}
+                    />
+                  </Surface>
+                ))}
+              </div>
+            </Surface>
+
             <CopySectionEditor
-              title="Organizer / Flags"
+              title="Organizer / Photo slider heading"
               section={draft.organizer.flags}
               onChange={(field, language, value) =>
                 setDraft((current) =>
@@ -798,34 +2382,212 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Organizer / Current frame and actions"
+                description="These labels control the note card beside the photo slider and the visible action labels."
+              />
+              <LocalizedFieldEditor
+                label="Current frame eyebrow"
+                rows={2}
+                value={draft.organizer.galleryCurrentFrame.eyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.galleryCurrentFrame.eyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <div className="grid gap-4 xl:grid-cols-2">
+                {[
+                  ["Open full view label", draft.organizer.openFullViewLabel, (language: Locale, value: string, next: SitePageContent) => { next.organizer.openFullViewLabel[language] = value; }],
+                  ["Previous photo label", draft.organizer.previousPhotoLabel, (language: Locale, value: string, next: SitePageContent) => { next.organizer.previousPhotoLabel[language] = value; }],
+                  ["Next photo label", draft.organizer.nextPhotoLabel, (language: Locale, value: string, next: SitePageContent) => { next.organizer.nextPhotoLabel[language] = value; }],
+                  ["Close gallery label", draft.organizer.closeGalleryLabel, (language: Locale, value: string, next: SitePageContent) => { next.organizer.closeGalleryLabel[language] = value; }],
+                ].map(([title, value, updater]) => (
+                  <LocalizedTextEditorCard
+                    key={title as string}
+                    title={title as string}
+                    value={value as LocalizedText}
+                    onChange={(language, nextValue) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
+                        }),
+                      )
+                    }
+                  />
+                ))}
+              </div>
+              <LocalizedListBlockEditor
+                title="Current frame notes"
+                description="These short notes appear in the side card below the current active slide."
+                items={draft.organizer.galleryNotes}
+                itemLabelPrefix="Note"
+                rows={3}
+                onChange={(itemIndex, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.galleryNotes[itemIndex][language] = value;
+                    }),
+                  )
+                }
+                onAdd={() =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.galleryNotes.push(createBlankLocalizedText());
+                    }),
+                  )
+                }
+                addLabel={locale === "en" ? "Add note" : "Thêm ghi chú"}
+                onRemove={(itemIndex) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.galleryNotes = next.organizer.galleryNotes.filter(
+                        (_, currentIndex) => currentIndex !== itemIndex,
+                      );
+                    }),
+                  )
+                }
+                removeLabel={locale === "en" ? "Remove note" : "Xóa ghi chú"}
+                minItems={1}
+              />
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <BlockIntro
+                  title="Organizer / Photo slider items"
+                  description="Manage the images and text shown in the organizer photo slider."
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.organizer.gallerySlides.push(
+                          createOrganizerGallerySlideDraft(next.organizer.gallerySlides.length),
+                        );
+                      }),
+                    )
+                  }
+                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                >
+                  <Plus className="h-4 w-4" />
+                  {locale === "en" ? "Add gallery image" : "Thêm ảnh slider"}
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {draft.organizer.gallerySlides.map((slide, index) => (
+                  <Surface key={`organizer-gallery-${index}`} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-lg font-semibold theme-text-strong">
+                        {locale === "en" ? `Gallery slide ${index + 1}` : `Ảnh slider ${index + 1}`}
+                      </p>
+                      <button
+                        type="button"
+                        disabled={draft.organizer.gallerySlides.length <= 1}
+                        onClick={() =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.organizer.gallerySlides = next.organizer.gallerySlides.filter(
+                                (_, currentIndex) => currentIndex !== index,
+                              );
+                            }),
+                          )
+                        }
+                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={locale === "en" ? "Delete gallery slide" : "Xóa ảnh slider"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-[140px_minmax(0,1fr)]">
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Year</span>
+                        <input
+                          value={slide.year}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.organizer.gallerySlides[index].year = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Image path</span>
+                        <input
+                          value={slide.image}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.organizer.gallerySlides[index].image = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                    </div>
+                    <LocalizedFieldEditor
+                      label="Label"
+                      rows={2}
+                      value={slide.label}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.gallerySlides[index].label[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <LocalizedFieldEditor
+                      label="Title"
+                      rows={3}
+                      value={slide.title}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.gallerySlides[index].title[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <LocalizedFieldEditor
+                      label="Description"
+                      rows={4}
+                      value={slide.description}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.gallerySlides[index].description[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                  </Surface>
+                ))}
+              </div>
+            </Surface>
           </>
         ) : null}
 
         {pageId === "contact" ? (
           <>
-            <CopySectionEditor
-              title="Contact / Response rhythm"
-              section={{
-                eyebrow: draft.contact.responseRhythmEyebrow,
-                title: createBlankLocalizedText(),
-                description: draft.contact.responseRhythmDescription,
-              }}
-              onChange={(field, language, value) =>
-                setDraft((current) =>
-                  updateDraftContent(current, (next) => {
-                    if (field === "eyebrow") {
-                      next.contact.responseRhythmEyebrow[language] = value;
-                    }
-                    if (field === "description") {
-                      next.contact.responseRhythmDescription[language] = value;
-                    }
-                  }),
-                )
-              }
-            />
-            <div className="grid gap-4 xl:grid-cols-2">
-              <LocalizedTextEditorCard
-                title="Contact / Map eyebrow"
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Contact / Map and address"
+                description="These fields control the map header, campus name, and the organizer address block. The embedded map URL stays fixed."
+              />
+              <LocalizedFieldEditor
+                label="Map eyebrow"
+                rows={2}
                 value={draft.contact.mapEyebrow}
                 onChange={(language, value) =>
                   setDraft((current) =>
@@ -835,6 +2597,269 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                   )
                 }
               />
+              <LocalizedFieldEditor
+                label="Campus name"
+                rows={3}
+                value={draft.contact.campusName}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.campusName[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Organizer address eyebrow"
+                rows={2}
+                value={draft.contact.organizerAddressEyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.organizerAddressEyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Organizer address"
+                rows={4}
+                value={draft.contact.organizerAddress}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.organizerAddress[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Organizer address note"
+                rows={4}
+                value={draft.contact.organizerAddressNote}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.organizerAddressNote[language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Contact / Response rhythm and quick contacts"
+                description="Edit the quick-contact labels and the values shown in the response card."
+              />
+              <LocalizedFieldEditor
+                label="Response rhythm eyebrow"
+                rows={2}
+                value={draft.contact.responseRhythmEyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.responseRhythmEyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedFieldEditor
+                label="Response rhythm description"
+                rows={4}
+                value={draft.contact.responseRhythmDescription}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.responseRhythmDescription[language] = value;
+                    }),
+                  )
+                }
+              />
+              <div className="grid gap-4 xl:grid-cols-2">
+                <LocalizedTextEditorCard
+                  title="Contact / Official email label"
+                  value={draft.contact.officialEmailLabel}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.contact.officialEmailLabel[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <label className="space-y-2">
+                  <span className="text-sm theme-text-muted">Official email value</span>
+                  <input
+                    value={draft.contact.officialEmailValue}
+                    onChange={(event) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.contact.officialEmailValue = event.target.value;
+                        }),
+                      )
+                    }
+                    className={fieldClassName}
+                  />
+                </label>
+                <LocalizedTextEditorCard
+                  title="Contact / Primary hotline label"
+                  value={draft.contact.primaryHotlineLabel}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.contact.primaryHotlineLabel[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <label className="space-y-2">
+                  <span className="text-sm theme-text-muted">Primary hotline value</span>
+                  <input
+                    value={draft.contact.primaryHotlineValue}
+                    onChange={(event) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.contact.primaryHotlineValue = event.target.value;
+                        }),
+                      )
+                    }
+                    className={fieldClassName}
+                  />
+                </label>
+                <LocalizedTextEditorCard
+                  title="Contact / Support window label"
+                  value={draft.contact.supportWindowLabel}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.contact.supportWindowLabel[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <label className="space-y-2">
+                  <span className="text-sm theme-text-muted">Support window value</span>
+                  <input
+                    value={draft.contact.supportWindowValue}
+                    onChange={(event) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.contact.supportWindowValue = event.target.value;
+                        }),
+                      )
+                    }
+                    className={fieldClassName}
+                  />
+                </label>
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Contact / Official channels"
+                description="Edit the visible labels and the Facebook URLs in the official-channels block."
+              />
+              <LocalizedFieldEditor
+                label="Official channels eyebrow"
+                rows={2}
+                value={draft.contact.officialChannelsEyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.officialChannelsEyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <div className="grid gap-4 xl:grid-cols-2">
+                <LocalizedTextEditorCard
+                  title="Contact / Attacker Facebook label"
+                  value={draft.contact.attackerFacebookLabel}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.contact.attackerFacebookLabel[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <label className="space-y-2">
+                  <span className="text-sm theme-text-muted">Attacker Facebook URL</span>
+                  <input
+                    value={draft.contact.attackerFacebookUrl}
+                    onChange={(event) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.contact.attackerFacebookUrl = event.target.value;
+                        }),
+                      )
+                    }
+                    className={fieldClassName}
+                  />
+                </label>
+                <LocalizedTextEditorCard
+                  title="Contact / FTC Facebook label"
+                  value={draft.contact.ftcFacebookLabel}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.contact.ftcFacebookLabel[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <label className="space-y-2">
+                  <span className="text-sm theme-text-muted">FTC Facebook URL</span>
+                  <input
+                    value={draft.contact.ftcFacebookUrl}
+                    onChange={(event) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.contact.ftcFacebookUrl = event.target.value;
+                        }),
+                      )
+                    }
+                    className={fieldClassName}
+                  />
+                </label>
+                <LocalizedTextEditorCard
+                  title="Contact / Open newsroom label"
+                  value={draft.contact.openNewsroomLabel}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.contact.openNewsroomLabel[language] = value;
+                      }),
+                    )
+                  }
+                />
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <BlockIntro
+                  title="Contact / Phone contacts"
+                  description="Manage the contact people listed below the map. Each card includes name, displayed phone, raw tel link, and support scope."
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.contact.phoneContacts.push(
+                          createPhoneContactDraft(next.contact.phoneContacts.length),
+                        );
+                      }),
+                    )
+                  }
+                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                >
+                  <Plus className="h-4 w-4" />
+                  {locale === "en" ? "Add phone contact" : "Thêm đầu mối"}
+                </button>
+              </div>
               <LocalizedTextEditorCard
                 title="Contact / Phone contacts eyebrow"
                 value={draft.contact.phoneContactsEyebrow}
@@ -846,100 +2871,139 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                   )
                 }
               />
-              <LocalizedTextEditorCard
-                title="Contact / Organizer address eyebrow"
-                value={draft.contact.organizerAddressEyebrow}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.contact.organizerAddressEyebrow[language] = value;
-                    }),
-                  )
-                }
-              />
-              <LocalizedTextEditorCard
-                title="Contact / Official channels eyebrow"
-                value={draft.contact.officialChannelsEyebrow}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.contact.officialChannelsEyebrow[language] = value;
-                    }),
-                  )
-                }
-              />
-              <LocalizedTextEditorCard
-                title="Contact / Official email label"
-                value={draft.contact.officialEmailLabel}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.contact.officialEmailLabel[language] = value;
-                    }),
-                  )
-                }
-              />
-              <LocalizedTextEditorCard
-                title="Contact / Primary hotline label"
-                value={draft.contact.primaryHotlineLabel}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.contact.primaryHotlineLabel[language] = value;
-                    }),
-                  )
-                }
-              />
-              <LocalizedTextEditorCard
-                title="Contact / Support window label"
-                value={draft.contact.supportWindowLabel}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.contact.supportWindowLabel[language] = value;
-                    }),
-                  )
-                }
-              />
-              <LocalizedTextEditorCard
-                title="Contact / Attacker Facebook label"
-                value={draft.contact.attackerFacebookLabel}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.contact.attackerFacebookLabel[language] = value;
-                    }),
-                  )
-                }
-              />
-              <LocalizedTextEditorCard
-                title="Contact / FTC Facebook label"
-                value={draft.contact.ftcFacebookLabel}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.contact.ftcFacebookLabel[language] = value;
-                    }),
-                  )
-                }
-              />
-              <LocalizedTextEditorCard
-                title="Contact / Open newsroom label"
-                value={draft.contact.openNewsroomLabel}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.contact.openNewsroomLabel[language] = value;
-                    }),
-                  )
-                }
-              />
-            </div>
+              <div className="space-y-4">
+                {draft.contact.phoneContacts.map((item, index) => (
+                  <Surface key={`phone-contact-${index}`} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-lg font-semibold theme-text-strong">
+                        {locale === "en" ? `Phone contact ${index + 1}` : `Đầu mối ${index + 1}`}
+                      </p>
+                      <button
+                        type="button"
+                        disabled={draft.contact.phoneContacts.length <= 1}
+                        onClick={() =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.contact.phoneContacts = next.contact.phoneContacts.filter(
+                                (_, currentIndex) => currentIndex !== index,
+                              );
+                            }),
+                          )
+                        }
+                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={locale === "en" ? "Delete phone contact" : "Xóa đầu mối"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="grid gap-4 xl:grid-cols-3">
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Name</span>
+                        <input
+                          value={item.name}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.contact.phoneContacts[index].name = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Display phone</span>
+                        <input
+                          value={item.phone}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.contact.phoneContacts[index].phone = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Tel link value</span>
+                        <input
+                          value={item.tel}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.contact.phoneContacts[index].tel = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                    </div>
+                    <LocalizedFieldEditor
+                      label="Responsibility"
+                      rows={3}
+                      value={item.responsibility}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.contact.phoneContacts[index].responsibility[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                  </Surface>
+                ))}
+              </div>
+            </Surface>
           </>
         ) : null}
 
         {pageId === "timeline" ? (
           <>
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Timeline / Diagram and shared labels"
+                description="These labels appear in the top timeline diagram, card status badges, and timeline action buttons."
+              />
+              <div className="space-y-4">
+                {[
+                  ["Timeline / Diagram eyebrow", draft.timelinePage.diagramEyebrow, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.diagramEyebrow[language] = value; }],
+                  ["Timeline / Diagram hint", draft.timelinePage.diagramHint, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.diagramHint[language] = value; }],
+                  ["Timeline / Schedule fallback", draft.timelinePage.scheduleToBeUpdated, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.scheduleToBeUpdated[language] = value; }],
+                  ["Timeline / Steps label", draft.timelinePage.stepsLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.stepsLabel[language] = value; }],
+                  ["Timeline / Open detail", draft.timelinePage.openDetailLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.openDetailLabel[language] = value; }],
+                  ["Timeline / Open rule block", draft.timelinePage.openRuleBlockLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.openRuleBlockLabel[language] = value; }],
+                  ["Timeline / Read result update", draft.timelinePage.readResultUpdateLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.readResultUpdateLabel[language] = value; }],
+                  ["Timeline / Round 2 closed title", draft.timelinePage.round2SubmissionClosedTitle, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.round2SubmissionClosedTitle[language] = value; }],
+                  ["Timeline / Final report closed title", draft.timelinePage.finalReportClosedTitle, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.finalReportClosedTitle[language] = value; }],
+                  ["Timeline / Time label", draft.timelinePage.timeLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.timeLabel[language] = value; }],
+                  ["Timeline / Place label", draft.timelinePage.placeLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.placeLabel[language] = value; }],
+                  ["Timeline / Method label", draft.timelinePage.methodLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.methodLabel[language] = value; }],
+                  ["Timeline / Now label", draft.timelinePage.nowLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.nowLabel[language] = value; }],
+                  ["Timeline / Finished label", draft.timelinePage.finishedLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.finishedLabel[language] = value; }],
+                  ["Timeline / Ongoing label", draft.timelinePage.ongoingLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.ongoingLabel[language] = value; }],
+                  ["Timeline / Starting soon label", draft.timelinePage.startingSoonLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.startingSoonLabel[language] = value; }],
+                  ["Timeline / Not started label", draft.timelinePage.notStartedLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.notStartedLabel[language] = value; }],
+                  ["Timeline / Ends in prefix", draft.timelinePage.endsInPrefix, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.endsInPrefix[language] = value; }],
+                  ["Timeline / Starts in prefix", draft.timelinePage.startsInPrefix, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.startsInPrefix[language] = value; }],
+                ].map(([title, value, updater]) => (
+                  <LocalizedTextEditorCard
+                    key={title as string}
+                    title={title as string}
+                    value={value as LocalizedText}
+                    onChange={(language, nextValue) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
+                        }),
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </Surface>
+
             <CopySectionEditor
               title="Timeline / Preparation phase"
               section={draft.timelinePage.general}
@@ -984,39 +3048,6 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
-            <div className="grid gap-4 xl:grid-cols-2">
-              {[
-                ["Timeline / Diagram eyebrow", draft.timelinePage.diagramEyebrow, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.diagramEyebrow[language] = value; }],
-                ["Timeline / Diagram hint", draft.timelinePage.diagramHint, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.diagramHint[language] = value; }],
-                ["Timeline / Schedule fallback", draft.timelinePage.scheduleToBeUpdated, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.scheduleToBeUpdated[language] = value; }],
-                ["Timeline / Steps label", draft.timelinePage.stepsLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.stepsLabel[language] = value; }],
-                ["Timeline / Open detail", draft.timelinePage.openDetailLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.openDetailLabel[language] = value; }],
-                ["Timeline / Open rule block", draft.timelinePage.openRuleBlockLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.openRuleBlockLabel[language] = value; }],
-                ["Timeline / Time label", draft.timelinePage.timeLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.timeLabel[language] = value; }],
-                ["Timeline / Place label", draft.timelinePage.placeLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.placeLabel[language] = value; }],
-                ["Timeline / Method label", draft.timelinePage.methodLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.methodLabel[language] = value; }],
-                ["Timeline / Now label", draft.timelinePage.nowLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.nowLabel[language] = value; }],
-                ["Timeline / Finished label", draft.timelinePage.finishedLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.finishedLabel[language] = value; }],
-                ["Timeline / Ongoing label", draft.timelinePage.ongoingLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.ongoingLabel[language] = value; }],
-                ["Timeline / Starting soon label", draft.timelinePage.startingSoonLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.startingSoonLabel[language] = value; }],
-                ["Timeline / Not started label", draft.timelinePage.notStartedLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.notStartedLabel[language] = value; }],
-                ["Timeline / Ends in prefix", draft.timelinePage.endsInPrefix, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.endsInPrefix[language] = value; }],
-                ["Timeline / Starts in prefix", draft.timelinePage.startsInPrefix, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.startsInPrefix[language] = value; }],
-              ].map(([title, value, updater]) => (
-                <LocalizedTextEditorCard
-                  key={title as string}
-                  title={title as string}
-                  value={value as LocalizedText}
-                  onChange={(language, nextValue) =>
-                    setDraft((current) =>
-                      updateDraftContent(current, (next) => {
-                        (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
-                      }),
-                    )
-                  }
-                />
-              ))}
-            </div>
           </>
         ) : null}
 
@@ -1167,10 +3198,170 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   );
 }
 
+export function ContentSponsorsEditor() {
+  const { locale, sponsors, saveSponsorsByAdmin } = useSiteState();
+  useAdminTitleScroll();
+  const [draft, setDraft] = useState<SponsorProfile[]>(() => cloneSponsors(sponsors));
+
+  useEffect(() => {
+    setDraft(cloneSponsors(sponsors));
+  }, [sponsors]);
+
+  const isDirty = useMemo(
+    () => JSON.stringify(draft) !== JSON.stringify(sponsors),
+    [draft, sponsors],
+  );
+
+  return (
+    <div className="space-y-8">
+      <EditorTopBar
+        eyebrow={locale === "en" ? "Admin / Content / Sponsors" : "Admin / Noi dung / Nha tai tro"}
+        title={locale === "en" ? "Sponsor records" : "Danh sách nhà tài trợ"}
+        description={
+          locale === "en"
+            ? "Manage the sponsor cards shown on the competition sponsor page and the homepage sponsor marquee."
+            : "Quản lý các thẻ nhà tài trợ hiển thị trên trang nhà tài trợ và dải logo nhà tài trợ trên trang chủ."
+        }
+        isDirty={isDirty}
+        onReset={() => setDraft(cloneSponsors(sponsors))}
+        onSave={() => saveSponsorsByAdmin(draft)}
+      />
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setDraft((current) => [...current, createSponsorDraft(current.length)])}
+          className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+        >
+          <Plus className="h-4 w-4" />
+          {locale === "en" ? "Add sponsor" : "Thêm nhà tài trợ"}
+        </button>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {draft.map((sponsor, index) => (
+          <Surface key={`${sponsor.name || "sponsor"}-${index}`} className="space-y-5 px-5 py-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-lg font-semibold theme-text-strong">
+                {locale === "en" ? `Sponsor ${index + 1}` : `Nhà tài trợ ${index + 1}`}
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setDraft((current) => current.filter((_, currentIndex) => currentIndex !== index))
+                }
+                className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full border"
+                aria-label={locale === "en" ? "Delete sponsor" : "Xóa nhà tài trợ"}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+
+            <label className="space-y-2">
+              <span className="text-sm theme-text-muted">
+                {locale === "en" ? "Sponsor name" : "Tên nhà tài trợ"}
+              </span>
+              <input
+                value={sponsor.name}
+                onChange={(event) =>
+                  setDraft((current) =>
+                    current.map((item, currentIndex) =>
+                      currentIndex === index ? { ...item, name: event.target.value } : item,
+                    ),
+                  )
+                }
+                className={fieldClassName}
+              />
+            </label>
+
+            <label className="space-y-2">
+              <span className="text-sm theme-text-muted">
+                {locale === "en" ? "Logo image path" : "Đường dẫn logo"}
+              </span>
+              <input
+                value={sponsor.logoSrc}
+                onChange={(event) =>
+                  setDraft((current) =>
+                    current.map((item, currentIndex) =>
+                      currentIndex === index ? { ...item, logoSrc: event.target.value } : item,
+                    ),
+                  )
+                }
+                className={fieldClassName}
+              />
+            </label>
+
+            <LocalizedFieldEditor
+              label={locale === "en" ? "Tier" : "Hạng tài trợ"}
+              rows={2}
+              value={sponsor.tier}
+              onChange={(language, value) =>
+                setDraft((current) =>
+                  current.map((item, currentIndex) =>
+                    currentIndex === index
+                      ? { ...item, tier: { ...item.tier, [language]: value } }
+                      : item,
+                  ),
+                )
+              }
+            />
+
+            <LocalizedFieldEditor
+              label={locale === "en" ? "Category" : "Nhóm đồng hành"}
+              rows={2}
+              value={sponsor.category}
+              onChange={(language, value) =>
+                setDraft((current) =>
+                  current.map((item, currentIndex) =>
+                    currentIndex === index
+                      ? { ...item, category: { ...item.category, [language]: value } }
+                      : item,
+                  ),
+                )
+              }
+            />
+
+            <LocalizedFieldEditor
+              label={locale === "en" ? "Description" : "Mô tả"}
+              rows={4}
+              value={sponsor.description}
+              onChange={(language, value) =>
+                setDraft((current) =>
+                  current.map((item, currentIndex) =>
+                    currentIndex === index
+                      ? { ...item, description: { ...item.description, [language]: value } }
+                      : item,
+                  ),
+                )
+              }
+            />
+
+            <LocalizedFieldEditor
+              label={locale === "en" ? "Contribution" : "Nội dung đồng hành"}
+              rows={4}
+              value={sponsor.contribution}
+              onChange={(language, value) =>
+                setDraft((current) =>
+                  current.map((item, currentIndex) =>
+                    currentIndex === index
+                      ? { ...item, contribution: { ...item.contribution, [language]: value } }
+                      : item,
+                  ),
+                )
+              }
+            />
+          </Surface>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
   const { locale, pageContent, savePageContent } = useSiteState();
   useAdminTitleScroll();
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
+  const [testimonialAvatarError, setTestimonialAvatarError] = useState("");
 
   useEffect(() => {
     setDraft(clonePageContent(pageContent));
@@ -1196,22 +3387,20 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
 
       {typeId === "hero-slides" ? (
         <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
-          <div>
-            <p className="text-lg font-semibold theme-text-strong">
-              {locale === "en" ? "Homepage hero slides" : "Hero slides trang chu"}
-            </p>
-            <p className="mt-2 text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "Manage the homepage slider separately from the rest of the Home page copy."
-                : "Quan ly slider trang chu tach rieng khoi cac phan noi dung con lai cua Home."}
-            </p>
-          </div>
+          <BlockIntro
+            title={locale === "en" ? "Homepage hero slides" : "Hero slides trang chủ"}
+            description={
+              locale === "en"
+                ? "Each slide is edited as one full-width content block, including CTA labels, highlight chips, and the three summary cards shown over the image."
+                : "Mỗi slide được chỉnh như một block nội dung full width, bao gồm nút CTA, các chip highlight và ba thẻ tóm tắt hiển thị trên ảnh."
+            }
+          />
 
-          <div className="grid gap-4 xl:grid-cols-3">
+          <div className="space-y-5">
             {draft.home.heroSlides.map((slide, index) => (
-              <Surface key={slide.id} className="space-y-4 px-4 py-4">
+              <Surface key={slide.id} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-base font-semibold theme-text-strong">
+                  <p className="text-lg font-semibold theme-text-strong">
                     {locale === "en" ? `Slide ${index + 1}` : `Slide ${index + 1}`}
                   </p>
                   <span className="rounded-full border theme-border bg-white/70 px-3 py-1 text-xs font-medium theme-text-soft">
@@ -1232,6 +3421,40 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
                     className={fieldClassName}
                   />
                 </label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Primary CTA href" : "Liên kết CTA chính"}
+                    </span>
+                    <input
+                      value={slide.primaryCta.href}
+                      onChange={(event) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.home.heroSlides[index].primaryCta.href = event.target.value;
+                          }),
+                        )
+                      }
+                      className={fieldClassName}
+                    />
+                  </label>
+                  <label className="space-y-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Secondary CTA href" : "Liên kết CTA phụ"}
+                    </span>
+                    <input
+                      value={slide.secondaryCta.href}
+                      onChange={(event) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.home.heroSlides[index].secondaryCta.href = event.target.value;
+                          }),
+                        )
+                      }
+                      className={fieldClassName}
+                    />
+                  </label>
+                </div>
                 <LocalizedFieldEditor
                   label="Eyebrow"
                   rows={2}
@@ -1268,6 +3491,105 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
                     )
                   }
                 />
+                <LocalizedFieldEditor
+                  label={locale === "en" ? "Primary CTA label" : "Nhãn CTA chính"}
+                  rows={2}
+                  value={slide.primaryCta.label}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.home.heroSlides[index].primaryCta.label[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <LocalizedFieldEditor
+                  label={locale === "en" ? "Secondary CTA label" : "Nhãn CTA phụ"}
+                  rows={2}
+                  value={slide.secondaryCta.label}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.home.heroSlides[index].secondaryCta.label[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <LocalizedListBlockEditor
+                  title={locale === "en" ? "Highlight chips" : "Chip highlight"}
+                  description={
+                    locale === "en"
+                      ? "These short chips appear between the slide description and CTA buttons."
+                      : "Các chip ngắn này hiển thị giữa phần mô tả slide và nhóm nút CTA."
+                  }
+                  items={slide.highlights}
+                  itemLabelPrefix={locale === "en" ? "Highlight" : "Highlight"}
+                  rows={2}
+                  onChange={(itemIndex, language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.home.heroSlides[index].highlights[itemIndex][language] = value;
+                      }),
+                    )
+                  }
+                />
+                <Surface className="space-y-4 px-4 py-4">
+                  <BlockIntro
+                    title={locale === "en" ? "Overlay summary cards" : "Thẻ tóm tắt trên overlay"}
+                    description={
+                      locale === "en"
+                        ? "These three cards sit on the right side of the homepage hero overlay."
+                        : "Ba thẻ này nằm ở cột phải của phần overlay trên slider trang chủ."
+                    }
+                  />
+                  <div className="space-y-4">
+                    {slide.cards.map((card, cardIndex) => (
+                      <div key={`${slide.id}-card-${cardIndex}`} className="rounded-[1.4rem] border theme-border px-4 py-4">
+                        <p className="mb-4 text-sm font-semibold theme-text-strong">
+                          {locale === "en" ? `Card ${cardIndex + 1}` : `Thẻ ${cardIndex + 1}`}
+                        </p>
+                        <div className="space-y-4">
+                          <LocalizedFieldEditor
+                            label={locale === "en" ? "Card label" : "Nhãn thẻ"}
+                            rows={2}
+                            value={card.label}
+                            onChange={(language, value) =>
+                              setDraft((current) =>
+                                updateDraftContent(current, (next) => {
+                                  next.home.heroSlides[index].cards[cardIndex].label[language] = value;
+                                }),
+                              )
+                            }
+                          />
+                          <LocalizedFieldEditor
+                            label={locale === "en" ? "Card value" : "Giá trị thẻ"}
+                            rows={2}
+                            value={card.value}
+                            onChange={(language, value) =>
+                              setDraft((current) =>
+                                updateDraftContent(current, (next) => {
+                                  next.home.heroSlides[index].cards[cardIndex].value[language] = value;
+                                }),
+                              )
+                            }
+                          />
+                          <LocalizedFieldEditor
+                            label={locale === "en" ? "Card note" : "Ghi chú thẻ"}
+                            rows={4}
+                            value={card.note}
+                            onChange={(language, value) =>
+                              setDraft((current) =>
+                                updateDraftContent(current, (next) => {
+                                  next.home.heroSlides[index].cards[cardIndex].note[language] = value;
+                                }),
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Surface>
               </Surface>
             ))}
           </div>
@@ -1353,22 +3675,116 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
                       className={fieldClassName}
                     />
                   </label>
-                  <label className="space-y-2">
+                  <div className="space-y-3">
                     <span className="text-sm theme-text-muted">
-                      {locale === "en" ? "Avatar image path" : "Đường dẫn ảnh đại diện"}
+                      {locale === "en" ? "Testimonial avatar" : "Avatar testimonial"}
                     </span>
-                    <input
-                      value={testimonial.avatarImageSrc}
-                      onChange={(event) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.home.testimonials[index].avatarImageSrc = event.target.value;
-                          }),
-                        )
-                      }
-                      className={fieldClassName}
-                    />
-                  </label>
+                    <div className="flex items-center gap-3">
+                      <div className="relative h-16 w-16 overflow-hidden rounded-full border theme-border bg-white/70 dark:bg-white/[0.05]">
+                        {testimonial.avatarImageSrc ? (
+                          <Image
+                            src={testimonial.avatarImageSrc}
+                            alt={testimonial.name || (locale === "en" ? "Avatar preview" : "Xem trước avatar")}
+                            fill
+                            sizes="64px"
+                            unoptimized
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs font-semibold theme-text-soft">
+                            {locale === "en" ? "No image" : "Chưa có"}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <label className="theme-button-secondary inline-flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold">
+                          <Upload className="h-4 w-4" />
+                          {locale === "en" ? "Upload avatar" : "Tải avatar"}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (event: ChangeEvent<HTMLInputElement>) => {
+                              const file = event.target.files?.[0];
+                              event.target.value = "";
+                              if (!file) {
+                                return;
+                              }
+                              if (!file.type.startsWith("image/")) {
+                                setTestimonialAvatarError(
+                                  locale === "en"
+                                    ? "Only image files are allowed for testimonial avatars."
+                                    : "Chỉ chấp nhận tệp hình ảnh cho avatar testimonial.",
+                                );
+                                return;
+                              }
+                              if (file.size > MAX_TESTIMONIAL_AVATAR_FILE_BYTES) {
+                                setTestimonialAvatarError(
+                                  locale === "en"
+                                    ? `Avatar images must be ${formatFileSize(MAX_TESTIMONIAL_AVATAR_FILE_BYTES)} or smaller.`
+                                    : `Ảnh avatar phải có dung lượng ${formatFileSize(MAX_TESTIMONIAL_AVATAR_FILE_BYTES)} trở xuống.`,
+                                );
+                                return;
+                              }
+                              try {
+                                const imageSrc = await readImageFileAsDataUrl(file);
+                                setTestimonialAvatarError("");
+                                setDraft((current) =>
+                                  updateDraftContent(current, (next) => {
+                                    next.home.testimonials[index].avatarImageSrc = imageSrc;
+                                  }),
+                                );
+                              } catch {
+                                setTestimonialAvatarError(
+                                  locale === "en"
+                                    ? "Could not load the testimonial avatar."
+                                    : "Không thể tải ảnh avatar testimonial.",
+                                );
+                              }
+                            }}
+                          />
+                        </label>
+                        {testimonial.avatarImageSrc ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setDraft((current) =>
+                                updateDraftContent(current, (next) => {
+                                  next.home.testimonials[index].avatarImageSrc = "";
+                                }),
+                              )
+                            }
+                            className="theme-button-danger inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            {locale === "en" ? "Remove" : "Gỡ ảnh"}
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                    <label className="space-y-2">
+                      <span className="text-sm theme-text-muted">
+                        {locale === "en" ? "Avatar image path" : "Đường dẫn ảnh đại diện"}
+                      </span>
+                      <input
+                        value={testimonial.avatarImageSrc}
+                        onChange={(event) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.home.testimonials[index].avatarImageSrc = event.target.value;
+                            }),
+                          )
+                        }
+                        className={fieldClassName}
+                      />
+                    </label>
+                    <p className="text-xs leading-6 theme-text-soft">
+                      {locale === "en"
+                        ? `Upload a testimonial avatar image or paste an image path. Maximum size ${formatFileSize(MAX_TESTIMONIAL_AVATAR_FILE_BYTES)}.`
+                        : `Tải ảnh avatar testimonial hoặc dán đường dẫn ảnh. Dung lượng tối đa ${formatFileSize(MAX_TESTIMONIAL_AVATAR_FILE_BYTES)}.`}
+                    </p>
+                    {testimonialAvatarError ? <p className="text-xs leading-6 text-rose-500 dark:text-rose-200">{testimonialAvatarError}</p> : null}
+                  </div>
                   <label className="space-y-2 md:col-span-2">
                     <span className="inline-flex items-center gap-2 text-sm theme-text-muted">
                       <Users2 className="h-4 w-4" />

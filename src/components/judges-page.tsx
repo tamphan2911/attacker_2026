@@ -3,51 +3,7 @@
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
-import type { CompetitionRoundKey, JudgeProfile, LocalizedText } from "@/types/site";
-
-const judgeSections: Array<{
-  round: CompetitionRoundKey;
-  eyebrow: LocalizedText;
-  title: LocalizedText;
-  description: LocalizedText;
-}> = [
-  {
-    round: "round-3",
-    eyebrow: { en: "Final round judges", vi: "Giám khảo vòng chung kết" },
-    title: {
-      en: "The panel for live presentation, defense, and final ranking.",
-      vi: "Hội đồng cho phần thuyết trình trực tiếp, hỏi đáp và xếp hạng cuối cùng.",
-    },
-    description: {
-      en: "These judges focus on stage presence, strategic clarity, execution quality, and final competition performance.",
-      vi: "Nhóm giám khảo này tập trung vào bản lĩnh trình bày, độ rõ chiến lược, chất lượng thực thi và hiệu suất thi đấu ở chặng cuối.",
-    },
-  },
-  {
-    round: "round-2",
-    eyebrow: { en: "Round 2 judges", vi: "Giám khảo vòng 2" },
-    title: {
-      en: "The review panel for project reports and shortlist decisions.",
-      vi: "Hội đồng chấm báo cáo dự án và quyết định danh sách vào chung kết.",
-    },
-    description: {
-      en: "Round 2 judges concentrate on structure, feasibility, compliance, and the quality of project documentation.",
-      vi: "Giám khảo vòng 2 tập trung vào cấu trúc, tính khả thi, tuân thủ và chất lượng hồ sơ dự án.",
-    },
-  },
-  {
-    round: "round-1",
-    eyebrow: { en: "Round 1 judges", vi: "Giám khảo vòng 1" },
-    title: {
-      en: "The specialist layer behind the individual qualifier and scoring logic.",
-      vi: "Lớp chuyên môn phía sau vòng loại cá nhân và logic chấm điểm ban đầu.",
-    },
-    description: {
-      en: "This group shapes question-bank quality, quantitative thinking, and the academic rigor of the first checkpoint.",
-      vi: "Nhóm này định hình chất lượng ngân hàng câu hỏi, tư duy định lượng và độ chặt chẽ học thuật của chốt kiểm tra đầu tiên.",
-    },
-  },
-];
+import type { JudgeProfile } from "@/types/site";
 
 function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
   const { locale } = useSiteState();
@@ -88,11 +44,18 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
 }
 
 export function JudgesPage() {
-  const { locale, judges } = useSiteState();
+  const { locale, judges, pageContent } = useSiteState();
+  const sections = pageContent.judges.roundSections;
 
   return (
     <div className="space-y-16">
-      {judgeSections.map((section) => {
+      <SectionHeading
+        eyebrow={pickText(locale, pageContent.judges.header.eyebrow)}
+        title={pickText(locale, pageContent.judges.header.title)}
+        description={pickText(locale, pageContent.judges.header.description)}
+      />
+
+      {sections.map((section) => {
         const sectionJudges = judges.filter((judge) => judge.rounds.includes(section.round));
 
         if (sectionJudges.length === 0) {
@@ -110,21 +73,11 @@ export function JudgesPage() {
 
               <Surface className="px-5 py-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                  {locale === "en" ? "Panel size" : "Quy mô hội đồng"}
+                  {pickText(locale, pageContent.judges.panelSizeLabel)}
                 </p>
                 <p className="mt-4 text-3xl font-semibold theme-text-strong">{sectionJudges.length}</p>
                 <p className="mt-3 text-sm leading-7 theme-text-muted">
-                  {section.round === "round-3"
-                    ? locale === "en"
-                      ? "Final-round judges visible for the live pitch and Q&A stage."
-                      : "Số giám khảo xuất hiện cho chặng pitch và hỏi đáp của vòng chung kết."
-                    : section.round === "round-2"
-                      ? locale === "en"
-                        ? "Report-evaluation judges focused on shortlist and depth."
-                        : "Số giám khảo chấm báo cáo, tập trung vào shortlist và chiều sâu dự án."
-                      : locale === "en"
-                        ? "Question-bank and scoring specialists for the first round."
-                        : "Số chuyên gia phụ trách ngân hàng câu hỏi và logic chấm điểm của vòng đầu."}
+                  {pickText(locale, section.panelNote)}
                 </p>
               </Surface>
             </div>
@@ -137,6 +90,14 @@ export function JudgesPage() {
           </section>
         );
       })}
+
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <SectionHeading
+          eyebrow={pickText(locale, pageContent.judges.clarity.eyebrow)}
+          title={pickText(locale, pageContent.judges.clarity.title)}
+          description={pickText(locale, pageContent.judges.clarity.description)}
+        />
+      </Surface>
     </div>
   );
 }

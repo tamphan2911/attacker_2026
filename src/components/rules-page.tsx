@@ -20,13 +20,6 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import {
-  TEAM_MAX_MEMBERS,
-  TEAM_MIN_MEMBERS,
-  audienceHighlights,
-  roundItems,
-  ruleItems,
-} from "@/data/site-content";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import { getCompetitionRoundWindow } from "@/lib/competition";
@@ -227,6 +220,10 @@ const roundRuleMeta = {
 
 export function RulesPage() {
   const { locale, pageContent, timelineItems } = useSiteState();
+  const jumpItems = pageContent.rules.introJumpItems;
+  const generalHighlights = pageContent.rules.generalHighlights;
+  const generalPolicyChecks = pageContent.rules.generalPolicyChecks;
+  const rulesRounds = pageContent.rules.rounds;
 
   return (
     <div className="space-y-16 md:space-y-20">
@@ -239,8 +236,9 @@ export function RulesPage() {
           />
 
           <div className="flex flex-wrap gap-3">
-            {introJumpItems.map((item) => {
+            {introJumpItems.map((item, index) => {
               const Icon = item.icon;
+              const copy = jumpItems[index];
 
               return (
                 <Link
@@ -251,9 +249,9 @@ export function RulesPage() {
                   <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/14 bg-white/55 dark:bg-white/[0.08]">
                     <Icon className="h-4 w-4" />
                   </span>
-                  <span>{pickText(locale, item.shortLabel)}</span>
+                  <span>{pickText(locale, copy.shortLabel)}</span>
                   <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-20 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
-                    {pickText(locale, item.hoverLabel)}
+                    {pickText(locale, copy.hoverLabel)}
                   </span>
                 </Link>
               );
@@ -264,41 +262,22 @@ export function RulesPage() {
         <Surface className="theme-rules-shell relative overflow-hidden px-5 py-5">
           <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(23,114,208,0),rgba(23,114,208,0.92),rgba(23,114,208,0))]" />
           <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-            {locale === "en" ? "Quick policy read" : "Đọc nhanh"}
+            {pickText(locale, pageContent.rules.quickReadLabel)}
           </p>
           <div className="mt-5 space-y-3">
-            {[
-              {
-                label:
-                  locale === "en"
-                    ? `${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} members are required for official Round 1 access`
-                    : `Cần ${TEAM_MIN_MEMBERS}-${TEAM_MAX_MEMBERS} thành viên để vào Vòng 1 chính thức`,
-              },
-              {
-                label:
-                  locale === "en"
-                    ? "Team lock must be approved by all members before Round 1 starts"
-                    : "Khóa đội phải được toàn bộ thành viên đồng thuận trước khi bắt đầu Vòng 1",
-              },
-              {
-                label:
-                  locale === "en"
-                    ? "Progression is determined by team ranking at every stage"
-                    : "Việc đi tiếp được quyết định theo xếp hạng đội ở từng giai đoạn",
-              },
-            ].map((item, index) => {
+            {pageContent.rules.quickReadItems.map((item, index) => {
               const Icon = quickPolicyItems[index]?.icon ?? BadgeCheck;
               const iconClass = quickPolicyItems[index]?.iconClass ?? "border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.28),rgba(59,130,246,0.18))] text-sky-950 dark:text-sky-100";
 
               return (
               <div
-                key={item.label}
+                key={item.en}
                 className="theme-rules-note-card flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm leading-7 theme-text-body"
               >
                 <span className={`mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border ${iconClass}`}>
                   <Icon className="h-4 w-4" />
                 </span>
-                <span>{item.label}</span>
+                <span>{pickText(locale, item)}</span>
               </div>
               );
             })}
@@ -317,7 +296,7 @@ export function RulesPage() {
             />
 
             <div className="mt-7 grid gap-4 md:grid-cols-3">
-              {audienceHighlights.map((item, index) => {
+              {generalHighlights.map((item, index) => {
                 const Icon = generalRuleIcons[index] ?? Flag;
                 const iconClass = generalRuleIconClasses[index] ?? generalRuleIconClasses[0];
 
@@ -342,10 +321,10 @@ export function RulesPage() {
 
             <div className="mt-8 border-t theme-border pt-7">
               <p className="text-xs font-semibold uppercase tracking-[0.3em] theme-eyebrow">
-                {locale === "en" ? "General policy checks" : "Điểm kiểm soát chung"}
+                {pickText(locale, pageContent.rules.generalPolicyChecksLabel)}
               </p>
               <div className="mt-6 grid gap-3 xl:grid-cols-2">
-                {ruleItems.map((item, index) => {
+                {generalPolicyChecks.map((item, index) => {
                   const Icon = policyIcons[index] ?? BadgeCheck;
                   const iconClass = policyIconClasses[index] ?? policyIconClasses[0];
 
@@ -374,7 +353,7 @@ export function RulesPage() {
                 href="/competition/timeline#general-timeline"
                 className="mt-6 inline-flex items-center gap-2 rounded-full border border-sky-500/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(59,130,246,0.08))] px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-500/36 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.12))] active:scale-[0.98] dark:text-sky-100"
               >
-                {locale === "en" ? "Open timeline overview" : "Mở lịch trình tổng quan"}
+                {pickText(locale, pageContent.rules.openTimelineOverviewLabel)}
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -383,7 +362,7 @@ export function RulesPage() {
       </section>
 
       <section className="space-y-6">
-        {roundItems.map((round) => {
+        {rulesRounds.map((round) => {
           const roundKey = round.id === "01" ? "round-1" : round.id === "02" ? "round-2" : "round-3";
           const roundWindow = getCompetitionRoundWindow(roundKey, timelineItems);
           const meta = roundRuleMeta[round.id as keyof typeof roundRuleMeta];
@@ -421,9 +400,7 @@ export function RulesPage() {
                           <CalendarDays className="h-4.5 w-4.5" />
                         </Link>
                         <span className="theme-header-tooltip pointer-events-none absolute right-0 top-full z-20 mt-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-                          {locale === "en"
-                            ? "Open this round on timeline page"
-                            : "Mở giai đoạn này trên trang lịch trình"}
+                          {pickText(locale, pageContent.rules.openRoundOnTimelineLabel)}
                         </span>
                       </div>
                     </div>
@@ -438,7 +415,7 @@ export function RulesPage() {
                     </span>
                     <span className={`inline-flex max-w-xl items-start gap-2 rounded-[1.15rem] border px-4 py-3 text-sm font-medium leading-6 ${meta.chipClass}`}>
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      {pickText(locale, meta.focus)}
+                      {pickText(locale, round.focus)}
                     </span>
                   </div>
 
@@ -459,7 +436,7 @@ export function RulesPage() {
                               <DeliverableIcon className="h-4 w-4" />
                             </span>
                             <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-                              {locale === "en" ? `Deliverable ${deliverableIndex + 1}` : `Đầu việc ${deliverableIndex + 1}`}
+                              {`${pickText(locale, pageContent.rules.deliverablePrefix)} ${deliverableIndex + 1}`}
                             </p>
                           </div>
                           <p className="mt-2 text-sm leading-7 theme-text-body">
@@ -479,10 +456,10 @@ export function RulesPage() {
                     />
                     <div className="relative">
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                        {locale === "en" ? "Specific round rules" : "Quy định riêng của vòng"}
+                        {pickText(locale, pageContent.rules.specificRoundRulesLabel)}
                       </p>
                       <div className="mt-5 space-y-3">
-                        {meta.notes.map((note, index) => {
+                        {round.specificRules.map((note, index) => {
                           const NoteIcon = specificRuleIcons[index] ?? Sparkles;
 
                           return (
@@ -507,10 +484,10 @@ export function RulesPage() {
 
               <Surface className="theme-rules-shell mt-6 overflow-hidden px-5 py-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                  {locale === "en" ? "Round notes" : "Lưu ý của vòng"}
+                  {pickText(locale, pageContent.rules.roundNotesLabel)}
                 </p>
                 <div className="mt-5 grid gap-3 lg:grid-cols-2">
-                  {meta.roundNotes.map((note) => (
+                  {round.roundNotes.map((note) => (
                     <div
                       key={note.en}
                       className="theme-rules-note-card flex items-start gap-3 rounded-[1.35rem] border px-4 py-4"

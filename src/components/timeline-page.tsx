@@ -116,6 +116,7 @@ function buildTimelineActionLinks({
   activeUserId,
   timelineItems,
   now,
+  labels,
 }: {
   item: TimelineItem;
   currentUserRole: UserRole;
@@ -123,6 +124,10 @@ function buildTimelineActionLinks({
   activeUserId: string;
   timelineItems: TimelineItem[];
   now: Date;
+  labels: Pick<
+    ReturnType<typeof useSiteState>["pageContent"]["timelinePage"],
+    "readResultUpdateLabel" | "round2SubmissionClosedTitle" | "finalReportClosedTitle"
+  >;
 }): TimelineActionLink[] {
   const actionLinks: TimelineActionLink[] = [];
 
@@ -130,7 +135,7 @@ function buildTimelineActionLinks({
     actionLinks.push({
       key: `${item.id}-finalists`,
       href: item.id === "round-3-final-presentation" ? "/competition/final-results" : "/competition/finalists",
-      label: { en: "Read result update", vi: "Đọc cập nhật kết quả" },
+      label: labels.readResultUpdateLabel,
       icon: Presentation,
     });
   }
@@ -163,10 +168,7 @@ function buildTimelineActionLinks({
           icon: FileUp,
           disabled: round2Closed,
           title: round2Closed
-            ? {
-                en: "Round 2 submission window has closed.",
-                vi: "Hạn nộp bài Vòng 2 đã kết thúc.",
-              }
+            ? labels.round2SubmissionClosedTitle
             : undefined,
         });
       }
@@ -188,10 +190,7 @@ function buildTimelineActionLinks({
           icon: FileUp,
           disabled: finalReportClosed,
           title: finalReportClosed
-            ? {
-                en: "The final report deadline has passed.",
-                vi: "Hạn nộp báo cáo chung kết đã kết thúc.",
-              }
+            ? labels.finalReportClosedTitle
             : undefined,
         });
       }
@@ -491,6 +490,7 @@ export function TimelinePage() {
                       activeUserId,
                       timelineItems,
                       now,
+                      labels: pageContent.timelinePage,
                     });
 
                     return (
