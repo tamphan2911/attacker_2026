@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 
-import { contactInfo } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import type { LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -79,7 +78,7 @@ const primaryNavItems: Array<{
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { locale, theme, currentUser, setLocale, setTheme, signOutCurrentUser } = useSiteState();
+  const { locale, pageContent, theme, currentUser, setLocale, setTheme, signOutCurrentUser } = useSiteState();
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
@@ -112,10 +111,11 @@ export function SiteHeader() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  const topbarSlogan = {
-    en: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",
-    vi: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",
-  };
+  const topbarSlogan = pageContent.siteHeader.slogan;
+  const topbarEmail = pageContent.siteHeader.email.trim();
+  const topbarPhone = pageContent.siteHeader.phone.trim();
+  const topbarFacebookLabel = pickText(locale, pageContent.siteHeader.facebookLabel);
+  const topbarFacebookUrl = pageContent.siteHeader.facebookUrl.trim();
 
   const isActiveRoute = (href: string) => {
     if (href === "/") {
@@ -155,30 +155,30 @@ export function SiteHeader() {
               <div className={topbarContactWrapClass}>
                 <a
                   className={topbarContactLinkClass}
-                  href={`mailto:${contactInfo.email}`}
-                  aria-label={contactInfo.email}
+                  href={`mailto:${topbarEmail}`}
+                  aria-label={topbarEmail}
                 >
                   <Mail className={topbarContactIconClass} />
-                  <span>{contactInfo.email}</span>
+                  <span>{topbarEmail}</span>
                 </a>
                 <span className={topbarContactDividerClass} />
                 <a
                   className={topbarContactLinkClass}
-                  href={`tel:${contactInfo.phone}`}
+                  href={`tel:${topbarPhone}`}
                 >
                   <PhoneCall className={topbarContactIconClass} />
-                  <span>{contactInfo.phone}</span>
+                  <span>{topbarPhone}</span>
                 </a>
                 <span className={cn("hidden xl:block", topbarContactDividerClass)} />
                 <a
                   className={cn("hidden xl:inline-flex", topbarContactLinkClass)}
-                  href={contactInfo.attackerFacebook}
+                  href={topbarFacebookUrl}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label="Facebook"
+                  aria-label={topbarFacebookLabel}
                 >
                   <FacebookIcon className={topbarContactIconClass} />
-                  <span>Facebook</span>
+                  <span>{topbarFacebookLabel}</span>
                 </a>
               </div>
             </div>

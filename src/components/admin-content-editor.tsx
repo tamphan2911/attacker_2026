@@ -385,7 +385,13 @@ const contentPageTree: Array<{
   id: ContentPageId;
   children?: ContentTreeChild[];
 }> = [
-  { id: "home" },
+  {
+    id: "home",
+    children: [
+      { kind: "type", id: "hero-slides" },
+      { kind: "type", id: "home-testimonials" },
+    ],
+  },
   {
     id: "competition",
     children: [
@@ -400,8 +406,14 @@ const contentPageTree: Array<{
   },
   { id: "news" },
   { id: "forum" },
-  { id: "auth" },
-  { id: "workspace" },
+  {
+    id: "auth",
+    children: [{ kind: "type", id: "auth-notes" }],
+  },
+  {
+    id: "workspace",
+    children: [{ kind: "type", id: "workspace-states" }],
+  },
   { id: "organizer" },
   { id: "contact" },
 ];
@@ -616,6 +628,153 @@ export function ContentIndexSection() {
           </Link>
         </Surface>
       </section>
+
+      <section className="space-y-5">
+        <p className="scroll-mt-32 theme-heading text-2xl font-semibold uppercase tracking-[0.16em] theme-text-strong md:text-[1.75rem]">
+          {locale === "en" ? "Header" : "Header"}
+        </p>
+        <Surface className="space-y-3 px-5 py-5 md:px-6">
+          <Link href="/admin/content/header">
+            <div className="group flex items-start gap-4 rounded-[1.4rem] px-3 py-3 transition hover:bg-[rgba(23,114,208,0.06)]">
+              <div className="theme-brand-gradient flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-[0_16px_34px_rgba(23,114,208,0.18)]">
+                <Mail className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="theme-heading text-xl font-semibold theme-text-strong">
+                  {locale === "en" ? "Top header" : "Header phía trên"}
+                </p>
+                <p className="mt-1 text-sm leading-7 theme-text-muted">
+                  {locale === "en"
+                    ? "Edit the competition slogan, contact email, phone number, and Facebook link used in the top bar."
+                    : "Chỉnh sửa slogan cuộc thi, email liên hệ, số điện thoại và liên kết Facebook dùng ở thanh phía trên."}
+                </p>
+              </div>
+            </div>
+          </Link>
+        </Surface>
+      </section>
+    </div>
+  );
+}
+
+export function ContentHeaderEditor() {
+  const { locale, pageContent, savePageContent } = useSiteState();
+  useAdminTitleScroll();
+  const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
+
+  useEffect(() => {
+    setDraft(clonePageContent(pageContent));
+  }, [pageContent]);
+
+  const isDirty = useMemo(
+    () => JSON.stringify(draft.siteHeader) !== JSON.stringify(pageContent.siteHeader),
+    [draft.siteHeader, pageContent.siteHeader],
+  );
+
+  return (
+    <div className="space-y-8">
+      <EditorTopBar
+        eyebrow={locale === "en" ? "Admin / Content / Header" : "Admin / Nội dung / Header"}
+        title={locale === "en" ? "Top header" : "Header phía trên"}
+        description={
+          locale === "en"
+            ? "Edit the slogan and contact points shown in the top bar across the site."
+            : "Chỉnh sửa slogan và các đầu mối liên hệ hiển thị ở thanh trên cùng của toàn bộ website."
+        }
+        isDirty={isDirty}
+        onReset={() => setDraft(clonePageContent(pageContent))}
+        onSave={() => savePageContent(draft)}
+      />
+
+      <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+        <BlockIntro
+          title={locale === "en" ? "Top header content" : "Nội dung header trên cùng"}
+          description={
+            locale === "en"
+              ? "These fields control the slogan and quick contact line shown above the main navigation."
+              : "Các trường này điều khiển slogan và dải liên hệ nhanh hiển thị phía trên thanh điều hướng chính."
+          }
+        />
+
+        <LocalizedFieldEditor
+          label={locale === "en" ? "Competition slogan" : "Slogan cuộc thi"}
+          rows={2}
+          value={draft.siteHeader.slogan}
+          onChange={(language, value) =>
+            setDraft((current) =>
+              updateDraftContent(current, (next) => {
+                next.siteHeader.slogan[language] = value;
+              }),
+            )
+          }
+        />
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          <label className="space-y-2">
+            <span className="text-sm theme-text-muted">
+              {locale === "en" ? "Contact email" : "Email liên hệ"}
+            </span>
+            <input
+              value={draft.siteHeader.email}
+              onChange={(event) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.siteHeader.email = event.target.value;
+                  }),
+                )
+              }
+              className={fieldClassName}
+            />
+          </label>
+
+          <label className="space-y-2">
+            <span className="text-sm theme-text-muted">
+              {locale === "en" ? "Phone number" : "Số điện thoại"}
+            </span>
+            <input
+              value={draft.siteHeader.phone}
+              onChange={(event) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.siteHeader.phone = event.target.value;
+                  }),
+                )
+              }
+              className={fieldClassName}
+            />
+          </label>
+        </div>
+
+        <LocalizedFieldEditor
+          label={locale === "en" ? "Facebook label" : "Nhãn Facebook"}
+          rows={2}
+          value={draft.siteHeader.facebookLabel}
+          onChange={(language, value) =>
+            setDraft((current) =>
+              updateDraftContent(current, (next) => {
+                next.siteHeader.facebookLabel[language] = value;
+              }),
+            )
+          }
+        />
+
+        <label className="space-y-2">
+          <span className="text-sm theme-text-muted">
+            {locale === "en" ? "Facebook link" : "Liên kết Facebook"}
+          </span>
+          <input
+            value={draft.siteHeader.facebookUrl}
+            onChange={(event) =>
+              setDraft((current) =>
+                updateDraftContent(current, (next) => {
+                  next.siteHeader.facebookUrl = event.target.value;
+                }),
+              )
+            }
+            className={fieldClassName}
+          />
+        </label>
+      </Surface>
     </div>
   );
 }
@@ -3202,6 +3361,8 @@ export function ContentSponsorsEditor() {
   const { locale, sponsors, saveSponsorsByAdmin } = useSiteState();
   useAdminTitleScroll();
   const [draft, setDraft] = useState<SponsorProfile[]>(() => cloneSponsors(sponsors));
+  const [logoUploadError, setLogoUploadError] = useState("");
+  const [uploadingSponsorIndex, setUploadingSponsorIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setDraft(cloneSponsors(sponsors));
@@ -3238,7 +3399,7 @@ export function ContentSponsorsEditor() {
         </button>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className="grid gap-4">
         {draft.map((sponsor, index) => (
           <Surface key={`${sponsor.name || "sponsor"}-${index}`} className="space-y-5 px-5 py-5">
             <div className="flex items-center justify-between gap-3">
@@ -3274,22 +3435,118 @@ export function ContentSponsorsEditor() {
               />
             </label>
 
-            <label className="space-y-2">
+            <div className="space-y-3">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Logo image path" : "Đường dẫn logo"}
+                {locale === "en" ? "Sponsor logo" : "Logo nhà tài trợ"}
               </span>
-              <input
-                value={sponsor.logoSrc}
-                onChange={(event) =>
-                  setDraft((current) =>
-                    current.map((item, currentIndex) =>
-                      currentIndex === index ? { ...item, logoSrc: event.target.value } : item,
-                    ),
-                  )
-                }
-                className={fieldClassName}
-              />
-            </label>
+              <div className="flex flex-col gap-4 rounded-[1.6rem] border theme-border theme-panel px-4 py-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="relative flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-[1.25rem] border theme-border bg-white/80 p-3 dark:bg-white/[0.06]">
+                    {sponsor.logoSrc ? (
+                      <Image
+                        src={sponsor.logoSrc}
+                        alt={sponsor.name || (locale === "en" ? "Sponsor logo preview" : "Xem trước logo")}
+                        fill
+                        sizes="128px"
+                        unoptimized
+                        className="object-contain p-3"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs font-semibold theme-text-soft">
+                        {locale === "en" ? "No logo" : "Chưa có logo"}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-semibold theme-text-strong">
+                      {locale === "en" ? "Upload logo image" : "Tải ảnh logo"}
+                    </p>
+                    <p className="text-xs leading-6 theme-text-soft">
+                      {locale === "en"
+                        ? "Use JPG, PNG, or WEBP. Maximum size: 2MB."
+                        : "Dùng JPG, PNG hoặc WEBP. Dung lượng tối đa: 2MB."}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <label className="theme-button-secondary inline-flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold">
+                    <Upload className="h-4 w-4" />
+                    {uploadingSponsorIndex === index
+                      ? locale === "en"
+                        ? "Uploading..."
+                        : "Đang tải..."
+                      : locale === "en"
+                        ? "Upload logo"
+                        : "Tải logo"}
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={async (event: ChangeEvent<HTMLInputElement>) => {
+                        const file = event.target.files?.[0];
+                        event.target.value = "";
+                        if (!file) {
+                          return;
+                        }
+
+                        const formData = new FormData();
+                        formData.set("imageFile", file);
+                        setUploadingSponsorIndex(index);
+                        setLogoUploadError("");
+
+                        try {
+                          const response = await fetch("/api/admin/content/sponsors/logo", {
+                            method: "POST",
+                            body: formData,
+                          });
+                          const payload = (await response.json().catch(() => null)) as { imageUrl?: string; error?: string } | null;
+
+                          if (!response.ok || !payload?.imageUrl) {
+                            setLogoUploadError(
+                              payload?.error ||
+                                (locale === "en"
+                                  ? "Could not upload the sponsor logo."
+                                  : "Không thể tải logo nhà tài trợ."),
+                            );
+                            return;
+                          }
+
+                          setDraft((current) =>
+                            current.map((item, currentIndex) =>
+                              currentIndex === index ? { ...item, logoSrc: payload.imageUrl! } : item,
+                            ),
+                          );
+                        } catch {
+                          setLogoUploadError(
+                            locale === "en"
+                              ? "Could not upload the sponsor logo."
+                              : "Không thể tải logo nhà tài trợ.",
+                          );
+                        } finally {
+                          setUploadingSponsorIndex((current) => (current === index ? null : current));
+                        }
+                      }}
+                    />
+                  </label>
+                  {sponsor.logoSrc ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDraft((current) =>
+                          current.map((item, currentIndex) =>
+                            currentIndex === index ? { ...item, logoSrc: "" } : item,
+                          ),
+                        )
+                      }
+                      className="theme-button-danger inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {locale === "en" ? "Remove logo" : "Gỡ logo"}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
 
             <LocalizedFieldEditor
               label={locale === "en" ? "Tier" : "Hạng tài trợ"}
@@ -3353,6 +3610,12 @@ export function ContentSponsorsEditor() {
           </Surface>
         ))}
       </div>
+
+      {logoUploadError ? (
+        <Surface className="px-5 py-4">
+          <p className="text-sm font-medium text-rose-700 dark:text-rose-200">{logoUploadError}</p>
+        </Surface>
+      ) : null}
     </div>
   );
 }

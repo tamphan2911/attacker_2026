@@ -505,6 +505,13 @@ export interface EditableHeroSlide {
 }
 
 export interface SitePageContent {
+  siteHeader: {
+    slogan: LocalizedText;
+    email: string;
+    phone: string;
+    facebookLabel: LocalizedText;
+    facebookUrl: string;
+  };
   home: {
     heroSlides: EditableHeroSlide[];
     testimonials: TestimonialItem[];

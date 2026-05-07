@@ -57,6 +57,7 @@ export function SponsorsPage() {
                     alt={sponsor.name}
                     width={320}
                     height={96}
+                    unoptimized={sponsor.logoSrc.startsWith("/api/sponsor-images/")}
                     className="h-16 w-full object-contain object-left"
                   />
                 </div>

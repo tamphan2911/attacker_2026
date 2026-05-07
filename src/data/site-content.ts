@@ -248,6 +248,16 @@ export const heroCopy = {
 };
 
 export const defaultPageContent: SitePageContent = {
+  siteHeader: {
+    slogan: {
+      en: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",
+      vi: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",
+    },
+    email: contactInfo.email,
+    phone: contactInfo.phone,
+    facebookLabel: { en: "Facebook", vi: "Facebook" },
+    facebookUrl: contactInfo.attackerFacebook,
+  },
   home: {
     heroSlides: [
       {
