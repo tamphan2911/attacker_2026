@@ -44,6 +44,15 @@ function getMailPassword() {
 function getMailFrom() {
   const explicit = readConfigValue("SMTP_FROM");
   if (explicit) {
+    if (explicit.includes("@") || explicit.includes("<")) {
+      return explicit;
+    }
+
+    const mailUser = getMailUser();
+    if (mailUser) {
+      return `${explicit} <${mailUser}>`;
+    }
+
     return explicit;
   }
 
