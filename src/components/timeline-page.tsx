@@ -47,7 +47,7 @@ const timelinePhaseMeta: Array<{
     phase: "general",
     anchor: "general-timeline",
     eyebrow: { en: "Preparation", vi: "Chuẩn bị" },
-    title: { en: "Registration, briefing, and team lock", vi: "Đăng ký, briefing và chốt đội" },
+    title: { en: "Registration and team lock", vi: "Đăng ký và chốt đội" },
     description: {
       en: "This phase covers account setup, team formation, and the final lock checkpoint required before Round 1.",
       vi: "Giai đoạn này bao gồm tạo tài khoản, hình thành đội và mốc chốt đội bắt buộc trước khi vào Vòng 1.",
@@ -66,7 +66,7 @@ const timelinePhaseMeta: Array<{
     phase: "round-1",
     anchor: "round-1-timeline",
     eyebrow: { en: "Round 1", vi: "Vòng 1" },
-    title: { en: "Individual qualifier and Top 50 announcement", vi: "Bài thi cá nhân và công bố Top 50" },
+    title: { en: "Individual qualifier", vi: "Bài thi cá nhân" },
     description: {
       en: "The first competition stage is an online individual exam, but qualification is decided by team-average ranking.",
       vi: "Giai đoạn thi đầu tiên là bài thi trực tuyến theo cá nhân, nhưng điều kiện đi tiếp được quyết định bằng xếp hạng điểm trung bình đội.",
