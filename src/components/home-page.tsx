@@ -145,6 +145,7 @@ export function HomePage() {
                 fill
                 priority={index === 0}
                 sizes="100vw"
+                unoptimized={slide.image.startsWith("/api/hero-slide-images/")}
                 className="hero-pan object-cover"
               />
               <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.16),rgba(7,18,35,0.38))]" />

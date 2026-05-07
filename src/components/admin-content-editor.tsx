@@ -45,6 +45,7 @@ function cn(...values: Array<string | undefined | false>) {
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
 const MAX_TESTIMONIAL_AVATAR_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_HERO_SLIDE_IMAGE_FILE_BYTES = 2 * 1024 * 1024;
 
 function formatFileSize(bytes: number) {
   if (bytes >= 1024 * 1024) {
@@ -3625,6 +3626,8 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
   useAdminTitleScroll();
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
   const [testimonialAvatarError, setTestimonialAvatarError] = useState("");
+  const [heroSlideImageUploadError, setHeroSlideImageUploadError] = useState("");
+  const [uploadingHeroSlideIndex, setUploadingHeroSlideIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setDraft(clonePageContent(pageContent));
@@ -3670,20 +3673,131 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
                     {slide.id}
                   </span>
                 </div>
-                <label className="space-y-2">
-                  <span className="text-sm theme-text-muted">Image path</span>
-                  <input
-                    value={slide.image}
-                    onChange={(event) =>
-                      setDraft((current) =>
-                        updateDraftContent(current, (next) => {
-                          next.home.heroSlides[index].image = event.target.value;
-                        }),
-                      )
-                    }
-                    className={fieldClassName}
-                  />
-                </label>
+                <div className="space-y-3">
+                  <span className="text-sm theme-text-muted">
+                    {locale === "en" ? "Background image" : "Ảnh nền slide"}
+                  </span>
+                  <div className="overflow-hidden rounded-[1.5rem] border theme-border bg-white/70 dark:bg-white/[0.05]">
+                    <div className="relative aspect-[16/7] min-h-[180px] w-full">
+                      {slide.image ? (
+                        <Image
+                          src={slide.image}
+                          alt={pickText(locale, slide.title) || (locale === "en" ? "Hero slide preview" : "Xem trước ảnh slide")}
+                          fill
+                          sizes="(min-width: 768px) 960px, 100vw"
+                          unoptimized={slide.image.startsWith("/api/hero-slide-images/")}
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-sm font-medium theme-text-soft">
+                          {locale === "en" ? "No image uploaded yet" : "Chưa có ảnh cho slide"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <label className="theme-button-secondary inline-flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold">
+                      <Upload className="h-4 w-4" />
+                      {uploadingHeroSlideIndex === index
+                        ? locale === "en"
+                          ? "Uploading..."
+                          : "Đang tải..."
+                        : locale === "en"
+                          ? "Upload image"
+                          : "Tải ảnh"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingHeroSlideIndex === index}
+                        onChange={async (event: ChangeEvent<HTMLInputElement>) => {
+                          const file = event.target.files?.[0];
+                          event.target.value = "";
+                          if (!file) {
+                            return;
+                          }
+                          if (!file.type.startsWith("image/")) {
+                            setHeroSlideImageUploadError(
+                              locale === "en"
+                                ? "Only image files are allowed for hero slides."
+                                : "Chỉ chấp nhận tệp hình ảnh cho hero slide.",
+                            );
+                            return;
+                          }
+                          if (file.size > MAX_HERO_SLIDE_IMAGE_FILE_BYTES) {
+                            setHeroSlideImageUploadError(
+                              locale === "en"
+                                ? `Hero slide images must be ${formatFileSize(MAX_HERO_SLIDE_IMAGE_FILE_BYTES)} or smaller.`
+                                : `Ảnh hero slide phải có dung lượng ${formatFileSize(MAX_HERO_SLIDE_IMAGE_FILE_BYTES)} trở xuống.`,
+                            );
+                            return;
+                          }
+
+                          const formData = new FormData();
+                          formData.append("imageFile", file);
+                          setUploadingHeroSlideIndex(index);
+                          setHeroSlideImageUploadError("");
+
+                          try {
+                            const response = await fetch("/api/admin/content/hero-slides/image", {
+                              method: "POST",
+                              body: formData,
+                            });
+                            const payload = (await response.json().catch(() => null)) as
+                              | { imageUrl?: string; error?: string }
+                              | null;
+
+                            if (!response.ok || !payload?.imageUrl) {
+                              throw new Error(
+                                payload?.error ||
+                                  (locale === "en"
+                                    ? "The hero slide image could not be uploaded."
+                                    : "Không thể tải ảnh hero slide."),
+                              );
+                            }
+
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.home.heroSlides[index].image = payload.imageUrl!;
+                              }),
+                            );
+                          } catch (error) {
+                            setHeroSlideImageUploadError(
+                              error instanceof Error
+                                ? error.message
+                                : locale === "en"
+                                  ? "The hero slide image could not be uploaded."
+                                  : "Không thể tải ảnh hero slide.",
+                            );
+                          } finally {
+                            setUploadingHeroSlideIndex(null);
+                          }
+                        }}
+                      />
+                    </label>
+                    {slide.image ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.home.heroSlides[index].image = "";
+                            }),
+                          )
+                        }
+                        className="theme-button-danger inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {locale === "en" ? "Remove image" : "Gỡ ảnh"}
+                      </button>
+                    ) : null}
+                  </div>
+                  <p className="text-xs leading-6 theme-text-soft">
+                    {locale === "en"
+                      ? `Accepted formats: JPG, PNG, WEBP. Maximum size: ${formatFileSize(MAX_HERO_SLIDE_IMAGE_FILE_BYTES)}.`
+                      : `Chấp nhận JPG, PNG, WEBP. Dung lượng tối đa: ${formatFileSize(MAX_HERO_SLIDE_IMAGE_FILE_BYTES)}.`}
+                  </p>
+                </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2">
                     <span className="text-sm theme-text-muted">
@@ -3856,6 +3970,11 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
               </Surface>
             ))}
           </div>
+          {heroSlideImageUploadError ? (
+            <Surface className="px-5 py-4">
+              <p className="text-sm font-medium text-rose-700 dark:text-rose-200">{heroSlideImageUploadError}</p>
+            </Surface>
+          ) : null}
         </Surface>
       ) : null}
 
@@ -3888,7 +4007,7 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
             </button>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4">
             {draft.home.testimonials.map((testimonial, index) => (
               <Surface key={testimonial.id} className="space-y-4 px-4 py-4">
                 <div className="flex items-center justify-between gap-3">
