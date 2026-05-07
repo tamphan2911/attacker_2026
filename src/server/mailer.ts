@@ -14,13 +14,75 @@ type MailSendResult = {
 
 let cachedTransporter: nodemailer.Transporter | null | undefined;
 
+function readConfigValue(...keys: string[]) {
+  for (const key of keys) {
+    const value = process.env[key]?.trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+}
+
+function getMailHost() {
+  return readConfigValue("SMTP_HOST", "MAIL_HOST");
+}
+
+function getMailPort() {
+  return readConfigValue("SMTP_PORT", "MAIL_PORT");
+}
+
+function getMailUser() {
+  return readConfigValue("SMTP_USER", "MAIL_USERNAME");
+}
+
+function getMailPassword() {
+  return readConfigValue("SMTP_PASSWORD", "MAIL_PASSWORD");
+}
+
+function getMailFrom() {
+  const explicit = readConfigValue("SMTP_FROM");
+  if (explicit) {
+    return explicit;
+  }
+
+  const fromAddress = readConfigValue("MAIL_FROM_ADDRESS");
+  if (!fromAddress) {
+    return "";
+  }
+
+  const fromName = readConfigValue("MAIL_FROM_NAME");
+  return fromName ? `${fromName} <${fromAddress}>` : fromAddress;
+}
+
+function getMailSecure() {
+  const smtpSecure = process.env.SMTP_SECURE?.trim();
+  if (smtpSecure === "true") {
+    return true;
+  }
+  if (smtpSecure === "false") {
+    return false;
+  }
+
+  const mailEncryption = process.env.MAIL_ENCRYPTION?.trim().toLowerCase();
+  if (mailEncryption === "ssl") {
+    return true;
+  }
+  if (mailEncryption === "tls" || mailEncryption === "starttls") {
+    return false;
+  }
+
+  return Number(getMailPort()) === 465;
+}
+
 function hasMailConfiguration() {
   return Boolean(
-    process.env.SMTP_HOST &&
-      process.env.SMTP_PORT &&
-      process.env.SMTP_FROM &&
-      process.env.SMTP_USER &&
-      process.env.SMTP_PASSWORD,
+    getMailHost() &&
+      getMailPort() &&
+      getMailFrom() &&
+      getMailUser() &&
+      getMailPassword(),
   );
 }
 
@@ -35,15 +97,15 @@ function getTransporter() {
   }
 
   cachedTransporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: process.env.SMTP_SECURE === "true",
+    host: getMailHost(),
+    port: Number(getMailPort()),
+    secure: getMailSecure(),
     connectionTimeout: 10_000,
     greetingTimeout: 10_000,
     socketTimeout: 15_000,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
+      user: getMailUser(),
+      pass: getMailPassword(),
     },
   });
 
@@ -64,7 +126,7 @@ export async function sendMail(payload: MailPayload): Promise<MailSendResult> {
 
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM,
+      from: getMailFrom(),
       to: payload.to,
       subject: payload.subject,
       html: payload.html,
