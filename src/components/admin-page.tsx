@@ -24,7 +24,12 @@ import { AdminRound1Manager } from "@/components/admin-round1-manager";
 import { AdminRound2SubmissionsManager } from "@/components/admin-round2-submissions-manager";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
-import { getAdminUserCompetitionStatus, pickAdminUserRoleLabel } from "@/lib/admin-users";
+import {
+  getAdminUserCompetitionStatus,
+  pickAdminUserEmailVerificationLabel,
+  pickAdminUserEmailVerificationTone,
+  pickAdminUserRoleLabel,
+} from "@/lib/admin-users";
 import {
   pickCompetitionStateLabel,
   pickTeamDisplayStatusLabel,
@@ -239,6 +244,7 @@ function UsersTableSection() {
     studentId: "",
     role: "all",
     status: "all",
+    emailVerification: "all",
     email: "",
     university: "",
     major: "",
@@ -261,6 +267,9 @@ function UsersTableSection() {
           statusKey: status.key,
           statusLabel: status.label,
           statusTone: status.tone,
+          emailVerificationKey: user.emailVerified ? "verified" : "unverified",
+          emailVerificationLabel: pickAdminUserEmailVerificationLabel(locale, Boolean(user.emailVerified)),
+          emailVerificationTone: pickAdminUserEmailVerificationTone(Boolean(user.emailVerified)),
           email: user.email,
           university: user.university,
           major: user.major,
@@ -288,6 +297,10 @@ function UsersTableSection() {
         }
 
         if (filters.status !== "all" && row.statusKey !== filters.status) {
+          return false;
+        }
+
+        if (filters.emailVerification !== "all" && row.emailVerificationKey !== filters.emailVerification) {
           return false;
         }
 
@@ -322,6 +335,7 @@ function UsersTableSection() {
     studentId: row.studentId,
     role: row.roleLabel,
     status: row.statusLabel,
+    emailVerification: row.emailVerificationLabel,
     email: row.email,
     university: row.university,
     major: row.major,
@@ -362,6 +376,7 @@ function UsersTableSection() {
                   locale === "en" ? "Student ID" : "Mã sinh viên",
                   locale === "en" ? "Role" : "Vai trò",
                   locale === "en" ? "Status" : "Trạng thái",
+                  locale === "en" ? "Email activation" : "Kích hoạt email",
                   "Email",
                   locale === "en" ? "University" : "Trường",
                   locale === "en" ? "Major" : "Chuyên ngành",
@@ -427,6 +442,19 @@ function UsersTableSection() {
                     <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
                     <option value="finished">{locale === "en" ? "Finished" : "Hoàn thành"}</option>
                     <option value="stopped">{locale === "en" ? "Stopped" : "Dừng"}</option>
+                  </select>
+                </th>
+                <th className="px-4 py-3">
+                  <select
+                    value={filters.emailVerification}
+                    onChange={(event) =>
+                      setFilters((current) => ({ ...current, emailVerification: event.target.value }))
+                    }
+                    className="w-full rounded-xl border theme-border theme-panel-subtle px-3 py-2 text-xs theme-text-body outline-none"
+                  >
+                    <option value="all">{locale === "en" ? "All states" : "Tất cả trạng thái"}</option>
+                    <option value="verified">{locale === "en" ? "Verified" : "Đã kích hoạt"}</option>
+                    <option value="unverified">{locale === "en" ? "Not verified" : "Chưa kích hoạt"}</option>
                   </select>
                 </th>
                 <th className="px-4 py-3">
@@ -499,6 +527,9 @@ function UsersTableSection() {
                     </td>
                     <td className="px-4 py-4 text-center">
                       <StatusPill tone={row.statusTone}>{row.statusLabel}</StatusPill>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <StatusPill tone={row.emailVerificationTone}>{row.emailVerificationLabel}</StatusPill>
                     </td>
                     <td className="px-4 py-4 theme-text-body">{row.email}</td>
                     <td className="px-4 py-4 theme-text-body">{row.university}</td>

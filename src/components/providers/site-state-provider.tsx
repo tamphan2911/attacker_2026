@@ -69,13 +69,14 @@ import type {
   UserProfile,
 } from "@/types/site";
 
-const STORAGE_KEY = "attacker-2026-site-state-v16";
+const STORAGE_KEY = "attacker-2026-site-state-v17";
 
 const GUEST_USER: UserProfile = {
   id: "",
   loginId: "",
   name: "",
   email: "",
+  emailVerified: false,
   role: "student",
   studentId: "",
   phoneNumber: "",
@@ -90,6 +91,7 @@ const GUEST_USER: UserProfile = {
 function normalizeUserProfile(user: UserProfile): UserProfile {
   return {
     ...user,
+    emailVerified: Boolean(user.emailVerified),
     loginId: user.loginId ?? user.studentId ?? user.email,
     phoneNumber: user.phoneNumber ?? "",
   };

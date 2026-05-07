@@ -227,6 +227,7 @@ export function serializeUser(user: UserWithAccounts): UserProfile {
     loginId: user.loginId,
     name: user.name,
     email: user.email,
+    emailVerified: Boolean(user.emailVerifiedAt),
     role: mapUserRole(user.role),
     judgeProfileId: user.judgeProfileId ?? undefined,
     studentId: user.studentId ?? "",

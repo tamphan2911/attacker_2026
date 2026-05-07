@@ -7,6 +7,10 @@ import { ArrowLeft, Trash2 } from "lucide-react";
 
 import { DEMO_ADMIN_LOGIN_ID } from "@/data/site-content";
 import {
+  pickAdminUserEmailVerificationLabel,
+  pickAdminUserEmailVerificationTone,
+} from "@/lib/admin-users";
+import {
   pickTeamDisplayStatusDescription,
   pickTeamDisplayStatusLabel,
   pickTeamDisplayStatusTone,
@@ -183,9 +187,15 @@ export function AdminUserEditor({ userId }: { userId: string }) {
               <span className="text-sm theme-text-muted">Email</span>
               <input
                 value={draft.email}
-                onChange={(event) => setDraft((current) => (current ? { ...current, email: event.target.value } : current))}
-                className={fieldClassName}
+                disabled
+                readOnly
+                className={`${fieldClassName} cursor-not-allowed opacity-70`}
               />
+              <p className="text-xs theme-text-soft">
+                {locale === "en"
+                  ? "Email is fixed after the account is created."
+                  : "Email được cố định sau khi tài khoản được tạo."}
+              </p>
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
@@ -208,6 +218,27 @@ export function AdminUserEditor({ userId }: { userId: string }) {
                 }
                 className={fieldClassName}
               />
+            </label>
+            <label className="space-y-2">
+              <span className="text-sm theme-text-muted">
+                {locale === "en" ? "Email activation" : "Kích hoạt email"}
+              </span>
+              <select
+                value={draft.emailVerified ? "verified" : "unverified"}
+                onChange={(event) =>
+                  setDraft((current) =>
+                    current ? { ...current, emailVerified: event.target.value === "verified" } : current,
+                  )
+                }
+                className={fieldClassName}
+              >
+                <option value="verified">
+                  {locale === "en" ? "Verified" : "Đã kích hoạt"}
+                </option>
+                <option value="unverified">
+                  {locale === "en" ? "Not verified" : "Chưa kích hoạt"}
+                </option>
+              </select>
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
@@ -324,6 +355,16 @@ export function AdminUserEditor({ userId }: { userId: string }) {
                 {locale === "en" ? "Providers" : "Nha cung cap"}
               </p>
               <p className="mt-2 text-sm font-semibold theme-text-strong">{user.providers.join(", ")}</p>
+            </div>
+            <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Email activation" : "Kích hoạt email"}
+              </p>
+              <div className="mt-2">
+                <StatusPill tone={pickAdminUserEmailVerificationTone(draft.emailVerified ?? false)}>
+                  {pickAdminUserEmailVerificationLabel(locale, draft.emailVerified ?? false)}
+                </StatusPill>
+              </div>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">

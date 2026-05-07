@@ -367,7 +367,7 @@ export async function updateUserByAdmin(
 ): Promise<ServiceResult<{ userId: string }>> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, role: true, studentId: true, loginId: true },
+    select: { id: true, role: true, studentId: true, loginId: true, email: true, emailVerifiedAt: true },
   });
 
   if (!user) {
@@ -394,20 +394,21 @@ export async function updateUserByAdmin(
   const nextStudentId = payload.studentId?.trim().toLowerCase();
   const nextPhoneNumber = payload.phoneNumber?.trim();
 
-  if (nextEmail || nextStudentId) {
+  if (nextEmail && nextEmail !== user.email.toLowerCase()) {
+    return fail(403, "Email is fixed after account creation and cannot be changed here.");
+  }
+
+  if (nextStudentId) {
     const duplicate = await prisma.user.findFirst({
       where: {
         id: { not: userId },
-        OR: [
-          ...(nextEmail ? [{ email: nextEmail }] : []),
-          ...(nextStudentId ? [{ studentId: nextStudentId }, { loginId: nextStudentId }] : []),
-        ],
+        OR: [{ studentId: nextStudentId }, { loginId: nextStudentId }],
       },
       select: { id: true },
     });
 
     if (duplicate) {
-      return fail(409, "Another account already uses that email or student ID.");
+      return fail(409, "Another account already uses that student ID.");
     }
   }
 
@@ -415,7 +416,6 @@ export async function updateUserByAdmin(
     where: { id: userId },
     data: {
       name: payload.name?.trim(),
-      email: nextEmail,
       role: payload.role ? mapUserRole(payload.role) : undefined,
       studentId: nextStudentId === undefined ? undefined : nextStudentId || null,
       loginId: nextStudentId || undefined,
@@ -427,6 +427,12 @@ export async function updateUserByAdmin(
       avatarTone: payload.avatarTone?.trim(),
       avatarImageSrc:
         payload.avatarImageSrc === undefined ? undefined : payload.avatarImageSrc || null,
+      emailVerifiedAt:
+        payload.emailVerified === undefined
+          ? undefined
+          : payload.emailVerified
+            ? user.emailVerifiedAt ?? new Date()
+            : null,
     },
   });
 

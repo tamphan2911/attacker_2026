@@ -19,6 +19,20 @@ export function pickAdminUserRoleLabel(locale: Locale, role: UserProfile["role"]
   }
 }
 
+export function pickAdminUserEmailVerificationLabel(locale: Locale, verified: boolean) {
+  return verified
+    ? locale === "en"
+      ? "Verified"
+      : "Đã kích hoạt"
+    : locale === "en"
+      ? "Not verified"
+      : "Chưa kích hoạt";
+}
+
+export function pickAdminUserEmailVerificationTone(verified: boolean) {
+  return verified ? ("success" as const) : ("warning" as const);
+}
+
 export function getAdminUserCompetitionStatus(
   locale: Locale,
   user: UserProfile,

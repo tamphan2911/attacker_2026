@@ -289,6 +289,10 @@ export const preparationTestUsers: UserProfile[] = [
   },
 ];
 
+for (const user of preparationTestUsers) {
+  user.emailVerified = user.emailVerified ?? true;
+}
+
 export const preparationTestTeams: TeamProfile[] = [
   {
     id: "prep-t01",

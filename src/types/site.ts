@@ -261,6 +261,7 @@ export interface UserProfile {
   loginId?: string;
   name: string;
   email: string;
+  emailVerified?: boolean;
   role: UserRole;
   judgeProfileId?: string;
   studentId: string;

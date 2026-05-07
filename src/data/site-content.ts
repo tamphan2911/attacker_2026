@@ -2034,6 +2034,10 @@ export const mockUsers: UserProfile[] = [
   },
 ];
 
+for (const user of mockUsers) {
+  user.emailVerified = user.emailVerified ?? true;
+}
+
 export const mockTeams: TeamProfile[] = [
   {
     id: "t1",
