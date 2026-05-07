@@ -405,7 +405,7 @@ export function AuthPage() {
 
     const payload = (await response.json()) as {
       email?: string;
-      emailDeliveryMode?: "smtp" | "log";
+      emailDeliveryMode?: "smtp" | "log" | "error";
     };
 
     setIsBusy(false);

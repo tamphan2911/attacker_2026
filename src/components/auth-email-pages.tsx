@@ -66,6 +66,10 @@ export function AuthCheckEmailPage() {
       ? locale === "en"
         ? "Outgoing email is not configured yet, so this environment only logs the email on the server."
         : "Hệ thống gửi email đi chưa được cấu hình, nên môi trường này hiện chỉ ghi email vào log phía máy chủ."
+      : deliveryMode === "error"
+        ? locale === "en"
+          ? "The account was created, but the system could not deliver the email. Check the SMTP configuration and use the resend action below."
+          : "Tài khoản đã được tạo, nhưng hệ thống chưa gửi được email. Hãy kiểm tra cấu hình SMTP rồi dùng nút gửi lại bên dưới."
       : "";
 
   const handleResend = async () => {
@@ -97,6 +101,10 @@ export function AuthCheckEmailPage() {
         ? locale === "en"
           ? "Activation email was regenerated, but outgoing email is not configured yet in this environment."
           : "Email kích hoạt đã được tạo lại, nhưng môi trường này vẫn chưa cấu hình hệ thống gửi email."
+        : payload.emailDeliveryMode === "error"
+          ? locale === "en"
+            ? "The activation email was regenerated, but delivery still failed. Please re-check SMTP and try again."
+            : "Email kích hoạt đã được tạo lại, nhưng việc gửi vẫn thất bại. Vui lòng kiểm tra lại SMTP rồi thử lại."
         : locale === "en"
           ? "Activation email sent again."
           : "Đã gửi lại email kích hoạt.",
