@@ -33,9 +33,6 @@ import type {
 const timelinePhaseMeta: Array<{
   phase: "general" | CompetitionRoundKey;
   anchor: string;
-  eyebrow: { en: string; vi: string };
-  title: { en: string; vi: string };
-  description: { en: string; vi: string };
   icon: typeof Flag;
   ruleHref: string;
   iconClass: string;
@@ -46,12 +43,6 @@ const timelinePhaseMeta: Array<{
   {
     phase: "general",
     anchor: "general-timeline",
-    eyebrow: { en: "Preparation", vi: "Chuẩn bị" },
-    title: { en: "Registration and team lock", vi: "Đăng ký và chốt đội" },
-    description: {
-      en: "This phase covers account setup, team formation, and the final lock checkpoint required before Round 1.",
-      vi: "Giai đoạn này bao gồm tạo tài khoản, hình thành đội và mốc chốt đội bắt buộc trước khi vào Vòng 1.",
-    },
     icon: Flag,
     ruleHref: "/rules#general-rules",
     iconClass:
@@ -65,12 +56,6 @@ const timelinePhaseMeta: Array<{
   {
     phase: "round-1",
     anchor: "round-1-timeline",
-    eyebrow: { en: "Round 1", vi: "Vòng 1" },
-    title: { en: "Individual qualifier", vi: "Bài thi cá nhân" },
-    description: {
-      en: "The first competition stage is an online individual exam, but qualification is decided by team-average ranking.",
-      vi: "Giai đoạn thi đầu tiên là bài thi trực tuyến theo cá nhân, nhưng điều kiện đi tiếp được quyết định bằng xếp hạng điểm trung bình đội.",
-    },
     icon: ShieldCheck,
     ruleHref: "/rules#round-1-rules",
     iconClass:
@@ -84,12 +69,6 @@ const timelinePhaseMeta: Array<{
   {
     phase: "round-2",
     anchor: "round-2-timeline",
-    eyebrow: { en: "Round 2", vi: "Vòng 2" },
-    title: { en: "Report submission and judge review", vi: "Nộp báo cáo và chấm bởi giám khảo" },
-    description: {
-      en: "Round 2 focuses on report submission, version tracking, and the judged shortlist for the final.",
-      vi: "Vòng 2 tập trung vào nộp báo cáo, theo dõi phiên bản và chấm chọn danh sách vào chung kết.",
-    },
     icon: Route,
     ruleHref: "/rules#round-2-rules",
     iconClass:
@@ -103,12 +82,6 @@ const timelinePhaseMeta: Array<{
   {
     phase: "round-3",
     anchor: "round-3-timeline",
-    eyebrow: { en: "Final round", vi: "Chung kết" },
-    title: { en: "Final report, presentation, and awards", vi: "Báo cáo cuối, thuyết trình và trao giải" },
-    description: {
-      en: "The final stage starts with the finalist report deadline, then moves into live presentation, judge Q&A, and the final award decision.",
-      vi: "Giai đoạn chung kết bắt đầu bằng hạn nộp báo cáo của top 5, sau đó chuyển sang thuyết trình trực tiếp, hỏi đáp cùng giám khảo và quyết định giải thưởng cuối cùng.",
-    },
     icon: CalendarDays,
     ruleHref: "/rules#round-3-rules",
     iconClass:
@@ -257,9 +230,9 @@ function parseLocalDate(value: string, endOfDay = false) {
     : new Date(year, month - 1, day, 0, 0, 0, 0);
 }
 
-function formatCountdown(locale: "en" | "vi", distanceMs: number) {
+function formatCountdown(locale: "en" | "vi", distanceMs: number, nowLabel: LocalizedText) {
   if (distanceMs <= 0) {
-    return locale === "en" ? "now" : "ngay bây giờ";
+    return pickText(locale, nowLabel);
   }
 
   const totalSeconds = Math.floor(distanceMs / 1000);
@@ -304,6 +277,16 @@ function getTimelineCardStatusMeta(
   now: Date,
   locale: "en" | "vi",
   nextUpcomingKey: string | null,
+  labels: Pick<
+    ReturnType<typeof useSiteState>["pageContent"]["timelinePage"],
+    | "nowLabel"
+    | "finishedLabel"
+    | "ongoingLabel"
+    | "startingSoonLabel"
+    | "notStartedLabel"
+    | "endsInPrefix"
+    | "startsInPrefix"
+  >,
 ) {
   const key = getTimelineItemKey(item);
   const startAt = parseLocalDate(item.startDate);
@@ -313,7 +296,7 @@ function getTimelineCardStatusMeta(
     return {
       key,
       status: "finished" as const,
-      label: locale === "en" ? "Finished" : "Đã kết thúc",
+      label: pickText(locale, labels.finishedLabel),
       countdown: "",
       icon: CheckCircle2,
     };
@@ -323,11 +306,8 @@ function getTimelineCardStatusMeta(
     return {
       key,
       status: "ongoing" as const,
-      label: locale === "en" ? "Ongoing" : "Đang diễn ra",
-      countdown:
-        locale === "en"
-          ? `Ends in ${formatCountdown(locale, endAt.getTime() - now.getTime())}`
-          : `Kết thúc trong ${formatCountdown(locale, endAt.getTime() - now.getTime())}`,
+      label: pickText(locale, labels.ongoingLabel),
+      countdown: `${pickText(locale, labels.endsInPrefix)} ${formatCountdown(locale, endAt.getTime() - now.getTime(), labels.nowLabel)}`,
       icon: Clock3,
     };
   }
@@ -336,11 +316,8 @@ function getTimelineCardStatusMeta(
     return {
       key,
       status: "upcoming" as const,
-      label: locale === "en" ? "Starting soon" : "Sắp diễn ra",
-      countdown:
-        locale === "en"
-          ? `Starts in ${formatCountdown(locale, startAt.getTime() - now.getTime())}`
-          : `Bắt đầu trong ${formatCountdown(locale, startAt.getTime() - now.getTime())}`,
+      label: pickText(locale, labels.startingSoonLabel),
+      countdown: `${pickText(locale, labels.startsInPrefix)} ${formatCountdown(locale, startAt.getTime() - now.getTime(), labels.nowLabel)}`,
       icon: Clock3,
     };
   }
@@ -348,14 +325,14 @@ function getTimelineCardStatusMeta(
   return {
     key,
     status: "not-started" as const,
-    label: locale === "en" ? "Not started" : "Chưa diễn ra",
+    label: pickText(locale, labels.notStartedLabel),
     countdown: "",
     icon: CalendarDays,
   };
 }
 
 export function TimelinePage() {
-  const { locale, timelineItems, currentUser, currentTeam, activeUserId } = useSiteState();
+  const { locale, timelineItems, currentUser, currentTeam, activeUserId, pageContent } = useSiteState();
   const [now, setNow] = useState(() => new Date());
   const visibleTimelineItems = timelineItems.filter((item) => item.id !== "info-session-team-clinic");
 
@@ -380,6 +357,14 @@ export function TimelinePage() {
   const nextUpcomingItem = orderedTimelineItems.find((item) => parseLocalDate(item.startDate).getTime() > now.getTime());
   const nextUpcomingKey = nextUpcomingItem ? getTimelineItemKey(nextUpcomingItem) : null;
   const phaseSummaries = timelinePhaseMeta.map((phase) => {
+    const copy =
+      phase.phase === "general"
+        ? pageContent.timelinePage.general
+        : phase.phase === "round-1"
+          ? pageContent.timelinePage.round1
+          : phase.phase === "round-2"
+            ? pageContent.timelinePage.round2
+            : pageContent.timelinePage.round3;
     const items = [...visibleTimelineItems]
       .filter((item) => item.phase === phase.phase)
       .sort((left, right) => {
@@ -392,6 +377,7 @@ export function TimelinePage() {
 
     return {
       ...phase,
+      ...copy,
       items,
       startDate: items[0]?.startDate,
       endDate: items[items.length - 1]?.endDate,
@@ -404,13 +390,11 @@ export function TimelinePage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-              {locale === "en" ? "Timeline diagram" : "Sơ đồ lịch trình"}
+              {pickText(locale, pageContent.timelinePage.diagramEyebrow)}
             </p>
           </div>
           <p className="max-w-xl text-sm leading-7 theme-text-muted">
-            {locale === "en"
-              ? "Click any stage to jump straight to the detailed block below."
-              : "Nhấn vào từng giai đoạn để chuyển nhanh đến khối thông tin chi tiết bên dưới."}
+            {pickText(locale, pageContent.timelinePage.diagramHint)}
           </p>
         </div>
 
@@ -431,7 +415,7 @@ export function TimelinePage() {
                           <Icon className="h-4.5 w-4.5" />
                         </div>
                         <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] ${phase.statusClass}`}>
-                          {phase.items.length} {locale === "en" ? "steps" : "bước"}
+                          {phase.items.length} {pickText(locale, pageContent.timelinePage.stepsLabel)}
                         </span>
                       </div>
 
@@ -444,12 +428,10 @@ export function TimelinePage() {
                       <p className="mt-2 text-sm leading-7 theme-text-muted">
                         {phase.startDate && phase.endDate
                           ? formatDateRangeLabel(locale, phase.startDate, phase.endDate)
-                          : locale === "en"
-                            ? "Schedule to be updated"
-                            : "Lịch sẽ được cập nhật"}
+                          : pickText(locale, pageContent.timelinePage.scheduleToBeUpdated)}
                       </p>
                       <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-                        {locale === "en" ? "Open detail" : "Mở chi tiết"}
+                        {pickText(locale, pageContent.timelinePage.openDetailLabel)}
                         <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
                       </span>
                     </Link>
@@ -461,17 +443,9 @@ export function TimelinePage() {
       </section>
 
       <section className="space-y-6">
-        {timelinePhaseMeta.map((phase) => {
-          const items = [...visibleTimelineItems]
-            .filter((item) => item.phase === phase.phase)
-            .sort((left, right) => {
-              if (left.startDate !== right.startDate) {
-                return left.startDate.localeCompare(right.startDate);
-              }
-
-              return left.endDate.localeCompare(right.endDate);
-            });
+        {phaseSummaries.map((phase) => {
           const Icon = phase.icon;
+          const items = phase.items;
 
           return (
             <section
@@ -501,14 +475,14 @@ export function TimelinePage() {
                     href={phase.ruleHref}
                     className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-[0.98] ${phase.buttonClass}`}
                   >
-                    {locale === "en" ? "Open rule block" : "Mở khối thể lệ"}
+                    {pickText(locale, pageContent.timelinePage.openRuleBlockLabel)}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
 
                 <div className="space-y-4">
                   {items.map((item) => {
-                    const statusMeta = getTimelineCardStatusMeta(item, now, locale, nextUpcomingKey);
+                    const statusMeta = getTimelineCardStatusMeta(item, now, locale, nextUpcomingKey, pageContent.timelinePage);
                     const StatusIcon = statusMeta.icon;
                     const actionLinks = buildTimelineActionLinks({
                       item,
@@ -548,7 +522,7 @@ export function TimelinePage() {
                       <div className="mt-5 grid gap-3 md:grid-cols-3">
                         <div className="theme-timeline-meta-card theme-timeline-meta-card--accent rounded-[1.25rem] border px-4 py-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                            {locale === "en" ? "Time" : "Thời gian"}
+                            {pickText(locale, pageContent.timelinePage.timeLabel)}
                           </p>
                           <p className="mt-2 text-sm leading-7 theme-text-body">
                             {formatDateRangeLabel(locale, item.startDate, item.endDate)}
@@ -556,13 +530,13 @@ export function TimelinePage() {
                         </div>
                         <div className="theme-timeline-meta-card theme-timeline-meta-card--accent rounded-[1.25rem] border px-4 py-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                            {locale === "en" ? "Place" : "Địa điểm"}
+                            {pickText(locale, pageContent.timelinePage.placeLabel)}
                           </p>
                           <p className="mt-2 text-sm leading-7 theme-text-body">{pickText(locale, item.location)}</p>
                         </div>
                         <div className="theme-timeline-meta-card rounded-[1.25rem] border px-4 py-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                            {locale === "en" ? "Method" : "Hình thức"}
+                            {pickText(locale, pageContent.timelinePage.methodLabel)}
                           </p>
                           <p className="mt-2 text-sm leading-7 theme-text-body">{pickText(locale, item.method)}</p>
                         </div>

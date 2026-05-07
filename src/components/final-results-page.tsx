@@ -10,9 +10,6 @@ import type { TeamFinalOutcome, TeamProfile, UserProfile } from "@/types/site";
 type FinalOutcomeMeta = {
   outcome: Exclude<TeamFinalOutcome, "emerging-team">;
   slots: number;
-  eyebrow: { en: string; vi: string };
-  title: { en: string; vi: string };
-  note: { en: string; vi: string };
   icon: typeof Crown;
   tone: "warning" | "info" | "default" | "success";
   iconClass: string;
@@ -26,12 +23,6 @@ const outcomeMeta: FinalOutcomeMeta[] = [
   {
     outcome: "champion",
     slots: 1,
-    eyebrow: { en: "First place", vi: "Hạng nhất" },
-    title: { en: "Champion", vi: "Quán quân" },
-    note: {
-      en: "Highest final-round score after the live defense.",
-      vi: "Đội có tổng điểm cao nhất sau phần bảo vệ trực tiếp.",
-    },
     icon: Crown,
     tone: "warning",
     iconClass:
@@ -44,12 +35,6 @@ const outcomeMeta: FinalOutcomeMeta[] = [
   {
     outcome: "runner-up",
     slots: 1,
-    eyebrow: { en: "Second place", vi: "Hạng nhì" },
-    title: { en: "Runner-up", vi: "Á quân" },
-    note: {
-      en: "Second-highest team after the final presentation day.",
-      vi: "Đội đứng thứ hai sau ngày thuyết trình chung kết.",
-    },
     icon: Trophy,
     tone: "info",
     iconClass:
@@ -62,12 +47,6 @@ const outcomeMeta: FinalOutcomeMeta[] = [
   {
     outcome: "third-place",
     slots: 1,
-    eyebrow: { en: "Third place", vi: "Hạng ba" },
-    title: { en: "Third place", vi: "Quý quân" },
-    note: {
-      en: "The final podium place after the last judge review.",
-      vi: "Vị trí cuối cùng trên bục xếp hạng sau chấm điểm chung cuộc.",
-    },
     icon: Medal,
     tone: "default",
     iconClass:
@@ -80,12 +59,6 @@ const outcomeMeta: FinalOutcomeMeta[] = [
   {
     outcome: "fourth-place",
     slots: 2,
-    eyebrow: { en: "Shared fourth place", vi: "Đồng hạng tư" },
-    title: { en: "4th place teams", vi: "Hai đội hạng 4" },
-    note: {
-      en: "Two finalist teams close the season in shared fourth place.",
-      vi: "Hai đội chung kết khép lại mùa giải với vị trí đồng hạng 4.",
-    },
     icon: Star,
     tone: "success",
     iconClass:
@@ -96,6 +69,25 @@ const outcomeMeta: FinalOutcomeMeta[] = [
       "from-emerald-400/0 via-emerald-400/80 to-emerald-400/0 dark:from-emerald-300/0 dark:via-emerald-300/70 dark:to-emerald-300/0",
   },
 ];
+
+function getFinalOutcomeCopy(
+  content: ReturnType<typeof useSiteState>["pageContent"]["finalResults"],
+  outcome: FinalOutcomeMeta["outcome"],
+) {
+  if (outcome === "champion") {
+    return content.champion;
+  }
+
+  if (outcome === "runner-up") {
+    return content.runnerUp;
+  }
+
+  if (outcome === "third-place") {
+    return content.thirdPlace;
+  }
+
+  return content.fourthPlace;
+}
 
 function getLeader(team: TeamProfile, users: UserProfile[]) {
   return users.find((user) => user.id === team.leaderId);
@@ -124,9 +116,11 @@ function getTeamsForOutcome(teams: TeamProfile[], outcome: TeamFinalOutcome, slo
 function MemberCard({
   member,
   locale,
+  content,
 }: {
   member: UserProfile | null;
   locale: "en" | "vi";
+  content: ReturnType<typeof useSiteState>["pageContent"]["finalResults"];
 }) {
   if (!member) {
     return (
@@ -137,10 +131,10 @@ function MemberCard({
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold theme-text-strong">
-              {locale === "en" ? "Member slot" : "Vị trí thành viên"}
+              {pickText(locale, content.memberSlotLabel)}
             </p>
             <p className="mt-1 text-xs theme-text-soft">
-              {locale === "en" ? "Awaiting official team lineup" : "Chờ cập nhật đội hình chính thức"}
+              {pickText(locale, content.awaitingOfficialTeamLineup)}
             </p>
           </div>
         </div>
@@ -173,6 +167,7 @@ function PlaceCard({
   locale,
   isCurrentTeam,
   featured = false,
+  content,
 }: {
   meta: FinalOutcomeMeta;
   team: TeamProfile | null;
@@ -180,8 +175,10 @@ function PlaceCard({
   locale: "en" | "vi";
   isCurrentTeam: boolean;
   featured?: boolean;
+  content: ReturnType<typeof useSiteState>["pageContent"]["finalResults"];
 }) {
   const Icon = meta.icon;
+  const copy = getFinalOutcomeCopy(content, meta.outcome);
   const leader = team ? getLeader(team, users) : undefined;
   const teamMembers = team ? getTeamMembers(team, users) : [];
   const memberSlots = team
@@ -211,56 +208,52 @@ function PlaceCard({
               </span>
               <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-                  {pickText(locale, meta.eyebrow)}
+                  {pickText(locale, copy.eyebrow)}
                 </p>
                 <h2 className={`theme-heading font-semibold theme-text-strong ${featured ? "text-[2rem]" : "text-[1.5rem]"}`}>
-                  {pickText(locale, meta.title)}
+                  {pickText(locale, copy.title)}
                 </h2>
               </div>
             </div>
-            <p className="mt-4 text-sm leading-7 theme-text-muted">{pickText(locale, meta.note)}</p>
+            <p className="mt-4 text-sm leading-7 theme-text-muted">{pickText(locale, copy.description)}</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <StatusPill tone={meta.tone}>
-              {team ? `#${team.tag}` : locale === "en" ? "Result pending" : "Chờ công bố"}
+              {team ? `#${team.tag}` : pickText(locale, content.resultPendingLabel)}
             </StatusPill>
-            {isCurrentTeam ? <StatusPill tone="info">{locale === "en" ? "Your team" : "Đội của bạn"}</StatusPill> : null}
+            {isCurrentTeam ? <StatusPill tone="info">{pickText(locale, content.yourTeamLabel)}</StatusPill> : null}
           </div>
         </div>
 
         <div className="rounded-[1.5rem] border theme-border bg-white/62 px-4 py-4 dark:bg-white/[0.04]">
           <div className="flex items-start gap-4">
             <GradientAvatar
-              label={team?.name ?? pickText(locale, meta.title)}
+              label={team?.name ?? pickText(locale, copy.title)}
               tone={team?.avatarTone ?? "from-slate-500 via-slate-400 to-slate-300"}
               imageSrc={team?.avatarImageSrc}
               className={`${featured ? "h-16 w-16 rounded-[1.15rem]" : "h-14 w-14 rounded-[1.05rem]"}`}
             />
             <div className="min-w-0">
               <h3 className={`theme-heading font-semibold theme-text-strong ${featured ? "text-[1.7rem]" : "text-[1.3rem]"}`}>
-                {team ? team.name : locale === "en" ? "Awaiting official announcement" : "Đang chờ công bố chính thức"}
+                {team ? team.name : pickText(locale, content.awaitingOfficialAnnouncement)}
               </h3>
               <p className="mt-2 text-sm leading-7 theme-text-body">
                 {team
                   ? team.bio
-                  : locale === "en"
-                    ? "This place will be replaced by the official team as soon as the final decision is published."
-                    : "Vị trí này sẽ được thay bằng đội chính thức ngay khi kết quả cuối cùng được công bố."}
+                  : pickText(locale, content.awaitingOfficialAnnouncementBody)}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <StatusPill tone={meta.tone}>{pickText(locale, meta.title)}</StatusPill>
+                <StatusPill tone={meta.tone}>{pickText(locale, copy.title)}</StatusPill>
                 {team ? (
                   <StatusPill>
-                    {locale === "en" ? `Keyword · ${team.track}` : `Từ khóa · ${team.track}`}
+                    {`${pickText(locale, content.keywordPrefix)} · ${team.track}`}
                   </StatusPill>
                 ) : null}
                 <StatusPill>
                   {leader?.name
-                    ? `${locale === "en" ? "Leader" : "Đội trưởng"} · ${leader.name}`
-                    : locale === "en"
-                      ? "Leader info pending"
-                      : "Chờ cập nhật đội trưởng"}
+                    ? `${pickText(locale, content.leaderPrefix)} · ${leader.name}`
+                    : pickText(locale, content.leaderInfoPending)}
                 </StatusPill>
               </div>
             </div>
@@ -271,7 +264,7 @@ function PlaceCard({
           <div className="mb-3 flex items-center gap-2">
             <Users2 className="h-4 w-4 theme-accent" />
             <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-              {locale === "en" ? "Team members" : "Thành viên đội"}
+              {pickText(locale, content.teamMembersLabel)}
             </p>
           </div>
           <div className={`grid gap-3 ${memberGridClass}`}>
@@ -280,6 +273,7 @@ function PlaceCard({
                 key={member?.id ?? `${meta.outcome}-member-${index}`}
                 member={member}
                 locale={locale}
+                content={content}
               />
             ))}
           </div>
@@ -290,7 +284,7 @@ function PlaceCard({
 }
 
 export function FinalResultsPage() {
-  const { locale, teams, users, currentTeam, timelineItems } = useSiteState();
+  const { locale, teams, users, currentTeam, timelineItems, pageContent } = useSiteState();
   const finalPresentationItem = timelineItems.find((item) => item.id === "round-3-final-presentation");
 
   const championMeta = outcomeMeta.find((meta) => meta.outcome === "champion")!;
@@ -311,7 +305,7 @@ export function FinalResultsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-            {locale === "en" ? "Final standings" : "Xếp hạng chung cuộc"}
+            {pickText(locale, pageContent.finalResults.finalStandingsEyebrow)}
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -322,14 +316,12 @@ export function FinalResultsPage() {
               </span>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                  {locale === "en" ? "Presentation day" : "Ngày thuyết trình"}
+                  {pickText(locale, pageContent.finalResults.presentationDayLabel)}
                 </p>
                 <p className="mt-1 text-sm font-semibold theme-text-strong">
                   {finalPresentationItem
                     ? formatDateRangeLabel(locale, finalPresentationItem.startDate, finalPresentationItem.endDate)
-                    : locale === "en"
-                      ? "To be announced"
-                      : "Sẽ cập nhật"}
+                    : pickText(locale, pageContent.finalResults.toBeAnnouncedLabel)}
                 </p>
               </div>
             </div>
@@ -341,14 +333,12 @@ export function FinalResultsPage() {
               </span>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                  {locale === "en" ? "Presentation place" : "Địa điểm thuyết trình"}
+                  {pickText(locale, pageContent.finalResults.presentationPlaceLabel)}
                 </p>
                 <p className="mt-1 text-sm font-semibold theme-text-strong">
                   {finalPresentationItem
                     ? pickText(locale, finalPresentationItem.location)
-                    : locale === "en"
-                      ? "To be announced"
-                      : "Sẽ cập nhật"}
+                    : pickText(locale, pageContent.finalResults.toBeAnnouncedLabel)}
                 </p>
               </div>
             </div>
@@ -364,6 +354,7 @@ export function FinalResultsPage() {
           locale={locale}
           isCurrentTeam={currentTeam?.id === championTeam?.id}
           featured
+          content={pageContent.finalResults}
         />
 
         <div className={`mx-auto h-px max-w-5xl bg-[linear-gradient(90deg,var(--tw-gradient-stops))] ${runnerUpMeta.lineClass}`} />
@@ -374,6 +365,7 @@ export function FinalResultsPage() {
           users={users}
           locale={locale}
           isCurrentTeam={currentTeam?.id === runnerUpTeam?.id}
+          content={pageContent.finalResults}
         />
 
         <div className={`mx-auto h-px max-w-5xl bg-[linear-gradient(90deg,var(--tw-gradient-stops))] ${thirdPlaceMeta.lineClass}`} />
@@ -384,6 +376,7 @@ export function FinalResultsPage() {
           users={users}
           locale={locale}
           isCurrentTeam={currentTeam?.id === thirdPlaceTeam?.id}
+          content={pageContent.finalResults}
         />
 
         <div className={`mx-auto h-px max-w-5xl bg-[linear-gradient(90deg,var(--tw-gradient-stops))] ${fourthPlaceMeta.lineClass}`} />
@@ -395,10 +388,10 @@ export function FinalResultsPage() {
             </span>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-                {pickText(locale, fourthPlaceMeta.eyebrow)}
+                {pickText(locale, pageContent.finalResults.fourthPlace.eyebrow)}
               </p>
               <p className="theme-heading text-2xl font-semibold theme-text-strong">
-                {pickText(locale, fourthPlaceMeta.title)}
+                {pickText(locale, pageContent.finalResults.fourthPlace.title)}
               </p>
             </div>
           </div>
@@ -412,6 +405,7 @@ export function FinalResultsPage() {
                 users={users}
                 locale={locale}
                 isCurrentTeam={currentTeam?.id === team?.id}
+                content={pageContent.finalResults}
               />
             ))}
           </div>

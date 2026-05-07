@@ -6,9 +6,13 @@ import {
   ArrowLeft,
   BriefcaseBusiness,
   CircleHelp,
+  Clock3,
   FileText,
   ImageIcon,
   LayoutDashboard,
+  Mail,
+  Medal,
+  MessageSquare,
   Newspaper,
   Plus,
   Quote,
@@ -152,8 +156,16 @@ function iconForPage(pageId: ContentPageId) {
       return CircleHelp;
     case "rules":
       return ShieldCheck;
+    case "timeline":
+      return Clock3;
+    case "finalists":
+      return Trophy;
+    case "final-results":
+      return Medal;
     case "news":
       return Newspaper;
+    case "forum":
+      return MessageSquare;
     case "sponsors":
       return LayoutDashboard;
     case "judges":
@@ -164,6 +176,8 @@ function iconForPage(pageId: ContentPageId) {
       return Users2;
     case "organizer":
       return LayoutDashboard;
+    case "contact":
+      return Mail;
   }
 }
 
@@ -207,16 +221,40 @@ const contentPageTree: Array<{
     id: "competition",
     children: [
       { kind: "page", id: "rules" },
+      { kind: "page", id: "timeline" },
       { kind: "page", id: "faq" },
       { kind: "page", id: "sponsors" },
       { kind: "page", id: "judges" },
+      { kind: "page", id: "finalists" },
+      { kind: "page", id: "final-results" },
     ],
   },
   { id: "news" },
+  { id: "forum" },
   { id: "auth", children: [{ kind: "type", id: "auth-notes" }] },
   { id: "workspace", children: [{ kind: "type", id: "workspace-states" }] },
   { id: "organizer" },
+  { id: "contact" },
 ];
+
+function LocalizedTextEditorCard({
+  title,
+  value,
+  rows = 2,
+  onChange,
+}: {
+  title: string;
+  value: LocalizedText;
+  rows?: number;
+  onChange: (locale: Locale, value: string) => void;
+}) {
+  return (
+    <Surface className="space-y-4 px-4 py-4">
+      <p className="text-sm font-semibold theme-text-strong">{title}</p>
+      <LocalizedFieldEditor label={title} rows={rows} value={value} onChange={onChange} />
+    </Surface>
+  );
+}
 
 function EditorTopBar({
   eyebrow,
@@ -575,6 +613,73 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
           </>
         ) : null}
 
+        {pageId === "forum" ? (
+          <div className="grid gap-4 xl:grid-cols-2">
+            {[
+              ["Forum / Search placeholder", draft.forum.searchPlaceholder, (language: Locale, value: string, next: SitePageContent) => { next.forum.searchPlaceholder[language] = value; }],
+              ["Forum / All threads label", draft.forum.allThreadsLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.allThreadsLabel[language] = value; }],
+              ["Forum / Matching threads suffix", draft.forum.matchingThreadsSuffix, (language: Locale, value: string, next: SitePageContent) => { next.forum.matchingThreadsSuffix[language] = value; }],
+              ["Forum / All-categories description", draft.forum.allCategoriesDescription, (language: Locale, value: string, next: SitePageContent) => { next.forum.allCategoriesDescription[language] = value; }],
+              ["Forum / Back to thread list", draft.forum.backToThreadListLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.backToThreadListLabel[language] = value; }],
+              ["Forum / Last activity label", draft.forum.lastActivityLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.lastActivityLabel[language] = value; }],
+              ["Forum / Closed by owner label", draft.forum.closedByOwnerLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.closedByOwnerLabel[language] = value; }],
+              ["Forum / Replies suffix", draft.forum.repliesSuffix, (language: Locale, value: string, next: SitePageContent) => { next.forum.repliesSuffix[language] = value; }],
+              ["Forum / Loading discussion label", draft.forum.loadingDiscussionLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.loadingDiscussionLabel[language] = value; }],
+              ["Forum / Replies section label", draft.forum.repliesSectionLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.repliesSectionLabel[language] = value; }],
+              ["Forum / No reply yet label", draft.forum.noReplyYetLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.noReplyYetLabel[language] = value; }],
+              ["Forum / Join conversation label", draft.forum.joinConversationLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.joinConversationLabel[language] = value; }],
+              ["Forum / Closed thread notice", draft.forum.closedThreadNotice, (language: Locale, value: string, next: SitePageContent) => { next.forum.closedThreadNotice[language] = value; }],
+              ["Forum / Signed-in reply notice", draft.forum.signedInReplyNotice, (language: Locale, value: string, next: SitePageContent) => { next.forum.signedInReplyNotice[language] = value; }],
+              ["Forum / Sign in now label", draft.forum.signInNowLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.signInNowLabel[language] = value; }],
+              ["Forum / Reply placeholder", draft.forum.replyPlaceholder, (language: Locale, value: string, next: SitePageContent) => { next.forum.replyPlaceholder[language] = value; }],
+              ["Forum / Post reply label", draft.forum.postReplyLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.postReplyLabel[language] = value; }],
+              ["Forum / Active threads suffix", draft.forum.activeThreadsSuffix, (language: Locale, value: string, next: SitePageContent) => { next.forum.activeThreadsSuffix[language] = value; }],
+              ["Forum / Sorted by recent activity", draft.forum.sortedByRecentActivityLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.sortedByRecentActivityLabel[language] = value; }],
+              ["Forum / Open thread label", draft.forum.openThreadLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.openThreadLabel[language] = value; }],
+              ["Forum / Sign in to participate", draft.forum.signInToParticipateLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.signInToParticipateLabel[language] = value; }],
+              ["Forum / Loading threads label", draft.forum.loadingThreadsLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.loadingThreadsLabel[language] = value; }],
+              ["Forum / No matching thread title", draft.forum.noMatchingThreadTitle, (language: Locale, value: string, next: SitePageContent) => { next.forum.noMatchingThreadTitle[language] = value; }],
+              ["Forum / No matching thread description", draft.forum.noMatchingThreadDescription, (language: Locale, value: string, next: SitePageContent) => { next.forum.noMatchingThreadDescription[language] = value; }],
+              ["Forum / New thread eyebrow", draft.forum.newThreadEyebrow, (language: Locale, value: string, next: SitePageContent) => { next.forum.newThreadEyebrow[language] = value; }],
+              ["Forum / New thread title", draft.forum.newThreadTitle, (language: Locale, value: string, next: SitePageContent) => { next.forum.newThreadTitle[language] = value; }],
+              ["Forum / Close dialog label", draft.forum.closeDialogLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.closeDialogLabel[language] = value; }],
+              ["Forum / Thread title field label", draft.forum.threadTitleFieldLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.threadTitleFieldLabel[language] = value; }],
+              ["Forum / Category field label", draft.forum.categoryFieldLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.categoryFieldLabel[language] = value; }],
+              ["Forum / Roles or skills field label", draft.forum.rolesSkillsFieldLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.rolesSkillsFieldLabel[language] = value; }],
+              ["Forum / Roles or skills placeholder", draft.forum.rolesSkillsPlaceholder, (language: Locale, value: string, next: SitePageContent) => { next.forum.rolesSkillsPlaceholder[language] = value; }],
+              ["Forum / Short summary field label", draft.forum.shortSummaryFieldLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.shortSummaryFieldLabel[language] = value; }],
+              ["Forum / Main post field label", draft.forum.mainPostFieldLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.mainPostFieldLabel[language] = value; }],
+              ["Forum / Contact note field label", draft.forum.contactNoteFieldLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.contactNoteFieldLabel[language] = value; }],
+              ["Forum / Contact note placeholder", draft.forum.contactNotePlaceholder, (language: Locale, value: string, next: SitePageContent) => { next.forum.contactNotePlaceholder[language] = value; }],
+              ["Forum / Publish thread label", draft.forum.publishThreadLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.publishThreadLabel[language] = value; }],
+              ["Forum / Clear form label", draft.forum.clearFormLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.clearFormLabel[language] = value; }],
+              ["Forum / Close thread confirm title", draft.forum.closeThreadConfirmTitle, (language: Locale, value: string, next: SitePageContent) => { next.forum.closeThreadConfirmTitle[language] = value; }],
+              ["Forum / Close thread confirm description", draft.forum.closeThreadConfirmDescription, (language: Locale, value: string, next: SitePageContent) => { next.forum.closeThreadConfirmDescription[language] = value; }],
+              ["Forum / Cancel label", draft.forum.cancelLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.cancelLabel[language] = value; }],
+              ["Forum / Close thread label", draft.forum.closeThreadLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.closeThreadLabel[language] = value; }],
+              ["Forum / Looking-for-team label", draft.forum.categoryLookingForTeamLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.categoryLookingForTeamLabel[language] = value; }],
+              ["Forum / Looking-for-team description", draft.forum.categoryLookingForTeamDescription, (language: Locale, value: string, next: SitePageContent) => { next.forum.categoryLookingForTeamDescription[language] = value; }],
+              ["Forum / Team recruiting label", draft.forum.categoryTeamRecruitingLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.categoryTeamRecruitingLabel[language] = value; }],
+              ["Forum / Team recruiting description", draft.forum.categoryTeamRecruitingDescription, (language: Locale, value: string, next: SitePageContent) => { next.forum.categoryTeamRecruitingDescription[language] = value; }],
+              ["Forum / General discussion label", draft.forum.categoryGeneralDiscussionLabel, (language: Locale, value: string, next: SitePageContent) => { next.forum.categoryGeneralDiscussionLabel[language] = value; }],
+              ["Forum / General discussion description", draft.forum.categoryGeneralDiscussionDescription, (language: Locale, value: string, next: SitePageContent) => { next.forum.categoryGeneralDiscussionDescription[language] = value; }],
+            ].map(([title, value, updater]) => (
+              <LocalizedTextEditorCard
+                key={title as string}
+                title={title as string}
+                value={value as LocalizedText}
+                onChange={(language, nextValue) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
+                    }),
+                  )
+                }
+              />
+            ))}
+          </div>
+        ) : null}
+
         {pageId === "sponsors" ? (
           <>
             <CopySectionEditor
@@ -693,6 +798,368 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+          </>
+        ) : null}
+
+        {pageId === "contact" ? (
+          <>
+            <CopySectionEditor
+              title="Contact / Response rhythm"
+              section={{
+                eyebrow: draft.contact.responseRhythmEyebrow,
+                title: createBlankLocalizedText(),
+                description: draft.contact.responseRhythmDescription,
+              }}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    if (field === "eyebrow") {
+                      next.contact.responseRhythmEyebrow[language] = value;
+                    }
+                    if (field === "description") {
+                      next.contact.responseRhythmDescription[language] = value;
+                    }
+                  }),
+                )
+              }
+            />
+            <div className="grid gap-4 xl:grid-cols-2">
+              <LocalizedTextEditorCard
+                title="Contact / Map eyebrow"
+                value={draft.contact.mapEyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.mapEyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedTextEditorCard
+                title="Contact / Phone contacts eyebrow"
+                value={draft.contact.phoneContactsEyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.phoneContactsEyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedTextEditorCard
+                title="Contact / Organizer address eyebrow"
+                value={draft.contact.organizerAddressEyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.organizerAddressEyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedTextEditorCard
+                title="Contact / Official channels eyebrow"
+                value={draft.contact.officialChannelsEyebrow}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.officialChannelsEyebrow[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedTextEditorCard
+                title="Contact / Official email label"
+                value={draft.contact.officialEmailLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.officialEmailLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedTextEditorCard
+                title="Contact / Primary hotline label"
+                value={draft.contact.primaryHotlineLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.primaryHotlineLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedTextEditorCard
+                title="Contact / Support window label"
+                value={draft.contact.supportWindowLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.supportWindowLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedTextEditorCard
+                title="Contact / Attacker Facebook label"
+                value={draft.contact.attackerFacebookLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.attackerFacebookLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedTextEditorCard
+                title="Contact / FTC Facebook label"
+                value={draft.contact.ftcFacebookLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.ftcFacebookLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedTextEditorCard
+                title="Contact / Open newsroom label"
+                value={draft.contact.openNewsroomLabel}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.contact.openNewsroomLabel[language] = value;
+                    }),
+                  )
+                }
+              />
+            </div>
+          </>
+        ) : null}
+
+        {pageId === "timeline" ? (
+          <>
+            <CopySectionEditor
+              title="Timeline / Preparation phase"
+              section={draft.timelinePage.general}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.timelinePage.general[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Timeline / Round 1 phase"
+              section={draft.timelinePage.round1}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.timelinePage.round1[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Timeline / Round 2 phase"
+              section={draft.timelinePage.round2}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.timelinePage.round2[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Timeline / Final round phase"
+              section={draft.timelinePage.round3}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.timelinePage.round3[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <div className="grid gap-4 xl:grid-cols-2">
+              {[
+                ["Timeline / Diagram eyebrow", draft.timelinePage.diagramEyebrow, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.diagramEyebrow[language] = value; }],
+                ["Timeline / Diagram hint", draft.timelinePage.diagramHint, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.diagramHint[language] = value; }],
+                ["Timeline / Schedule fallback", draft.timelinePage.scheduleToBeUpdated, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.scheduleToBeUpdated[language] = value; }],
+                ["Timeline / Steps label", draft.timelinePage.stepsLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.stepsLabel[language] = value; }],
+                ["Timeline / Open detail", draft.timelinePage.openDetailLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.openDetailLabel[language] = value; }],
+                ["Timeline / Open rule block", draft.timelinePage.openRuleBlockLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.openRuleBlockLabel[language] = value; }],
+                ["Timeline / Time label", draft.timelinePage.timeLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.timeLabel[language] = value; }],
+                ["Timeline / Place label", draft.timelinePage.placeLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.placeLabel[language] = value; }],
+                ["Timeline / Method label", draft.timelinePage.methodLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.methodLabel[language] = value; }],
+                ["Timeline / Now label", draft.timelinePage.nowLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.nowLabel[language] = value; }],
+                ["Timeline / Finished label", draft.timelinePage.finishedLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.finishedLabel[language] = value; }],
+                ["Timeline / Ongoing label", draft.timelinePage.ongoingLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.ongoingLabel[language] = value; }],
+                ["Timeline / Starting soon label", draft.timelinePage.startingSoonLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.startingSoonLabel[language] = value; }],
+                ["Timeline / Not started label", draft.timelinePage.notStartedLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.notStartedLabel[language] = value; }],
+                ["Timeline / Ends in prefix", draft.timelinePage.endsInPrefix, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.endsInPrefix[language] = value; }],
+                ["Timeline / Starts in prefix", draft.timelinePage.startsInPrefix, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.startsInPrefix[language] = value; }],
+              ].map(([title, value, updater]) => (
+                <LocalizedTextEditorCard
+                  key={title as string}
+                  title={title as string}
+                  value={value as LocalizedText}
+                  onChange={(language, nextValue) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
+                      }),
+                    )
+                  }
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
+
+        {pageId === "finalists" ? (
+          <>
+            <CopySectionEditor
+              title="Finalists / Finalist teams"
+              section={draft.finalists.finalistsHeader}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.finalists.finalistsHeader[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Finalists / Emerging teams"
+              section={draft.finalists.emergingHeader}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.finalists.emergingHeader[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <div className="grid gap-4 xl:grid-cols-2">
+              {[
+                ["Finalists / Finalist slot label", draft.finalists.finalistSlotLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.finalistSlotLabel[language] = value; }],
+                ["Finalists / Awaiting update label", draft.finalists.awaitingUpdateLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.awaitingUpdateLabel[language] = value; }],
+                ["Finalists / Finalist slot description", draft.finalists.finalistSlotDescription, (language: Locale, value: string, next: SitePageContent) => { next.finalists.finalistSlotDescription[language] = value; }],
+                ["Finalists / Presentation day label", draft.finalists.presentationDayLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.presentationDayLabel[language] = value; }],
+                ["Finalists / To be announced", draft.finalists.toBeAnnouncedLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.toBeAnnouncedLabel[language] = value; }],
+                ["Finalists / Your team label", draft.finalists.yourTeamLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.yourTeamLabel[language] = value; }],
+                ["Finalists / Keyword prefix", draft.finalists.keywordPrefix, (language: Locale, value: string, next: SitePageContent) => { next.finalists.keywordPrefix[language] = value; }],
+                ["Finalists / Finalist team label", draft.finalists.finalistTeamLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.finalistTeamLabel[language] = value; }],
+                ["Finalists / Members suffix", draft.finalists.membersSuffix, (language: Locale, value: string, next: SitePageContent) => { next.finalists.membersSuffix[language] = value; }],
+                ["Finalists / Team leader prefix", draft.finalists.teamLeaderPrefix, (language: Locale, value: string, next: SitePageContent) => { next.finalists.teamLeaderPrefix[language] = value; }],
+                ["Finalists / Leader info updating", draft.finalists.leaderInfoUpdating, (language: Locale, value: string, next: SitePageContent) => { next.finalists.leaderInfoUpdating[language] = value; }],
+                ["Finalists / Team column label", draft.finalists.teamColumnLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.teamColumnLabel[language] = value; }],
+                ["Finalists / Leader column label", draft.finalists.leaderColumnLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.leaderColumnLabel[language] = value; }],
+                ["Finalists / Keyword column label", draft.finalists.keywordColumnLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.keywordColumnLabel[language] = value; }],
+                ["Finalists / Recognition column label", draft.finalists.recognitionColumnLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.recognitionColumnLabel[language] = value; }],
+                ["Finalists / Emerging Team slot label", draft.finalists.emergingTeamSlotLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.emergingTeamSlotLabel[language] = value; }],
+                ["Finalists / Awaiting official update", draft.finalists.awaitingOfficialUpdate, (language: Locale, value: string, next: SitePageContent) => { next.finalists.awaitingOfficialUpdate[language] = value; }],
+                ["Finalists / Reserved label", draft.finalists.reservedLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.reservedLabel[language] = value; }],
+                ["Finalists / Emerging Team label", draft.finalists.emergingTeamLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.emergingTeamLabel[language] = value; }],
+              ].map(([title, value, updater]) => (
+                <LocalizedTextEditorCard
+                  key={title as string}
+                  title={title as string}
+                  value={value as LocalizedText}
+                  onChange={(language, nextValue) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
+                      }),
+                    )
+                  }
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
+
+        {pageId === "final-results" ? (
+          <>
+            <CopySectionEditor
+              title="Final results / Champion"
+              section={draft.finalResults.champion}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.finalResults.champion[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Final results / Runner-up"
+              section={draft.finalResults.runnerUp}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.finalResults.runnerUp[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Final results / Third place"
+              section={draft.finalResults.thirdPlace}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.finalResults.thirdPlace[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Final results / Fourth place"
+              section={draft.finalResults.fourthPlace}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.finalResults.fourthPlace[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <div className="grid gap-4 xl:grid-cols-2">
+              {[
+                ["Final results / Member slot label", draft.finalResults.memberSlotLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.memberSlotLabel[language] = value; }],
+                ["Final results / Awaiting official team lineup", draft.finalResults.awaitingOfficialTeamLineup, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.awaitingOfficialTeamLineup[language] = value; }],
+                ["Final results / Result pending label", draft.finalResults.resultPendingLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.resultPendingLabel[language] = value; }],
+                ["Final results / Your team label", draft.finalResults.yourTeamLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.yourTeamLabel[language] = value; }],
+                ["Final results / Awaiting official announcement", draft.finalResults.awaitingOfficialAnnouncement, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.awaitingOfficialAnnouncement[language] = value; }],
+                ["Final results / Awaiting official announcement body", draft.finalResults.awaitingOfficialAnnouncementBody, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.awaitingOfficialAnnouncementBody[language] = value; }],
+                ["Final results / Keyword prefix", draft.finalResults.keywordPrefix, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.keywordPrefix[language] = value; }],
+                ["Final results / Leader prefix", draft.finalResults.leaderPrefix, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.leaderPrefix[language] = value; }],
+                ["Final results / Leader info pending", draft.finalResults.leaderInfoPending, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.leaderInfoPending[language] = value; }],
+                ["Final results / Team members label", draft.finalResults.teamMembersLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.teamMembersLabel[language] = value; }],
+                ["Final results / Final standings eyebrow", draft.finalResults.finalStandingsEyebrow, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.finalStandingsEyebrow[language] = value; }],
+                ["Final results / Presentation day label", draft.finalResults.presentationDayLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.presentationDayLabel[language] = value; }],
+                ["Final results / Presentation place label", draft.finalResults.presentationPlaceLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.presentationPlaceLabel[language] = value; }],
+                ["Final results / To be announced", draft.finalResults.toBeAnnouncedLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.toBeAnnouncedLabel[language] = value; }],
+              ].map(([title, value, updater]) => (
+                <LocalizedTextEditorCard
+                  key={title as string}
+                  title={title as string}
+                  value={value as LocalizedText}
+                  onChange={(language, nextValue) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
+                      }),
+                    )
+                  }
+                />
+              ))}
+            </div>
           </>
         ) : null}
       </div>

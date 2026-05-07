@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 import { pickText } from "@/lib/site";
-import type { ForumReply, ForumThread, ForumThreadCategory, LocalizedText, TeamProfile } from "@/types/site";
+import type { ForumReply, ForumThread, ForumThreadCategory, TeamProfile } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, Surface } from "@/components/site-ui";
 
@@ -45,32 +45,7 @@ type ForumMutationPayload = {
   issues?: ForumModerationIssue[];
 };
 
-const forumCategoryCopy: Record<
-  ForumThreadCategory,
-  { label: LocalizedText; description: LocalizedText }
-> = {
-  "looking-for-team": {
-    label: { en: "Looking for team", vi: "Tìm đội" },
-    description: {
-      en: "For participants who want to join an existing team.",
-      vi: "Dành cho thí sinh muốn tìm một đội đang tuyển thành viên.",
-    },
-  },
-  "team-looking-for-members": {
-    label: { en: "Team recruiting", vi: "Đội đang tuyển" },
-    description: {
-      en: "For teams that still need members before they lock their roster.",
-      vi: "Dành cho các đội đang cần thêm người trước khi chốt đội hình.",
-    },
-  },
-  "general-discussion": {
-    label: { en: "General discussion", vi: "Trao đổi chung" },
-    description: {
-      en: "For broader questions about skills, expectations, and collaboration.",
-      vi: "Dành cho trao đổi chung về kỹ năng, kỳ vọng và cách phối hợp.",
-    },
-  },
-};
+type ForumPageContent = ReturnType<typeof useSiteState>["pageContent"]["forum"];
 
 const forumCategoryOrder: ForumThreadCategory[] = [
   "looking-for-team",
@@ -98,8 +73,29 @@ function formatForumDateTime(locale: "en" | "vi", value: string) {
   }).format(new Date(value));
 }
 
-function getForumCategoryLabel(locale: "en" | "vi", category: ForumThreadCategory) {
-  return pickText(locale, forumCategoryCopy[category].label);
+function getForumCategoryCopy(content: ForumPageContent, category: ForumThreadCategory) {
+  if (category === "looking-for-team") {
+    return {
+      label: content.categoryLookingForTeamLabel,
+      description: content.categoryLookingForTeamDescription,
+    };
+  }
+
+  if (category === "team-looking-for-members") {
+    return {
+      label: content.categoryTeamRecruitingLabel,
+      description: content.categoryTeamRecruitingDescription,
+    };
+  }
+
+  return {
+    label: content.categoryGeneralDiscussionLabel,
+    description: content.categoryGeneralDiscussionDescription,
+  };
+}
+
+function getForumCategoryLabel(locale: "en" | "vi", content: ForumPageContent, category: ForumThreadCategory) {
+  return pickText(locale, getForumCategoryCopy(content, category).label);
 }
 
 function getForumAuthorHref(userId: string) {
@@ -279,7 +275,7 @@ function ForumIconButton({
 }
 
 export function ForumPage() {
-  const { locale, currentUser, isAuthenticated, teams } = useSiteState();
+  const { locale, currentUser, isAuthenticated, teams, pageContent } = useSiteState();
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [activeThreadSlug, setActiveThreadSlug] = useState<string>("");
   const [activeThread, setActiveThread] = useState<ForumThread | null>(null);
@@ -512,10 +508,8 @@ export function ForumPage() {
 
   const activeCategoryDescription =
     categoryFilter === "all"
-      ? locale === "en"
-        ? "Browse all open conversations from participants looking for teammates or building discussion."
-        : "Xem toàn bộ cuộc trò chuyện của thí sinh đang tìm đồng đội hoặc trao đổi chung."
-      : pickText(locale, forumCategoryCopy[categoryFilter].description);
+      ? pickText(locale, pageContent.forum.allCategoriesDescription)
+      : pickText(locale, getForumCategoryCopy(pageContent.forum, categoryFilter).description);
 
   const resetComposer = () => {
     setThreadDraft({
@@ -801,7 +795,7 @@ export function ForumPage() {
               <input
                 value={searchValue}
                 onChange={(event) => setSearchValue(event.target.value)}
-                placeholder={locale === "en" ? "Search by title, university, or role" : "Tìm theo tiêu đề, trường hoặc vai trò"}
+                placeholder={pickText(locale, pageContent.forum.searchPlaceholder)}
                 className="theme-news-search-input min-w-0 flex-1 bg-transparent text-sm outline-none"
               />
             </div>
@@ -813,7 +807,7 @@ export function ForumPage() {
                   categoryFilter === "all" ? "theme-kicker" : "theme-chip"
                 }`}
               >
-                {locale === "en" ? "All threads" : "Tất cả"}
+                {pickText(locale, pageContent.forum.allThreadsLabel)}
               </button>
               {forumCategoryOrder.map((category) => (
                 <button
@@ -824,14 +818,14 @@ export function ForumPage() {
                     categoryFilter === category ? "theme-kicker" : "theme-chip"
                   }`}
                 >
-                  {getForumCategoryLabel(locale, category)}
+                  {getForumCategoryLabel(locale, pageContent.forum, category)}
                 </button>
               ))}
             </div>
             <div className="mt-4 rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm font-semibold theme-text-strong">
-                  {filteredThreads.length} {locale === "en" ? "matching threads" : "chủ đề phù hợp"}
+                  {filteredThreads.length} {pickText(locale, pageContent.forum.matchingThreadsSuffix)}
                 </p>
               </div>
               <p className="mt-2 text-sm leading-6 theme-text-muted">{activeCategoryDescription}</p>
@@ -860,23 +854,23 @@ export function ForumPage() {
                       className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold"
                     >
                       <ChevronLeft className="h-4 w-4" />
-                      {locale === "en" ? "Back to thread list" : "Quay lại danh sách chủ đề"}
+                      {pickText(locale, pageContent.forum.backToThreadListLabel)}
                     </button>
                     <h2 className="theme-heading min-w-0 text-2xl font-semibold leading-[1.15] theme-text-strong md:text-[2.3rem]">
                       {selectedThreadFromList.title}
                     </h2>
                     <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
-                      {locale === "en" ? "Last activity" : "Hoạt động gần nhất"} ·{" "}
+                      {pickText(locale, pageContent.forum.lastActivityLabel)} ·{" "}
                       {formatForumTimestamp(locale, selectedThreadFromList.lastActivityAt)}
                     </span>
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-2">
                     <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                      {getForumCategoryLabel(locale, selectedThreadFromList.category)}
+                      {getForumCategoryLabel(locale, pageContent.forum, selectedThreadFromList.category)}
                     </span>
                     {selectedThreadFromList.status === "closed" ? (
                       <span className="rounded-full border border-amber-600/24 bg-amber-400/18 px-3 py-1 text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-amber-950 shadow-[0_10px_24px_rgba(245,158,11,0.08)] dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100 dark:shadow-none">
-                        {locale === "en" ? "Closed by owner" : "Chủ đề đã đóng"}
+                        {pickText(locale, pageContent.forum.closedByOwnerLabel)}
                       </span>
                     ) : null}
                   </div>
@@ -908,7 +902,7 @@ export function ForumPage() {
                   </Link>
                   <span className="theme-chip rounded-full px-3 py-1 text-[0.72rem]">
                     <UsersRound className="mr-1 inline h-3.5 w-3.5" />
-                    {selectedThreadFromList.replyCount} {locale === "en" ? "replies" : "phản hồi"}
+                    {selectedThreadFromList.replyCount} {pickText(locale, pageContent.forum.repliesSuffix)}
                   </span>
                 </div>
               </div>
@@ -918,7 +912,7 @@ export function ForumPage() {
                   <div className="flex items-center gap-3 rounded-[1.4rem] border theme-border px-4 py-4 theme-panel-subtle">
                     <LoaderCircle className="h-4 w-4 animate-spin theme-accent" />
                     <span className="text-sm theme-text-body">
-                      {locale === "en" ? "Loading discussion..." : "Đang tải thảo luận..."}
+                      {pickText(locale, pageContent.forum.loadingDiscussionLabel)}
                     </span>
                   </div>
                 ) : detailError ? (
@@ -1038,7 +1032,7 @@ export function ForumPage() {
 
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                        {locale === "en" ? "Replies" : "Phản hồi"}
+                        {pickText(locale, pageContent.forum.repliesSectionLabel)}
                       </p>
                       <div className="mt-4 space-y-3">
 	                        {activeThread.replies && activeThread.replies.length > 0 ? (
@@ -1180,12 +1174,10 @@ export function ForumPage() {
 	                              </div>
 	                            );
 	                          })
-	                        ) : (
+                        ) : (
                           <div className="rounded-[1.4rem] border theme-border px-4 py-4 theme-panel-subtle">
                             <p className="text-sm theme-text-muted">
-                              {locale === "en"
-                                ? "No reply yet. Start the conversation from the composer below."
-                                : "Chưa có phản hồi nào. Hãy bắt đầu cuộc trao đổi bằng khung trả lời bên dưới."}
+                              {pickText(locale, pageContent.forum.noReplyYetLabel)}
                             </p>
                           </div>
 	                        )}
@@ -1198,25 +1190,21 @@ export function ForumPage() {
                     <div className="rounded-[1.6rem] border theme-border px-5 py-5 theme-panel-subtle">
                       <div className="rounded-[1.45rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.88),rgba(244,249,255,0.84))] px-5 py-5 dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))]">
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                        {locale === "en" ? "Join the conversation" : "Tham gia trao đổi"}
+                        {pickText(locale, pageContent.forum.joinConversationLabel)}
                       </p>
                       {!canReplyToActiveThread ? (
                         <div className="mt-4 rounded-[1.35rem] border theme-border px-4 py-4 bg-white/76 dark:bg-white/[0.05]">
                           <p className="text-sm leading-7 theme-text-body">
                             {activeThread.status === "closed"
-                              ? locale === "en"
-                                ? "This thread is closed. New replies are no longer accepted."
-                                : "Chủ đề này đã đóng. Không thể gửi thêm phản hồi mới."
-                              : locale === "en"
-                                ? "Only signed-in participant, admin, or moderator accounts can reply. Browsing remains open to everyone."
-                                : "Chỉ tài khoản thí sinh, admin hoặc moderator đã đăng nhập mới có thể phản hồi. Việc xem nội dung vẫn mở cho mọi người."}
+                              ? pickText(locale, pageContent.forum.closedThreadNotice)
+                              : pickText(locale, pageContent.forum.signedInReplyNotice)}
                           </p>
                           {activeThread.status === "open" && !isAuthenticated ? (
                             <Link
                               href="/auth"
                               className="theme-button-secondary mt-4 inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
                             >
-                              {locale === "en" ? "Sign in now" : "Đăng nhập ngay"}
+                              {pickText(locale, pageContent.forum.signInNowLabel)}
                               <ArrowRight className="h-4 w-4" />
                             </Link>
                           ) : null}
@@ -1227,11 +1215,7 @@ export function ForumPage() {
                             value={replyDraft}
                             onChange={(event) => setReplyDraft(event.target.value)}
                             onKeyDown={handleReplyKeyDown}
-                            placeholder={
-                              locale === "en"
-                                ? "Write a useful reply about your background, what role you can take, and how people should contact you."
-                                : "Viết một phản hồi hữu ích về nền tảng của bạn, vai trò bạn có thể đảm nhận và cách mọi người nên liên hệ với bạn."
-                            }
+                            placeholder={pickText(locale, pageContent.forum.replyPlaceholder)}
                             className="theme-field mt-4 min-h-[140px] w-full rounded-[1.35rem] border px-4 py-3 text-sm leading-7 outline-none"
                           />
                           <ForumModerationWarning
@@ -1250,7 +1234,7 @@ export function ForumPage() {
                               className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
                             >
                               {isPostingReply ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <MessageSquare className="h-4 w-4" />}
-                              {locale === "en" ? "Post reply" : "Gửi phản hồi"}
+                              {pickText(locale, pageContent.forum.postReplyLabel)}
                             </button>
                             {statusMessage ? <span className="text-sm theme-text-soft">{statusMessage}</span> : null}
                           </div>
@@ -1269,12 +1253,10 @@ export function ForumPage() {
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
                       <MessageSquare className="mr-1 inline h-3.5 w-3.5" />
-                      {filteredThreads.length} {locale === "en" ? "active threads" : "chủ đề đang hoạt động"}
+                      {filteredThreads.length} {pickText(locale, pageContent.forum.activeThreadsSuffix)}
                     </span>
                     <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
-                      {locale === "en"
-                        ? `Sorted by recent activity`
-                        : "Sắp theo hoạt động gần nhất"}
+                      {pickText(locale, pageContent.forum.sortedByRecentActivityLabel)}
                     </span>
                   </div>
 
@@ -1288,14 +1270,14 @@ export function ForumPage() {
                       <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white/18 ring-1 ring-white/18">
                         <Sparkles className="h-4 w-4" />
                       </span>
-                      {locale === "en" ? "Open a thread" : "Mở chủ đề"}
+                      {pickText(locale, pageContent.forum.openThreadLabel)}
                     </button>
                     {!canPostOnForum ? (
                       <Link
                         href="/auth"
                         className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
                       >
-                        {locale === "en" ? "Sign in to participate" : "Đăng nhập để tham gia"}
+                        {pickText(locale, pageContent.forum.signInToParticipateLabel)}
                         <ArrowRight className="h-4 w-4" />
                       </Link>
                     ) : null}
@@ -1309,7 +1291,7 @@ export function ForumPage() {
                   <div className="flex items-center gap-3 rounded-[1.4rem] border theme-border px-4 py-4 theme-panel-subtle">
                     <LoaderCircle className="h-4 w-4 animate-spin theme-accent" />
                     <span className="text-sm theme-text-body">
-                      {locale === "en" ? "Loading discussion threads..." : "Đang tải danh sách thảo luận..."}
+                      {pickText(locale, pageContent.forum.loadingThreadsLabel)}
                     </span>
                   </div>
                 ) : listError ? (
@@ -1319,12 +1301,10 @@ export function ForumPage() {
                 ) : filteredThreads.length === 0 ? (
                   <div className="rounded-[1.4rem] border theme-border px-4 py-5 theme-panel-subtle">
                     <p className="text-sm font-semibold theme-text-strong">
-                      {locale === "en" ? "No matching thread yet." : "Chưa có chủ đề phù hợp."}
+                      {pickText(locale, pageContent.forum.noMatchingThreadTitle)}
                     </p>
                     <p className="mt-2 text-sm leading-7 theme-text-muted">
-                      {locale === "en"
-                        ? "Try another keyword or open the first thread for your own team-search message."
-                        : "Hãy đổi từ khóa khác hoặc mở một chủ đề mới cho nhu cầu tìm đội của bạn."}
+                      {pickText(locale, pageContent.forum.noMatchingThreadDescription)}
                     </p>
                   </div>
                 ) : (
@@ -1367,14 +1347,14 @@ export function ForumPage() {
                                   </p>
                                 </div>
                                 <span className="text-[0.72rem] theme-text-soft">
-                                  {locale === "en" ? "Last activity" : "Hoạt động gần nhất"} ·{" "}
+                                  {pickText(locale, pageContent.forum.lastActivityLabel)} ·{" "}
                                   {formatForumTimestamp(locale, thread.lastActivityAt)}
                                 </span>
                               </div>
 
                               <div className="mt-3 flex flex-wrap items-center gap-2">
                                 <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
-                                  {getForumCategoryLabel(locale, thread.category)}
+                                  {getForumCategoryLabel(locale, pageContent.forum, thread.category)}
                                 </span>
                                 <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
                                   {thread.status === "open"
@@ -1387,12 +1367,12 @@ export function ForumPage() {
                                 </span>
                                 {isClosedThread ? (
                                   <span className="rounded-full border border-amber-600/24 bg-amber-400/18 px-3 py-1 text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
-                                    {locale === "en" ? "Closed by owner" : "Chủ đề đã đóng"}
+                                    {pickText(locale, pageContent.forum.closedByOwnerLabel)}
                                   </span>
                                 ) : null}
                                 <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
                                   <UsersRound className="mr-1 inline h-3.5 w-3.5" />
-                                  {thread.replyCount} {locale === "en" ? "replies" : "phản hồi"}
+                                  {thread.replyCount} {pickText(locale, pageContent.forum.repliesSuffix)}
                                 </span>
                                 <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
                                   {getForumRoleLabel(locale, thread.author.role)}
@@ -1430,9 +1410,7 @@ export function ForumPage() {
                           {isClosedThread ? (
                             <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-slate-950/72 px-6 text-center opacity-0 transition duration-200 group-hover:opacity-100">
                               <span className="rounded-full border border-white/20 bg-white/12 px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_34px_rgba(2,8,20,0.24)]">
-                                {locale === "en"
-                                  ? "This thread is closed by the thread owner"
-                                  : "Chủ đề này đã được chủ sở hữu đóng"}
+                                {pickText(locale, pageContent.forum.closedByOwnerLabel)}
                               </span>
                             </div>
                           ) : null}
@@ -1527,12 +1505,10 @@ export function ForumPage() {
 	              </span>
 	              <div className="min-w-0 flex-1">
 	                <p className="text-lg font-semibold theme-text-strong">
-	                  {locale === "en" ? "Close this thread?" : "Đóng chủ đề này?"}
+	                  {pickText(locale, pageContent.forum.closeThreadConfirmTitle)}
 	                </p>
 	                <p className="mt-3 text-sm leading-7 theme-text-muted">
-	                  {locale === "en"
-	                    ? "Closed threads cannot be re-opened. Participants will still see the thread in the list, but new replies will be blocked."
-	                    : "Chủ đề đã đóng sẽ không thể mở lại. Người dùng vẫn thấy chủ đề trong danh sách, nhưng không thể gửi thêm phản hồi."}
+	                  {pickText(locale, pageContent.forum.closeThreadConfirmDescription)}
 	                </p>
 	              </div>
 	            </div>
@@ -1542,7 +1518,7 @@ export function ForumPage() {
 	                onClick={() => setPendingCloseThread(null)}
 	                className="theme-button-secondary inline-flex items-center justify-center rounded-full border px-4 py-2.5 text-sm font-semibold"
 	              >
-	                {locale === "en" ? "Cancel" : "Hủy"}
+	                {pickText(locale, pageContent.forum.cancelLabel)}
 	              </button>
 	              <button
 	                type="button"
@@ -1551,7 +1527,7 @@ export function ForumPage() {
 	                className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
 	              >
 	                {isClosingThread ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-	                {locale === "en" ? "Close thread" : "Đóng chủ đề"}
+	                {pickText(locale, pageContent.forum.closeThreadLabel)}
 	              </button>
 	            </div>
 	          </div>
@@ -1565,12 +1541,10 @@ export function ForumPage() {
               <div className="flex items-center justify-between border-b theme-border px-6 py-5">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                    {locale === "en" ? "New forum thread" : "Chủ đề forum mới"}
+                    {pickText(locale, pageContent.forum.newThreadEyebrow)}
                   </p>
                   <p className="mt-2 text-lg font-semibold theme-text-strong">
-                    {locale === "en"
-                      ? "Open a discussion for teammate matching"
-                      : "Mở một chủ đề để kết nối tìm đồng đội"}
+                    {pickText(locale, pageContent.forum.newThreadTitle)}
                   </p>
                 </div>
                 <button
@@ -1580,7 +1554,7 @@ export function ForumPage() {
                     setComposerError("");
                   }}
                   className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full border"
-                  aria-label={locale === "en" ? "Close dialog" : "Đóng cửa sổ"}
+                  aria-label={pickText(locale, pageContent.forum.closeDialogLabel)}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -1590,7 +1564,7 @@ export function ForumPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="space-y-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Thread title" : "Tiêu đề"}
+                      {pickText(locale, pageContent.forum.threadTitleFieldLabel)}
                     </span>
                     <input
                       value={threadDraft.title}
@@ -1601,7 +1575,7 @@ export function ForumPage() {
 
                   <label className="space-y-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Category" : "Phân loại"}
+                      {pickText(locale, pageContent.forum.categoryFieldLabel)}
                     </span>
                     <select
                       value={threadDraft.category}
@@ -1615,7 +1589,7 @@ export function ForumPage() {
                     >
                       {forumCategoryOrder.map((category) => (
                         <option key={category} value={category}>
-                          {getForumCategoryLabel(locale, category)}
+                          {getForumCategoryLabel(locale, pageContent.forum, category)}
                         </option>
                       ))}
                     </select>
@@ -1623,25 +1597,21 @@ export function ForumPage() {
 
                   <label className="space-y-2 md:col-span-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Roles or skills you want to mention" : "Vai trò hoặc kỹ năng bạn muốn nhắc đến"}
+                      {pickText(locale, pageContent.forum.rolesSkillsFieldLabel)}
                     </span>
                     <input
                       value={threadDraft.preferredRoles}
                       onChange={(event) =>
                         setThreadDraft((current) => ({ ...current, preferredRoles: event.target.value }))
                       }
-                      placeholder={
-                        locale === "en"
-                          ? "Example: Product, UI/UX, Data analysis, Frontend"
-                          : "Ví dụ: Product, UI/UX, Phân tích dữ liệu, Frontend"
-                      }
+                      placeholder={pickText(locale, pageContent.forum.rolesSkillsPlaceholder)}
                       className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
                     />
                   </label>
 
                   <label className="space-y-2 md:col-span-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Short summary" : "Mô tả ngắn"}
+                      {pickText(locale, pageContent.forum.shortSummaryFieldLabel)}
                     </span>
                     <textarea
                       value={threadDraft.summary}
@@ -1652,7 +1622,7 @@ export function ForumPage() {
 
                   <label className="space-y-2 md:col-span-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Main post" : "Nội dung chính"}
+                      {pickText(locale, pageContent.forum.mainPostFieldLabel)}
                     </span>
                     <textarea
                       value={threadDraft.body}
@@ -1663,16 +1633,12 @@ export function ForumPage() {
 
                   <label className="space-y-2 md:col-span-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Contact note" : "Ghi chú liên hệ"}
+                      {pickText(locale, pageContent.forum.contactNoteFieldLabel)}
                     </span>
                     <input
                       value={threadDraft.contactNote}
                       onChange={(event) => setThreadDraft((current) => ({ ...current, contactNote: event.target.value }))}
-                      placeholder={
-                        locale === "en"
-                          ? "Example: I usually check forum replies every evening."
-                          : "Ví dụ: Tôi thường xem phản hồi trên forum vào mỗi buổi tối."
-                      }
+                      placeholder={pickText(locale, pageContent.forum.contactNotePlaceholder)}
                       className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
                     />
                   </label>
@@ -1692,7 +1658,7 @@ export function ForumPage() {
                     className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
                   >
                     {isCreatingThread ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <CirclePlus className="h-4 w-4" />}
-                    {locale === "en" ? "Publish thread" : "Đăng chủ đề"}
+                    {pickText(locale, pageContent.forum.publishThreadLabel)}
                   </button>
                   <button
                     type="button"
@@ -1702,7 +1668,7 @@ export function ForumPage() {
                     }}
                     className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
                   >
-                    {locale === "en" ? "Clear form" : "Xóa nội dung"}
+                    {pickText(locale, pageContent.forum.clearFormLabel)}
                   </button>
                 </div>
               </div>

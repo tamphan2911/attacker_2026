@@ -2,7 +2,7 @@
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
-import { formatDateRangeLabel } from "@/lib/site";
+import { formatDateRangeLabel, pickText } from "@/lib/site";
 import type { TeamFinalOutcome, TeamProfile, UserProfile } from "@/types/site";
 
 const finalOutcomeOrder: Record<TeamFinalOutcome, number> = {
@@ -48,7 +48,7 @@ function createEmptySlots<T>(items: T[], count: number) {
 }
 
 export function FinalistsPage() {
-  const { locale, teams, users, currentTeam, timelineItems } = useSiteState();
+  const { locale, teams, users, currentTeam, timelineItems, pageContent } = useSiteState();
   const finalPresentationItem = timelineItems.find((item) => item.id === "round-3-final-presentation");
   const finalists = getFinalistTeams(teams);
   const finalistIds = new Set(finalists.map((team) => team.id));
@@ -60,13 +60,9 @@ export function FinalistsPage() {
     <div className="space-y-12 md:space-y-16">
       <section className="space-y-5">
         <SectionHeading
-          eyebrow={locale === "en" ? "Finalist teams" : "Đội vào thuyết trình"}
-          title={locale === "en" ? "Top 5 finalist teams" : "Top 5 đội vào chung kết"}
-          description={
-            locale === "en"
-              ? "The five teams below are the finalist list only. This section does not indicate ranking order."
-              : "Năm đội dưới đây là danh sách đội vào chung kết. Phần này chỉ mang tính liệt kê, không thể hiện thứ hạng."
-          }
+          eyebrow={pickText(locale, pageContent.finalists.finalistsHeader.eyebrow)}
+          title={pickText(locale, pageContent.finalists.finalistsHeader.title)}
+          description={pickText(locale, pageContent.finalists.finalistsHeader.description)}
         />
 
         <div className="grid gap-4 xl:grid-cols-2">
@@ -82,30 +78,26 @@ export function FinalistsPage() {
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="theme-heading text-xl font-semibold theme-text-strong">
-                              {locale === "en" ? "Finalist slot" : "Vị trí chung kết"}
+                              {pickText(locale, pageContent.finalists.finalistSlotLabel)}
                             </h3>
                             <StatusPill tone="default">
-                              {locale === "en" ? "Awaiting update" : "Chờ cập nhật"}
+                              {pickText(locale, pageContent.finalists.awaitingUpdateLabel)}
                             </StatusPill>
                           </div>
                           <p className="mt-2 text-sm leading-7 theme-text-soft">
-                            {locale === "en"
-                              ? "This finalist slot is reserved and will be filled when the shortlist is finalized."
-                              : "Vị trí chung kết này đang được giữ chỗ và sẽ được cập nhật khi danh sách chính thức hoàn tất."}
+                            {pickText(locale, pageContent.finalists.finalistSlotDescription)}
                           </p>
                         </div>
                       </div>
 
                       <div className="rounded-[1.2rem] border theme-border bg-white/82 px-4 py-3 dark:bg-white/[0.05]">
                         <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                          {locale === "en" ? "Presentation day" : "Ngày thuyết trình"}
+                          {pickText(locale, pageContent.finalists.presentationDayLabel)}
                         </p>
                         <p className="mt-2 text-sm font-semibold theme-text-strong">
                           {finalPresentationItem
                             ? formatDateRangeLabel(locale, finalPresentationItem.startDate, finalPresentationItem.endDate)
-                            : locale === "en"
-                              ? "To be announced"
-                              : "Sẽ cập nhật"}
+                            : pickText(locale, pageContent.finalists.toBeAnnouncedLabel)}
                         </p>
                       </div>
                     </div>
@@ -140,21 +132,19 @@ export function FinalistsPage() {
                           <StatusPill>{`#${team.tag}`}</StatusPill>
                           {isCurrentTeam ? (
                             <StatusPill tone="info">
-                              {locale === "en" ? "Your team" : "Đội của bạn"}
+                              {pickText(locale, pageContent.finalists.yourTeamLabel)}
                             </StatusPill>
                           ) : null}
                         </div>
                         <p className="mt-2 text-sm leading-7 theme-text-soft">
-                          {locale === "en" ? `Keyword · ${team.track}` : `Từ khóa · ${team.track}`}
+                          {`${pickText(locale, pageContent.finalists.keywordPrefix)} · ${team.track}`}
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <StatusPill tone="success">
-                            {locale === "en" ? "Finalist team" : "Đội vào chung kết"}
+                            {pickText(locale, pageContent.finalists.finalistTeamLabel)}
                           </StatusPill>
                           <StatusPill tone="default">
-                            {locale === "en"
-                              ? `${team.memberIds.length} members`
-                              : `${team.memberIds.length} thành viên`}
+                            {`${team.memberIds.length} ${pickText(locale, pageContent.finalists.membersSuffix)}`}
                           </StatusPill>
                         </div>
                       </div>
@@ -162,21 +152,17 @@ export function FinalistsPage() {
 
                     <div className="rounded-[1.2rem] border theme-border bg-white/82 px-4 py-3 dark:bg-white/[0.05]">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                        {locale === "en" ? "Presentation day" : "Ngày thuyết trình"}
+                        {pickText(locale, pageContent.finalists.presentationDayLabel)}
                       </p>
                       <p className="mt-2 text-sm font-semibold theme-text-strong">
                         {finalPresentationItem
                           ? formatDateRangeLabel(locale, finalPresentationItem.startDate, finalPresentationItem.endDate)
-                          : locale === "en"
-                            ? "To be announced"
-                            : "Sẽ cập nhật"}
+                          : pickText(locale, pageContent.finalists.toBeAnnouncedLabel)}
                       </p>
                       <p className="mt-1 text-xs leading-6 theme-text-soft">
                         {leader?.name
-                          ? `${locale === "en" ? "Team leader" : "Đội trưởng"} · ${leader.name}`
-                          : locale === "en"
-                            ? "Leader info is being updated"
-                            : "Đang cập nhật thông tin đội trưởng"}
+                          ? `${pickText(locale, pageContent.finalists.teamLeaderPrefix)} · ${leader.name}`
+                          : pickText(locale, pageContent.finalists.leaderInfoUpdating)}
                       </p>
                     </div>
                   </div>
@@ -188,13 +174,9 @@ export function FinalistsPage() {
 
       <section className="space-y-5">
         <SectionHeading
-          eyebrow={locale === "en" ? "Recognition" : "Ghi nhận nổi bật"}
-          title={locale === "en" ? "10 Emerging Teams" : "10 Đội tiềm năng"}
-          description={
-            locale === "en"
-              ? "The ten teams below are recognized as Emerging Teams only. This section is also a plain listing without ranking meaning."
-              : "Mười đội dưới đây được ghi nhận là Đội tiềm năng. Phần này cũng chỉ là danh sách liệt kê, không mang ý nghĩa xếp hạng."
-          }
+          eyebrow={pickText(locale, pageContent.finalists.emergingHeader.eyebrow)}
+          title={pickText(locale, pageContent.finalists.emergingHeader.title)}
+          description={pickText(locale, pageContent.finalists.emergingHeader.description)}
         />
 
         <Surface className="overflow-hidden px-0 py-0">
@@ -204,16 +186,16 @@ export function FinalistsPage() {
                 <tr className="border-b theme-border bg-[rgba(244,249,255,0.88)] dark:bg-white/[0.04]">
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">#</th>
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                    {locale === "en" ? "Team" : "Đội"}
+                    {pickText(locale, pageContent.finalists.teamColumnLabel)}
                   </th>
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                    {locale === "en" ? "Leader" : "Đội trưởng"}
+                    {pickText(locale, pageContent.finalists.leaderColumnLabel)}
                   </th>
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                    {locale === "en" ? "Keyword" : "Từ khóa"}
+                    {pickText(locale, pageContent.finalists.keywordColumnLabel)}
                   </th>
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                    {locale === "en" ? "Recognition" : "Ghi nhận"}
+                    {pickText(locale, pageContent.finalists.recognitionColumnLabel)}
                   </th>
                 </tr>
               </thead>
@@ -225,17 +207,17 @@ export function FinalistsPage() {
                           <td className="px-5 py-4 font-semibold theme-text-soft">{String(index + 1).padStart(2, "0")}</td>
                           <td className="px-5 py-4">
                             <p className="font-semibold theme-text-strong">
-                              {locale === "en" ? "Emerging Team slot" : "Vị trí Đội tiềm năng"}
+                              {pickText(locale, pageContent.finalists.emergingTeamSlotLabel)}
                             </p>
                             <p className="text-xs theme-text-soft">
-                              {locale === "en" ? "Awaiting official update" : "Chờ cập nhật chính thức"}
+                              {pickText(locale, pageContent.finalists.awaitingOfficialUpdate)}
                             </p>
                           </td>
                           <td className="px-5 py-4 text-sm theme-text-soft">--</td>
                           <td className="px-5 py-4 text-sm theme-text-soft">--</td>
                           <td className="px-5 py-4">
                             <StatusPill tone="default">
-                              {locale === "en" ? "Reserved" : "Giữ chỗ"}
+                              {pickText(locale, pageContent.finalists.reservedLabel)}
                             </StatusPill>
                           </td>
                         </tr>
@@ -272,7 +254,7 @@ export function FinalistsPage() {
                         <td className="px-5 py-4 text-sm leading-7 theme-text-body">{team.track}</td>
                         <td className="px-5 py-4">
                           <StatusPill tone="warning">
-                            {locale === "en" ? "Emerging Team" : "Đội tiềm năng"}
+                            {pickText(locale, pageContent.finalists.emergingTeamLabel)}
                           </StatusPill>
                         </td>
                       </tr>

@@ -27,7 +27,7 @@ function FacebookIcon({ className }: { className?: string }) {
 }
 
 export function ContactPage() {
-  const { locale } = useSiteState();
+  const { locale, pageContent } = useSiteState();
 
   return (
     <div className="space-y-12">
@@ -35,7 +35,7 @@ export function ContactPage() {
         <Surface className="overflow-hidden px-0 py-0">
           <div className="border-b theme-border px-6 py-5">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-              {locale === "en" ? "Contact" : "Liên hệ"}
+              {pickText(locale, pageContent.contact.mapEyebrow)}
             </p>
             <p className="mt-3 text-2xl font-semibold theme-text-strong">
               {pickText(locale, contactLocation.campusName)}
@@ -52,7 +52,7 @@ export function ContactPage() {
           </div>
           <div className="border-t theme-border px-6 py-6">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-              {locale === "en" ? "Phone contacts" : "Đầu mối điện thoại"}
+              {pickText(locale, pageContent.contact.phoneContactsEyebrow)}
             </p>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {contactDeskContacts.map((item) => (
@@ -85,12 +85,10 @@ export function ContactPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-text-soft">
-                  {locale === "en" ? "Response rhythm" : "Nhịp phản hồi"}
+                  {pickText(locale, pageContent.contact.responseRhythmEyebrow)}
                 </p>
                 <p className="mt-1 text-sm leading-7 theme-text-body">
-                  {locale === "en"
-                    ? "Support channels stay open 24/7 for registration, team, and technical coordination."
-                    : "Các kênh hỗ trợ luôn mở 24/7 cho nhu cầu đăng ký, đội thi và phối hợp kỹ thuật."}
+                  {pickText(locale, pageContent.contact.responseRhythmDescription)}
                 </p>
               </div>
             </div>
@@ -99,19 +97,19 @@ export function ContactPage() {
               {[
                 {
                   icon: <Mail className="h-4 w-4 text-sky-400" />,
-                  label: locale === "en" ? "Official email" : "Email chính thức",
+                  label: pickText(locale, pageContent.contact.officialEmailLabel),
                   value: contactInfo.email,
                   href: `mailto:${contactInfo.email}`,
                 },
                 {
                   icon: <PhoneCall className="h-4 w-4 text-sky-400" />,
-                  label: locale === "en" ? "Primary hotline" : "Hotline chính",
+                  label: pickText(locale, pageContent.contact.primaryHotlineLabel),
                   value: contactInfo.phone,
                   href: `tel:${contactInfo.phone}`,
                 },
                 {
                   icon: <Clock3 className="h-4 w-4 text-sky-400" />,
-                  label: locale === "en" ? "Support window" : "Khung giờ hỗ trợ",
+                  label: pickText(locale, pageContent.contact.supportWindowLabel),
                   value: "24/7",
                 },
               ].map((item) => (
@@ -149,7 +147,7 @@ export function ContactPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-text-soft">
-                  {locale === "en" ? "Organizer address" : "Địa chỉ ban tổ chức"}
+                  {pickText(locale, pageContent.contact.organizerAddressEyebrow)}
                 </p>
                 <p className="mt-3 text-lg font-semibold leading-8 theme-text-strong">
                   {pickText(locale, contactLocation.address)}
@@ -163,7 +161,7 @@ export function ContactPage() {
 
           <Surface className="px-6 py-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-text-soft">
-              {locale === "en" ? "Official channels" : "Kênh chính thức"}
+              {pickText(locale, pageContent.contact.officialChannelsEyebrow)}
             </p>
             <div className="mt-4 space-y-3 text-sm">
               <a
@@ -184,7 +182,7 @@ export function ContactPage() {
               >
                 <span className="inline-flex items-center gap-3 theme-text-body">
                   <FacebookIcon className="h-4 w-4 text-sky-400" />
-                  {locale === "en" ? "Attacker facebook page" : "Fanpage Attacker"}
+                  {pickText(locale, pageContent.contact.attackerFacebookLabel)}
                 </span>
                 <ExternalLink className="h-4 w-4 theme-text-soft" />
               </a>
@@ -196,7 +194,7 @@ export function ContactPage() {
               >
                 <span className="inline-flex items-center gap-3 theme-text-body">
                   <FacebookIcon className="h-4 w-4 text-sky-400" />
-                  {locale === "en" ? "FTC facebook page" : "Fanpage FTC"}
+                  {pickText(locale, pageContent.contact.ftcFacebookLabel)}
                 </span>
                 <ExternalLink className="h-4 w-4 theme-text-soft" />
               </a>
@@ -205,7 +203,7 @@ export function ContactPage() {
               href="/news"
               className="mt-5 inline-flex items-center gap-2 text-sm font-semibold theme-accent"
             >
-              {locale === "en" ? "Open newsroom" : "Mở trang tin tức"}
+              {pickText(locale, pageContent.contact.openNewsroomLabel)}
               <ExternalLink className="h-4 w-4" />
             </Link>
           </Surface>

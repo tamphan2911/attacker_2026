@@ -5,12 +5,17 @@ export type ContentPageId =
   | "competition"
   | "faq"
   | "rules"
+  | "timeline"
+  | "finalists"
+  | "final-results"
   | "news"
+  | "forum"
   | "sponsors"
   | "judges"
   | "auth"
   | "workspace"
-  | "organizer";
+  | "organizer"
+  | "contact";
 
 export type ContentTypeId = "hero-slides" | "home-testimonials" | "auth-notes" | "workspace-states";
 
@@ -65,12 +70,48 @@ export const contentPageConfigs: ContentPageConfig[] = [
     },
   },
   {
+    id: "timeline",
+    href: "/admin/content/pages/timeline",
+    label: { en: "Timeline", vi: "Lịch trình" },
+    description: {
+      en: "Timeline diagram, round summaries, and page labels around the stage list.",
+      vi: "Sơ đồ lịch trình, phần tóm tắt theo vòng và các nhãn bao quanh danh sách giai đoạn.",
+    },
+  },
+  {
+    id: "finalists",
+    href: "/admin/content/pages/finalists",
+    label: { en: "Finalists", vi: "Đội vào chung kết" },
+    description: {
+      en: "Finalist listing copy, recognition copy, and placeholder labels.",
+      vi: "Nội dung danh sách chung kết, phần ghi nhận và các nhãn giữ chỗ.",
+    },
+  },
+  {
+    id: "final-results",
+    href: "/admin/content/pages/final-results",
+    label: { en: "Final results", vi: "Kết quả chung cuộc" },
+    description: {
+      en: "Award-place copy, final result labels, and pending-state text.",
+      vi: "Nội dung các hạng mục giải thưởng, nhãn kết quả cuối cùng và trạng thái chờ công bố.",
+    },
+  },
+  {
     id: "news",
     href: "/admin/content/pages/news",
     label: { en: "News", vi: "Tin tức" },
     description: {
       en: "Featured, latest updates, and related-news section copy.",
       vi: "Nội dung featured, latest updates và related news.",
+    },
+  },
+  {
+    id: "forum",
+    href: "/admin/content/pages/forum",
+    label: { en: "Forum", vi: "Forum" },
+    description: {
+      en: "Forum-page labels, list copy, reply composer copy, and new-thread modal text.",
+      vi: "Các nhãn của trang forum, nội dung danh sách, khung phản hồi và văn bản của cửa sổ tạo chủ đề mới.",
     },
   },
   {
@@ -116,6 +157,15 @@ export const contentPageConfigs: ContentPageConfig[] = [
     description: {
       en: "Organizer header, content modules, and flags sections.",
       vi: "Header, content modules và flags của trang organizer.",
+    },
+  },
+  {
+    id: "contact",
+    href: "/admin/content/pages/contact",
+    label: { en: "Contact", vi: "Liên hệ" },
+    description: {
+      en: "Contact-page labels, support copy, and official-channel headings.",
+      vi: "Các nhãn của trang liên hệ, nội dung hỗ trợ và heading cho các kênh chính thức.",
     },
   },
 ];
