@@ -772,25 +772,6 @@ export function HomePage() {
       </section>
       ) : null}
 
-      <section className="mx-auto max-w-4xl text-center">
-        <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
-          {locale === "en" ? "Why Attacker 2026" : "Vi sao Attacker 2026"}
-        </p>
-        <h2 className="theme-heading mt-5 text-3xl font-semibold leading-[1.15] theme-text-strong md:text-[3rem]">
-          {locale === "en"
-            ? "A student fintech competition should look established, useful, and easy to navigate from the first screen."
-            : "Mot cuoc thi fintech sinh vien nen tao cam giac chuyen nghiep, huu ich va de dinh huong ngay tu man hinh dau tien."}
-        </h2>
-        <p className="mx-auto mt-5 max-w-3xl text-base leading-8 theme-text-muted md:text-lg">
-          {locale === "en"
-            ? "This closer-to-reference homepage uses a more classic launch-site rhythm: hero slider, large visual columns, utility content bands, latest updates, proof points, and a clearer footer structure."
-            : "Trang chu duoc dieu chinh sat huong tham chieu hon, theo nhip dieu quen thuoc cua mot launch-site: hero slider, cot hinh anh lon, cac band noi dung tien ich, cap nhat moi nhat, proof points va footer ro rang hon."}
-        </p>
-        <Link href="/competition" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-          {locale === "en" ? "About Attacker" : "Giới thiệu Attacker"}
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </section>
     </div>
   );
 }

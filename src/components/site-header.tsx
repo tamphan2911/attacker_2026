@@ -133,6 +133,13 @@ export function SiteHeader() {
     return isActiveRoute(href);
   };
 
+  const topbarContactWrapClass =
+    "inline-flex items-center overflow-hidden rounded-full border border-slate-900/10 bg-[rgba(255,255,255,0.18)] shadow-[0_12px_30px_rgba(2,8,20,0.12)] backdrop-blur-md dark:border-white/12 dark:bg-[rgba(255,255,255,0.09)] dark:shadow-[0_12px_30px_rgba(2,8,20,0.16)]";
+  const topbarContactLinkClass =
+    "inline-flex h-8 items-center gap-2 px-3 text-[0.68rem] font-medium text-slate-950/90 transition hover:bg-white/16 hover:text-slate-950 md:text-[0.7rem] dark:text-white/84 dark:hover:bg-white/8 dark:hover:text-white";
+  const topbarContactIconClass = "h-3.5 w-3.5 text-sky-800 dark:text-cyan-200";
+  const topbarContactDividerClass = "h-4 w-px bg-slate-900/12 dark:bg-white/12";
+
   return (
     <header className="sticky top-0 z-50">
       <div className="theme-topbar">
@@ -145,32 +152,32 @@ export function SiteHeader() {
             </div>
 
             <div className="hidden shrink-0 items-center md:flex">
-              <div className="inline-flex items-center overflow-hidden rounded-full border border-white/12 bg-[rgba(255,255,255,0.09)] shadow-[0_12px_30px_rgba(2,8,20,0.16)] backdrop-blur-md">
+              <div className={topbarContactWrapClass}>
                 <a
-                  className="inline-flex h-8 items-center gap-2 px-3 text-[0.68rem] font-medium text-white/84 transition hover:bg-white/8 hover:text-white"
+                  className={topbarContactLinkClass}
                   href={`mailto:${contactInfo.email}`}
                   aria-label={contactInfo.email}
                 >
-                  <Mail className="h-3.5 w-3.5 text-cyan-200" />
+                  <Mail className={topbarContactIconClass} />
                   <span>{contactInfo.email}</span>
                 </a>
-                <span className="h-4 w-px bg-white/12" />
+                <span className={topbarContactDividerClass} />
                 <a
-                  className="inline-flex h-8 items-center gap-2 px-3 text-[0.68rem] font-medium text-white/84 transition hover:bg-white/8 hover:text-white"
+                  className={topbarContactLinkClass}
                   href={`tel:${contactInfo.phone}`}
                 >
-                  <PhoneCall className="h-3.5 w-3.5 text-cyan-200" />
+                  <PhoneCall className={topbarContactIconClass} />
                   <span>{contactInfo.phone}</span>
                 </a>
-                <span className="hidden h-4 w-px bg-white/12 xl:block" />
+                <span className={cn("hidden xl:block", topbarContactDividerClass)} />
                 <a
-                  className="hidden h-8 items-center gap-2 px-3 text-[0.68rem] font-medium text-white/84 transition hover:bg-white/8 hover:text-white xl:inline-flex"
+                  className={cn("hidden xl:inline-flex", topbarContactLinkClass)}
                   href={contactInfo.attackerFacebook}
                   target="_blank"
                   rel="noreferrer"
                   aria-label="Facebook"
                 >
-                  <FacebookIcon className="h-3.5 w-3.5 text-cyan-200" />
+                  <FacebookIcon className={topbarContactIconClass} />
                   <span>Facebook</span>
                 </a>
               </div>

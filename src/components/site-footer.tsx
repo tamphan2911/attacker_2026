@@ -27,8 +27,8 @@ export function SiteFooter() {
             <BrandMark />
             <p className="max-w-xl text-sm leading-7 theme-text-muted">
               {locale === "en"
-                ? "Attacker 2026 is being refined into a bilingual student fintech platform with clearer information bands, stronger team workflows, and a more established launch-site rhythm."
-                : "Attacker 2026 đang được tinh chỉnh thành một nền tảng fintech sinh viên song ngữ với các lớp thông tin rõ ràng hơn, luồng đội thi mạch lạc hơn và nhịp điệu launch-site trưởng thành hơn."}
+                ? "Attacker 2026 is an annual academic fintech competition for university students, built to create an energetic and high-quality learning arena for students interested in fintech in Vietnam."
+                : "Attacker 2026 là cuộc thi học thuật trong lĩnh vực Fintech dành cho sinh viên, được tổ chức thường niên, với mục tiêu tạo sân chơi học thuật năng động và chất lượng cho sinh viên yêu thích lĩnh vực Fintech tại Việt Nam."}
             </p>
             <Link href="/competition" className="theme-button-primary inline-flex rounded-full px-5 py-2.5 text-sm font-semibold transition hover:brightness-110">
               {locale === "en" ? "Explore the competition" : "Khám phá cuộc thi"}
@@ -116,8 +116,8 @@ export function SiteFooter() {
                   label: locale === "en" ? "Timeline" : "Thời gian",
                   value:
                     locale === "en"
-                      ? "May - July 2026"
-                      : "Tháng 5 - tháng 7 năm 2026",
+                      ? "May-August 2026"
+                      : "Tháng 5 - tháng 8 năm 2026",
                 },
               ].map((item) => (
                 <div
@@ -142,7 +142,6 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 flex flex-col gap-3 border-t theme-border pt-6 text-sm theme-text-soft md:flex-row md:items-center md:justify-between">
-          <p>{locale === "en" ? "Frontend concept for review and refinement." : "Concept frontend để review và tinh chỉnh tiếp."}</p>
           <p>(c) Attacker 2026 - Fintech Challenge</p>
         </div>
       </div>
