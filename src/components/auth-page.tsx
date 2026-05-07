@@ -133,12 +133,18 @@ export function AuthPage() {
       });
 
       if (!response.ok) {
-        router.replace("/dashboard");
+        router.replace("/profile");
         return;
       }
 
       const payload = (await response.json()) as { user?: { role?: string } | null };
-      router.replace(payload.user?.role === "judge" ? "/judge-dashboard" : "/dashboard");
+      router.replace(
+        payload.user?.role === "judge"
+          ? "/judge-dashboard"
+          : payload.user?.role === "admin" || payload.user?.role === "moderator"
+            ? "/admin"
+            : "/profile",
+      );
     })();
   }, [canAccessAdminMode, isAuthenticated, router]);
 
@@ -235,7 +241,7 @@ export function AuthPage() {
     });
 
     if (!response.ok) {
-      router.push("/dashboard");
+      router.push("/profile");
       router.refresh();
       return;
     }
@@ -246,7 +252,7 @@ export function AuthPage() {
         ? "/admin"
         : payload.user?.role === "judge"
           ? "/judge-dashboard"
-          : "/dashboard",
+          : "/profile",
     );
     router.refresh();
   };
