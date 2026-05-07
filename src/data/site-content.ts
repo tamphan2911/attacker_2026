@@ -2761,7 +2761,18 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 function mergeJsonShape<T>(defaults: T, input: unknown): T {
   if (Array.isArray(defaults)) {
-    return (Array.isArray(input) ? input : defaults) as T;
+    if (!Array.isArray(input)) {
+      return defaults as T;
+    }
+
+    if (defaults.length === 0) {
+      return input as T;
+    }
+
+    return input.map((item, index) => {
+      const fallbackIndex = Math.min(index, defaults.length - 1);
+      return mergeJsonShape(defaults[fallbackIndex], item);
+    }) as T;
   }
 
   if (isPlainObject(defaults)) {
