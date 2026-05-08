@@ -12,6 +12,7 @@ import {
   serializeTeamSubmission,
   serializeUser,
 } from "@/server/site-serializers";
+import { ensureRound1SubmissionArchives } from "@/server/round1-submission-archive";
 import { getRound1ExamState } from "@/server/team-service";
 
 export async function GET() {
@@ -107,6 +108,18 @@ export async function GET() {
             })
           : Promise.resolve([]),
     ]);
+
+  if (round1Submissions.length > 0) {
+    await ensureRound1SubmissionArchives(
+      round1Submissions.map((submission) => ({
+        id: submission.id,
+        bankId: submission.bankId,
+        answers: submission.answers,
+        rightCount: submission.rightCount,
+        essayScore: submission.essayScore,
+      })),
+    );
+  }
 
   return NextResponse.json(
     {

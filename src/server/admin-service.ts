@@ -12,7 +12,7 @@ import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, sponsorProfiles
 import { prisma } from "@/lib/db";
 import { deleteJudgeImageFile, getJudgeImageStorageKeyFromUrl } from "@/server/judge-image-storage";
 import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/news-image-storage";
-import { resolveRound1SubmissionArchive } from "@/server/round1-submission-archive";
+import { ensureRound1SubmissionArchive } from "@/server/round1-submission-archive";
 import type {
   JudgeProfile,
   NewsPost,
@@ -933,14 +933,20 @@ export async function updateRound1EssayScoreByAdmin(
 > {
   const submission = await prisma.round1Submission.findUnique({
     where: { id: submissionId },
-    select: { id: true, objectiveScore: true, answers: true },
+    select: { id: true, bankId: true, rightCount: true, objectiveScore: true, essayScore: true, answers: true },
   });
 
   if (!submission) {
     return fail(404, "Round 1 submission not found.");
   }
 
-  const archive = await resolveRound1SubmissionArchive(submission.answers);
+  const archive = await ensureRound1SubmissionArchive({
+    id: submission.id,
+    bankId: submission.bankId,
+    answers: submission.answers,
+    rightCount: submission.rightCount,
+    essayScore: submission.essayScore,
+  });
 
   const essayQuestionIds = archive.questions
     .filter((question) => String(question.type ?? "").toLowerCase() === "essay" && question.id)

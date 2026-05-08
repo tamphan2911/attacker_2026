@@ -1,8 +1,9 @@
 import { SubmissionRound, UserRole } from "@prisma/client";
 
-import { ROUND1_ESSAY_MAX_SCORE, countWords, type Round1QuestionResponse } from "@/lib/round1";
+import { ROUND1_ESSAY_MAX_SCORE, countWords } from "@/lib/round1";
 import { prisma } from "@/lib/db";
 import { readStoredJudges } from "@/server/admin-service";
+import { ensureRound1SubmissionArchive } from "@/server/round1-submission-archive";
 import type {
   CompetitionRoundKey,
   JudgeAssignmentSummary,
@@ -13,7 +14,6 @@ import type {
   JudgeRound1Detail,
   JudgeTeamSubmissionDetail,
   LocalizedText,
-  Round1Question,
 } from "@/types/site";
 
 import type { ServiceResult } from "@/server/team-service";
@@ -38,26 +38,8 @@ function fail(status: number, error: string): ServiceFailure {
   return { ok: false, status, error };
 }
 
-type StoredRound1SubmissionPayload = {
-  questions?: Array<
-    Round1Question & {
-      paperOrder?: number;
-    }
-  >;
-  answers?: Record<string, Round1QuestionResponse>;
-};
-
 function normalizeRoundFromSubmission(round: SubmissionRound): CompetitionRoundKey {
   return round === SubmissionRound.ROUND_3 ? "round-3" : "round-2";
-}
-
-function parseRound1SubmissionPayload(rawAnswers: string | null | undefined): StoredRound1SubmissionPayload {
-  try {
-    const parsed = rawAnswers ? (JSON.parse(rawAnswers) as StoredRound1SubmissionPayload) : {};
-    return parsed && typeof parsed === "object" ? parsed : {};
-  } catch {
-    return {};
-  }
 }
 
 async function getJudgeAssignmentSummary(userId: string): Promise<ServiceResult<JudgeAssignmentSummary>> {
@@ -312,7 +294,17 @@ export async function getJudgeRound1Detail(
     return fail(404, "Round 1 submission not found.");
   }
 
-  const payload = parseRound1SubmissionPayload(submission.answers);
+  const archive = await ensureRound1SubmissionArchive({
+    id: submission.id,
+    bankId: submission.bankId,
+    answers: submission.answers,
+    rightCount: submission.rightCount,
+    essayScore: submission.essayScore,
+  });
+  const payload = {
+    questions: archive.questions,
+    answers: archive.answers,
+  };
   const essays = (payload.questions ?? [])
     .filter((question) => String(question.type).toLowerCase() === "essay")
     .map((question, index) => {

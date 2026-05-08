@@ -72,11 +72,11 @@ const questionVariants: LocalizedText[] = [
   { en: "Scenario set 10", vi: "Bộ tình huống 10" },
 ];
 
-function shuffleArray<T>(items: T[]) {
+function shuffleArray<T>(items: T[], random: () => number = Math.random) {
   const copy = [...items];
 
   for (let index = copy.length - 1; index > 0; index -= 1) {
-    const nextIndex = Math.floor(Math.random() * (index + 1));
+    const nextIndex = Math.floor(random() * (index + 1));
     const current = copy[index];
     copy[index] = copy[nextIndex];
     copy[nextIndex] = current;
@@ -133,13 +133,13 @@ function cloneQuestionVariant(
   };
 }
 
-function expandQuestionPool(questions: Round1Question[], targetSize: number) {
+function expandQuestionPool(questions: Round1Question[], targetSize: number, random: () => number = Math.random) {
   if (!questions.length || targetSize <= 0) {
     return [];
   }
 
   if (questions.length >= targetSize) {
-    return shuffleArray(questions).slice(0, targetSize);
+    return shuffleArray(questions, random).slice(0, targetSize);
   }
 
   return Array.from({ length: targetSize }, (_, index) =>
@@ -192,6 +192,7 @@ function pickObjectiveQuestions(
   topic: string,
   difficulty: Round1QuestionDifficulty,
   count: number,
+  random: () => number = Math.random,
 ) {
   const exactBucket = bank.questions.filter(
     (question) =>
@@ -215,33 +216,36 @@ function pickObjectiveQuestions(
           ? difficultyFallback
           : anyObjective;
 
-  return shuffleArray(expandQuestionPool(source, count)).slice(0, count);
+  return shuffleArray(expandQuestionPool(source, count, random), random).slice(0, count);
 }
 
-function pickEssayQuestions(bank: Round1TestBank, count: number) {
+function pickEssayQuestions(bank: Round1TestBank, count: number, random: () => number = Math.random) {
   const essayQuestions = bank.questions.filter((question) => question.type === "essay");
-  return shuffleArray(expandQuestionPool(essayQuestions, count)).slice(0, count);
+  return shuffleArray(expandQuestionPool(essayQuestions, count, random), random).slice(0, count);
 }
 
 export function createRound1ExamPaper({
   objectiveBank,
   essayBank,
+  random,
 }: {
   objectiveBank: Round1TestBank;
   essayBank: Round1TestBank;
+  random?: () => number;
 }): Round1PaperQuestion[] {
+  const pickRandom = random ?? Math.random;
   const objectiveQuestions = getRound1Topics(objectiveBank).flatMap((topic) =>
     (Object.entries(ROUND1_OBJECTIVE_DIFFICULTY_MIX) as Array<
       [Round1QuestionDifficulty, number]
     >).flatMap(([difficulty, count]) =>
-      pickObjectiveQuestions(objectiveBank, topic, difficulty, count),
+      pickObjectiveQuestions(objectiveBank, topic, difficulty, count, pickRandom),
     ),
   );
 
   const orderedObjectiveQuestions = objectiveBank.shuffleQuestions
-    ? shuffleArray(objectiveQuestions)
+    ? shuffleArray(objectiveQuestions, pickRandom)
     : objectiveQuestions;
-  const essayQuestions = pickEssayQuestions(essayBank, ROUND1_ESSAY_TOTAL);
+  const essayQuestions = pickEssayQuestions(essayBank, ROUND1_ESSAY_TOTAL, pickRandom);
   const paperQuestions = [
     ...orderedObjectiveQuestions.slice(0, ROUND1_OBJECTIVE_TOTAL),
     ...essayQuestions,

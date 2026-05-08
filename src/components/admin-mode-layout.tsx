@@ -128,7 +128,7 @@ const adminNavGroups: Array<{
         children: [
           { href: "/admin/round-1", label: { en: "Round 1 test bank", vi: "Ngân hàng đề Vòng 1" } },
           { href: "/admin/round-1/scores", label: { en: "Round 1 scores", vi: "Điểm Vòng 1" } },
-          { href: "/admin/round-1/exams", label: { en: "Round 1 exam", vi: "Bài thi Vòng 1" } },
+          { href: "/admin/round-1/exams", label: { en: "Round 1 attempt", vi: "Lượt thi Vòng 1" } },
         ],
       },
       {

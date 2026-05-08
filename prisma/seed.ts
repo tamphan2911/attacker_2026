@@ -31,6 +31,7 @@ import {
   round1IndividualSubmissions,
   round1TestBanks,
 } from "@/data/site-content";
+import { buildRound1SubmissionArchiveFromBanks } from "@/server/round1-submission-archive";
 
 const prisma = new PrismaClient();
 
@@ -459,6 +460,21 @@ async function main() {
   }
 
   for (const submission of round1IndividualSubmissions) {
+    const objectiveBank = round1TestBanks.find((bank) => bank.id === submission.bankId);
+    const essayBank = round1TestBanks.find((bank) => bank.bankType === "essay");
+
+    if (!objectiveBank || !essayBank) {
+      throw new Error(`Missing Round 1 banks while seeding submission ${submission.id}.`);
+    }
+
+    const archive = buildRound1SubmissionArchiveFromBanks({
+      submissionId: submission.id,
+      objectiveBank,
+      essayBank,
+      rightCount: submission.rightCount,
+      essayScore: submission.essayScore,
+    });
+
     await prisma.round1Submission.create({
       data: {
         id: submission.id,
@@ -473,7 +489,7 @@ async function main() {
         essayScore: submission.essayScore,
         totalScore: submission.totalScore,
         durationMinutes: submission.durationMinutes,
-        answers: null,
+        answers: JSON.stringify(archive),
       },
     });
   }

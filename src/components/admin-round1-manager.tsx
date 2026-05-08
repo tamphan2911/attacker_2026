@@ -12,6 +12,7 @@ import {
   CirclePlus,
   Clock3,
   Download,
+  Eye,
   Filter,
   ListOrdered,
   ListFilter,
@@ -1930,19 +1931,13 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
 }
 
 export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
-  const { locale, round1Submissions, round1TestBanks, teams, users, updateRound1EssayScoreByAdmin } = useSiteState();
+  const { locale, round1Submissions, round1TestBanks, teams, users } = useSiteState();
   useAdminTitleScroll();
   const team = teams.find((item) => item.id === teamId);
   const teamGroups = buildTeamResultGroups(round1Submissions, teams, users);
   const group = teamGroups.find((item) => item.team.id === teamId);
   const leader = team ? users.find((user) => user.id === team.leaderId) : undefined;
   const bankTitleById = new Map(round1TestBanks.map((bank) => [bank.id, bank.title]));
-  const [essayDrafts, setEssayDrafts] = useState<Record<string, string>>(() =>
-    round1Submissions.reduce<Record<string, string>>((result, submission) => {
-      result[submission.id] = submission.essayScore == null ? "" : String(submission.essayScore);
-      return result;
-    }, {}),
-  );
   const {
     page,
     setPage,
@@ -2263,35 +2258,14 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
                   </td>
                   <td className="px-4 py-4">
                     {row.submission ? (
-                      <div className="space-y-2">
-                        <input
-                          type="number"
-                          min={0}
-                          max={ROUND1_ESSAY_MAX_SCORE}
-                          step="1"
-                          value={essayDrafts[row.submission.id] ?? ""}
-                          onChange={(event) =>
-                            setEssayDrafts((current) => ({
-                              ...current,
-                              [row.submission!.id]: event.target.value,
-                            }))
-                          }
-                          placeholder="0-28"
-                          className="theme-placeholder w-24 rounded-xl border theme-border theme-panel px-3 py-2 text-sm theme-text-strong outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const value = Number(essayDrafts[row.submission!.id]);
-                            if (Number.isFinite(value)) {
-                              updateRound1EssayScoreByAdmin(row.submission!.id, value);
-                            }
-                          }}
-                          className="rounded-full border theme-border theme-panel px-3 py-2 text-xs font-semibold theme-text-strong"
-                        >
-                          {locale === "en" ? "Save essay" : "Luu diem tu luan"}
-                        </button>
-                      </div>
+                      <Link
+                        href={`/admin/round-1/exams/${row.student.id}`}
+                        className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full border"
+                        title={locale === "en" ? "Open submission detail" : "Mở chi tiết bài nộp"}
+                        aria-label={locale === "en" ? "Open submission detail" : "Mở chi tiết bài nộp"}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Link>
                     ) : (
                       <StatusPill tone="default">
                         {locale === "en" ? "Pending" : "Dang cho"}

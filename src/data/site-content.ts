@@ -3569,7 +3569,7 @@ function createEssayQuestion({
   };
 }
 
-const round1ObjectivePreviewQuestions: Round1Question[] = [
+const round1ObjectiveQuestionTemplates: Round1Question[] = [
   createSingleChoiceQuestion({
     id: "r1q-01",
     topic: "Fintech fundamentals",
@@ -3892,7 +3892,7 @@ const round1ObjectivePreviewQuestions: Round1Question[] = [
   }),
 ];
 
-const round1EssayPreviewQuestions: Round1Question[] = [
+const round1EssayQuestionTemplates: Round1Question[] = [
   createEssayQuestion({
     id: "r1e-01",
     topic: "Fintech fundamentals",
@@ -3991,6 +3991,69 @@ const round1EssayPreviewQuestions: Round1Question[] = [
   }),
 ];
 
+const round1ObjectiveVariantLabels = Array.from({ length: 10 }, (_, index) =>
+  createText(`Case set ${String(index + 1).padStart(2, "0")}`, `Bộ tình huống ${String(index + 1).padStart(2, "0")}`),
+);
+
+const round1EssayVariantLabels = Array.from({ length: 5 }, (_, index) =>
+  createText(`Essay set ${String(index + 1).padStart(2, "0")}`, `Bộ tự luận ${String(index + 1).padStart(2, "0")}`),
+);
+
+function appendVariantLabel(value: LocalizedText | undefined, label: LocalizedText, index: number) {
+  if (!value) {
+    return value;
+  }
+
+  if (index === 0) {
+    return value;
+  }
+
+  return {
+    en: `${value.en} (${label.en})`,
+    vi: `${value.vi} (${label.vi})`,
+  };
+}
+
+function cloneQuestionVariant(question: Round1Question, index: number, label: LocalizedText) {
+  const variantId = index === 0 ? question.id : `${question.id}-v${String(index + 1).padStart(2, "0")}`;
+
+  return {
+    ...question,
+    id: variantId,
+    prompt: appendVariantLabel(question.prompt, label, index) ?? question.prompt,
+    placeholder: appendVariantLabel(question.placeholder, label, index),
+    rubricNote: appendVariantLabel(question.rubricNote, label, index),
+    options: question.options?.map((option) => ({
+      ...option,
+      text: appendVariantLabel(option.text, label, index) ?? option.text,
+    })),
+    pairingItems: question.pairingItems?.map((item, pairingIndex) => ({
+      ...item,
+      id: index === 0 ? item.id : `${variantId}-pair-${pairingIndex + 1}`,
+      prompt: appendVariantLabel(item.prompt, label, index) ?? item.prompt,
+    })),
+  } satisfies Round1Question;
+}
+
+function expandQuestionTemplates(
+  templates: Round1Question[],
+  variantLabels: LocalizedText[],
+) {
+  return templates.flatMap((template) =>
+    variantLabels.map((label, index) => cloneQuestionVariant(template, index, label)),
+  );
+}
+
+const round1ObjectivePreviewQuestions: Round1Question[] = expandQuestionTemplates(
+  round1ObjectiveQuestionTemplates,
+  round1ObjectiveVariantLabels,
+);
+
+const round1EssayPreviewQuestions: Round1Question[] = expandQuestionTemplates(
+  round1EssayQuestionTemplates,
+  round1EssayVariantLabels,
+);
+
 export const round1TestBanks: Round1TestBank[] = [
   {
     id: "bank-2026-official-a",
@@ -4004,7 +4067,7 @@ export const round1TestBanks: Round1TestBank[] = [
       vi: "Ngân hàng chính thức cho 36 câu hỏi trắc nghiệm trong mỗi đề. Hệ thống rút ngẫu nhiên 6 câu trên mỗi chủ đề trong 6 chủ đề, theo cơ cấu 2 dễ / 2 trung bình / 2 khó.",
     },
     status: "active",
-    questionPoolSize: 100,
+    questionPoolSize: round1ObjectivePreviewQuestions.length,
     questionsPerAttempt: 36,
     shuffleQuestions: true,
     shuffleOptions: true,
@@ -4024,7 +4087,7 @@ export const round1TestBanks: Round1TestBank[] = [
       vi: "Ngân hàng tự luận tách riêng dùng cho 2 câu cuối của mỗi đề. Hệ thống rút ngẫu nhiên 2 câu tự luận từ một kho 30 câu, với giới hạn 200 từ cho mỗi câu trả lời.",
     },
     status: "active",
-    questionPoolSize: 30,
+    questionPoolSize: round1EssayPreviewQuestions.length,
     questionsPerAttempt: 2,
     shuffleQuestions: true,
     shuffleOptions: false,

@@ -10,10 +10,9 @@ import {
 import { prisma } from "@/lib/db";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
 import {
+  ensureRound1SubmissionArchive,
   parseRound1ArchiveAnswers,
   parseRound1ArchiveQuestions,
-  parseRound1SubmissionArchiveSync,
-  resolveRound1SubmissionArchive,
 } from "@/server/round1-submission-archive";
 import type {
   AdminRound1ExamDetail,
@@ -93,54 +92,64 @@ export async function readAdminRound1ExamRows(): Promise<AdminRound1ExamListRow[
     },
   });
 
-  const rows = teams
-    .filter((team) => team.members.length >= TEAM_MIN_MEMBERS)
-    .flatMap((team) =>
-      team.members.flatMap<AdminRound1ExamListRow>(({ user }) => {
-        if (user.role !== UserRole.STUDENT) {
-          return [];
-        }
+  const rows = (
+    await Promise.all(
+      teams
+        .filter((team) => team.members.length >= TEAM_MIN_MEMBERS)
+        .flatMap((team) =>
+          team.members.map<Promise<AdminRound1ExamListRow | null>>(async ({ user }) => {
+            if (user.role !== UserRole.STUDENT) {
+              return null;
+            }
 
-        const attempt = user.round1ExamAttempt;
-        const submission = user.round1Submissions[0];
+            const attempt = user.round1ExamAttempt;
+            const submission = user.round1Submissions[0];
 
-        const archivedSubmission = submission ? parseRound1SubmissionArchiveSync(submission.answers) : null;
-        const attemptQuestions = attempt ? parseRound1ArchiveQuestions(attempt.questions) : [];
-        const attemptAnswers = attempt ? parseRound1ArchiveAnswers(attempt.answers) : {};
+            const archivedSubmission = submission
+              ? await ensureRound1SubmissionArchive({
+                  id: submission.id,
+                  bankId: submission.bankId,
+                  answers: submission.answers,
+                  rightCount: submission.rightCount,
+                  essayScore: submission.essayScore,
+                })
+              : null;
+            const attemptQuestions = attempt ? parseRound1ArchiveQuestions(attempt.questions) : [];
+            const attemptAnswers = attempt ? parseRound1ArchiveAnswers(attempt.answers) : {};
 
-        const sourceQuestions = submission ? archivedSubmission?.questions ?? [] : attemptQuestions;
-        const sourceAnswers = submission ? archivedSubmission?.answers ?? {} : attemptAnswers;
-        const answeredCount = countAnsweredQuestions(sourceQuestions, sourceAnswers);
+            const sourceQuestions = submission ? archivedSubmission?.questions ?? [] : attemptQuestions;
+            const sourceAnswers = submission ? archivedSubmission?.answers ?? {} : attemptAnswers;
+            const answeredCount = countAnsweredQuestions(sourceQuestions, sourceAnswers);
 
-        return [
-          {
-            userId: user.id,
-            loginId: user.loginId,
-            name: user.name,
-            email: user.email,
-            university: user.university,
-            major: user.major,
-            classYear: user.classYear,
-            teamId: team.id,
-            teamName: team.name,
-            teamTag: team.tag,
-            teamStage: mapStage(team.stage),
-            status: submission ? "submitted" : attempt ? "in-progress" : "not-initiated",
-            answeredCount,
-            totalQuestions: sourceQuestions.length,
-            currentQuestionIndex: attempt?.currentQuestionIndex ?? undefined,
-            startedAt: attempt?.startedAt.toISOString(),
-            deadlineAt: attempt?.deadlineAt.toISOString(),
-            submittedAt: submission?.submittedAt.toISOString(),
-            updatedAt: attempt?.updatedAt.toISOString(),
-            objectiveScore: submission?.objectiveScore ?? undefined,
-            essayScore: submission?.essayScore ?? undefined,
-            totalScore: submission?.totalScore ?? undefined,
-            detailAvailable: Boolean(submission || attempt),
-          },
-        ];
-      }),
-    );
+            return {
+              userId: user.id,
+              loginId: user.loginId,
+              name: user.name,
+              email: user.email,
+              university: user.university,
+              major: user.major,
+              classYear: user.classYear,
+              teamId: team.id,
+              teamName: team.name,
+              teamTag: team.tag,
+              teamStage: mapStage(team.stage),
+              status: submission ? "submitted" : attempt ? "in-progress" : "not-initiated",
+              answeredCount,
+              totalQuestions: sourceQuestions.length,
+              currentQuestionIndex: attempt?.currentQuestionIndex ?? undefined,
+              startedAt: attempt?.startedAt.toISOString(),
+              deadlineAt: attempt?.deadlineAt.toISOString(),
+              submittedAt: submission?.submittedAt.toISOString(),
+              updatedAt: attempt?.updatedAt.toISOString(),
+              objectiveScore: submission?.objectiveScore ?? undefined,
+              essayScore: submission?.essayScore ?? undefined,
+              totalScore: submission?.totalScore ?? undefined,
+              detailAvailable: Boolean(submission || attempt),
+            };
+          }),
+        ),
+    )
+  ).filter((row): row is AdminRound1ExamListRow => row !== null);
 
   return rows
     .sort((left, right) => {
@@ -197,7 +206,15 @@ export async function readAdminRound1ExamDetail(userId: string): Promise<AdminRo
   }
 
   const attempt = user.round1ExamAttempt;
-  const submissionArchive = submission ? await resolveRound1SubmissionArchive(submission.answers) : null;
+  const submissionArchive = submission
+    ? await ensureRound1SubmissionArchive({
+        id: submission.id,
+        bankId: submission.bankId,
+        answers: submission.answers,
+        rightCount: submission.rightCount,
+        essayScore: submission.essayScore,
+      })
+    : null;
   const attemptQuestions = attempt ? parseRound1ArchiveQuestions(attempt.questions) : [];
   const attemptAnswers = attempt ? parseRound1ArchiveAnswers(attempt.answers) : {};
   const sourceAnswers = submission ? submissionArchive?.answers ?? {} : attemptAnswers;
