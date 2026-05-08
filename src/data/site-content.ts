@@ -520,15 +520,20 @@ export const defaultPageContent: SitePageContent = {
       },
     },
     competitionPath: {
-      eyebrow: { en: "Competition path", vi: "Lộ trình cuộc thi" },
+      eyebrow: { en: "Additional opportunities", vi: "Quyền lợi mở rộng" },
       items: [
-        { en: "Round 1 selects the top 50 teams.", vi: "Vòng 1 chọn ra top 50 đội." },
-        { en: "Round 2 selects the top 5 finalists.", vi: "Vòng 2 chọn ra top 5 đội chung kết." },
-        { en: "The next 10 teams are named Emerging Teams.", vi: "10 đội tiếp theo được gọi tên là Đội tiềm năng." },
+        {
+          en: "Sponsor-backed gifts, scholarships, and other non-cash benefits may be added depending on the partner program in each season.",
+          vi: "Quà tặng, học bổng và các quyền lợi phi tiền mặt từ nhà tài trợ có thể được bổ sung tùy theo chương trình đồng hành của từng mùa.",
+        },
+        {
+          en: "Judges, firms, and invited guests at the final event may also open mentorship, recruitment, or investment conversations for standout teams.",
+          vi: "Giám khảo, doanh nghiệp và khách mời tại chung kết cũng có thể mở ra cơ hội mentoring, tuyển dụng hoặc trao đổi đầu tư cho các đội nổi bật.",
+        },
       ],
       note: {
-        en: "In addition to cash awards, teams may also receive sponsor-supported gifts, scholarships, and other non-cash opportunities.",
-        vi: "Bên cạnh tiền thưởng, các đội còn có thể nhận thêm quà tặng, học bổng và những quyền lợi phi tiền mặt từ nhà tài trợ.",
+        en: "These additional benefits depend on partner decisions and event context, so they are not guaranteed as fixed prize entitlements.",
+        vi: "Các quyền lợi bổ sung này phụ thuộc vào quyết định của đối tác và bối cảnh sự kiện, nên không được xem là phần thưởng cố định được bảo đảm trước.",
       },
       ctaLabel: { en: "Open full competition page", vi: "Mở trang cuộc thi đầy đủ" },
       ctaHref: "/competition",
@@ -759,15 +764,20 @@ export const defaultPageContent: SitePageContent = {
       },
     },
     competitionPath: {
-      eyebrow: { en: "Competition path", vi: "Lộ trình cuộc thi" },
+      eyebrow: { en: "Additional opportunities", vi: "Quyền lợi mở rộng" },
       items: [
-        { en: "Round 1 selects the top 50 teams.", vi: "Vòng 1 chọn ra top 50 đội." },
-        { en: "Round 2 selects the top 5 finalists.", vi: "Vòng 2 chọn ra top 5 đội chung kết." },
-        { en: "The next 10 teams are named Emerging Teams.", vi: "10 đội tiếp theo được gọi tên là Đội tiềm năng." },
+        {
+          en: "Sponsor-backed gifts, scholarships, and other non-cash benefits may be added depending on the partner program in each season.",
+          vi: "Quà tặng, học bổng và các quyền lợi phi tiền mặt từ nhà tài trợ có thể được bổ sung tùy theo chương trình đồng hành của từng mùa.",
+        },
+        {
+          en: "Judges, firms, and invited guests at the final event may also open mentorship, recruitment, or investment conversations for standout teams.",
+          vi: "Giám khảo, doanh nghiệp và khách mời tại chung kết cũng có thể mở ra cơ hội mentoring, tuyển dụng hoặc trao đổi đầu tư cho các đội nổi bật.",
+        },
       ],
       note: {
-        en: "In addition to cash awards, teams may also receive sponsor-supported gifts, scholarships, and other non-cash opportunities.",
-        vi: "Bên cạnh tiền thưởng, các đội còn có thể nhận thêm quà tặng, học bổng và những quyền lợi phi tiền mặt từ nhà tài trợ.",
+        en: "These additional benefits depend on partner decisions and event context, so they are not guaranteed as fixed prize entitlements.",
+        vi: "Các quyền lợi bổ sung này phụ thuộc vào quyết định của đối tác và bối cảnh sự kiện, nên không được xem là phần thưởng cố định được bảo đảm trước.",
       },
     },
     mentors: {

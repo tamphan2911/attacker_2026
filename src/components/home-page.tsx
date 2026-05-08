@@ -107,7 +107,7 @@ export function HomePage() {
     pageContent.home.rewardCards.length > 0 ? pageContent.home.rewardCards : defaultPageContent.home.rewardCards;
   const rewardSection = pageContent.home.rewards;
   const emergingReward = pageContent.home.emergingReward;
-  const competitionPath = pageContent.home.competitionPath;
+  const additionalRewardOpportunities = pageContent.home.competitionPath;
   const testimonialsSection = pageContent.home.testimonialsSection;
   const currentHeroSlide = heroDeck[activeSlide] ?? heroDeck[0];
   const sponsorMarqueeItems = [...sponsors, ...sponsors];
@@ -346,10 +346,10 @@ export function HomePage() {
 
             <div className="theme-home-reward-aside rounded-[2rem] border px-5 py-5 backdrop-blur-md">
               <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
-                {pickText(locale, competitionPath.eyebrow)}
+                {pickText(locale, additionalRewardOpportunities.eyebrow)}
               </p>
               <div className="mt-5 space-y-3">
-                {competitionPath.items.map((item) => (
+                {additionalRewardOpportunities.items.map((item) => (
                   <div
                     key={item.en}
                     className="theme-home-path-item theme-text-body rounded-2xl border px-4 py-3 text-sm"
@@ -358,15 +358,8 @@ export function HomePage() {
                   </div>
                 ))}
               </div>
-              <Link
-                href={competitionPath.ctaHref ?? "/competition"}
-                className="theme-button-secondary mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
-              >
-                {pickText(locale, competitionPath.ctaLabel ?? defaultPageContent.home.competitionPath.ctaLabel!)}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
               <p className="theme-text-muted mt-4 text-sm leading-7">
-                {pickText(locale, competitionPath.note)}
+                {pickText(locale, additionalRewardOpportunities.note)}
               </p>
             </div>
           </div>

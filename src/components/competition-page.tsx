@@ -74,6 +74,7 @@ export function CompetitionPage() {
       : [];
   const rewardSection = pageContent.competition.rewards;
   const emergingReward = pageContent.competition.emergingReward;
+  const additionalRewardOpportunities = pageContent.competition.competitionPath;
   const pillars = pageContent.competition.pillars;
 
   return (
@@ -250,6 +251,25 @@ export function CompetitionPage() {
               </p>
               <p className="theme-text-muted mt-3 text-sm leading-7">
                 {pickText(locale, emergingReward.note)}
+              </p>
+            </div>
+
+            <div className="theme-home-reward-aside rounded-[2rem] border px-5 py-5 backdrop-blur-md">
+              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
+                {pickText(locale, additionalRewardOpportunities.eyebrow)}
+              </p>
+              <div className="mt-5 space-y-3">
+                {additionalRewardOpportunities.items.map((item) => (
+                  <div
+                    key={item.en}
+                    className="theme-home-path-item theme-text-body rounded-2xl border px-4 py-3 text-sm"
+                  >
+                    {pickText(locale, item)}
+                  </div>
+                ))}
+              </div>
+              <p className="theme-text-muted mt-4 text-sm leading-7">
+                {pickText(locale, additionalRewardOpportunities.note)}
               </p>
             </div>
           </div>
