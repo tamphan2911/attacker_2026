@@ -248,7 +248,7 @@ export function AdminRound1ExamList() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | AdminRound1ExamStatus>("all");
-  const [stageFilter, setStageFilter] = useState<"all" | CompetitionStage>("all");
+  const [essayScoreFilter, setEssayScoreFilter] = useState<"all" | "scored" | "not-scored">("all");
   const [sortKey, setSortKey] = useState<Round1ExamSortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   useAdminTitleScroll();
@@ -302,13 +302,17 @@ export function AdminRound1ExamList() {
           return false;
         }
 
-        if (stageFilter !== "all" && row.teamStage !== stageFilter) {
+        if (essayScoreFilter === "scored" && typeof row.essayScore !== "number") {
+          return false;
+        }
+
+        if (essayScoreFilter === "not-scored" && typeof row.essayScore === "number") {
           return false;
         }
 
         return true;
       }),
-    [rows, search, stageFilter, statusFilter],
+    [essayScoreFilter, rows, search, statusFilter],
   );
 
   const sortedRows = useMemo(() => {
@@ -388,7 +392,7 @@ export function AdminRound1ExamList() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, setPage, sortDirection, sortKey, stageFilter, statusFilter]);
+  }, [essayScoreFilter, search, setPage, sortDirection, sortKey, statusFilter]);
 
   const toggleSort = (nextSortKey: Round1ExamSortKey) => {
     if (sortKey === nextSortKey) {
@@ -467,17 +471,18 @@ export function AdminRound1ExamList() {
           <label className="space-y-2">
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
               <ListFilter className="h-3.5 w-3.5" />
-              {locale === "en" ? "Current stage" : "Vị trí hiện tại"}
+              {locale === "en" ? "Essay score" : "Điểm tự luận"}
             </span>
             <select
-              value={stageFilter}
-              onChange={(event) => setStageFilter(event.target.value as "all" | CompetitionStage)}
+              value={essayScoreFilter}
+              onChange={(event) =>
+                setEssayScoreFilter(event.target.value as "all" | "scored" | "not-scored")
+              }
               className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
-              <option value="all">{locale === "en" ? "All stages" : "Tất cả giai đoạn"}</option>
-              <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
-              <option value="round-2">{locale === "en" ? "Round 2" : "Vòng 2"}</option>
-              <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
+              <option value="all">{locale === "en" ? "All essay states" : "Tất cả trạng thái tự luận"}</option>
+              <option value="scored">{locale === "en" ? "Essay scored" : "Đã có điểm tự luận"}</option>
+              <option value="not-scored">{locale === "en" ? "Essay not scored" : "Chưa có điểm tự luận"}</option>
             </select>
           </label>
         </div>

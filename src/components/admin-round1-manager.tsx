@@ -1039,6 +1039,7 @@ export function AdminRound1Manager() {
 export function AdminRound1ScoresManager() {
   const { locale, round1Submissions, teams, users } = useSiteState();
   useAdminTitleScroll();
+  const [activeScoreView, setActiveScoreView] = useState<"team" | "individual">("team");
 
   const teamGroups = useMemo(
     () => buildTeamResultGroups(round1Submissions, teams, users),
@@ -1133,6 +1134,53 @@ export function AdminRound1ScoresManager() {
         />
       </section>
 
+      <Surface className="px-6 py-6 md:px-8 md:py-8">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2">
+            <p className="theme-heading text-2xl font-semibold theme-text-strong">
+              {locale === "en" ? "Score table view" : "Chế độ xem bảng điểm"}
+            </p>
+            <p className="text-sm leading-7 theme-text-muted">
+              {locale === "en"
+                ? "Switch between the team-average table and the participant-level score table."
+                : "Chuyển giữa bảng điểm trung bình theo đội và bảng điểm chi tiết theo từng thí sinh."}
+            </p>
+          </div>
+
+          <div className="relative inline-grid grid-cols-2 rounded-[1.4rem] border theme-border theme-panel p-1.5">
+            <span
+              className={cn(
+                "pointer-events-none absolute bottom-1.5 top-1.5 w-[calc(50%-0.375rem)] rounded-[1rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] shadow-[0_18px_40px_rgba(45,117,197,0.24)] transition-transform duration-300",
+                activeScoreView === "team" ? "translate-x-0 left-1.5" : "translate-x-full left-1.5",
+              )}
+            />
+            {[
+              {
+                id: "team" as const,
+                label: locale === "en" ? "Team score" : "Điểm đội",
+              },
+              {
+                id: "individual" as const,
+                label: locale === "en" ? "Individual score" : "Điểm cá nhân",
+              },
+            ].map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveScoreView(item.id)}
+                className={cn(
+                  "relative z-10 inline-flex min-w-[152px] items-center justify-center rounded-[1rem] px-4 py-3 text-sm font-semibold transition",
+                  activeScoreView === item.id ? "text-white" : "theme-text-muted",
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Surface>
+
+      {activeScoreView === "individual" ? (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="space-y-2">
@@ -1283,7 +1331,9 @@ export function AdminRound1ScoresManager() {
           onPageChange={setIndividualPage}
         />
       </Surface>
+      ) : null}
 
+      {activeScoreView === "team" ? (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div className="space-y-2">
@@ -1445,6 +1495,7 @@ export function AdminRound1ScoresManager() {
           onPageChange={setTeamPage}
         />
       </Surface>
+      ) : null}
     </div>
   );
 }
