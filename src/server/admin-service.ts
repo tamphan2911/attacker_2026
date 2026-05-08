@@ -12,6 +12,7 @@ import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, sponsorProfiles
 import { prisma } from "@/lib/db";
 import { deleteJudgeImageFile, getJudgeImageStorageKeyFromUrl } from "@/server/judge-image-storage";
 import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/news-image-storage";
+import { resolveRound1SubmissionArchive } from "@/server/round1-submission-archive";
 import type {
   JudgeProfile,
   NewsPost,
@@ -939,36 +940,7 @@ export async function updateRound1EssayScoreByAdmin(
     return fail(404, "Round 1 submission not found.");
   }
 
-  const archive = (() => {
-    try {
-      const parsed = submission.answers
-        ? (JSON.parse(submission.answers) as {
-            questions?: Array<{ id?: string; type?: string }>;
-            answers?: unknown;
-            essayQuestionScores?: Record<string, number>;
-          })
-        : null;
-
-      return {
-        questions: Array.isArray(parsed?.questions) ? parsed.questions : [],
-        answers: parsed?.answers && typeof parsed.answers === "object" ? parsed.answers : {},
-        essayQuestionScores:
-          parsed?.essayQuestionScores && typeof parsed.essayQuestionScores === "object"
-            ? Object.fromEntries(
-                Object.entries(parsed.essayQuestionScores).filter(
-                  ([, value]) => typeof value === "number" && Number.isFinite(value),
-                ),
-              )
-            : {},
-      };
-    } catch {
-      return {
-        questions: [] as Array<{ id?: string; type?: string }>,
-        answers: {},
-        essayQuestionScores: {} as Record<string, number>,
-      };
-    }
-  })();
+  const archive = await resolveRound1SubmissionArchive(submission.answers);
 
   const essayQuestionIds = archive.questions
     .filter((question) => String(question.type ?? "").toLowerCase() === "essay" && question.id)

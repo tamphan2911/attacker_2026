@@ -1016,6 +1016,10 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
     : ROUND1_ESSAY_MAX_SCORE;
   const visibleQuestions = questionFilter === "essay" ? essayQuestions : objectiveQuestions;
   const canScoreEssay = Boolean(detail?.submissionId && detail.status === "submitted" && essayQuestions.length > 0);
+  const hasSavedEssayTotalWithoutQuestionBreakdown =
+    typeof detail?.essayScore === "number" &&
+    essayQuestions.length > 0 &&
+    essayQuestions.every((question) => typeof question.essayScore !== "number");
   const enteredEssayScoreTotal = essayQuestions.reduce((total, question) => {
     const rawValue = essayDrafts[question.id];
     const value = typeof rawValue === "string" && rawValue.trim() !== "" ? Number(rawValue) : NaN;
@@ -1411,6 +1415,14 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
         {saveError ? (
           <div className="mt-5 rounded-[1.2rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
             {saveError}
+          </div>
+        ) : null}
+
+        {questionFilter === "essay" && hasSavedEssayTotalWithoutQuestionBreakdown ? (
+          <div className="mt-5 rounded-[1.2rem] border border-sky-700/18 bg-[linear-gradient(135deg,rgba(239,246,255,0.98),rgba(224,242,254,0.92))] px-4 py-3.5 text-sm leading-7 text-slate-900 dark:border-sky-300/18 dark:bg-sky-300/10 dark:text-sky-100">
+            {locale === "en"
+              ? `This submission already has a saved total essay score of ${detail.essayScore} / ${ROUND1_ESSAY_MAX_SCORE}, but no question-by-question breakdown was archived. Save the two essay question scores below if you want the detail page and summary reports to carry the same breakdown.`
+              : `Bài nộp này đã có tổng điểm tự luận ${detail.essayScore} / ${ROUND1_ESSAY_MAX_SCORE}, nhưng chưa lưu phần chia điểm theo từng câu. Hãy lưu điểm cho 2 câu tự luận bên dưới nếu bạn muốn trang chi tiết và các báo cáo tóm tắt dùng cùng một breakdown.`}
           </div>
         ) : null}
       </Surface>
