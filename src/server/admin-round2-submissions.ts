@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getTimelineItemById } from "@/lib/competition";
 import { syncJudgeAccounts } from "@/server/judge-accounts";
 import { readStoredJudges } from "@/server/admin-service";
+import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import type {
   AdminRound2AssignedJudgeRecord,
@@ -311,4 +312,35 @@ export async function assignJudgesToRound2Submission(
   });
 
   return ok({ saved: true });
+}
+
+export async function deleteRound2SubmissionByAdmin(
+  submissionId: string,
+): Promise<ServiceResult<{ deleted: true }>> {
+  const submission = await prisma.teamSubmission.findUnique({
+    where: { id: submissionId },
+    select: {
+      id: true,
+      round: true,
+      resourceSource: true,
+      resourceStorageKey: true,
+    },
+  });
+
+  if (!submission || submission.round !== SubmissionRound.ROUND_2) {
+    return fail(404, "Round 2 submission not found.");
+  }
+
+  await prisma.teamSubmission.delete({
+    where: { id: submissionId },
+  });
+
+  if (
+    submission.resourceSource === TeamSubmissionResourceSource.UPLOAD &&
+    submission.resourceStorageKey
+  ) {
+    await deleteTeamSubmissionFile(submission.resourceStorageKey).catch(() => {});
+  }
+
+  return ok({ deleted: true });
 }

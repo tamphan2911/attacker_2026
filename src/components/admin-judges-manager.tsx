@@ -646,10 +646,10 @@ export function AdminJudgesList() {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(filteredJudges, ADMIN_LIST_TABLE_PAGE_SIZE);
-  const firstStickyColumnClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
-  const secondStickyColumnClass = "sticky z-20 bg-[var(--panel-strong)]";
-  const firstStickyHeadClass = "sticky left-0 z-40 bg-[var(--panel)]";
-  const secondStickyHeadClass = "sticky z-30 bg-[var(--panel)]";
+  const firstStickyColumnClass = "theme-admin-sticky-cell-strong sticky left-0 z-30";
+  const secondStickyColumnClass = "theme-admin-sticky-cell-strong sticky z-20";
+  const firstStickyHeadClass = "theme-admin-sticky-head sticky left-0 z-40";
+  const secondStickyHeadClass = "theme-admin-sticky-head sticky z-30";
 
   const handleCreateJudge = async () => {
     const payload = normalizeDraftForSave(addDraft);

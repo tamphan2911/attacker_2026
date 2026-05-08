@@ -9,6 +9,7 @@ import {
   Download,
   Filter,
   Search,
+  Trash2,
   UsersRound,
   X,
 } from "lucide-react";
@@ -32,10 +33,10 @@ function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
-const stickyFirstColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
-const stickySecondColumnClass = "sticky z-10 bg-[var(--panel)]";
-const stickyFirstHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
-const stickySecondHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
+const stickyFirstColumnClass = "theme-admin-sticky-cell sticky left-0 z-20";
+const stickySecondColumnClass = "theme-admin-sticky-cell sticky z-10";
+const stickyFirstHeadClass = "theme-admin-sticky-head sticky left-0 z-30";
+const stickySecondHeadClass = "theme-admin-sticky-head sticky z-20";
 
 function matchesFilter(value: string, query: string) {
   if (!query.trim()) {
@@ -471,7 +472,7 @@ function ErrorState({ locale, message }: { locale: "en" | "vi"; message: string 
 }
 
 export function AdminRound2SubmissionsManager() {
-  const { locale } = useSiteState();
+  const { currentUser, locale } = useSiteState();
   const [rows, setRows] = useState<AdminRound2SubmissionRow[]>([]);
   const [availableJudges, setAvailableJudges] = useState<AdminRound2JudgeOption[]>([]);
   const [round2Closed, setRound2Closed] = useState(false);
@@ -480,6 +481,7 @@ export function AdminRound2SubmissionsManager() {
   const [search, setSearch] = useState("");
   const [versionFilter, setVersionFilter] = useState<"all" | "latest" | "history">("all");
   const [assignmentFilter, setAssignmentFilter] = useState<"all" | AdminRound2AssignmentStatus>("all");
+  const [deletingSubmissionId, setDeletingSubmissionId] = useState<string | null>(null);
   const [activeRow, setActiveRow] = useState<AdminRound2SubmissionRow | null>(null);
   useAdminTitleScroll();
 
@@ -600,6 +602,50 @@ export function AdminRound2SubmissionsManager() {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(filteredRows, ADMIN_LIST_TABLE_PAGE_SIZE);
+
+  const canDeleteSubmission = currentUser.role === "admin";
+
+  const deleteSubmission = async (row: AdminRound2SubmissionRow) => {
+    const confirmed = window.confirm(
+      locale === "en"
+        ? `Delete Round 2 submission ${row.title} from team ${row.teamName}?`
+        : `Xóa bài nộp Vòng 2 ${row.title} của đội ${row.teamName}?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingSubmissionId(row.submissionId);
+      const response = await fetch(`/api/admin/round-2/submissions/${row.submissionId}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(
+          payload?.error ??
+            (locale === "en"
+              ? "Could not delete the Round 2 submission."
+              : "Không thể xóa bài nộp Vòng 2."),
+        );
+      }
+
+      await load();
+    } catch (nextError) {
+      window.alert(
+        nextError instanceof Error
+          ? nextError.message
+          : locale === "en"
+            ? "Could not delete the Round 2 submission."
+            : "Không thể xóa bài nộp Vòng 2.",
+      );
+    } finally {
+      setDeletingSubmissionId(null);
+    }
+  };
 
   if (loading) {
     return <LoadingState locale={locale} />;
@@ -727,6 +773,7 @@ export function AdminRound2SubmissionsManager() {
                   locale === "en" ? "File" : "Tệp",
                   locale === "en" ? "Submitted by" : "Người nộp",
                   locale === "en" ? "Submitted at" : "Nộp lúc",
+                  ...(canDeleteSubmission ? [locale === "en" ? "Delete" : "Xóa"] : []),
                 ].map((label, columnIndex) => (
                   <th
                     key={label}
@@ -795,6 +842,22 @@ export function AdminRound2SubmissionsManager() {
                     </Link>
                   </td>
                   <td className="px-4 py-4 theme-text-body">{formatDateTime(locale, row.submittedAt)}</td>
+                  {canDeleteSubmission ? (
+                    <td className="px-4 py-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void deleteSubmission(row);
+                        }}
+                        disabled={deletingSubmissionId === row.submissionId}
+                        title={locale === "en" ? "Delete submission" : "Xóa bài nộp"}
+                        aria-label={locale === "en" ? "Delete submission" : "Xóa bài nộp"}
+                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-55"
+                      >
+                        <Trash2 className={`h-4 w-4 ${deletingSubmissionId === row.submissionId ? "animate-pulse" : ""}`} />
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>

@@ -1,44 +1,82 @@
-import { Round1BankStatus, Round1TestBankType } from "@prisma/client";
+import {
+  Round1BankStatus,
+  Round1QuestionDifficulty,
+  Round1QuestionType,
+  Round1TestBankType,
+} from "@prisma/client";
 
-import { round1IndividualSubmissions } from "@/data/site-content";
+import { round1IndividualSubmissions, round1TestBanks } from "@/data/site-content";
 import { prisma } from "@/lib/db";
 import { ROUND1_OBJECTIVE_TOTAL, getRound1ObjectiveScore } from "@/lib/round1";
 import {
   buildRound1SubmissionArchiveFromBanks,
-  mapStoredBankToAppBank,
 } from "@/server/round1-submission-archive";
 
 export interface Round1ResetResult {
+  syncedBankCount: number;
+  archivedBankCount: number;
   deletedReviewCount: number;
   deletedAttemptCount: number;
   deletedSubmissionCount: number;
   createdSubmissionCount: number;
 }
 
-export async function resetRound1SubmissionsToCanonicalSeed(): Promise<Round1ResetResult> {
-  const [objectiveBanks, activeEssayBank, latestEssayBank] = await Promise.all([
-    prisma.round1TestBank.findMany({
-      where: { bankType: Round1TestBankType.OBJECTIVE },
-    }),
-    prisma.round1TestBank.findFirst({
-      where: { bankType: Round1TestBankType.ESSAY, status: Round1BankStatus.ACTIVE },
-      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    }),
-    prisma.round1TestBank.findFirst({
-      where: { bankType: Round1TestBankType.ESSAY },
-      orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
-    }),
-  ]);
+function mapBankType(bankType: "objective" | "essay") {
+  return bankType === "essay" ? Round1TestBankType.ESSAY : Round1TestBankType.OBJECTIVE;
+}
 
-  const essayBank = activeEssayBank ?? latestEssayBank;
-  if (!objectiveBanks.length || !essayBank) {
-    throw new Error("Round 1 banks are not configured well enough to recreate submissions.");
+function mapBankStatus(status: "draft" | "active" | "archived") {
+  switch (status) {
+    case "draft":
+      return Round1BankStatus.DRAFT;
+    case "archived":
+      return Round1BankStatus.ARCHIVED;
+    case "active":
+    default:
+      return Round1BankStatus.ACTIVE;
+  }
+}
+
+function mapQuestionDifficulty(difficulty: "easy" | "medium" | "hard") {
+  switch (difficulty) {
+    case "medium":
+      return Round1QuestionDifficulty.MEDIUM;
+    case "hard":
+      return Round1QuestionDifficulty.HARD;
+    case "easy":
+    default:
+      return Round1QuestionDifficulty.EASY;
+  }
+}
+
+function mapQuestionType(type: "true-false" | "single-choice" | "multiple-choice" | "pairing" | "essay") {
+  switch (type) {
+    case "true-false":
+      return Round1QuestionType.TRUE_FALSE;
+    case "multiple-choice":
+      return Round1QuestionType.MULTIPLE_CHOICE;
+    case "pairing":
+      return Round1QuestionType.PAIRING;
+    case "essay":
+      return Round1QuestionType.ESSAY;
+    case "single-choice":
+    default:
+      return Round1QuestionType.SINGLE_CHOICE;
+  }
+}
+
+export async function resetRound1SubmissionsToCanonicalSeed(): Promise<Round1ResetResult> {
+  const canonicalObjectiveBank = round1TestBanks.find((bank) => bank.bankType === "objective");
+  const canonicalEssayBank = round1TestBanks.find((bank) => bank.bankType === "essay");
+
+  if (!canonicalObjectiveBank || !canonicalEssayBank) {
+    throw new Error("Canonical Round 1 banks are missing from the site content source.");
   }
 
-  const objectiveBankById = new Map(
-    objectiveBanks.map((bank) => [bank.id, mapStoredBankToAppBank(bank, "objective")]),
-  );
-  const mappedEssayBank = mapStoredBankToAppBank(essayBank, "essay");
+  const objectiveBankById = new Map([[canonicalObjectiveBank.id, canonicalObjectiveBank]]);
+  const mappedEssayBank = canonicalEssayBank;
+  const canonicalBankIds = round1TestBanks.map((bank) => bank.id);
+  const canonicalBankTypes = round1TestBanks.map((bank) => mapBankType(bank.bankType));
 
   const expectedUserIds = [...new Set(round1IndividualSubmissions.map((submission) => submission.userId))];
   const expectedTeamIds = [...new Set(round1IndividualSubmissions.map((submission) => submission.teamId))];
@@ -67,6 +105,70 @@ export async function resetRound1SubmissionsToCanonicalSeed(): Promise<Round1Res
   }
 
   return prisma.$transaction(async (tx) => {
+    for (const bank of round1TestBanks) {
+      await tx.round1TestBank.upsert({
+        where: { id: bank.id },
+        create: {
+          id: bank.id,
+          slug: bank.id,
+          bankType: mapBankType(bank.bankType),
+          status: mapBankStatus(bank.status),
+          titleEn: bank.title.en,
+          titleVi: bank.title.vi,
+          descriptionEn: bank.description.en,
+          descriptionVi: bank.description.vi,
+          questionPoolSize: bank.questionPoolSize,
+          questionsPerAttempt: bank.questionsPerAttempt,
+          shuffleQuestions: bank.shuffleQuestions,
+          shuffleOptions: bank.shuffleOptions,
+          durationMinutes: bank.durationMinutes,
+          wordLimit: bank.wordLimit ?? null,
+          publishedAt: bank.publishedAt ? new Date(bank.publishedAt) : null,
+          questions: JSON.stringify(
+            bank.questions.map((question) => ({
+              ...question,
+              difficulty: mapQuestionDifficulty(question.difficulty),
+              type: mapQuestionType(question.type),
+            })),
+          ),
+        },
+        update: {
+          slug: bank.id,
+          bankType: mapBankType(bank.bankType),
+          status: mapBankStatus(bank.status),
+          titleEn: bank.title.en,
+          titleVi: bank.title.vi,
+          descriptionEn: bank.description.en,
+          descriptionVi: bank.description.vi,
+          questionPoolSize: bank.questionPoolSize,
+          questionsPerAttempt: bank.questionsPerAttempt,
+          shuffleQuestions: bank.shuffleQuestions,
+          shuffleOptions: bank.shuffleOptions,
+          durationMinutes: bank.durationMinutes,
+          wordLimit: bank.wordLimit ?? null,
+          publishedAt: bank.publishedAt ? new Date(bank.publishedAt) : null,
+          questions: JSON.stringify(
+            bank.questions.map((question) => ({
+              ...question,
+              difficulty: mapQuestionDifficulty(question.difficulty),
+              type: mapQuestionType(question.type),
+            })),
+          ),
+        },
+      });
+    }
+
+    const archiveOtherBanks = await tx.round1TestBank.updateMany({
+      where: {
+        id: { notIn: canonicalBankIds },
+        bankType: { in: canonicalBankTypes },
+        status: { not: Round1BankStatus.ARCHIVED },
+      },
+      data: {
+        status: Round1BankStatus.ARCHIVED,
+      },
+    });
+
     const reviewDeletion = await tx.round1JudgeReview.deleteMany();
     const attemptDeletion = await tx.round1ExamAttempt.deleteMany();
     const submissionDeletion = await tx.round1Submission.deleteMany();
@@ -111,6 +213,8 @@ export async function resetRound1SubmissionsToCanonicalSeed(): Promise<Round1Res
     }
 
     return {
+      syncedBankCount: round1TestBanks.length,
+      archivedBankCount: archiveOtherBanks.count,
       deletedReviewCount: reviewDeletion.count,
       deletedAttemptCount: attemptDeletion.count,
       deletedSubmissionCount: submissionDeletion.count,

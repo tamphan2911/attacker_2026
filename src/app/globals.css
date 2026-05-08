@@ -13,6 +13,9 @@
   --panel: rgba(255, 255, 255, 0.78);
   --panel-strong: rgba(255, 255, 255, 0.94);
   --panel-subtle: rgba(255, 255, 255, 0.62);
+  --admin-sticky-cell: rgba(250, 253, 255, 0.98);
+  --admin-sticky-head: rgba(255, 255, 255, 0.995);
+  --admin-sticky-cell-strong: rgba(241, 248, 255, 0.99);
   --line: rgba(10, 29, 52, 0.1);
   --line-strong: rgba(10, 29, 52, 0.16);
   --header-top: linear-gradient(90deg, #0b4f87 0%, #1474c9 56%, #45b7ff 100%);
@@ -47,6 +50,9 @@
   --panel: rgba(255, 255, 255, 0.05);
   --panel-strong: rgba(255, 255, 255, 0.08);
   --panel-subtle: rgba(255, 255, 255, 0.04);
+  --admin-sticky-cell: rgba(10, 20, 37, 0.96);
+  --admin-sticky-head: rgba(8, 18, 34, 0.985);
+  --admin-sticky-cell-strong: rgba(14, 27, 47, 0.98);
   --line: rgba(255, 255, 255, 0.12);
   --line-strong: rgba(255, 255, 255, 0.18);
   --header-top: linear-gradient(90deg, #061427 0%, #0a2240 54%, #0d3f7c 100%);
@@ -122,6 +128,18 @@ body {
 .theme-panel-subtle {
   border-color: var(--line);
   background: var(--panel-subtle);
+}
+
+.theme-admin-sticky-cell {
+  background: var(--admin-sticky-cell);
+}
+
+.theme-admin-sticky-head {
+  background: var(--admin-sticky-head);
+}
+
+.theme-admin-sticky-cell-strong {
+  background: var(--admin-sticky-cell-strong);
 }
 
 .theme-border {

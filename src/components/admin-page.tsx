@@ -233,12 +233,12 @@ function pickAdminRoleTone(role: UserProfile["role"]) {
 function UsersTableSection() {
   const { locale, users, teams, timelineItems, deleteUserByAdmin } = useSiteState();
   useAdminTitleScroll();
-  const firstStickyColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
-  const secondStickyColumnClass = "sticky z-10 bg-[var(--panel)]";
-  const firstStickyHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
-  const secondStickyHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
-  const firstStickyFilterClass = "sticky left-0 z-30 bg-[var(--panel)]";
-  const secondStickyFilterClass = "sticky z-20 bg-[var(--panel)]";
+  const firstStickyColumnClass = "theme-admin-sticky-cell sticky left-0 z-20";
+  const secondStickyColumnClass = "theme-admin-sticky-cell sticky z-10";
+  const firstStickyHeadClass = "theme-admin-sticky-head sticky left-0 z-30";
+  const secondStickyHeadClass = "theme-admin-sticky-head sticky z-20";
+  const firstStickyFilterClass = "theme-admin-sticky-cell sticky left-0 z-30";
+  const secondStickyFilterClass = "theme-admin-sticky-cell sticky z-20";
   const [filters, setFilters] = useState({
     name: "",
     studentId: "",
@@ -592,10 +592,10 @@ function UsersTableSection() {
 function TeamsTableSection() {
   const { locale, teams, users, timelineItems, deleteTeamByAdmin } = useSiteState();
   useAdminTitleScroll();
-  const firstStickyColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
-  const secondStickyColumnClass = "sticky z-10 bg-[var(--panel)]";
-  const firstStickyHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
-  const secondStickyHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
+  const firstStickyColumnClass = "theme-admin-sticky-cell sticky left-0 z-20";
+  const secondStickyColumnClass = "theme-admin-sticky-cell sticky z-10";
+  const firstStickyHeadClass = "theme-admin-sticky-head sticky left-0 z-30";
+  const secondStickyHeadClass = "theme-admin-sticky-head sticky z-20";
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<"all" | "round-1" | "round-2" | "round-3">("all");
 

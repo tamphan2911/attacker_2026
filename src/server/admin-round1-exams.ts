@@ -70,6 +70,28 @@ function countAnsweredQuestions(
   return questions.filter((question) => isRound1QuestionAnswered(question, answers[question.id])).length;
 }
 
+type ServiceSuccess<T> = {
+  ok: true;
+  status: number;
+  data: T;
+};
+
+type ServiceFailure = {
+  ok: false;
+  status: number;
+  error: string;
+};
+
+type ServiceResult<T> = ServiceSuccess<T> | ServiceFailure;
+
+function ok<T>(data: T, status = 200): ServiceSuccess<T> {
+  return { ok: true, status, data };
+}
+
+function fail(status: number, error: string): ServiceFailure {
+  return { ok: false, status, error };
+}
+
 export async function readAdminRound1ExamRows(): Promise<AdminRound1ExamListRow[]> {
   const teams = await prisma.team.findMany({
     where: {
@@ -257,4 +279,52 @@ export async function readAdminRound1ExamDetail(userId: string): Promise<AdminRo
     durationMinutes: submission?.durationMinutes ?? undefined,
     questions,
   };
+}
+
+export async function deleteAdminRound1ExamRecord(
+  userId: string,
+): Promise<ServiceResult<{ deletedSubmission: boolean; deletedAttempt: boolean }>> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      role: true,
+      round1ExamAttempt: {
+        select: { id: true },
+      },
+      round1Submissions: {
+        select: { id: true },
+      },
+    },
+  });
+
+  if (!user || user.role !== UserRole.STUDENT) {
+    return fail(404, "Round 1 attempt record not found.");
+  }
+
+  const submissionId = user.round1Submissions[0]?.id;
+  const attemptId = user.round1ExamAttempt?.id;
+
+  if (!submissionId && !attemptId) {
+    return fail(404, "This participant does not have a saved Round 1 attempt or submission.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (submissionId) {
+      await tx.round1Submission.delete({
+        where: { id: submissionId },
+      });
+    }
+
+    if (attemptId) {
+      await tx.round1ExamAttempt.delete({
+        where: { id: attemptId },
+      });
+    }
+  });
+
+  return ok({
+    deletedSubmission: Boolean(submissionId),
+    deletedAttempt: Boolean(attemptId),
+  });
 }

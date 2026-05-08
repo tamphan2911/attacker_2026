@@ -106,12 +106,12 @@ function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
-const stickyFirstColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
-const stickySecondColumnClass = "sticky z-10 bg-[var(--panel)]";
-const stickyFirstHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
-const stickySecondHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
-const stickyFirstStrongColumnClass = "sticky left-0 z-20 bg-[var(--panel-strong)]";
-const stickySecondStrongColumnClass = "sticky z-10 bg-[var(--panel-strong)]";
+const stickyFirstColumnClass = "theme-admin-sticky-cell sticky left-0 z-20";
+const stickySecondColumnClass = "theme-admin-sticky-cell sticky z-10";
+const stickyFirstHeadClass = "theme-admin-sticky-head sticky left-0 z-30";
+const stickySecondHeadClass = "theme-admin-sticky-head sticky z-20";
+const stickyFirstStrongColumnClass = "theme-admin-sticky-cell-strong sticky left-0 z-20";
+const stickySecondStrongColumnClass = "theme-admin-sticky-cell-strong sticky z-10";
 
 function cloneRound1Question(question: Round1Question): Round1Question {
   return JSON.parse(JSON.stringify(question)) as Round1Question;

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowDown,
@@ -19,6 +19,7 @@ import {
   Search,
   ShieldCheck,
   Target,
+  Trash2,
   UserRound,
   CheckCircle2,
 } from "lucide-react";
@@ -52,10 +53,10 @@ function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
-const stickyFirstColumnClass = "sticky left-0 z-20 bg-[var(--panel)]";
-const stickySecondColumnClass = "sticky z-10 bg-[var(--panel)]";
-const stickyFirstHeadClass = "sticky left-0 z-30 bg-[var(--panel-strong)]";
-const stickySecondHeadClass = "sticky z-20 bg-[var(--panel-strong)]";
+const stickyFirstColumnClass = "theme-admin-sticky-cell sticky left-0 z-20";
+const stickySecondColumnClass = "theme-admin-sticky-cell sticky z-10";
+const stickyFirstHeadClass = "theme-admin-sticky-head sticky left-0 z-30";
+const stickySecondHeadClass = "theme-admin-sticky-head sticky z-20";
 
 function formatDateTime(locale: "en" | "vi", value?: string) {
   if (!value) {
@@ -242,7 +243,7 @@ function ExamListError({ locale, message }: { locale: "en" | "vi"; message: stri
 }
 
 export function AdminRound1ExamList() {
-  const { locale } = useSiteState();
+  const { currentUser, locale } = useSiteState();
   const [rows, setRows] = useState<AdminRound1ExamListRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -251,26 +252,37 @@ export function AdminRound1ExamList() {
   const [essayScoreFilter, setEssayScoreFilter] = useState<"all" | "scored" | "not-scored">("all");
   const [sortKey, setSortKey] = useState<Round1ExamSortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   useAdminTitleScroll();
+
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await fetch("/api/admin/round-1/exams", { cache: "no-store" });
+      const payload = (await response.json().catch(() => null)) as
+        | { exams?: AdminRound1ExamListRow[]; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.exams) {
+        throw new Error(payload?.error ?? (locale === "en" ? "Could not load exam records." : "Không thể tải dữ liệu bài thi."));
+      }
+
+      setRows(payload.exams);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected error." : "Có lỗi bất ngờ.");
+    } finally {
+      setLoading(false);
+    }
+  }, [locale]);
 
   useEffect(() => {
     let active = true;
 
     const run = async () => {
       try {
-        setLoading(true);
-        setError("");
-        const response = await fetch("/api/admin/round-1/exams", { cache: "no-store" });
-        const payload = (await response.json().catch(() => null)) as
-          | { exams?: AdminRound1ExamListRow[]; error?: string }
-          | null;
-
-        if (!response.ok || !payload?.exams) {
-          throw new Error(payload?.error ?? (locale === "en" ? "Could not load exam records." : "Không thể tải dữ liệu bài thi."));
-        }
-
         if (active) {
-          setRows(payload.exams);
+          await load();
         }
       } catch (nextError) {
         if (active) {
@@ -288,7 +300,51 @@ export function AdminRound1ExamList() {
     return () => {
       active = false;
     };
-  }, [locale]);
+  }, [load, locale]);
+
+  const canDeleteAttempt = currentUser.role === "admin";
+
+  const deleteAttempt = async (row: AdminRound1ExamListRow) => {
+    const confirmed = window.confirm(
+      locale === "en"
+        ? `Delete the saved Round 1 attempt/submission for ${row.name}?`
+        : `Xóa lượt thi hoặc bài nộp Vòng 1 đã lưu của ${row.name}?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingUserId(row.userId);
+      const response = await fetch(`/api/admin/round-1/exams/${row.userId}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(
+          payload?.error ??
+            (locale === "en"
+              ? "Could not delete the Round 1 attempt."
+              : "Không thể xóa dữ liệu lượt thi Vòng 1."),
+        );
+      }
+
+      await load();
+    } catch (nextError) {
+      window.alert(
+        nextError instanceof Error
+          ? nextError.message
+          : locale === "en"
+            ? "Could not delete the Round 1 attempt."
+            : "Không thể xóa dữ liệu lượt thi Vòng 1.",
+      );
+    } finally {
+      setDeletingUserId(null);
+    }
+  };
 
   const filteredRows = useMemo(
     () =>
@@ -569,6 +625,11 @@ export function AdminRound1ExamList() {
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
                   {locale === "en" ? "Detail" : "Chi tiết"}
                 </th>
+                {canDeleteAttempt ? (
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                    {locale === "en" ? "Delete" : "Xóa"}
+                  </th>
+                ) : null}
               </tr>
             </thead>
             <tbody>
@@ -659,6 +720,34 @@ export function AdminRound1ExamList() {
                       </button>
                     )}
                   </td>
+                  {canDeleteAttempt ? (
+                    <td className="px-4 py-4">
+                      {row.detailAvailable ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void deleteAttempt(row);
+                          }}
+                          disabled={deletingUserId === row.userId}
+                          title={locale === "en" ? "Delete attempt" : "Xóa lượt thi"}
+                          aria-label={locale === "en" ? "Delete attempt" : "Xóa lượt thi"}
+                          className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-55"
+                        >
+                          <Trash2 className={`h-4 w-4 ${deletingUserId === row.userId ? "animate-pulse" : ""}`} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          title={locale === "en" ? "No saved attempt exists yet." : "Chưa có lượt thi nào được lưu."}
+                          aria-label={locale === "en" ? "No saved attempt exists yet." : "Chưa có lượt thi nào được lưu."}
+                          className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full opacity-35"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
