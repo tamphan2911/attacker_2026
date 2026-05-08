@@ -1061,13 +1061,29 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
       return;
     }
 
-    const node = document.getElementById(`admin-round1-question-${queuedQuestionId}`);
-    if (!node) {
-      return;
-    }
+    let frameId = 0;
+    let nestedFrameId = 0;
 
-    node.scrollIntoView({ behavior: "smooth", block: "start" });
-    setQueuedQuestionId(null);
+    const scrollToQuestion = () => {
+      const node = document.getElementById(`admin-round1-question-${queuedQuestionId}`);
+      if (!node) {
+        return;
+      }
+
+      const scrollOffset = 156;
+      const targetTop = Math.max(0, node.getBoundingClientRect().top + window.scrollY - scrollOffset);
+      window.scrollTo({ top: targetTop, behavior: "smooth" });
+      setQueuedQuestionId(null);
+    };
+
+    frameId = window.requestAnimationFrame(() => {
+      nestedFrameId = window.requestAnimationFrame(scrollToQuestion);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.cancelAnimationFrame(nestedFrameId);
+    };
   }, [queuedQuestionId, questionFilter, visibleQuestions.length]);
 
   if (loading) {

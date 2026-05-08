@@ -1,6 +1,7 @@
-import { TeamRound1LockStatus, UserRole } from "@prisma/client";
+import { Round1BankStatus, Round1TestBankType, TeamRound1LockStatus, UserRole } from "@prisma/client";
 
 import {
+  ROUND1_ESSAY_TOTAL,
   countWords,
   isRound1QuestionAnswered,
   scoreRound1Question,
@@ -117,6 +118,97 @@ function parseSubmissionArchive(rawArchive: string | null | undefined) {
       essayQuestionScores: {} as Record<string, number>,
     };
   }
+}
+
+function resequenceQuestions(questions: Round1PaperQuestion[], startOrder = 1) {
+  return questions.map((question, index) => ({
+    ...question,
+    paperOrder: startOrder + index,
+  }));
+}
+
+function createFallbackEssayQuestion(
+  id: string,
+  index: number,
+  paperOrder: number,
+  reference?: Round1PaperQuestion,
+): Round1PaperQuestion {
+  return {
+    ...(reference ?? {}),
+    id,
+    paperOrder,
+    prompt:
+      reference?.prompt ?? {
+        en: `Archived essay question ${index + 1}`,
+        vi: `Câu tự luận lưu trữ ${index + 1}`,
+      },
+    topic: reference?.topic ?? "Essay",
+    difficulty: reference?.difficulty ?? "medium",
+    type: "essay",
+  };
+}
+
+function buildLegacyFallbackQuestions(
+  objectiveQuestions: Round1PaperQuestion[],
+  essayQuestions: Round1PaperQuestion[],
+  answers: Record<string, Round1QuestionResponse>,
+) {
+  const normalizedObjectiveQuestions = resequenceQuestions(
+    objectiveQuestions.filter((question) => question.type !== "essay"),
+  );
+  const essayReferenceQuestions = essayQuestions.filter((question) => question.type === "essay");
+  const essayAnswerEntries = Object.entries(answers).filter(([, response]) =>
+    Boolean(response?.essayText?.trim()),
+  );
+
+  const normalizedEssayQuestions =
+    essayAnswerEntries.length > 0
+      ? essayAnswerEntries.map(([questionId], index) =>
+          createFallbackEssayQuestion(
+            questionId,
+            index,
+            normalizedObjectiveQuestions.length + index + 1,
+            essayReferenceQuestions[index],
+          ),
+        )
+      : resequenceQuestions(
+          essayReferenceQuestions
+            .slice(0, ROUND1_ESSAY_TOTAL)
+            .map((question, index) =>
+              createFallbackEssayQuestion(
+                question.id,
+                index,
+                normalizedObjectiveQuestions.length + index + 1,
+                question,
+              ),
+            ),
+          normalizedObjectiveQuestions.length + 1,
+        );
+
+  return [...normalizedObjectiveQuestions, ...normalizedEssayQuestions];
+}
+
+async function readFallbackEssayBankQuestions() {
+  const activeEssayBank = await prisma.round1TestBank.findFirst({
+    where: {
+      bankType: Round1TestBankType.ESSAY,
+      status: Round1BankStatus.ACTIVE,
+    },
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+  });
+
+  if (activeEssayBank) {
+    return parseQuestions(activeEssayBank.questions);
+  }
+
+  const latestEssayBank = await prisma.round1TestBank.findFirst({
+    where: {
+      bankType: Round1TestBankType.ESSAY,
+    },
+    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+  });
+
+  return parseQuestions(latestEssayBank?.questions);
 }
 
 function buildQuestionRecords(
@@ -283,9 +375,24 @@ export async function readAdminRound1ExamDetail(userId: string): Promise<AdminRo
 
   const attempt = user.round1ExamAttempt;
   const submissionArchive = submission ? parseSubmissionArchive(submission.answers) : null;
-  const sourceQuestions = submission ? submissionArchive?.questions ?? [] : attempt ? parseQuestions(attempt.questions) : [];
-  const sourceAnswers = submission ? submissionArchive?.answers ?? {} : attempt ? parseAnswers(attempt.answers) : {};
+  const attemptQuestions = attempt ? parseQuestions(attempt.questions) : [];
+  const attemptAnswers = attempt ? parseAnswers(attempt.answers) : {};
+  const sourceAnswers = submission ? submissionArchive?.answers ?? {} : attemptAnswers;
   const essayQuestionScores = submission ? submissionArchive?.essayQuestionScores ?? {} : {};
+  let sourceQuestions = submission ? submissionArchive?.questions ?? [] : attemptQuestions;
+
+  if (submission && sourceQuestions.length === 0) {
+    const [objectiveBankQuestions, essayBankQuestions] = await Promise.all([
+      Promise.resolve(parseQuestions(submission.bank?.questions)),
+      readFallbackEssayBankQuestions(),
+    ]);
+    sourceQuestions = buildLegacyFallbackQuestions(
+      objectiveBankQuestions,
+      essayBankQuestions,
+      sourceAnswers,
+    );
+  }
+
   const questions = buildQuestionRecords(sourceQuestions, sourceAnswers, essayQuestionScores);
 
   return {

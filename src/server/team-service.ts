@@ -188,6 +188,20 @@ function parseRound1AttemptAnswers(rawAnswers: string | null | undefined) {
   }
 }
 
+function extractSubmittedRound1Answers(payload: unknown) {
+  if (!payload || typeof payload !== "object") {
+    return undefined;
+  }
+
+  const record = payload as Record<string, unknown>;
+  const nestedAnswers = record.answers;
+  if (nestedAnswers && typeof nestedAnswers === "object") {
+    return nestedAnswers as Record<string, Round1QuestionResponse>;
+  }
+
+  return record as Record<string, Round1QuestionResponse>;
+}
+
 function serializeRound1AttemptRecord(attempt: Round1ExamAttempt): PersistedRound1Attempt {
   return {
     id: attempt.id,
@@ -1327,6 +1341,16 @@ export async function submitRound1Attempt(
     });
     if (existingSubmission) {
       return fail(409, "This account has already submitted its Round 1 attempt.");
+    }
+
+    const existingAttempt = await tx.round1ExamAttempt.findUnique({
+      where: { userId: actorId },
+    });
+    if (existingAttempt) {
+      const submission = await finalizeRound1AttemptRecord(tx, existingAttempt, {
+        answers: extractSubmittedRound1Answers(payload.answers),
+      });
+      return ok({ submissionId: submission.id }, 201);
     }
 
     const bank = await tx.round1TestBank.findUnique({
