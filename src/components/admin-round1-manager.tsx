@@ -769,8 +769,13 @@ function NotFoundState({
 }
 
 export function AdminRound1Manager() {
-  const { locale, round1TestBanks } = useSiteState();
+  const { locale, round1TestBanks, currentUser } = useSiteState();
   useAdminTitleScroll();
+  const [resetPending, setResetPending] = useState(false);
+  const [resetMessage, setResetMessage] = useState<{
+    tone: "success" | "warning";
+    text: string;
+  } | null>(null);
 
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
@@ -784,6 +789,66 @@ export function AdminRound1Manager() {
     ? buildBankTopicSummaryRows(activeEssayBank, locale)
     : [];
 
+  const canResetRound1Submissions = currentUser.role === "admin";
+
+  const handleResetRound1Submissions = async () => {
+    const confirmed = window.confirm(
+      locale === "en"
+        ? "Delete all existing Round 1 submissions, attempts, and judge reviews, then recreate the clean canonical submission set?"
+        : "Xóa toàn bộ bài nộp, lượt thi và phiếu chấm Vòng 1 hiện có, rồi tạo lại bộ bài nộp chuẩn mới?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setResetPending(true);
+    setResetMessage(null);
+
+    try {
+      const response = await fetch("/api/admin/round-1/reset", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { error?: string; createdSubmissionCount?: number }
+        | null;
+
+      if (!response.ok) {
+        throw new Error(
+          payload?.error ??
+            (locale === "en"
+              ? "Could not reset Round 1 submissions."
+              : "Không thể làm mới dữ liệu bài nộp Vòng 1."),
+        );
+      }
+
+      setResetMessage({
+        tone: "success",
+        text:
+          locale === "en"
+            ? `Round 1 submissions were rebuilt successfully (${payload?.createdSubmissionCount ?? 0} canonical submissions). Reloading...`
+            : `Dữ liệu bài nộp Vòng 1 đã được dựng lại thành công (${payload?.createdSubmissionCount ?? 0} bài nộp chuẩn). Đang tải lại...`,
+      });
+
+      window.setTimeout(() => {
+        window.location.reload();
+      }, 900);
+    } catch (error) {
+      setResetMessage({
+        tone: "warning",
+        text:
+          error instanceof Error
+            ? error.message
+            : locale === "en"
+              ? "Could not reset Round 1 submissions."
+              : "Không thể làm mới dữ liệu bài nộp Vòng 1.",
+      });
+    } finally {
+      setResetPending(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div id={ADMIN_TITLE_ID} className="scroll-mt-32 space-y-2">
@@ -794,6 +859,41 @@ export function AdminRound1Manager() {
           {locale === "en" ? "Round 1" : "Vòng 1"}
         </h1>
       </div>
+
+      {canResetRound1Submissions ? (
+        <Surface className="px-6 py-5">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                {locale === "en" ? "Round 1 reset" : "Làm mới dữ liệu Vòng 1"}
+              </p>
+              <p className="mt-2 text-sm leading-7 theme-text-muted">
+                {locale === "en"
+                  ? "Use this once to delete legacy Round 1 submissions, attempts, and judge reviews, then recreate a clean canonical set from the current banks."
+                  : "Dùng thao tác này một lần để xóa bài nộp, lượt thi và phiếu chấm Vòng 1 cũ, rồi dựng lại bộ dữ liệu chuẩn từ các bank hiện tại."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                void handleResetRound1Submissions();
+              }}
+              disabled={resetPending}
+              className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              <Trash2 className={`h-4 w-4 ${resetPending ? "animate-pulse" : ""}`} />
+              {locale === "en" ? "Rebuild Round 1 submissions" : "Dựng lại bài nộp Vòng 1"}
+            </button>
+          </div>
+          {resetMessage ? (
+            <div className="mt-4">
+              <StatusPill tone={resetMessage.tone === "success" ? "success" : "warning"}>
+                {resetMessage.text}
+              </StatusPill>
+            </div>
+          ) : null}
+        </Surface>
+      ) : null}
 
       {activeObjectiveBank && activeEssayBank ? (
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

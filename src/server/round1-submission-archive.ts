@@ -115,7 +115,7 @@ function parseStoredBankQuestions(rawQuestions: string) {
   return parseRound1ArchiveQuestions(rawQuestions) as Round1Question[];
 }
 
-function mapStoredBankToAppBank(bank: DbRound1TestBank, bankType: AppRound1TestBank["bankType"]): AppRound1TestBank {
+export function mapStoredBankToAppBank(bank: DbRound1TestBank, bankType: AppRound1TestBank["bankType"]): AppRound1TestBank {
   return {
     id: bank.id,
     bankType,
