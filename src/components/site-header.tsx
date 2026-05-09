@@ -71,7 +71,7 @@ const primaryNavItems: Array<{
   },
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
   { href: "/forum", label: { en: "Forum", vi: "Diễn đàn" } },
-  { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
+  { href: "/dashboard", label: { en: "Team Workspace", vi: "Đội thi" } },
   { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
 ];
 

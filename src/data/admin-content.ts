@@ -144,7 +144,7 @@ export const contentPageConfigs: ContentPageConfig[] = [
   {
     id: "workspace",
     href: "/admin/content/pages/workspace",
-    label: { en: "Team Workspace", vi: "Không gian đội" },
+    label: { en: "Team Workspace", vi: "Đội thi" },
     description: {
       en: "Workspace page header and main team-state entry copy.",
       vi: "Header của workspace và copy đầu vào cho trạng thái đội.",

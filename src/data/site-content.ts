@@ -210,7 +210,7 @@ export const navItems: NavItem[] = [
   { href: "/competition", label: { en: "Competition", vi: "Cuộc thi" } },
   { href: "/rules", label: { en: "Rules", vi: "Thể lệ" } },
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
-  { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
+  { href: "/dashboard", label: { en: "Team Workspace", vi: "Đội thi" } },
   { href: "/organizer", label: { en: "About", vi: "Giới thiệu" } },
   { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
 ];
