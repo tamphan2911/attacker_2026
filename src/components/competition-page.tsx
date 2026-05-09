@@ -61,10 +61,18 @@ const competitionRewardItems = [
 
 export function CompetitionPage() {
   const { locale, pageContent, timelineItems } = useSiteState();
-  const highlightItems =
+  const competitionHighlightItems =
     pageContent.competition.highlights.length > 0
       ? pageContent.competition.highlights
       : [];
+  const highlightItems = competitionHighlightItems.filter((item) => {
+    const titleText = `${item.title.en} ${item.title.vi}`.toLowerCase();
+
+    return !(
+      titleText.includes("2026") &&
+      (titleText.includes("momentum") || titleText.includes("động lực") || titleText.includes("dong luc"))
+    );
+  });
   const roundCards =
     pageContent.competition.roundCards.length > 0
       ? pageContent.competition.roundCards
