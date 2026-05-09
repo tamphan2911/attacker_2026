@@ -11,9 +11,9 @@ import {
 import { useEffect, useState, type ChangeEvent } from "react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { GradientAvatar, SectionHeading, Surface } from "@/components/site-ui";
 import { ALLOWED_AVATAR_IMAGE_TYPES, MAX_AVATAR_IMAGE_BYTES, formatAvatarFileSize } from "@/lib/avatar-images";
-import { getTeamCompetitionState, pickCompetitionStateLabel, pickRound1LockStatusLabel } from "@/lib/competition";
+import { pickRound1LockStatusLabel } from "@/lib/competition";
 
 interface ProfileFormState {
   name: string;
@@ -63,22 +63,6 @@ function pickTeamUserRoleLabel(locale: ReturnType<typeof useSiteState>["locale"]
   }
 
   return locale === "en" ? "Member" : "Thành viên";
-}
-
-function pickProfileRoleLabel(
-  locale: ReturnType<typeof useSiteState>["locale"],
-  role: ReturnType<typeof useSiteState>["currentUser"]["role"],
-) {
-  switch (role) {
-    case "admin":
-      return locale === "en" ? "Admin" : "Quản trị viên";
-    case "judge":
-      return locale === "en" ? "Judge" : "Giám khảo";
-    case "moderator":
-      return locale === "en" ? "Moderator" : "Điều phối viên";
-    case "student":
-      return locale === "en" ? "Participant" : "Thí sinh";
-  }
 }
 
 function AuthRequiredState({
@@ -414,7 +398,6 @@ export function ProfilePage() {
     );
   }
 
-  const currentTeamState = currentTeam ? getTeamCompetitionState(currentTeam) : undefined;
   const isTeamLeader = Boolean(currentTeam && currentTeam.leaderId === currentUser.id);
   const primaryActionHref =
     currentUser.role === "judge"
@@ -434,7 +417,6 @@ export function ProfilePage() {
         : locale === "en"
           ? "Open workspace"
           : "Mở không gian đội";
-  const roleLabel = pickProfileRoleLabel(locale, currentUser.role);
   const universityDisplay = currentUser.university || (locale === "en" ? "No university yet" : "Chưa có trường");
   const majorClassYearDisplay =
     [currentUser.major, currentUser.classYear].filter(Boolean).join(" · ") ||
@@ -482,20 +464,53 @@ export function ProfilePage() {
               </p>
             ) : null}
 
-            <div className="mt-7 flex flex-wrap gap-3">
-              {currentUser.studentId ? (
-                <StatusPill>{`${locale === "en" ? "Student ID" : "MSSV"} · ${currentUser.studentId}`}</StatusPill>
-              ) : null}
-              <StatusPill>{roleLabel}</StatusPill>
-              <StatusPill>Email</StatusPill>
-              {currentTeamState ? (
-                <StatusPill tone={currentTeamState === "not-eligible" ? "warning" : "success"}>
-                  {pickCompetitionStateLabel(locale, currentTeamState)}
-                </StatusPill>
-              ) : null}
-            </div>
+            {currentTeam ? (
+              <div className="mt-7 rounded-[1.45rem] border theme-border theme-panel-subtle px-4 py-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-sky-500/18 bg-sky-500/10 text-sky-600 dark:text-sky-200">
+                      <Users2 className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                        {locale === "en" ? "Team information" : "Thông tin đội"}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold theme-text-strong">{currentTeam.name}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs font-semibold theme-text-soft">
+                    {pickTeamUserRoleLabel(locale, isTeamLeader)}
+                  </p>
+                </div>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                  <div className="rounded-2xl border theme-border bg-white/65 px-3 py-3 dark:bg-white/[0.04]">
+                    <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                      {locale === "en" ? "Team status" : "Trạng thái đội"}
+                    </p>
+                    <p className="mt-1.5 text-xs font-semibold theme-text-strong">
+                      {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border theme-border bg-white/65 px-3 py-3 dark:bg-white/[0.04]">
+                    <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                      {locale === "en" ? "Members" : "Số thành viên"}
+                    </p>
+                    <p className="mt-1.5 text-xs font-semibold theme-text-strong">
+                      {locale === "en" ? `${currentTeam.memberIds.length} members` : `${currentTeam.memberIds.length} thành viên`}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border theme-border bg-white/65 px-3 py-3 dark:bg-white/[0.04]">
+                    <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                      {locale === "en" ? "Team tag" : "Mã đội"}
+                    </p>
+                    <p className="mt-1.5 text-xs font-semibold theme-text-strong">{currentTeam.tag}</p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/profile/edit"
                 className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-[1.5rem] px-5 py-3.5 text-sm font-semibold"
@@ -518,94 +533,34 @@ export function ProfilePage() {
       <Surface className="relative overflow-hidden px-5 py-6 md:px-6 md:py-7">
         <div className="absolute inset-x-0 top-0 h-32 bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(23,114,208,0.08),transparent)]" />
         <div className="relative">
-          <p className="text-xs font-semibold uppercase tracking-[0.34em] text-sky-600 dark:text-sky-200/80">
+          <p className="text-[0.68rem] font-semibold uppercase tracking-[0.3em] text-sky-600 dark:text-sky-200/80">
             {locale === "en" ? "Quick overview" : "Tổng quan nhanh"}
           </p>
-          <div className="mt-6 space-y-4">
-            <div className="rounded-[1.8rem] border theme-border theme-panel-subtle px-5 py-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
+          <div className="mt-5 space-y-3">
+            <div className="rounded-[1.55rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
                 {locale === "en" ? "University" : "Trường"}
               </p>
-              <p className="mt-4 text-lg font-medium leading-7 theme-text-strong">{universityDisplay}</p>
+              <p className="mt-3 text-sm font-semibold leading-6 theme-text-strong">{universityDisplay}</p>
             </div>
 
-            <div className="rounded-[1.8rem] border theme-border theme-panel-subtle px-5 py-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
+            <div className="rounded-[1.55rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
                 {locale === "en" ? "Major / class year" : "Ngành / khóa"}
               </p>
-              <p className="mt-4 text-lg font-medium leading-7 theme-text-strong">{majorClassYearDisplay}</p>
+              <p className="mt-3 text-sm font-semibold leading-6 theme-text-strong">{majorClassYearDisplay}</p>
             </div>
 
-            <div className="rounded-[1.8rem] border theme-border theme-panel-subtle px-5 py-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
+            <div className="rounded-[1.55rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-[0.66rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
                 {locale === "en" ? "Contact" : "Liên hệ"}
               </p>
-              <p className="mt-4 text-base font-medium leading-7 theme-text-strong break-words">{emailDisplay}</p>
-              <p className="mt-3 text-base leading-7 theme-text-muted">{phoneDisplay}</p>
+              <p className="mt-3 break-words text-sm font-semibold leading-6 theme-text-strong">{emailDisplay}</p>
+              <p className="mt-2 text-sm leading-6 theme-text-muted">{phoneDisplay}</p>
             </div>
           </div>
         </div>
       </Surface>
-
-      {currentTeam ? (
-        <Surface className="xl:col-span-2 px-6 py-6 md:px-8 md:py-7">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-sky-500/18 bg-sky-500/10 text-sky-600 dark:text-sky-200">
-              <Users2 className="h-4.5 w-4.5" />
-            </span>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-                {locale === "en" ? "Team information" : "Thông tin đội"}
-              </p>
-              <p className="mt-1 text-sm theme-text-soft">
-                {locale === "en"
-                  ? "Current team details connected to this account."
-                  : "Thông tin đội hiện đang gắn với tài khoản này."}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-[1.35rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.04]">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] theme-text-soft">
-                {locale === "en" ? "Team name" : "Tên đội"}
-              </p>
-              <p className="mt-2 text-sm font-semibold theme-text-strong">{currentTeam.name}</p>
-            </div>
-            <div className="rounded-[1.35rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.04]">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] theme-text-soft">
-                {locale === "en" ? "Team status" : "Trạng thái đội"}
-              </p>
-              <p className="mt-2 text-sm font-semibold theme-text-strong">
-                {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
-              </p>
-            </div>
-            <div className="rounded-[1.35rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.04]">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] theme-text-soft">
-                {locale === "en" ? "Members" : "Số thành viên"}
-              </p>
-              <p className="mt-2 text-sm font-semibold theme-text-strong">
-                {locale === "en" ? `${currentTeam.memberIds.length} members` : `${currentTeam.memberIds.length} thành viên`}
-              </p>
-            </div>
-            <div className="rounded-[1.35rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.04]">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] theme-text-soft">
-                {locale === "en" ? "Your role" : "Vai trò của bạn"}
-              </p>
-              <p className="mt-2 text-sm font-semibold theme-text-strong">{pickTeamUserRoleLabel(locale, isTeamLeader)}</p>
-            </div>
-          </div>
-
-          {currentTeamState ? (
-            <div className="mt-4 flex flex-wrap gap-2">
-              <StatusPill tone={currentTeamState === "not-eligible" ? "warning" : "success"}>
-                {pickCompetitionStateLabel(locale, currentTeamState)}
-              </StatusPill>
-              <StatusPill>{currentTeam.tag}</StatusPill>
-            </div>
-          ) : null}
-        </Surface>
-      ) : null}
     </section>
   );
 }
