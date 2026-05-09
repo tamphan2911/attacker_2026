@@ -614,8 +614,8 @@ export function AuthPage() {
                     </div>
                   </label>
 
-	                  <label className="space-y-2 xl:col-span-2">
-	                    <span className="text-sm theme-text-muted">Email (*)</span>
+                  <label className="space-y-2 xl:col-span-2">
+                    <span className="text-sm theme-text-muted">{requiredFieldLabel("Email")}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <Mail className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
@@ -793,7 +793,7 @@ export function AuthPage() {
 
                 <div className="space-y-2">
                   <p className="text-sm theme-text-muted">
-                    {locale === "en" ? "Security check" : "Xác minh bảo mật"}
+                    {requiredFieldLabel(locale === "en" ? "Security check" : "Xác minh bảo mật")}
                   </p>
                   <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
                     {HAS_TURNSTILE_SITE_KEY ? (
