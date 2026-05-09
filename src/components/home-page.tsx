@@ -104,6 +104,19 @@ export function HomePage() {
   const heroDeck = heroSlides;
   const metricItems =
     pageContent.home.metrics.length > 0 ? pageContent.home.metrics : defaultPageContent.home.metrics;
+  const visibleMetricItems = metricItems.filter((item) => {
+    const metricText = [
+      item.value,
+      item.label.en,
+      item.label.vi,
+      item.note.en,
+      item.note.vi,
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return !(metricText.includes("2026") && metricText.includes("momentum"));
+  });
   const rewardCards =
     pageContent.home.rewardCards.length > 0 ? pageContent.home.rewardCards : defaultPageContent.home.rewardCards;
   const rewardSection = pageContent.home.rewards;
@@ -254,8 +267,9 @@ export function HomePage() {
         </div>
       </section>
 
+      {visibleMetricItems.length > 0 ? (
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {metricItems.map((item) => {
+        {visibleMetricItems.map((item) => {
           return (
           <div
             key={item.value + item.label.en}
@@ -270,6 +284,7 @@ export function HomePage() {
           );
         })}
       </section>
+      ) : null}
 
       <section className="theme-home-rewards-shell relative overflow-hidden rounded-[2.4rem] border px-6 py-8 md:px-8 md:py-10">
         <div className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-cyan-300/14 blur-3xl" />
