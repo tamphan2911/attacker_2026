@@ -205,6 +205,7 @@ interface SiteStateValue {
     payload: number | { questionScores: Record<string, number> },
   ) => Promise<{ essayScore: number | null; totalScore: number | null; essayQuestionScores: Record<string, number> } | null>;
   inviteUser: (userId: string) => void;
+  recallInvitation: (invitationId: string) => void;
   respondToInvitation: (invitationId: string, decision: "accept" | "decline") => void;
   initiateRound1TeamLock: () => void;
   respondToRound1TeamLock: (requestId: string, decision: "accept" | "decline") => void;
@@ -2083,6 +2084,56 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const recallInvitation = (invitationId: string) => {
+    const invitation = invitations.find((item) => item.id === invitationId);
+    const team = invitation ? teams.find((item) => item.id === invitation.teamId) : undefined;
+
+    if (!invitation || invitation.status !== "pending") {
+      return;
+    }
+
+    if (!team || (team.leaderId !== activeUserId && invitation.fromUserId !== activeUserId)) {
+      pushToast(
+        {
+          en: "Only the sender or current team leader can recall this invitation.",
+          vi: "Chỉ người gửi hoặc đội trưởng hiện tại mới có thể thu hồi lời mời này.",
+        },
+        "warning",
+      );
+      return;
+    }
+
+    void (async () => {
+      const response = await fetch(`/api/invitations/${invitation.id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not recall the invitation.");
+        pushToast({ en: error, vi: error }, "warning");
+        return;
+      }
+
+      await syncWorkspace();
+      pushToast(
+        {
+          en: "Invitation recalled.",
+          vi: "Đã thu hồi lời mời.",
+        },
+        "success",
+      );
+    })().catch(() => {
+      pushToast(
+        {
+          en: "Could not recall the invitation right now.",
+          vi: "Hiện không thể thu hồi lời mời.",
+        },
+        "warning",
+      );
+    });
+  };
+
   const leaveCurrentTeam = () => {
     const team = getTeamForUser(activeUserId, teams);
 
@@ -2727,6 +2778,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     deleteRound1QuestionByAdmin,
     updateRound1EssayScoreByAdmin,
     inviteUser,
+    recallInvitation,
     respondToInvitation,
     initiateRound1TeamLock,
     respondToRound1TeamLock,

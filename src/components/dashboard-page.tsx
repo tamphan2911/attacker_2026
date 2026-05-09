@@ -15,6 +15,7 @@ import {
   Phone,
   Search,
   ShieldCheck,
+  Undo2,
   Upload,
   UserPlus2,
   X,
@@ -206,6 +207,7 @@ export function DashboardPage() {
     createTeam,
     updateCurrentTeam,
     inviteUser,
+    recallInvitation,
     respondToInvitation,
     initiateRound1TeamLock,
     respondToRound1TeamLock,
@@ -218,6 +220,7 @@ export function DashboardPage() {
   const [teamAvatarError, setTeamAvatarError] = useState("");
   const [inviteSearch, setInviteSearch] = useState("");
   const [pendingInviteUserId, setPendingInviteUserId] = useState<string | null>(null);
+  const [pendingRecallInvitationId, setPendingRecallInvitationId] = useState<string | null>(null);
   const [leadershipTargetId, setLeadershipTargetId] = useState("");
   const [submissionForms, setSubmissionForms] = useState<Record<SubmissionRound, SubmissionFormState>>({
     "round-2": createSubmissionFormState(),
@@ -231,6 +234,7 @@ export function DashboardPage() {
   useEffect(() => {
     setTeamAvatarError("");
     setPendingInviteUserId(null);
+    setPendingRecallInvitationId(null);
   }, [currentTeam?.id]);
 
   useEffect(() => {
@@ -525,6 +529,20 @@ export function DashboardPage() {
                 : "Đội hiện không còn chỗ trống để gửi lời mời."
               : "";
   const canConfirmPendingInvite = Boolean(pendingInviteUser && !inviteConfirmBlockingReason);
+  const pendingRecallInvitation = pendingRecallInvitationId
+    ? sentInvitations.find((invitation) => invitation.id === pendingRecallInvitationId)
+    : undefined;
+  const pendingRecallTargetUser = pendingRecallInvitation
+    ? users.find((user) => user.id === pendingRecallInvitation.toUserId)
+    : undefined;
+  const pendingRecallSender = pendingRecallInvitation
+    ? users.find((user) => user.id === pendingRecallInvitation.fromUserId)
+    : undefined;
+  const canConfirmRecallInvitation = Boolean(
+    pendingRecallInvitation &&
+      currentTeam &&
+      (currentTeam.leaderId === activeUserId || pendingRecallInvitation.fromUserId === activeUserId),
+  );
 
   const roundJumpTargets = currentTeam
     ? [
@@ -669,6 +687,16 @@ export function DashboardPage() {
     const userId = pendingInviteUser.id;
     setPendingInviteUserId(null);
     inviteUser(userId);
+  };
+
+  const handleConfirmRecallInvitation = () => {
+    if (!pendingRecallInvitation || !canConfirmRecallInvitation) {
+      return;
+    }
+
+    const invitationId = pendingRecallInvitation.id;
+    setPendingRecallInvitationId(null);
+    recallInvitation(invitationId);
   };
 
   const hasActionInbox =
@@ -1207,11 +1235,38 @@ export function DashboardPage() {
                       <div className="mt-3 space-y-2">
                         {sentInvitations.map((invitation) => {
                           const targetUser = users.find((user) => user.id === invitation.toUserId);
+                          const canRecallThisInvite = Boolean(
+                            isLeader || invitation.fromUserId === activeUserId,
+                          );
 
                           return (
-                            <div key={invitation.id} className="flex items-center gap-3 text-sm theme-text-muted">
-                              <MailPlus className="h-4 w-4 text-sky-200" />
-                              <span>{targetUser?.name ?? invitation.toUserId}</span>
+                            <div
+                              key={invitation.id}
+                              className="flex items-center justify-between gap-3 rounded-[1.2rem] border theme-border bg-white/60 px-3 py-3 text-sm dark:bg-white/4"
+                            >
+                              <div className="flex min-w-0 items-center gap-3">
+                                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-sky-400/24 bg-sky-400/12 text-sky-700 dark:text-sky-100">
+                                  <MailPlus className="h-4 w-4" />
+                                </span>
+                                <div className="min-w-0">
+                                  <p className="truncate font-semibold theme-text-strong">
+                                    {targetUser?.name ?? invitation.toUserId}
+                                  </p>
+                                  <p className="mt-1 truncate text-xs theme-text-soft">
+                                    {targetUser?.email ?? (locale === "en" ? "Pending student" : "Sinh viên đang chờ")} · {formatDateLabel(locale, invitation.createdAt)}
+                                  </p>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                disabled={!canRecallThisInvite}
+                                onClick={() => setPendingRecallInvitationId(invitation.id)}
+                                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-rose-400/24 bg-rose-400/10 text-rose-700 transition hover:bg-rose-400/16 disabled:cursor-not-allowed disabled:opacity-40 dark:text-rose-100"
+                                aria-label={locale === "en" ? "Recall invitation" : "Thu hồi lời mời"}
+                                title={locale === "en" ? "Recall invitation" : "Thu hồi lời mời"}
+                              >
+                                <Undo2 className="h-4 w-4" />
+                              </button>
                             </div>
                           );
                         })}
@@ -2269,6 +2324,129 @@ export function DashboardPage() {
               >
                 <UserPlus2 className="h-4 w-4" />
                 {locale === "en" ? "Send invitation" : "Gửi lời mời"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      {pendingRecallInvitation ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="recall-invite-title"
+        >
+          <div className="theme-panel theme-card-shadow w-full max-w-2xl overflow-hidden rounded-[2rem] border theme-border">
+            <div className="flex items-start justify-between gap-4 border-b theme-border px-5 py-5 md:px-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rose-600 dark:text-rose-200/85">
+                  {locale === "en" ? "Recall invitation" : "Thu hồi lời mời"}
+                </p>
+                <h2 id="recall-invite-title" className="mt-2 theme-heading text-2xl font-semibold theme-text-strong">
+                  {locale === "en" ? "Recall this pending invitation?" : "Thu hồi lời mời đang chờ?"}
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-7 theme-text-muted">
+                  {locale === "en"
+                    ? "The selected student will no longer see this invite in their invitation inbox."
+                    : "Sinh viên được chọn sẽ không còn thấy lời mời này trong hộp thư lời mời."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingRecallInvitationId(null)}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border theme-border theme-panel-subtle theme-text-soft transition hover:bg-white/75 dark:hover:bg-white/8"
+                aria-label={locale === "en" ? "Close recall confirmation" : "Đóng xác nhận thu hồi"}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid gap-4 px-5 py-5 md:grid-cols-[minmax(0,1fr)_260px] md:px-6">
+              <div className="rounded-[1.5rem] border theme-border bg-white/60 px-4 py-4 dark:bg-white/4">
+                <div className="flex items-start gap-4">
+                  <GradientAvatar
+                    label={pendingRecallTargetUser?.name ?? pendingRecallInvitation.toUserId}
+                    tone={pendingRecallTargetUser?.avatarTone ?? "from-sky-500 via-cyan-400 to-emerald-400"}
+                    imageSrc={pendingRecallTargetUser?.avatarImageSrc}
+                    className="h-16 w-16 text-base"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-lg font-semibold theme-text-strong">
+                      {pendingRecallTargetUser?.name ?? pendingRecallInvitation.toUserId}
+                    </p>
+                    <p className="mt-1 truncate text-sm theme-text-muted">
+                      {pendingRecallTargetUser?.email ?? (locale === "en" ? "No email available" : "Chưa có email")}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <StatusPill tone="warning">{locale === "en" ? "Pending invite" : "Lời mời đang chờ"}</StatusPill>
+                      <StatusPill>{formatDateLabel(locale, pendingRecallInvitation.createdAt)}</StatusPill>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+                  <div className="rounded-[1.15rem] border theme-border theme-panel-subtle px-3 py-3">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "University" : "Trường"}
+                    </p>
+                    <p className="mt-2 font-semibold theme-text-strong">{pendingRecallTargetUser?.university || "—"}</p>
+                  </div>
+                  <div className="rounded-[1.15rem] border theme-border theme-panel-subtle px-3 py-3">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "Major" : "Ngành"}
+                    </p>
+                    <p className="mt-2 font-semibold theme-text-strong">{pendingRecallTargetUser?.major || "—"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-[1.5rem] border border-rose-400/28 bg-rose-400/10 px-4 py-4">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
+                  {locale === "en" ? "Invitation details" : "Thông tin lời mời"}
+                </p>
+                <div className="mt-4 space-y-3 text-sm">
+                  <div className="rounded-[1.15rem] border theme-border bg-white/55 px-3 py-3 dark:bg-white/5">
+                    <p className="text-xs uppercase tracking-[0.2em] theme-text-soft">
+                      {locale === "en" ? "Team" : "Đội"}
+                    </p>
+                    <p className="mt-2 font-semibold theme-text-strong">{currentTeam?.name ?? pendingRecallInvitation.teamId}</p>
+                    <p className="mt-1 theme-text-soft">
+                      {locale === "en" ? "Team code" : "Mã đội"} · {currentTeam?.tag ?? "—"}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.15rem] border theme-border bg-white/55 px-3 py-3 dark:bg-white/5">
+                    <p className="text-xs uppercase tracking-[0.2em] theme-text-soft">
+                      {locale === "en" ? "Sent by" : "Người gửi"}
+                    </p>
+                    <p className="mt-2 font-semibold theme-text-strong">{pendingRecallSender?.name ?? pendingRecallInvitation.fromUserId}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {!canConfirmRecallInvitation ? (
+              <div className="mx-5 rounded-[1.25rem] border border-amber-400/35 bg-amber-400/12 px-4 py-3 text-sm leading-7 text-amber-800 dark:text-amber-100 md:mx-6">
+                {locale === "en"
+                  ? "Only the sender or current team leader can recall this invitation."
+                  : "Chỉ người gửi hoặc đội trưởng hiện tại mới có thể thu hồi lời mời này."}
+              </div>
+            ) : null}
+
+            <div className="flex flex-col-reverse gap-3 px-5 py-5 md:flex-row md:justify-end md:px-6">
+              <button
+                type="button"
+                onClick={() => setPendingRecallInvitationId(null)}
+                className="inline-flex items-center justify-center rounded-2xl border theme-border-strong theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+              >
+                {locale === "en" ? "Cancel" : "Hủy"}
+              </button>
+              <button
+                type="button"
+                disabled={!canConfirmRecallInvitation}
+                onClick={handleConfirmRecallInvitation}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(244,63,94,0.22)] transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <Undo2 className="h-4 w-4" />
+                {locale === "en" ? "Recall invitation" : "Thu hồi lời mời"}
               </button>
             </div>
           </div>

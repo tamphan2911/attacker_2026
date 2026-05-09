@@ -696,6 +696,42 @@ export async function respondToInvitation(
   });
 }
 
+export async function recallInvitation(
+  actorId: string,
+  invitationId: string,
+): Promise<ServiceResult<{ invitationId: string; status: string }>> {
+  return prisma.$transaction(async (tx) => {
+    const invitation = await tx.teamInvitation.findUnique({
+      where: { id: invitationId },
+      include: {
+        team: true,
+      },
+    });
+
+    if (!invitation || invitation.status !== TeamInvitationStatus.PENDING) {
+      return fail(404, "Pending invitation not found.");
+    }
+
+    if (!invitation.team) {
+      return fail(404, "That team is no longer available.");
+    }
+
+    if (invitation.fromUserId !== actorId && invitation.team.leaderId !== actorId) {
+      return fail(403, "Only the sender or current team leader can recall this invitation.");
+    }
+
+    const recalled = await tx.teamInvitation.update({
+      where: { id: invitationId },
+      data: {
+        status: TeamInvitationStatus.EXPIRED,
+        respondedAt: new Date(),
+      },
+    });
+
+    return ok({ invitationId: recalled.id, status: recalled.status });
+  });
+}
+
 export async function leaveCurrentTeam(actorId: string): Promise<ServiceResult<{ teamId: string }>> {
   return prisma.$transaction(async (tx) => {
     const membership = await tx.teamMember.findUnique({
