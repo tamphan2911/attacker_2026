@@ -33,7 +33,6 @@ import {
   isTeamRound1Locked,
   isTeamCurrentlyCompetingRound,
   pickTeamDisplayStatusLabel,
-  pickTeamDisplayStatusTone,
   pickRound1LockStatusLabel,
   pickRoundLabel,
 } from "@/lib/competition";
@@ -928,7 +927,7 @@ export function DashboardPage() {
 
       <section>
         <Surface className="px-5 py-5 md:px-6 md:py-6">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-start">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
             <div className="min-w-0">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 {currentTeam ? (
@@ -968,6 +967,22 @@ export function DashboardPage() {
                         {locale === "en" ? "Team code" : "Mã đội"} · {currentTeam.tag}
                       </span>
                     ) : null}
+                    {currentTeam ? (
+                      <>
+                        <StatusPill>{`${teamReadinessCount}/${TEAM_MAX_MEMBERS} ${locale === "en" ? "members" : "thành viên"}`}</StatusPill>
+                        <StatusPill
+                          tone={
+                            currentTeam.round1LockStatus === "locked"
+                              ? "success"
+                              : currentTeam.round1LockStatus === "pending" || currentTeam.round1LockStatus === "declined"
+                                ? "warning"
+                                : "info"
+                          }
+                        >
+                          {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
+                        </StatusPill>
+                      </>
+                    ) : null}
                   </div>
                   <p className="mt-3 max-w-3xl text-sm leading-6 theme-text-muted">
                     {currentTeam
@@ -975,29 +990,14 @@ export function DashboardPage() {
                       : pickText(locale, pageContent.workspace.noTeamDescription)}
                   </p>
                   {teamAvatarError ? <p className="mt-3 text-xs leading-6 text-rose-300">{teamAvatarError}</p> : null}
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <StatusPill tone={currentTeam ? pickTeamDisplayStatusTone(currentTeam, new Date(), timelineItems) : "default"}>
-                      {currentTeam
-                        ? pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems)
-                        : locale === "en"
-                          ? "No team yet"
-                          : "Chưa có đội"}
-                    </StatusPill>
-                    <StatusPill>{`${teamReadinessCount}/${TEAM_MAX_MEMBERS} ${locale === "en" ? "members" : "thành viên"}`}</StatusPill>
-                    {currentTeam ? (
-                      <StatusPill
-                        tone={
-                          currentTeam.round1LockStatus === "locked"
-                            ? "success"
-                            : currentTeam.round1LockStatus === "pending" || currentTeam.round1LockStatus === "declined"
-                              ? "warning"
-                              : "info"
-                        }
-                      >
-                        {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
+                  {!currentTeam ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <StatusPill tone="default">
+                        {locale === "en" ? "No team yet" : "Chưa có đội"}
                       </StatusPill>
-                    ) : null}
-                  </div>
+                      <StatusPill>{`${teamReadinessCount}/${TEAM_MAX_MEMBERS} ${locale === "en" ? "members" : "thành viên"}`}</StatusPill>
+                    </div>
+                  ) : null}
 
                   {currentTeam ? (
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -1010,9 +1010,9 @@ export function DashboardPage() {
                                 ? "/round-1"
                                 : "/dashboard#round1-lock"
                           }
-                          className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
+                          className="theme-button-primary inline-flex items-center justify-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-semibold"
                         >
-                          <ArrowRight className="h-4 w-4" />
+                          <ArrowRight className="h-3.5 w-3.5" />
                           {hasAnyTeamRound1Result
                             ? locale === "en"
                               ? "View Round 1 result"
@@ -1029,13 +1029,13 @@ export function DashboardPage() {
                       {canAccessAdminMode ? (
                         <Link
                           href="/admin"
-                          className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-full border theme-border theme-panel px-3.5 py-2 text-xs font-semibold theme-text-strong"
                         >
                           Admin
                         </Link>
                       ) : null}
                       {roundJumpTargets.length > 0 ? (
-                        <div className="inline-flex flex-wrap items-center gap-1.5 rounded-[1.2rem] border theme-border theme-panel px-1.5 py-1.5">
+                        <div className="inline-flex flex-wrap items-center gap-1.5 rounded-[1.1rem] border theme-border theme-panel px-1 py-1">
                           {roundJumpTargets.map((target) => {
                             const Icon = target.icon;
                             const roundLabel = pickRoundLabel(locale, target.round);
@@ -1050,10 +1050,10 @@ export function DashboardPage() {
                                       : `Cuộn tới ${pickRoundLabel(locale, target.round)}`
                                   }
                                   onClick={() => scrollToDashboardSection(target.sectionId)}
-                                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${target.buttonClass}`}
+                                  className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-1.5 text-[0.72rem] font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${target.buttonClass}`}
                                 >
-                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/58 dark:bg-white/12">
-                                    <Icon className="h-4 w-4" />
+                                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/58 dark:bg-white/12">
+                                    <Icon className="h-3.5 w-3.5" />
                                   </span>
                                   <span>{roundLabel}</span>
                                 </button>
@@ -1083,7 +1083,7 @@ export function DashboardPage() {
                     <p className="text-[0.68rem] uppercase tracking-[0.2em] theme-text-soft">
                       {locale === "en" ? "Current stage" : "Vị trí hiện tại"}
                     </p>
-                    <p className="mt-2 text-base font-semibold leading-6 theme-text-strong">
+                    <p className="mt-2 whitespace-nowrap text-base font-semibold leading-6 theme-text-strong">
                       {currentTeam ? pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems) : "--"}
                     </p>
                   </div>
@@ -1098,47 +1098,70 @@ export function DashboardPage() {
         <>
           <section className="space-y-6">
             <Surface className="px-6 py-6 md:px-8 md:py-8">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                    {locale === "en" ? "Roster & actions" : "Đội hình và thao tác"}
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold theme-text-strong">
-                    {currentTeamMembers.length} / {TEAM_MAX_MEMBERS}
-                  </p>
-                </div>
-                <StatusPill tone={pickTeamDisplayStatusTone(currentTeam, new Date(), timelineItems)}>
-                  {pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems)}
-                </StatusPill>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
+                  {locale === "en" ? "Roster & actions" : "Đội hình và thao tác"}
+                </p>
               </div>
 
               <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(360px,1.1fr)_minmax(0,0.9fr)]">
-                <div className="space-y-3 xl:order-2">
-                {currentTeamMembers.map((member) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between gap-3 rounded-[1.5rem] border theme-border theme-panel px-4 py-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <GradientAvatar label={member.name} tone={member.avatarTone} imageSrc={member.avatarImageSrc} />
-                      <div>
-                        <p className="text-sm font-semibold theme-text-strong">{member.name}</p>
-                        <p className="text-xs theme-text-soft">
-                          {member.major} · {member.university}
-                        </p>
+                <div className="space-y-4 xl:order-2">
+                  <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-200/80">
+                      {locale === "en" ? "Official roster" : "Đội hình chính thức"}
+                    </p>
+                    <p className="mt-2 text-sm font-semibold theme-text-strong">
+                      {locale === "en" ? "Official team member list" : "Danh sách thành viên chính thức"}
+                    </p>
+                    <div className="mt-4 space-y-3">
+                      {currentTeamMembers.map((member) => (
+                        <Link
+                          key={member.id}
+                          href={`/users/${member.id}`}
+                          className="flex items-center justify-between gap-3 rounded-[1.5rem] border theme-border theme-panel px-4 py-4 transition hover:-translate-y-0.5 hover:border-sky-400/40"
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <GradientAvatar label={member.name} tone={member.avatarTone} imageSrc={member.avatarImageSrc} />
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold theme-text-strong">{member.name}</p>
+                              <p className="truncate text-xs theme-text-soft">
+                                {member.major} · {member.university}
+                              </p>
+                            </div>
+                          </div>
+                          <StatusPill tone={member.id === currentTeam.leaderId ? "success" : "default"}>
+                            {member.id === currentTeam.leaderId
+                              ? locale === "en"
+                                ? "Leader"
+                                : "Đội trưởng"
+                              : locale === "en"
+                                ? "Member"
+                                : "Thành viên"}
+                          </StatusPill>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+
+                  {sentInvitations.length > 0 ? (
+                    <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+                      <p className="text-sm font-semibold theme-text-strong">
+                        {locale === "en" ? "Pending sent invites" : "Lời mời đã gửi"}
+                      </p>
+                      <div className="mt-3 space-y-2">
+                        {sentInvitations.map((invitation) => {
+                          const targetUser = users.find((user) => user.id === invitation.toUserId);
+
+                          return (
+                            <div key={invitation.id} className="flex items-center gap-3 text-sm theme-text-muted">
+                              <MailPlus className="h-4 w-4 text-sky-200" />
+                              <span>{targetUser?.name ?? invitation.toUserId}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
-                    <StatusPill tone={member.id === currentTeam.leaderId ? "success" : "default"}>
-                      {member.id === currentTeam.leaderId
-                        ? locale === "en"
-                          ? "Leader"
-                          : "Đội trưởng"
-                        : locale === "en"
-                          ? "Member"
-                          : "Thành viên"}
-                    </StatusPill>
-                  </div>
-                ))}
+                  ) : null}
                 </div>
 
                 <div className="space-y-4 xl:order-1">
@@ -1344,26 +1367,6 @@ export function DashboardPage() {
                     </div>
                   ) : null}
                 </div>
-
-                {sentInvitations.length > 0 ? (
-                  <div className="mt-4 rounded-[1.25rem] border theme-border bg-white/60 px-4 py-4 dark:bg-white/4">
-                    <p className="text-sm font-semibold theme-text-strong">
-                      {locale === "en" ? "Pending sent invites" : "Lời mời đã gửi"}
-                    </p>
-                    <div className="mt-3 space-y-2">
-                      {sentInvitations.map((invitation) => {
-                        const targetUser = users.find((user) => user.id === invitation.toUserId);
-
-                        return (
-                          <div key={invitation.id} className="flex items-center gap-3 text-sm theme-text-muted">
-                            <MailPlus className="h-4 w-4 text-sky-200" />
-                            <span>{targetUser?.name ?? invitation.toUserId}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
               </div>
                 </div>
               </div>
