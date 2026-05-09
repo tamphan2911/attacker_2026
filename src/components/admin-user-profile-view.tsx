@@ -151,15 +151,15 @@ export function AdminUserProfileView({ userId }: { userId: string }) {
         </Surface>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-3">
+      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <Surface className="px-6 py-6">
           <div className="flex items-center gap-3">
             <Mail className="h-5 w-5 text-sky-400" />
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
                 {locale === "en" ? "Account email" : "Email tài khoản"}
               </p>
-              <p className="mt-2 text-sm leading-7 theme-text-body">{user.email}</p>
+              <p className="mt-2 break-words text-sm leading-7 theme-text-body">{user.email}</p>
             </div>
           </div>
         </Surface>
@@ -167,11 +167,11 @@ export function AdminUserProfileView({ userId }: { userId: string }) {
         <Surface className="px-6 py-6">
           <div className="flex items-center gap-3">
             <Phone className="h-5 w-5 text-sky-400" />
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
                 {locale === "en" ? "Phone number" : "Số điện thoại"}
               </p>
-              <p className="mt-2 text-sm leading-7 theme-text-body">
+              <p className="mt-2 break-words text-sm leading-7 theme-text-body">
                 {user.phoneNumber || (locale === "en" ? "No phone number yet" : "Chưa có số điện thoại")}
               </p>
             </div>
@@ -181,11 +181,11 @@ export function AdminUserProfileView({ userId }: { userId: string }) {
         <Surface className="px-6 py-6">
           <div className="flex items-center gap-3">
             <School className="h-5 w-5 text-sky-400" />
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
                 {locale === "en" ? "Academic profile" : "Hồ sơ học tập"}
               </p>
-              <p className="mt-2 text-sm leading-7 theme-text-body">{`${user.university} · ${user.major}`}</p>
+              <p className="mt-2 break-words text-sm leading-7 theme-text-body">{`${user.university} · ${user.major}`}</p>
             </div>
           </div>
         </Surface>
@@ -193,11 +193,11 @@ export function AdminUserProfileView({ userId }: { userId: string }) {
         <Surface className="px-6 py-6">
           <div className="flex items-center gap-3">
             <UserRound className="h-5 w-5 text-sky-400" />
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
                 {locale === "en" ? "Competition status" : "Trạng thái thi đấu"}
               </p>
-              <p className="mt-2 text-sm leading-7 theme-text-body">{competitionStatus.label}</p>
+              <p className="mt-2 break-words text-sm leading-7 theme-text-body">{competitionStatus.label}</p>
             </div>
           </div>
         </Surface>
