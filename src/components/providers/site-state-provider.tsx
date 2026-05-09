@@ -157,7 +157,7 @@ interface SiteStateValue {
   setActiveUserId: (userId: string) => void;
   signOutCurrentUser: () => Promise<void>;
   resetDemoData: () => void;
-  savePageContent: (nextPageContent: SitePageContent) => void;
+  savePageContent: (nextPageContent: SitePageContent) => Promise<boolean>;
   saveSponsorsByAdmin: (nextSponsors: SponsorProfile[]) => void;
   createNewsPostByAdmin: (payload: NewsPost) => void;
   updateNewsPostByAdmin: (slug: string, payload: NewsPost) => void;
@@ -510,7 +510,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const savePageContent = (nextPageContent: SitePageContent) => {
+  const savePageContent = async (nextPageContent: SitePageContent) => {
     if (!canAccessAdminMode) {
       pushToast(
         {
@@ -519,10 +519,10 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         },
         "warning",
       );
-      return;
+      return false;
     }
 
-    void (async () => {
+    try {
       const response = await fetch("/api/admin/content", {
         method: "PUT",
         headers: {
@@ -535,7 +535,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         const error = await extractResponseError(response, "Could not save the page content.");
         pushToast({ en: error, vi: error }, "warning");
-        return;
+        return false;
       }
 
       await syncSiteData();
@@ -546,7 +546,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         },
         "success",
       );
-    })().catch(() => {
+      return true;
+    } catch {
       pushToast(
         {
           en: "Could not save the page content right now.",
@@ -554,7 +555,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         },
         "warning",
       );
-    });
+      return false;
+    }
   };
 
   const saveSponsorsByAdmin = (nextSponsors: SponsorProfile[]) => {

@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   BriefcaseBusiness,
   ChevronDown,
+  CheckCircle2,
   CircleHelp,
   Clock3,
   FileText,
@@ -20,6 +21,7 @@ import {
   Quote,
   ShieldCheck,
   Sparkles,
+  Save,
   Tags,
   Trash2,
   Trophy,
@@ -698,7 +700,9 @@ export function ContentHeaderEditor() {
         }
         isDirty={isDirty}
         onReset={() => setDraft(clonePageContent(pageContent))}
-        onSave={() => savePageContent(draft)}
+        onSave={() => {
+          void savePageContent(draft);
+        }}
       />
 
       <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
@@ -800,6 +804,12 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
   const [faqEditorTab, setFaqEditorTab] = useState<"questions" | "page">("questions");
   const [expandedFaqItems, setExpandedFaqItems] = useState<Set<string>>(() => new Set());
+  const [faqSaveMessage, setFaqSaveMessage] = useState<{ key: string; text: string } | null>(null);
+  const [pendingFaqDelete, setPendingFaqDelete] = useState<{
+    type: "topic" | "question";
+    index: number;
+    label: string;
+  } | null>(null);
 
   useEffect(() => {
     setDraft(clonePageContent(pageContent));
@@ -828,6 +838,41 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
       return next;
     });
   };
+  const saveFaqBlock = async (messageKey: string, message: string) => {
+    const saved = await savePageContent(draft);
+    if (saved) {
+      setFaqSaveMessage({ key: messageKey, text: message });
+    }
+  };
+  const confirmFaqDelete = () => {
+    const target = pendingFaqDelete;
+    if (!target) {
+      return;
+    }
+
+    setDraft((current) =>
+      updateDraftContent(current, (next) => {
+        if (target.type === "topic") {
+          const deletedTopic = next.rules.faqTopics[target.index];
+          if (!deletedTopic || next.rules.faqTopics.length <= 1) {
+            return;
+          }
+
+          const fallbackTopicId =
+            next.rules.faqTopics.find((item) => item.id !== deletedTopic.id)?.id ?? "";
+          next.rules.faqTopics = next.rules.faqTopics.filter((item) => item.id !== deletedTopic.id);
+          next.rules.faqItems = next.rules.faqItems.map((item) =>
+            item.topicId === deletedTopic.id ? { ...item, topicId: fallbackTopicId } : item,
+          );
+          return;
+        }
+
+        next.rules.faqItems = next.rules.faqItems.filter((_, currentIndex) => currentIndex !== target.index);
+      }),
+    );
+    setFaqSaveMessage(null);
+    setPendingFaqDelete(null);
+  };
 
   return (
     <div className="space-y-8">
@@ -837,7 +882,9 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
         description={pickText(locale, config.description)}
         isDirty={isDirty}
         onReset={() => setDraft(clonePageContent(pageContent))}
-        onSave={() => savePageContent(draft)}
+        onSave={() => {
+          void savePageContent(draft);
+        }}
       />
 
       <div className="grid gap-4 xl:grid-cols-1">
@@ -1644,26 +1691,44 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                               {draft.rules.faqItems.filter((item) => item.topicId === topic.id).length} FAQ
                             </p>
                           </div>
-                          <button
-                            type="button"
-                            disabled={faqTopics.length <= 1}
-                            onClick={() =>
-                              setDraft((current) =>
-                                updateDraftContent(current, (next) => {
-                                  const fallbackTopicId = next.rules.faqTopics.find((item) => item.id !== topic.id)?.id ?? "";
-                                  next.rules.faqTopics = next.rules.faqTopics.filter((item) => item.id !== topic.id);
-                                  next.rules.faqItems = next.rules.faqItems.map((item) =>
-                                    item.topicId === topic.id ? { ...item, topicId: fallbackTopicId } : item,
-                                  );
-                                }),
-                              )
-                            }
-                            className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
-                            aria-label={locale === "en" ? "Delete FAQ topic" : "Xóa chủ đề FAQ"}
-                            title={locale === "en" ? "Delete FAQ topic" : "Xóa chủ đề FAQ"}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <div className="flex flex-wrap items-center justify-end gap-2">
+                            {faqSaveMessage?.key === `faq-topic-${topic.id}` ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                {faqSaveMessage.text}
+                              </span>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void saveFaqBlock(
+                                  `faq-topic-${topic.id}`,
+                                  locale === "en" ? "Topic saved" : "Đã lưu chủ đề",
+                                );
+                              }}
+                              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-emerald-500/25 bg-emerald-500/10 text-emerald-700 transition hover:-translate-y-0.5 hover:bg-emerald-500/15 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100"
+                              aria-label={locale === "en" ? "Save FAQ topic" : "Lưu chủ đề FAQ"}
+                              title={locale === "en" ? "Save FAQ topic" : "Lưu chủ đề FAQ"}
+                            >
+                              <Save className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={faqTopics.length <= 1}
+                              onClick={() =>
+                                setPendingFaqDelete({
+                                  type: "topic",
+                                  index: topicIndex,
+                                  label: pickText(locale, topic.title) || topic.id,
+                                })
+                              }
+                              className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                              aria-label={locale === "en" ? "Delete FAQ topic" : "Xóa chủ đề FAQ"}
+                              title={locale === "en" ? "Delete FAQ topic" : "Xóa chủ đề FAQ"}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
 
                         <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
@@ -1762,15 +1827,35 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                               <span className="inline-flex min-h-8 items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-slate-950 dark:border-emerald-300/18 dark:bg-emerald-300/12 dark:text-emerald-100">
                                 {pickFaqTopicTitle(topicId)}
                               </span>
+                              {faqSaveMessage?.key === itemKey ? (
+                                <span className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  {faqSaveMessage.text}
+                                </span>
+                              ) : null}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  void saveFaqBlock(
+                                    itemKey,
+                                    locale === "en" ? "Question saved" : "Đã lưu câu hỏi",
+                                  );
+                                }}
+                                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-emerald-500/25 bg-emerald-500/10 text-emerald-700 transition hover:-translate-y-0.5 hover:bg-emerald-500/15 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100"
+                                aria-label={locale === "en" ? "Save FAQ question" : "Lưu câu hỏi FAQ"}
+                                title={locale === "en" ? "Save FAQ question" : "Lưu câu hỏi FAQ"}
+                              >
+                                <Save className="h-4 w-4" />
+                              </button>
                               <button
                                 type="button"
                                 disabled={draft.rules.faqItems.length <= 1}
                                 onClick={() =>
-                                  setDraft((current) =>
-                                    updateDraftContent(current, (next) => {
-                                      next.rules.faqItems = next.rules.faqItems.filter((_, currentIndex) => currentIndex !== index);
-                                    }),
-                                  )
+                                  setPendingFaqDelete({
+                                    type: "question",
+                                    index,
+                                    label: pickText(locale, item.question) || (locale === "en" ? `Question ${index + 1}` : `Câu hỏi ${index + 1}`),
+                                  })
                                 }
                                 className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
                                 aria-label={locale === "en" ? "Delete FAQ item" : "Xóa câu hỏi FAQ"}
@@ -3575,6 +3660,55 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
           </>
         ) : null}
       </div>
+
+      {pendingFaqDelete ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[1.8rem] border theme-border theme-panel px-6 py-6 shadow-[0_28px_90px_rgba(15,23,42,0.28)]">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-500/12 text-rose-600 dark:text-rose-200">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-lg font-semibold theme-text-strong">
+                  {pendingFaqDelete.type === "topic"
+                    ? locale === "en"
+                      ? "Delete this FAQ topic?"
+                      : "Xóa chủ đề FAQ này?"
+                    : locale === "en"
+                      ? "Delete this FAQ question?"
+                      : "Xóa câu hỏi FAQ này?"}
+                </p>
+                <p className="mt-2 text-sm leading-7 theme-text-muted">
+                  {pendingFaqDelete.type === "topic"
+                    ? locale === "en"
+                      ? `This removes "${pendingFaqDelete.label}" from the draft and moves its questions to the next available topic.`
+                      : `Thao tác này sẽ xóa "${pendingFaqDelete.label}" khỏi bản nháp và chuyển các câu hỏi sang chủ đề còn lại.`
+                    : locale === "en"
+                      ? `This removes "${pendingFaqDelete.label}" from the draft.`
+                      : `Thao tác này sẽ xóa "${pendingFaqDelete.label}" khỏi bản nháp.`}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setPendingFaqDelete(null)}
+                className="rounded-full border theme-border theme-panel px-5 py-2.5 text-sm font-semibold theme-text-strong"
+              >
+                {locale === "en" ? "Cancel" : "Hủy"}
+              </button>
+              <button
+                type="button"
+                onClick={confirmFaqDelete}
+                className="theme-button-danger rounded-full px-5 py-2.5 text-sm font-semibold"
+              >
+                {locale === "en" ? "Delete" : "Xóa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -3869,7 +4003,9 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
         description={pickText(locale, config.description)}
         isDirty={isDirty}
         onReset={() => setDraft(clonePageContent(pageContent))}
-        onSave={() => savePageContent(draft)}
+        onSave={() => {
+          void savePageContent(draft);
+        }}
       />
 
       {typeId === "hero-slides" ? (
