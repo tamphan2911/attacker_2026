@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Upload,
   UserPlus2,
+  X,
 } from "lucide-react";
 
 import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS } from "@/data/site-content";
@@ -216,6 +217,7 @@ export function DashboardPage() {
   const [teamForm, setTeamForm] = useState<TeamFormState>(() => createTeamFormState(currentTeam));
   const [teamAvatarError, setTeamAvatarError] = useState("");
   const [inviteSearch, setInviteSearch] = useState("");
+  const [pendingInviteUserId, setPendingInviteUserId] = useState<string | null>(null);
   const [leadershipTargetId, setLeadershipTargetId] = useState("");
   const [submissionForms, setSubmissionForms] = useState<Record<SubmissionRound, SubmissionFormState>>({
     "round-2": createSubmissionFormState(),
@@ -228,6 +230,7 @@ export function DashboardPage() {
 
   useEffect(() => {
     setTeamAvatarError("");
+    setPendingInviteUserId(null);
   }, [currentTeam?.id]);
 
   useEffect(() => {
@@ -360,11 +363,11 @@ export function DashboardPage() {
       )
     : undefined;
 
-  const availableUsers = users.filter(
+  const inviteCandidateUsers = users.filter(
     (user) =>
       user.id !== activeUserId &&
       user.role === "student" &&
-      !getTeamForUser(user.id, teams),
+      !(currentTeam?.memberIds.includes(user.id) ?? false),
   );
   const isLeader = currentTeam?.leaderId === activeUserId;
   const teamReadinessCount = currentTeam?.memberIds.length ?? 0;
@@ -469,7 +472,7 @@ export function DashboardPage() {
     teamRound1EssayAverage == null ||
     teamRound1TotalAverage == null ||
     teamRound1DurationAverage == null;
-  const filteredAvailableUsers = availableUsers.filter((user) => {
+  const filteredAvailableUsers = inviteCandidateUsers.filter((user) => {
     const keyword = inviteSearch.trim().toLowerCase();
     if (!keyword) {
       return false;
@@ -480,6 +483,48 @@ export function DashboardPage() {
       .toLowerCase()
       .includes(keyword);
   });
+  const pendingInviteUser = pendingInviteUserId
+    ? users.find((user) => user.id === pendingInviteUserId)
+    : undefined;
+  const pendingInviteUserTeam = pendingInviteUser ? getTeamForUser(pendingInviteUser.id, teams) : undefined;
+  const pendingInviteAlreadyInvited = Boolean(
+    pendingInviteUser && sentInvitations.some((invitation) => invitation.toUserId === pendingInviteUser.id),
+  );
+  const pendingInviteUserInCurrentTeam = Boolean(
+    pendingInviteUser && currentTeam?.memberIds.includes(pendingInviteUser.id),
+  );
+  const pendingInviteUserInAnotherTeam = Boolean(
+    pendingInviteUserTeam && (!currentTeam || pendingInviteUserTeam.id !== currentTeam.id),
+  );
+  const pendingInviteTeamLeader = pendingInviteUserTeam
+    ? users.find((user) => user.id === pendingInviteUserTeam.leaderId)
+    : undefined;
+  const inviteConfirmBlockingReason = pendingInviteUserInAnotherTeam
+    ? locale === "en"
+      ? `${pendingInviteUser?.name ?? "This student"} is already a member of ${pendingInviteUserTeam?.name ?? "another team"}.`
+      : `${pendingInviteUser?.name ?? "Sinh viên này"} đã là thành viên của ${pendingInviteUserTeam?.name ?? "một đội khác"}.`
+    : pendingInviteUserInCurrentTeam
+      ? locale === "en"
+        ? "This student is already in your team."
+        : "Sinh viên này đã ở trong đội của bạn."
+      : pendingInviteAlreadyInvited
+        ? locale === "en"
+          ? "There is already a pending invitation for this student."
+          : "Đã có lời mời đang chờ cho sinh viên này."
+        : !isLeader
+          ? locale === "en"
+            ? "Only the team leader can send invitations."
+            : "Chỉ đội trưởng mới có thể gửi lời mời."
+          : teamRosterLocked
+            ? locale === "en"
+              ? "This team roster is locked, so new invitations are paused."
+              : "Đội hình đã được khóa nên không thể gửi thêm lời mời."
+            : isTeamFull || openSlots <= 0
+              ? locale === "en"
+                ? "This team has no open invitation slots right now."
+                : "Đội hiện không còn chỗ trống để gửi lời mời."
+              : "";
+  const canConfirmPendingInvite = Boolean(pendingInviteUser && !inviteConfirmBlockingReason);
 
   const roundJumpTargets = currentTeam
     ? [
@@ -614,6 +659,16 @@ export function DashboardPage() {
       ...current,
       [round]: createSubmissionFormState(),
     }));
+  };
+
+  const handleConfirmInvite = () => {
+    if (!pendingInviteUser || !canConfirmPendingInvite) {
+      return;
+    }
+
+    const userId = pendingInviteUser.id;
+    setPendingInviteUserId(null);
+    inviteUser(userId);
   };
 
   const hasActionInbox =
@@ -1285,8 +1340,8 @@ export function DashboardPage() {
                               ? "All remaining slots are currently reserved by pending invites."
                               : "Tất cả chỗ trống còn lại hiện đang được giữ bởi các lời mời đang chờ."
                             : locale === "en"
-                              ? "Search across students who are not currently members of any team."
-                              : "Tìm trong danh sách sinh viên hiện chưa là thành viên của bất kỳ đội nào."}
+                              ? "Search student accounts, then confirm eligibility before sending an invitation."
+                              : "Tìm tài khoản sinh viên và xác nhận điều kiện trước khi gửi lời mời."}
                     </p>
                   </div>
                   <StatusPill tone={teamRosterLocked || isTeamFull ? "warning" : "info"}>
@@ -1316,8 +1371,10 @@ export function DashboardPage() {
 
                 <div className="mt-4 max-h-[420px] space-y-3 overflow-y-auto pr-1">
                   {filteredAvailableUsers.map((user) => {
+                    const userTeam = getTeamForUser(user.id, teams);
+                    const isInAnotherTeam = Boolean(userTeam && userTeam.id !== currentTeam.id);
                     const alreadyInvited = sentInvitations.some((invitation) => invitation.toUserId === user.id);
-                    const canInvite = Boolean(
+                    const canOpenInviteConfirm = Boolean(
                       isLeader && !alreadyInvited && openSlots > 0 && !isTeamFull && !teamRosterLocked,
                     );
 
@@ -1332,12 +1389,19 @@ export function DashboardPage() {
                             <p className="text-sm font-semibold theme-text-strong">{user.name}</p>
                             <p className="text-xs theme-text-soft">{user.university}</p>
                             <p className="mt-1 text-xs theme-text-faint">{user.major}</p>
+                            {isInAnotherTeam ? (
+                              <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-200">
+                                {locale === "en"
+                                  ? `Already in ${userTeam?.name ?? "another team"}`
+                                  : `Đã ở ${userTeam?.name ?? "một đội khác"}`}
+                              </p>
+                            ) : null}
                           </div>
                         </div>
                         <button
                           type="button"
-                          disabled={!canInvite}
-                          onClick={() => inviteUser(user.id)}
+                          disabled={!canOpenInviteConfirm}
+                          onClick={() => setPendingInviteUserId(user.id)}
                           className="inline-flex items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           <UserPlus2 className="h-4 w-4" />
@@ -1345,6 +1409,10 @@ export function DashboardPage() {
                             ? locale === "en"
                               ? "Invite pending"
                               : "Đang chờ"
+                            : isInAnotherTeam
+                              ? locale === "en"
+                                ? "Review"
+                                : "Xem thông tin"
                             : locale === "en"
                               ? "Invite"
                               : "Mời vào đội"}
@@ -1361,15 +1429,15 @@ export function DashboardPage() {
                           : "Đội hình hiện đang bị khóa nên danh sách mời thêm thành viên đang được tắt có chủ đích."
                         : !inviteSearch.trim()
                           ? locale === "en"
-                            ? "Start typing in the search box to look for students who are not in any team yet."
-                            : "Hãy bắt đầu gõ trong ô tìm kiếm để tìm sinh viên hiện chưa thuộc đội nào."
+                            ? "Start typing in the search box to look for student accounts."
+                            : "Hãy bắt đầu gõ trong ô tìm kiếm để tìm tài khoản sinh viên."
                         : inviteSearch.trim()
                           ? locale === "en"
-                            ? "No available free-agent students match this search."
-                            : "Không có sinh viên chưa vào đội nào phù hợp với từ khóa tìm kiếm này."
+                            ? "No student accounts match this search."
+                            : "Không có tài khoản sinh viên phù hợp với từ khóa tìm kiếm này."
                           : locale === "en"
-                            ? "No free-agent students are available right now."
-                            : "Hiện không có sinh viên tự do nào để mời vào đội."}
+                            ? "No student accounts are available right now."
+                            : "Hiện không có tài khoản sinh viên nào để hiển thị."}
                     </div>
                   ) : null}
                 </div>
@@ -2071,6 +2139,141 @@ export function DashboardPage() {
           </Surface>
         </section>
       )}
+      {pendingInviteUser ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="invite-confirm-title"
+        >
+          <div className="theme-panel theme-card-shadow w-full max-w-2xl overflow-hidden rounded-[2rem] border theme-border">
+            <div className="flex items-start justify-between gap-4 border-b theme-border px-5 py-5 md:px-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200/80">
+                  {locale === "en" ? "Invite confirmation" : "Xác nhận lời mời"}
+                </p>
+                <h2 id="invite-confirm-title" className="mt-2 theme-heading text-2xl font-semibold theme-text-strong">
+                  {locale === "en" ? "Confirm this teammate before sending" : "Kiểm tra thành viên trước khi gửi"}
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-7 theme-text-muted">
+                  {locale === "en"
+                    ? "Review the selected student and their current team status. The final invite button is available only for students who are not already in another team."
+                    : "Xem lại thông tin sinh viên và trạng thái đội hiện tại. Nút gửi lời mời chỉ mở khi sinh viên chưa thuộc đội khác."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingInviteUserId(null)}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border theme-border theme-panel-subtle theme-text-soft transition hover:bg-white/75 dark:hover:bg-white/8"
+                aria-label={locale === "en" ? "Close invite confirmation" : "Đóng xác nhận lời mời"}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid gap-4 px-5 py-5 md:grid-cols-[minmax(0,1fr)_260px] md:px-6">
+              <div className="rounded-[1.5rem] border theme-border bg-white/60 px-4 py-4 dark:bg-white/4">
+                <div className="flex items-start gap-4">
+                  <GradientAvatar
+                    label={pendingInviteUser.name}
+                    tone={pendingInviteUser.avatarTone}
+                    imageSrc={pendingInviteUser.avatarImageSrc}
+                    className="h-16 w-16 text-base"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-lg font-semibold theme-text-strong">{pendingInviteUser.name}</p>
+                    <p className="mt-1 truncate text-sm theme-text-muted">{pendingInviteUser.email}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <StatusPill>{pendingInviteUser.studentId || (locale === "en" ? "No student ID" : "Chưa có mã sinh viên")}</StatusPill>
+                      <StatusPill>{pendingInviteUser.classYear || (locale === "en" ? "No class year" : "Chưa có năm học")}</StatusPill>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+                  <div className="rounded-[1.15rem] border theme-border theme-panel-subtle px-3 py-3">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "University" : "Trường"}
+                    </p>
+                    <p className="mt-2 font-semibold theme-text-strong">{pendingInviteUser.university || "—"}</p>
+                  </div>
+                  <div className="rounded-[1.15rem] border theme-border theme-panel-subtle px-3 py-3">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {locale === "en" ? "Major" : "Ngành"}
+                    </p>
+                    <p className="mt-2 font-semibold theme-text-strong">{pendingInviteUser.major || "—"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className={`rounded-[1.5rem] border px-4 py-4 ${
+                  pendingInviteUserInAnotherTeam
+                    ? "border-amber-400/35 bg-amber-400/12"
+                    : "border-emerald-400/30 bg-emerald-400/12"
+                }`}
+              >
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
+                  {locale === "en" ? "Team status" : "Trạng thái đội"}
+                </p>
+                <p className="mt-3 text-lg font-semibold theme-text-strong">
+                  {pendingInviteUserInAnotherTeam
+                    ? locale === "en"
+                      ? "Already in another team"
+                      : "Đã thuộc đội khác"
+                    : locale === "en"
+                      ? "Available to invite"
+                      : "Có thể mời"}
+                </p>
+                <p className="mt-3 text-sm leading-7 theme-text-muted">
+                  {pendingInviteUserInAnotherTeam
+                    ? locale === "en"
+                      ? `${pendingInviteUser.name} is currently listed in ${pendingInviteUserTeam?.name ?? "another team"}.`
+                      : `${pendingInviteUser.name} hiện đang thuộc ${pendingInviteUserTeam?.name ?? "một đội khác"}.`
+                    : locale === "en"
+                      ? "This student is not attached to another team in the current workspace."
+                      : "Sinh viên này hiện chưa thuộc đội khác trong workspace."}
+                </p>
+                {pendingInviteUserInAnotherTeam && pendingInviteUserTeam ? (
+                  <div className="mt-4 rounded-[1.15rem] border theme-border bg-white/55 px-3 py-3 text-sm dark:bg-white/5">
+                    <p className="font-semibold theme-text-strong">{pendingInviteUserTeam.name}</p>
+                    <p className="mt-1 theme-text-soft">
+                      {locale === "en" ? "Team code" : "Mã đội"} · {pendingInviteUserTeam.tag}
+                    </p>
+                    <p className="mt-1 theme-text-soft">
+                      {locale === "en" ? "Leader" : "Đội trưởng"} · {pendingInviteTeamLeader?.name ?? "—"}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {inviteConfirmBlockingReason ? (
+              <div className="mx-5 rounded-[1.25rem] border border-amber-400/35 bg-amber-400/12 px-4 py-3 text-sm leading-7 text-amber-800 dark:text-amber-100 md:mx-6">
+                {inviteConfirmBlockingReason}
+              </div>
+            ) : null}
+
+            <div className="flex flex-col-reverse gap-3 px-5 py-5 md:flex-row md:justify-end md:px-6">
+              <button
+                type="button"
+                onClick={() => setPendingInviteUserId(null)}
+                className="inline-flex items-center justify-center rounded-2xl border theme-border-strong theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+              >
+                {locale === "en" ? "Cancel" : "Hủy"}
+              </button>
+              <button
+                type="button"
+                disabled={!canConfirmPendingInvite}
+                onClick={handleConfirmInvite}
+                className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <UserPlus2 className="h-4 w-4" />
+                {locale === "en" ? "Send invitation" : "Gửi lời mời"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
