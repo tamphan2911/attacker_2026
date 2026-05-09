@@ -4,9 +4,15 @@ import { getCurrentDbUser } from "@/server/auth-helpers";
 import { unauthorizedResponse, serviceResultToResponse } from "@/server/route-utils";
 import { inviteUserToTeam } from "@/server/team-service";
 
-const inviteSchema = z.object({
-  userId: z.string().trim().min(1),
-});
+const inviteSchema = z
+  .object({
+    userId: z.string().trim().min(1).optional(),
+    targetUserId: z.string().trim().min(1).optional(),
+  })
+  .refine((payload) => payload.userId || payload.targetUserId, {
+    message: "A target user id is required.",
+    path: ["userId"],
+  });
 
 export async function POST(
   request: Request,
@@ -26,6 +32,6 @@ export async function POST(
   }
 
   const { teamId } = await params;
-  const result = await inviteUserToTeam(user.id, teamId, payload.data.userId);
+  const result = await inviteUserToTeam(user.id, teamId, payload.data.userId ?? payload.data.targetUserId!);
   return serviceResultToResponse(result);
 }

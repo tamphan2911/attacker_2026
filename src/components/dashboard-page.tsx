@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Camera,
   Check,
+  ChevronDown,
   Crown,
   FolderClock,
   LockKeyhole,
@@ -1180,23 +1181,28 @@ export function DashboardPage() {
                     <span className="text-sm theme-text-muted">
                       {locale === "en" ? "Transfer leadership" : "Chuyển đội trưởng"}
                     </span>
-                    <select
-                      disabled={!isLeader || Boolean(outgoingLeadershipTransfer) || teamRosterLocked}
-                      value={leadershipTargetId}
-                      onChange={(event) => setLeadershipTargetId(event.target.value)}
-                      className="w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none disabled:opacity-40"
-                    >
-                      <option value="" className="bg-slate-950">
-                        {locale === "en" ? "Select teammate" : "Chọn thành viên"}
-                      </option>
-                      {currentTeamMembers
-                        .filter((member) => member.id !== activeUserId)
-                        .map((member) => (
-                          <option key={member.id} value={member.id} className="bg-slate-950">
-                            {member.name}
-                          </option>
-                        ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        disabled={!isLeader || Boolean(outgoingLeadershipTransfer) || teamRosterLocked}
+                        value={leadershipTargetId}
+                        onChange={(event) => setLeadershipTargetId(event.target.value)}
+                        className="w-full appearance-none rounded-2xl border theme-border theme-panel px-4 py-3 pr-11 text-sm font-semibold theme-text-strong outline-none transition focus:border-sky-400/50 focus:ring-4 focus:ring-sky-400/12 disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        <option value="" className="bg-slate-950">
+                          {locale === "en" ? "Select teammate" : "Chọn thành viên"}
+                        </option>
+                        {currentTeamMembers
+                          .filter((member) => member.id !== activeUserId)
+                          .map((member) => (
+                            <option key={member.id} value={member.id} className="bg-slate-950">
+                              {member.name}
+                            </option>
+                          ))}
+                      </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border theme-border bg-white/65 theme-text-soft dark:bg-white/8">
+                        <ChevronDown className="h-4 w-4" />
+                      </span>
+                    </div>
                   </label>
 
                   <div className="grid gap-3 sm:grid-cols-2">

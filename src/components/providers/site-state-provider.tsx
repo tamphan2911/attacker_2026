@@ -1999,7 +1999,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
         },
         credentials: "same-origin",
-        body: JSON.stringify({ targetUserId: userId }),
+        body: JSON.stringify({ userId }),
       });
 
       if (!response.ok) {
