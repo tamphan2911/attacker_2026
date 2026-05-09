@@ -1609,8 +1609,8 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 </Surface>
               </>
             ) : (
-              <>
-                <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <div className="flex flex-col gap-8">
+                <Surface className="order-2 space-y-5 px-5 py-5 md:px-6 md:py-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <BlockIntro
                       title="FAQ / Topics"
@@ -1708,7 +1708,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                   </div>
                 </Surface>
 
-                <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                <Surface className="order-1 space-y-5 px-5 py-5 md:px-6 md:py-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <BlockIntro
                       title="FAQ / Questions"
@@ -1836,7 +1836,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                     })}
                   </div>
                 </Surface>
-              </>
+              </div>
             )}
           </>
         ) : null}
