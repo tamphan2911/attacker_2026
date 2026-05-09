@@ -38,7 +38,7 @@ export function FaqPage() {
             description={description}
           />
 
-          <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)]">
+          <div className="flex flex-wrap items-center gap-3">
             <a
               href={pageContent.contact.ftcFacebookUrl}
               target="_blank"
@@ -49,13 +49,12 @@ export function FaqPage() {
               {pickText(locale, pageContent.contact.ftcFacebookLabel)}
               <ExternalLink className="h-4 w-4" />
             </a>
-            <a
-              href={`mailto:${pageContent.contact.officialEmailValue}`}
-              className="theme-panel-subtle inline-flex min-h-12 items-center gap-3 rounded-[1rem] border theme-border px-4 text-sm font-semibold theme-text-strong transition hover:border-[var(--brand)]"
+            <span
+              className="theme-panel-subtle inline-flex min-h-12 w-fit max-w-full items-center gap-3 rounded-[1rem] border theme-border px-4 text-sm font-semibold theme-text-strong"
             >
               <Mail className="h-4 w-4 text-sky-500" />
               <span className="truncate">{pageContent.contact.officialEmailValue}</span>
-            </a>
+            </span>
           </div>
         </div>
 
