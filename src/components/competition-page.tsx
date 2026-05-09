@@ -130,7 +130,7 @@ export function CompetitionPage() {
         ))}
       </section>
 
-      <section className="space-y-8">
+      <section id="competition-journey" className="scroll-mt-28 space-y-8">
         <SectionHeading
           eyebrow={pickText(locale, pageContent.competition.rounds.eyebrow)}
           title={pickText(locale, pageContent.competition.rounds.title)}

@@ -467,7 +467,7 @@ export function HomePage() {
           </div>
 
           <div className="flex justify-end">
-            <Link href="/organizer" className="inline-flex items-center justify-center gap-2 text-sm font-semibold theme-accent md:justify-end">
+            <Link href="/competition#competition-journey" className="inline-flex items-center justify-center gap-2 text-sm font-semibold theme-accent md:justify-end">
               {pickText(locale, pageContent.home.testimonialsLinkLabel)}
               <ArrowRight className="h-4 w-4" />
             </Link>
