@@ -802,7 +802,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   const { locale, pageContent, savePageContent } = useSiteState();
   useAdminTitleScroll();
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
-  const [faqEditorTab, setFaqEditorTab] = useState<"questions" | "page">("questions");
+  const [faqEditorTab, setFaqEditorTab] = useState<"questions" | "topics" | "page">("questions");
   const [expandedFaqItems, setExpandedFaqItems] = useState<Set<string>>(() => new Set());
   const [faqSaveMessage, setFaqSaveMessage] = useState<{ key: string; text: string } | null>(null);
   const [pendingFaqDelete, setPendingFaqDelete] = useState<{
@@ -1577,12 +1577,13 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <BlockIntro
                   title="FAQ editor"
-                  description="Switch between topic/question management and the general text shown at the top of the FAQ page."
+                  description="Switch between questions, topics, and the general text shown at the top of the FAQ page."
                 />
                 <div className="theme-panel-subtle inline-flex rounded-full border theme-border p-1">
                   {[
-                    { id: "questions" as const, label: locale === "en" ? "Topics & questions" : "Chủ đề & câu hỏi", icon: Tags },
-                    { id: "page" as const, label: locale === "en" ? "Page text" : "Text của trang", icon: FileText },
+                    { id: "questions" as const, label: locale === "en" ? "Questions" : "Câu hỏi", icon: CircleHelp },
+                    { id: "topics" as const, label: locale === "en" ? "Topics" : "Chủ đề", icon: Tags },
+                    { id: "page" as const, label: locale === "en" ? "Text edit" : "Sửa nội dung", icon: FileText },
                   ].map((tab) => {
                     const Icon = tab.icon;
                     const isActive = faqEditorTab === tab.id;
@@ -1655,9 +1656,10 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                   />
                 </Surface>
               </>
-            ) : (
-              <div className="flex flex-col gap-8">
-                <Surface className="order-2 space-y-5 px-5 py-5 md:px-6 md:py-6">
+            ) : null}
+
+            {faqEditorTab === "topics" ? (
+                <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <BlockIntro
                       title="FAQ / Topics"
@@ -1772,8 +1774,10 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                     ))}
                   </div>
                 </Surface>
+            ) : null}
 
-                <Surface className="order-1 space-y-5 px-5 py-5 md:px-6 md:py-6">
+            {faqEditorTab === "questions" ? (
+                <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
                   <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                     <BlockIntro
                       title="FAQ / Questions"
@@ -1921,8 +1925,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                     })}
                   </div>
                 </Surface>
-              </div>
-            )}
+            ) : null}
           </>
         ) : null}
 
