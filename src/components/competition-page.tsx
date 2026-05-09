@@ -271,7 +271,7 @@ export function CompetitionPage() {
         </div>
       </section>
 
-      <OrganizerContent showGallery={false} />
+      <OrganizerContent showGallery={false} showSeasonIntroCopy={false} />
     </div>
   );
 }
