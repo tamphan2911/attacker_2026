@@ -3,13 +3,9 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Building2,
-  Mail,
+  Camera,
   PencilLine,
-  Phone,
-  School,
   Upload,
-  UserRound,
   Users2,
 } from "lucide-react";
 import { useEffect, useState, type ChangeEvent } from "react";
@@ -17,8 +13,7 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { ALLOWED_AVATAR_IMAGE_TYPES, MAX_AVATAR_IMAGE_BYTES, formatAvatarFileSize } from "@/lib/avatar-images";
-import { getTeamCompetitionState, pickCompetitionStateLabel } from "@/lib/competition";
-import { pickText } from "@/lib/site";
+import { getTeamCompetitionState, pickCompetitionStateLabel, pickRound1LockStatusLabel } from "@/lib/competition";
 
 interface ProfileFormState {
   name: string;
@@ -62,39 +57,12 @@ function readImageFileAsDataUrl(file: File) {
   });
 }
 
-function pickRoleLabel(locale: ReturnType<typeof useSiteState>["locale"], role: ReturnType<typeof useSiteState>["currentUser"]["role"]) {
-  if (locale === "en") {
-    switch (role) {
-      case "admin":
-        return "Administrator";
-      case "moderator":
-        return "Moderator";
-      case "judge":
-        return "Judge";
-      case "student":
-      default:
-        return "Participant";
-    }
+function pickTeamUserRoleLabel(locale: ReturnType<typeof useSiteState>["locale"], isLeader: boolean) {
+  if (isLeader) {
+    return locale === "en" ? "Leader" : "Đội trưởng";
   }
 
-  switch (role) {
-    case "admin":
-      return "Quản trị viên";
-    case "moderator":
-      return "Điều phối viên";
-    case "judge":
-      return "Giám khảo";
-    default:
-      return "Thí sinh";
-  }
-}
-
-function pickProviderLabel(locale: ReturnType<typeof useSiteState>["locale"], provider: "email" | "google") {
-  if (provider === "google") {
-    return "Google";
-  }
-
-  return locale === "en" ? "Email" : "Email";
+  return locale === "en" ? "Member" : "Thành viên";
 }
 
 function AuthRequiredState({
@@ -370,7 +338,43 @@ function ProfileEditor({
 }
 
 export function ProfilePage() {
-  const { authStatus, isAuthenticated, locale, currentUser, currentTeam, judges } = useSiteState();
+  const { authStatus, isAuthenticated, locale, currentUser, currentTeam, updateActiveUserProfile } = useSiteState();
+  const [avatarError, setAvatarError] = useState("");
+
+  const handleProfileAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    if (!ALLOWED_AVATAR_IMAGE_TYPES.has(file.type)) {
+      setAvatarError(
+        locale === "en"
+          ? "Only JPEG, PNG, WebP, or GIF images are allowed."
+          : "Chỉ chấp nhận ảnh JPEG, PNG, WebP hoặc GIF.",
+      );
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_IMAGE_BYTES) {
+      setAvatarError(
+        locale === "en"
+          ? `Avatar images must be ${formatAvatarFileSize(MAX_AVATAR_IMAGE_BYTES)} or smaller.`
+          : `Ảnh avatar phải có dung lượng ${formatAvatarFileSize(MAX_AVATAR_IMAGE_BYTES)} trở xuống.`,
+      );
+      return;
+    }
+
+    try {
+      const imageSrc = await readImageFileAsDataUrl(file);
+      setAvatarError("");
+      updateActiveUserProfile({ avatarImageSrc: imageSrc });
+    } catch {
+      setAvatarError(locale === "en" ? "Could not read this image file." : "Không thể đọc tệp ảnh này.");
+    }
+  };
 
   if (authStatus === "loading") {
     return (
@@ -395,408 +399,157 @@ export function ProfilePage() {
   }
 
   const currentTeamState = currentTeam ? getTeamCompetitionState(currentTeam) : undefined;
-  const currentJudgeProfile =
-    currentUser.role === "judge" && currentUser.judgeProfileId
-      ? judges.find((judge) => judge.id === currentUser.judgeProfileId)
-      : undefined;
-  const providerLabel = currentUser.providers.length
-    ? currentUser.providers.map((provider) => pickProviderLabel(locale, provider)).join(" · ")
-    : locale === "en"
-      ? "No provider"
-      : "Chưa có nhà cung cấp";
+  const isTeamLeader = Boolean(currentTeam && currentTeam.leaderId === currentUser.id);
+  const primaryActionHref =
+    currentUser.role === "judge"
+      ? "/judge-dashboard"
+      : currentUser.role === "admin" || currentUser.role === "moderator"
+        ? "/admin"
+        : "/dashboard";
+  const primaryActionLabel =
+    currentUser.role === "judge"
+      ? locale === "en"
+        ? "Judge Dashboard"
+        : "Bảng chấm giám khảo"
+      : currentUser.role === "admin" || currentUser.role === "moderator"
+        ? locale === "en"
+          ? "Admin mode"
+          : "Chế độ admin"
+        : locale === "en"
+          ? "Open workspace"
+          : "Mở không gian đội";
 
   return (
-    <div className="space-y-10">
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_360px]">
-        <Surface className="relative overflow-hidden px-6 py-6 md:px-8 md:py-8">
-          <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(135deg,rgba(23,114,208,0.18),rgba(14,165,233,0.08),transparent)]" />
-          <div className="relative flex flex-col gap-6 md:flex-row md:items-start">
-            <GradientAvatar
-              label={currentUser.name}
-              tone={currentUser.avatarTone}
-              imageSrc={currentUser.avatarImageSrc}
-              className="h-28 w-28 rounded-full text-3xl"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                {locale === "en" ? "User profile" : "Hồ sơ người dùng"}
-              </p>
-              <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.7rem]">
-                {currentUser.name}
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-7 theme-text-muted">
-                {currentUser.bio || (locale === "en" ? "No bio has been added yet." : "Bạn chưa thêm phần giới thiệu.")}
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {currentUser.role === "student" && currentUser.studentId ? (
-                  <StatusPill>{`${locale === "en" ? "Student ID" : "MSSV"} · ${currentUser.studentId}`}</StatusPill>
-                ) : null}
-                <StatusPill>{pickRoleLabel(locale, currentUser.role)}</StatusPill>
-                <StatusPill>{providerLabel}</StatusPill>
-                {currentTeam && currentTeamState ? (
-                  <StatusPill tone={currentTeamState === "not-eligible" ? "warning" : "success"}>
-                    {pickCompetitionStateLabel(locale, currentTeamState)}
-                  </StatusPill>
-                ) : null}
-              </div>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/profile/edit"
-                  className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
-                >
-                  <PencilLine className="h-4 w-4" />
-                  {locale === "en" ? "Edit profile" : "Chỉnh sửa hồ sơ"}
-                </Link>
-                <Link
-                  href={currentUser.role === "judge" ? "/judge-dashboard" : "/dashboard"}
-                  className="inline-flex items-center justify-center gap-2 rounded-[1.4rem] border theme-border theme-panel px-5 py-3.5 text-sm font-semibold theme-text-strong"
-                >
-                  {currentUser.role === "judge"
-                    ? locale === "en"
-                      ? "Judge Dashboard"
-                      : "Bảng chấm giám khảo"
-                    : locale === "en"
-                      ? "Open workspace"
-                      : "Mở không gian đội"}
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </Surface>
-
-        <Surface className="px-5 py-5">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Quick overview" : "Tổng quan nhanh"}
-          </p>
-          <div className="mt-5 space-y-3">
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {currentUser.role === "judge"
-                  ? locale === "en"
-                    ? "Organization"
-                    : "Đơn vị"
-                  : locale === "en"
-                    ? "University"
-                    : "Trường"}
-              </p>
-              <p className="mt-3 text-sm leading-7 theme-text-body">
-                {currentJudgeProfile?.organization || currentUser.university || "--"}
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {currentUser.role === "judge"
-                  ? locale === "en"
-                    ? "Position / rounds"
-                    : "Chức vụ / vòng chấm"
-                  : locale === "en"
-                    ? "Major / class year"
-                    : "Chuyên ngành / năm học"}
-              </p>
-              <p className="mt-3 text-sm leading-7 theme-text-body">
-                {currentUser.role === "judge"
-                  ? `${currentJudgeProfile ? pickText(locale, currentJudgeProfile.role) : currentUser.major || "--"} · ${
-                      currentJudgeProfile?.rounds.length
-                        ? currentJudgeProfile.rounds
-                            .map((round) =>
-                              round === "round-1"
-                                ? locale === "en"
-                                  ? "Round 1"
-                                  : "Vòng 1"
-                                : round === "round-2"
-                                  ? locale === "en"
-                                    ? "Round 2"
-                                    : "Vòng 2"
-                                  : locale === "en"
-                                    ? "Final round"
-                                    : "Chung kết",
-                            )
-                            .join(" · ")
-                        : "--"
-                    }`
-                  : `${currentUser.major} · ${currentUser.classYear}`}
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Contact" : "Liên hệ"}
-              </p>
-              <p className="mt-3 text-sm leading-7 theme-text-body">{currentUser.email}</p>
-              <p className="mt-2 text-sm leading-7 theme-text-soft">
-                {currentUser.phoneNumber || (locale === "en" ? "No phone number yet" : "Chưa có số điện thoại")}
-              </p>
-            </div>
-          </div>
-        </Surface>
-      </section>
-
-      <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <Surface className="px-6 py-6">
-          <div className="flex items-center gap-3">
-            <Mail className="h-5 w-5 text-sky-400" />
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Account email" : "Email tài khoản"}
-              </p>
-              <p className="mt-2 break-words text-sm leading-7 theme-text-body">{currentUser.email}</p>
-            </div>
-          </div>
-        </Surface>
-
-        <Surface className="px-6 py-6">
-          <div className="flex items-center gap-3">
-            <Phone className="h-5 w-5 text-sky-400" />
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Phone number" : "Số điện thoại"}
-              </p>
-              <p className="mt-2 break-words text-sm leading-7 theme-text-body">
-                {currentUser.phoneNumber || (locale === "en" ? "No phone number yet" : "Chưa có số điện thoại")}
-              </p>
-            </div>
-          </div>
-        </Surface>
-
-        <Surface className="px-6 py-6">
-          <div className="flex items-center gap-3">
-            <School className="h-5 w-5 text-sky-400" />
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {currentUser.role === "judge"
-                  ? locale === "en"
-                    ? "Judge role"
-                    : "Vai trò giám khảo"
-                  : locale === "en"
-                    ? "Academic profile"
-                    : "Hồ sơ học tập"}
-              </p>
-              <p className="mt-2 break-words text-sm leading-7 theme-text-body">
-                {currentUser.role === "judge"
-                  ? `${currentJudgeProfile ? pickText(locale, currentJudgeProfile.role) : currentUser.major} · ${currentJudgeProfile?.organization || currentUser.university}`
-                  : `${currentUser.university} · ${currentUser.major}`}
-              </p>
-            </div>
-          </div>
-        </Surface>
-
-        <Surface className="px-6 py-6">
-          <div className="flex items-center gap-3">
-            <UserRound className="h-5 w-5 text-sky-400" />
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Profile status" : "Trạng thái hồ sơ"}
-              </p>
-              <p className="mt-2 break-words text-sm leading-7 theme-text-body">{pickRoleLabel(locale, currentUser.role)}</p>
-            </div>
-          </div>
-        </Surface>
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)]">
-        <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <SectionHeading
-            eyebrow={locale === "en" ? "Profile details" : "Chi tiết hồ sơ"}
-            title={locale === "en" ? "Profile details" : "Chi tiết hồ sơ"}
+    <Surface className="relative overflow-hidden px-6 py-6 md:px-8 md:py-8">
+      <div className="absolute inset-x-0 top-0 h-32 bg-[linear-gradient(135deg,rgba(23,114,208,0.18),rgba(14,165,233,0.08),transparent)]" />
+      <div className="relative flex flex-col gap-6 md:flex-row md:items-start">
+        <div className="relative w-fit shrink-0">
+          <GradientAvatar
+            label={currentUser.name}
+            tone={currentUser.avatarTone}
+            imageSrc={currentUser.avatarImageSrc}
+            className="h-28 w-28 rounded-full text-3xl"
           />
+          <label
+            className="theme-button-primary absolute -bottom-1 -right-1 inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border border-white/40 p-0 shadow-[0_16px_34px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5 active:translate-y-0"
+            aria-label={locale === "en" ? "Upload or edit avatar" : "Tải lên hoặc đổi avatar"}
+            title={locale === "en" ? "Upload or edit avatar" : "Tải lên hoặc đổi avatar"}
+          >
+            <Camera className="h-4 w-4" />
+            <input type="file" accept="image/*" onChange={(event) => void handleProfileAvatarUpload(event)} className="hidden" />
+          </label>
+        </div>
 
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Full name" : "Họ và tên"}
-              </p>
-              <p className="mt-3 text-sm theme-text-body">{currentUser.name}</p>
-            </div>
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {currentUser.role === "judge"
-                  ? locale === "en"
-                    ? "Judge profile ID"
-                    : "Mã hồ sơ giám khảo"
-                  : locale === "en"
-                    ? "Student ID"
-                    : "Mã số sinh viên"}
-              </p>
-              <p className="mt-3 text-sm theme-text-body">
-                {currentUser.role === "judge" ? currentUser.judgeProfileId || "--" : currentUser.studentId || "--"}
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Phone number" : "Số điện thoại"}
-              </p>
-              <p className="mt-3 text-sm theme-text-body">
-                {currentUser.phoneNumber || "--"}
-              </p>
-            </div>
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {currentUser.role === "judge"
-                  ? locale === "en"
-                    ? "Organization"
-                    : "Đơn vị"
-                  : locale === "en"
-                    ? "University"
-                    : "Trường"}
-              </p>
-              <p className="mt-3 text-sm theme-text-body">{currentJudgeProfile?.organization || currentUser.university || "--"}</p>
-            </div>
-            <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {currentUser.role === "judge"
-                  ? locale === "en"
-                    ? "Assigned rounds"
-                    : "Vòng phụ trách"
-                  : locale === "en"
-                    ? "Class year"
-                    : "Khóa / năm học"}
-              </p>
-              <p className="mt-3 text-sm theme-text-body">
-                {currentUser.role === "judge"
-                  ? currentJudgeProfile?.rounds.length
-                    ? currentJudgeProfile.rounds
-                        .map((round) =>
-                          round === "round-1"
-                            ? locale === "en"
-                              ? "Round 1"
-                              : "Vòng 1"
-                            : round === "round-2"
-                              ? locale === "en"
-                                ? "Round 2"
-                                : "Vòng 2"
-                              : locale === "en"
-                                ? "Final round"
-                                : "Chung kết",
-                        )
-                        .join(" · ")
-                    : "--"
-                  : currentUser.classYear}
-              </p>
-            </div>
-          </div>
-        </Surface>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-600 dark:text-sky-200/80">
+            {locale === "en" ? "User profile" : "Hồ sơ người dùng"}
+          </p>
+          <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong md:text-[2.7rem]">
+            {currentUser.name}
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-7 theme-text-muted">
+            {currentUser.bio || (locale === "en" ? "No bio has been added yet." : "Bạn chưa thêm phần giới thiệu.")}
+          </p>
 
-        <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <div className="flex items-center gap-3">
-            <Users2 className="h-5 w-5 text-sky-400" />
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {currentUser.role === "judge"
-                  ? locale === "en"
-                    ? "Judge assignment"
-                    : "Phân công giám khảo"
-                  : locale === "en"
-                    ? "Current team"
-                    : "Đội hiện tại"}
-              </p>
-              <p className="mt-2 text-lg font-semibold theme-text-strong">
-                {currentUser.role === "judge"
-                  ? currentJudgeProfile
+          {avatarError ? (
+            <p className="mt-4 rounded-2xl border border-rose-400/24 bg-rose-500/10 px-4 py-3 text-sm leading-6 text-rose-700 dark:text-rose-100">
+              {avatarError}
+            </p>
+          ) : null}
+
+          <div className="mt-7 rounded-[1.8rem] border theme-border theme-panel-subtle px-5 py-5">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-sky-500/18 bg-sky-500/10 text-sky-600 dark:text-sky-200">
+                <Users2 className="h-4.5 w-4.5" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                  {locale === "en" ? "Team information" : "Thông tin đội"}
+                </p>
+                <p className="mt-1 text-sm theme-text-soft">
+                  {currentTeam
                     ? locale === "en"
-                      ? "Assigned judging rounds"
-                      : "Các vòng được phân công chấm"
+                      ? "Current team details connected to this account."
+                      : "Thông tin đội hiện đang gắn với tài khoản này."
                     : locale === "en"
-                      ? "No linked judge profile"
-                      : "Chưa có hồ sơ giám khảo liên kết"
-                  : currentTeam
-                    ? currentTeam.name
-                    : locale === "en"
-                      ? "No team yet"
-                      : "Chưa tham gia đội"}
-              </p>
-            </div>
-          </div>
-
-          {currentUser.role === "judge" ? (
-            <div className="mt-5 rounded-[1.6rem] border theme-border theme-panel px-5 py-5">
-              <div className="flex flex-wrap gap-2">
-                {currentJudgeProfile?.rounds.map((round) => (
-                  <StatusPill key={round} tone={round === "round-1" ? "info" : round === "round-2" ? "success" : "warning"}>
-                    {round === "round-1"
-                      ? locale === "en"
-                        ? "Round 1"
-                        : "Vòng 1"
-                      : round === "round-2"
-                        ? locale === "en"
-                          ? "Round 2"
-                          : "Vòng 2"
-                        : locale === "en"
-                          ? "Final round"
-                          : "Chung kết"}
-                  </StatusPill>
-                )) ?? null}
-              </div>
-              <p className="mt-4 text-sm leading-7 theme-text-muted">
-                {locale === "en"
-                  ? "Use the judge dashboard to open assigned scoring tasks, read essay responses, download team reports, and save your own judge score."
-                  : "Hãy dùng bảng chấm giám khảo để mở các đầu việc được phân công, đọc phần tự luận, tải báo cáo đội thi và lưu điểm chấm riêng của chính bạn."}
-              </p>
-
-              <Link
-                href="/judge-dashboard"
-                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold theme-accent"
-              >
-                {locale === "en" ? "Open judge dashboard" : "Mở bảng chấm giám khảo"}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          ) : currentTeam ? (
-            <div className="mt-5 rounded-[1.6rem] border theme-border theme-panel px-5 py-5">
-              <div className="flex items-start gap-4">
-                <GradientAvatar
-                  label={currentTeam.name}
-                  tone={currentTeam.avatarTone}
-                  imageSrc={currentTeam.avatarImageSrc}
-                  className="h-16 w-16 rounded-full text-lg"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap gap-2">
-                    <StatusPill>{currentTeam.tag}</StatusPill>
-                    {currentTeamState ? (
-                      <StatusPill tone={currentTeamState === "not-eligible" ? "warning" : "success"}>
-                        {pickCompetitionStateLabel(locale, currentTeamState)}
-                      </StatusPill>
-                    ) : null}
-                  </div>
-                  <p className="mt-4 text-sm leading-7 theme-text-muted">{currentTeam.bio}</p>
-                  <p className="mt-4 text-sm theme-text-soft">
-                    {locale === "en"
-                      ? `${currentTeam.memberIds.length} members currently in the roster.`
-                      : `${currentTeam.memberIds.length} thành viên hiện có trong đội hình.`}
-                  </p>
-                </div>
-              </div>
-
-              <Link
-                href="/dashboard"
-                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold theme-accent"
-              >
-                {locale === "en" ? "Open team workspace" : "Mở không gian đội"}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          ) : (
-            <div className="mt-5 rounded-[1.6rem] border theme-border theme-panel px-5 py-5">
-              <div className="flex items-center gap-3">
-                <Building2 className="h-5 w-5 text-sky-400" />
-                <p className="text-sm leading-7 theme-text-muted">
-                  {locale === "en"
-                    ? "You can browse the competition pages now and create or join a team when you are ready."
-                    : "Bạn có thể xem các trang thông tin trước, sau đó tạo hoặc tham gia đội khi đã sẵn sàng."}
+                      ? "This account is not currently connected to a team."
+                      : "Tài khoản này hiện chưa gắn với đội thi."}
                 </p>
               </div>
-              <Link
-                href="/dashboard"
-                className="mt-5 inline-flex items-center gap-2 text-sm font-semibold theme-accent"
-              >
-                {locale === "en" ? "Go to team workspace" : "Đi tới không gian đội"}
-                <ArrowRight className="h-4 w-4" />
-              </Link>
             </div>
-          )}
-        </Surface>
-      </section>
-    </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-[1.35rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.04]">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] theme-text-soft">
+                  {locale === "en" ? "Team name" : "Tên đội"}
+                </p>
+                <p className="mt-2 text-sm font-semibold theme-text-strong">
+                  {currentTeam?.name || (locale === "en" ? "No team yet" : "Chưa có đội")}
+                </p>
+              </div>
+              <div className="rounded-[1.35rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.04]">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] theme-text-soft">
+                  {locale === "en" ? "Team status" : "Trạng thái đội"}
+                </p>
+                <p className="mt-2 text-sm font-semibold theme-text-strong">
+                  {currentTeam
+                    ? pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)
+                    : locale === "en"
+                      ? "Not available"
+                      : "Chưa có"}
+                </p>
+              </div>
+              <div className="rounded-[1.35rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.04]">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] theme-text-soft">
+                  {locale === "en" ? "Members" : "Số thành viên"}
+                </p>
+                <p className="mt-2 text-sm font-semibold theme-text-strong">
+                  {currentTeam
+                    ? locale === "en"
+                      ? `${currentTeam.memberIds.length} members`
+                      : `${currentTeam.memberIds.length} thành viên`
+                    : "--"}
+                </p>
+              </div>
+              <div className="rounded-[1.35rem] border theme-border bg-white/70 px-4 py-4 dark:bg-white/[0.04]">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.2em] theme-text-soft">
+                  {locale === "en" ? "Your role" : "Vai trò của bạn"}
+                </p>
+                <p className="mt-2 text-sm font-semibold theme-text-strong">
+                  {currentTeam ? pickTeamUserRoleLabel(locale, isTeamLeader) : "--"}
+                </p>
+              </div>
+            </div>
+
+            {currentTeam && currentTeamState ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <StatusPill tone={currentTeamState === "not-eligible" ? "warning" : "success"}>
+                  {pickCompetitionStateLabel(locale, currentTeamState)}
+                </StatusPill>
+                <StatusPill>{currentTeam.tag}</StatusPill>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/profile/edit"
+              className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
+            >
+              <PencilLine className="h-4 w-4" />
+              {locale === "en" ? "Edit profile" : "Chỉnh sửa hồ sơ"}
+            </Link>
+            <Link
+              href={primaryActionHref}
+              className="inline-flex items-center justify-center gap-2 rounded-[1.4rem] border theme-border theme-panel px-5 py-3.5 text-sm font-semibold theme-text-strong"
+            >
+              {primaryActionLabel}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </Surface>
   );
 }
 
