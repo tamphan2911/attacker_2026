@@ -1133,8 +1133,8 @@ export const defaultPageContent: SitePageContent = {
         vi: "Điều kiện, cách chấm điểm và việc đi tiếp được làm rõ ngay từ đầu.",
       },
       description: {
-        en: "This matters especially for Round 1 eligibility, team-average scoring, and the rules around team switching.",
-        vi: "Điều này đặc biệt quan trọng với điều kiện vào Vòng 1, cơ chế điểm trung bình đội và các quy tắc chuyển đội.",
+        en: "If you have further questions, contact the organizer through the FTC Facebook page below or the official email listed here.",
+        vi: "Nếu bạn có câu hỏi khác, hãy liên hệ ban tổ chức qua Fanpage FTC bên dưới hoặc email chính thức được nêu trong khung bên dưới.",
       },
     },
   },
