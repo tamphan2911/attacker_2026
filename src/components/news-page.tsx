@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Filter, Search, Tag, X } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 
 import { formatDateLabel, pickText } from "@/lib/site";
@@ -27,13 +27,41 @@ function buildVisiblePages(page: number, pageCount: number) {
 export function NewsPage() {
   const { locale, newsPosts, pageContent } = useSiteState();
   const [query, setQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
   const [pageState, setPageState] = useState(1);
   const deferredQuery = useDeferredValue(query);
+
+  const categoryOptions = useMemo(() => {
+    const optionMap = new Map<string, string>();
+
+    for (const post of newsPosts) {
+      const key = `${post.category.en}|||${post.category.vi}`;
+      optionMap.set(key, pickText(locale, post.category));
+    }
+
+    return Array.from(optionMap.entries()).sort((left, right) =>
+      left[1].localeCompare(right[1], locale === "vi" ? "vi-VN" : "en-US", { sensitivity: "base" }),
+    );
+  }, [locale, newsPosts]);
+
+  const tagOptions = useMemo(
+    () =>
+      Array.from(new Set(newsPosts.flatMap((post) => post.tags)))
+        .filter(Boolean)
+        .sort((left, right) => left.localeCompare(right, locale === "vi" ? "vi-VN" : "en-US", { sensitivity: "base" })),
+    [locale, newsPosts],
+  );
+
+  const hasActiveFilters = query.trim().length > 0 || categoryFilter !== "all" || tagFilter !== "all";
 
   const filteredPosts = useMemo(() => {
     const normalizedQuery = deferredQuery.trim().toLowerCase();
 
     return newsPosts.filter((post) => {
+      const categoryKey = `${post.category.en}|||${post.category.vi}`;
+      const matchesCategory = categoryFilter === "all" || categoryFilter === categoryKey;
+      const matchesTag = tagFilter === "all" || post.tags.includes(tagFilter);
       const matchesQuery =
         normalizedQuery.length === 0 ||
         [
@@ -49,9 +77,9 @@ export function NewsPage() {
           .toLowerCase()
           .includes(normalizedQuery);
 
-      return matchesQuery;
+      return matchesCategory && matchesTag && matchesQuery;
     });
-  }, [deferredQuery, newsPosts]);
+  }, [categoryFilter, deferredQuery, newsPosts, tagFilter]);
 
   const pageCount = Math.max(1, Math.ceil(filteredPosts.length / NEWS_PAGE_SIZE));
   const page = Math.min(pageState, pageCount);
@@ -93,7 +121,7 @@ export function NewsPage() {
             </p>
           </div>
 
-          <label className="theme-news-search group flex w-full max-w-[500px] items-center gap-3 rounded-[1.6rem] border px-4 py-3 transition">
+          <label className="theme-news-search group flex w-full max-w-[520px] items-center gap-3 rounded-[1.6rem] border px-4 py-3 transition">
             <div className="theme-news-search-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition">
               <Search className="h-4 w-4" />
             </div>
@@ -123,6 +151,67 @@ export function NewsPage() {
               </button>
             ) : null}
           </label>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Category" : "Chuyên mục"}
+            </span>
+            <select
+              value={categoryFilter}
+              onChange={(event) => {
+                setCategoryFilter(event.target.value);
+                setPageState(1);
+              }}
+              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All categories" : "Tất cả chuyên mục"}</option>
+              {categoryOptions.map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Tag className="h-3.5 w-3.5" />
+              {locale === "en" ? "Tag" : "Thẻ"}
+            </span>
+            <select
+              value={tagFilter}
+              onChange={(event) => {
+                setTagFilter(event.target.value);
+                setPageState(1);
+              }}
+              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All tags" : "Tất cả thẻ"}</option>
+              {tagOptions.map((tag) => (
+                <option key={tag} value={tag}>
+                  #{tag}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <button
+            type="button"
+            disabled={!hasActiveFilters}
+            onClick={() => {
+              setQuery("");
+              setCategoryFilter("all");
+              setTagFilter("all");
+              setPageState(1);
+            }}
+            className="theme-button-secondary inline-flex h-12 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <X className="h-4 w-4" />
+            {locale === "en" ? "Reset filters" : "Xóa bộ lọc"}
+          </button>
         </div>
       </section>
 
