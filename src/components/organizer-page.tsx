@@ -140,25 +140,19 @@ export function OrganizerContent({
       </section>
 
       <section className="space-y-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          {showSeasonIntroCopy ? (
+        {showSeasonIntroCopy ? (
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <SectionHeading
               eyebrow={pickText(locale, pageContent.organizer.contentModules.eyebrow)}
               title={pickText(locale, pageContent.organizer.contentModules.title)}
               description={pickText(locale, pageContent.organizer.contentModules.description)}
             />
-          ) : (
-            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
-              {pickText(locale, pageContent.organizer.contentModules.eyebrow)}
-            </p>
-          )}
-          {showSeasonIntroCopy ? (
             <Link href="/competition" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
               {pickText(locale, organizerContent.competitionLinkLabel)}
               <ArrowRight className="h-4 w-4" />
             </Link>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         <div className="grid gap-5 xl:grid-cols-2">
           {seasonStories.map((season) => (
