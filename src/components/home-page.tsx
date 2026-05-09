@@ -16,6 +16,7 @@ import {
   Sparkles,
   Star,
   TrendingUp,
+  Trophy,
   Users2,
 } from "lucide-react";
 
@@ -45,7 +46,7 @@ const homepageRewardItems = [
       en: "Awarded to the team with the second-highest final-round score.",
       vi: "Trao cho đội có điểm cao thứ hai ở vòng chung kết.",
     },
-    icon: Medal,
+    icon: Trophy,
     iconClass: "bg-[linear-gradient(135deg,#e2e8f0,#cbd5e1)] text-slate-950",
     borderClass: "border-slate-300/60",
   },
