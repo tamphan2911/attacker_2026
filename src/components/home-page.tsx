@@ -129,7 +129,7 @@ export function HomePage() {
       : "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities. Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.";
   const testimonialsSection = pageContent.home.testimonialsSection;
   const testimonialsTitle =
-    locale === "vi" ? "Cảm nhận Attacker 2025" : "Attacker 2025 voices";
+    locale === "vi" ? "Cảm nhận từ các mùa trước" : "Voices from earlier seasons";
   const currentHeroSlide = heroDeck[activeSlide] ?? heroDeck[0];
   const sponsorMarqueeItems = [...sponsors, ...sponsors];
   const testimonialItems = pageContent.home.testimonials;

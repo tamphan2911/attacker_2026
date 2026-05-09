@@ -542,8 +542,8 @@ export const defaultPageContent: SitePageContent = {
     testimonialsSection: {
       eyebrow: { en: "Testimonial", vi: "Cảm nhận" },
       title: {
-        en: "Attacker 2025 voices",
-        vi: "Cảm nhận Attacker 2025",
+        en: "Voices from earlier seasons",
+        vi: "Cảm nhận từ các mùa trước",
       },
       description: {
         en: "",
