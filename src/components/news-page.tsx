@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronLeft, ChevronRight, Filter, Search, Tag, X } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, Filter, Search, Tag, X } from "lucide-react";
 import { useDeferredValue, useMemo, useState } from "react";
 
 import { formatDateLabel, pickText } from "@/lib/site";
@@ -108,20 +108,9 @@ export function NewsPage() {
 
   return (
     <div className="space-y-10">
-      <section className="space-y-5">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-          <div className="space-y-1">
-            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
-              {pickText(locale, pageContent.news.latest.eyebrow)}
-            </p>
-            <p className="text-sm theme-text-soft">
-              {locale === "en"
-                ? `${filteredPosts.length} editorial updates`
-                : `${filteredPosts.length} cập nhật`}
-            </p>
-          </div>
-
-          <label className="theme-news-search group flex w-full max-w-[520px] items-center gap-3 rounded-[1.6rem] border px-4 py-3 transition">
+      <section>
+        <div className="grid gap-3 xl:grid-cols-[minmax(22rem,1.35fr)_minmax(13rem,0.75fr)_minmax(13rem,0.75fr)_auto] xl:items-center">
+          <label className="theme-news-search group flex h-12 w-full min-w-0 items-center gap-3 rounded-[1.2rem] border px-3.5 transition">
             <div className="theme-news-search-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition">
               <Search className="h-4 w-4" />
             </div>
@@ -151,21 +140,17 @@ export function NewsPage() {
               </button>
             ) : null}
           </label>
-        </div>
 
-        <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
-          <label className="space-y-2">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-              <Filter className="h-3.5 w-3.5" />
-              {locale === "en" ? "Category" : "Chuyên mục"}
-            </span>
+          <label className="theme-field relative flex h-12 min-w-0 items-center gap-2 rounded-[1.2rem] border px-3.5 text-sm">
+            <Filter className="h-4 w-4 shrink-0 text-[var(--brand-deep)] dark:text-[var(--brand-soft)]" />
+            <span className="sr-only">{locale === "en" ? "Category" : "Chuyên mục"}</span>
             <select
               value={categoryFilter}
               onChange={(event) => {
                 setCategoryFilter(event.target.value);
                 setPageState(1);
               }}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="min-w-0 flex-1 appearance-none bg-transparent pr-8 text-sm font-medium theme-text-strong outline-none"
             >
               <option value="all">{locale === "en" ? "All categories" : "Tất cả chuyên mục"}</option>
               {categoryOptions.map(([key, label]) => (
@@ -174,20 +159,21 @@ export function NewsPage() {
                 </option>
               ))}
             </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border theme-border bg-white/70 dark:bg-white/[0.06]">
+              <ChevronDown className="h-3.5 w-3.5 theme-text-soft" />
+            </span>
           </label>
 
-          <label className="space-y-2">
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-              <Tag className="h-3.5 w-3.5" />
-              {locale === "en" ? "Tag" : "Thẻ"}
-            </span>
+          <label className="theme-field relative flex h-12 min-w-0 items-center gap-2 rounded-[1.2rem] border px-3.5 text-sm">
+            <Tag className="h-4 w-4 shrink-0 text-[var(--brand-deep)] dark:text-[var(--brand-soft)]" />
+            <span className="sr-only">{locale === "en" ? "Tag" : "Thẻ"}</span>
             <select
               value={tagFilter}
               onChange={(event) => {
                 setTagFilter(event.target.value);
                 setPageState(1);
               }}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="min-w-0 flex-1 appearance-none bg-transparent pr-8 text-sm font-medium theme-text-strong outline-none"
             >
               <option value="all">{locale === "en" ? "All tags" : "Tất cả thẻ"}</option>
               {tagOptions.map((tag) => (
@@ -196,6 +182,9 @@ export function NewsPage() {
                 </option>
               ))}
             </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border theme-border bg-white/70 dark:bg-white/[0.06]">
+              <ChevronDown className="h-3.5 w-3.5 theme-text-soft" />
+            </span>
           </label>
 
           <button
@@ -207,7 +196,7 @@ export function NewsPage() {
               setTagFilter("all");
               setPageState(1);
             }}
-            className="theme-button-secondary inline-flex h-12 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            className="theme-button-secondary inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full border px-4 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
           >
             <X className="h-4 w-4" />
             {locale === "en" ? "Reset filters" : "Xóa bộ lọc"}
