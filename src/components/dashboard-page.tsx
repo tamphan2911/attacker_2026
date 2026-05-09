@@ -117,6 +117,26 @@ function formatFileSize(bytes?: number) {
   return `${Math.ceil(bytes / 1024)}KB`;
 }
 
+function averageNumbers(values: number[]) {
+  if (values.length === 0) {
+    return null;
+  }
+
+  return values.reduce((total, value) => total + value, 0) / values.length;
+}
+
+function formatAverageNumber(value: number) {
+  return Number.isInteger(value) ? `${value}` : value.toFixed(1).replace(/\.0$/, "");
+}
+
+function formatAverageScore(value: number | null, maxScore: number, locale: Locale) {
+  if (value == null) {
+    return locale === "en" ? "Not decided yet" : "Chưa xác định";
+  }
+
+  return `${formatAverageNumber(value)} / ${maxScore}`;
+}
+
 function readImageFileAsDataUrl(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -162,10 +182,6 @@ function PhoneRequirementNotice({
       </div>
     </div>
   );
-}
-
-function pickDashboardRoleTone(isLeader: boolean) {
-  return isLeader ? ("info" as const) : ("default" as const);
 }
 
 export function DashboardPage() {
@@ -361,7 +377,6 @@ export function DashboardPage() {
   const openSlots = currentTeam
     ? TEAM_MAX_MEMBERS - currentTeam.memberIds.length - sentInvitations.length
     : TEAM_MAX_MEMBERS;
-  const currentStageWindow = currentTeam ? getCompetitionRoundWindow(currentTeam.stage, timelineItems) : undefined;
   const round1Window =
     getCompetitionRoundPrimaryTimelineItem("round-1", timelineItems) ??
     getCompetitionRoundWindow("round-1", timelineItems);
@@ -418,10 +433,6 @@ export function DashboardPage() {
       !teamRound1Locked &&
       !outgoingLeadershipTransfer,
   );
-  const round1EssayPending = Boolean(
-    currentRound1Submission &&
-      (currentRound1Submission.essayScore == null || currentRound1Submission.totalScore == null),
-  );
   const currentTeamRound1Results = currentTeam
     ? currentTeamMembers.map((member) => {
         const submission = round1Submissions.find((item) => item.userId === member.id && item.teamId === currentTeam.id);
@@ -432,6 +443,32 @@ export function DashboardPage() {
         };
       })
     : [];
+  const submittedTeamRound1Results = currentTeamRound1Results.flatMap(({ submission }) =>
+    submission ? [submission] : [],
+  );
+  const hasAnyTeamRound1Result = submittedTeamRound1Results.length > 0;
+  const hasCompleteTeamRound1Results =
+    currentTeamRound1Results.length > 0 &&
+    submittedTeamRound1Results.length === currentTeamRound1Results.length;
+  const teamRound1ObjectiveAverage = hasCompleteTeamRound1Results
+    ? averageNumbers(submittedTeamRound1Results.map((submission) => submission.objectiveScore))
+    : null;
+  const teamRound1EssayAverage =
+    hasCompleteTeamRound1Results && submittedTeamRound1Results.every((submission) => submission.essayScore != null)
+      ? averageNumbers(submittedTeamRound1Results.map((submission) => submission.essayScore ?? 0))
+      : null;
+  const teamRound1TotalAverage =
+    hasCompleteTeamRound1Results && submittedTeamRound1Results.every((submission) => submission.totalScore != null)
+      ? averageNumbers(submittedTeamRound1Results.map((submission) => submission.totalScore ?? 0))
+      : null;
+  const teamRound1DurationAverage = hasCompleteTeamRound1Results
+    ? averageNumbers(submittedTeamRound1Results.map((submission) => submission.durationMinutes))
+    : null;
+  const teamRound1ResultPending =
+    !hasCompleteTeamRound1Results ||
+    teamRound1EssayAverage == null ||
+    teamRound1TotalAverage == null ||
+    teamRound1DurationAverage == null;
   const filteredAvailableUsers = availableUsers.filter((user) => {
     const keyword = inviteSearch.trim().toLowerCase();
     if (!keyword) {
@@ -579,9 +616,6 @@ export function DashboardPage() {
     }));
   };
 
-  const competitionWindowLabel = currentStageWindow
-    ? formatDateRangeLabel(locale, currentStageWindow.startDate, currentStageWindow.endDate)
-    : undefined;
   const hasActionInbox =
     incomingInvitations.length > 0 ||
     incomingRound1TeamLockRequests.length > 0 ||
@@ -893,21 +927,21 @@ export function DashboardPage() {
       ) : null}
 
       <section>
-        <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <Surface className="px-5 py-5 md:px-6 md:py-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_240px] lg:items-start">
             <div className="min-w-0">
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 {currentTeam ? (
                   <div className="relative w-fit shrink-0">
                     <GradientAvatar
                       label={teamForm.name || currentTeam.name}
                       tone={teamForm.avatarTone}
                       imageSrc={teamForm.avatarImageSrc}
-                      className="h-20 w-20 rounded-[1.6rem] text-xl md:h-24 md:w-24"
+                      className="h-16 w-16 rounded-[1.35rem] text-lg md:h-20 md:w-20"
                     />
                     {isLeader ? (
                       <label
-                        className="theme-button-primary absolute -bottom-2 -right-2 inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/50 p-0 shadow-[0_14px_30px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5"
+                        className="theme-button-primary absolute -bottom-2 -right-2 inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-white/50 p-0 shadow-[0_14px_30px_rgba(14,165,233,0.28)] transition hover:-translate-y-0.5"
                         aria-label={locale === "en" ? "Upload team avatar" : "Tải avatar đội"}
                         title={locale === "en" ? "Upload team avatar" : "Tải avatar đội"}
                       >
@@ -925,16 +959,23 @@ export function DashboardPage() {
                   </div>
                 ) : null}
                 <div className="min-w-0 flex-1">
-                  <h1 className="theme-heading text-3xl font-semibold theme-text-strong md:text-[2.8rem]">
-                    {currentTeam ? currentTeam.name : pickText(locale, pageContent.workspace.noTeamTitle)}
-                  </h1>
-                  <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h1 className="theme-heading text-3xl font-semibold theme-text-strong md:text-[2.35rem]">
+                      {currentTeam ? currentTeam.name : pickText(locale, pageContent.workspace.noTeamTitle)}
+                    </h1>
+                    {currentTeam ? (
+                      <span className="inline-flex items-center rounded-full border theme-border theme-panel px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] theme-text-soft">
+                        {locale === "en" ? "Team code" : "Mã đội"} · {currentTeam.tag}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-3 max-w-3xl text-sm leading-6 theme-text-muted">
                     {currentTeam
                       ? currentTeam.bio || pickText(locale, pageContent.workspace.teamDescription)
                       : pickText(locale, pageContent.workspace.noTeamDescription)}
                   </p>
                   {teamAvatarError ? <p className="mt-3 text-xs leading-6 text-rose-300">{teamAvatarError}</p> : null}
-                  <div className="mt-6 flex flex-wrap gap-2">
+                  <div className="mt-4 flex flex-wrap gap-2">
                     <StatusPill tone={currentTeam ? pickTeamDisplayStatusTone(currentTeam, new Date(), timelineItems) : "default"}>
                       {currentTeam
                         ? pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems)
@@ -959,20 +1000,20 @@ export function DashboardPage() {
                   </div>
 
                   {currentTeam ? (
-                    <div className="mt-6 flex flex-wrap gap-3">
-                      {currentRound1Submission || currentCompetitionState === "round-1" ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {hasAnyTeamRound1Result || currentCompetitionState === "round-1" ? (
                         <Link
                           href={
-                            currentRound1Submission
+                            hasAnyTeamRound1Result
                               ? "/dashboard#round1-result"
                               : canStartRound1Exam
                                 ? "/round-1"
                                 : "/dashboard#round1-lock"
                           }
-                          className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                          className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
                         >
                           <ArrowRight className="h-4 w-4" />
-                          {currentRound1Submission
+                          {hasAnyTeamRound1Result
                             ? locale === "en"
                               ? "View Round 1 result"
                               : "Xem kết quả Vòng 1"
@@ -985,28 +1026,16 @@ export function DashboardPage() {
                                 : "Xem khóa đội"}
                         </Link>
                       ) : null}
-                      <Link
-                        href="/profile"
-                        className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
-                      >
-                        {locale === "en" ? "Open profile" : "Mở hồ sơ"}
-                      </Link>
-                      <Link
-                        href="/rules"
-                        className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
-                      >
-                        {locale === "en" ? "Review rules" : "Xem thể lệ"}
-                      </Link>
                       {canAccessAdminMode ? (
                         <Link
                           href="/admin"
-                          className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+                          className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-4 py-2.5 text-sm font-semibold theme-text-strong"
                         >
                           Admin
                         </Link>
                       ) : null}
                       {roundJumpTargets.length > 0 ? (
-                        <div className="inline-flex flex-wrap items-center gap-2 rounded-[1.4rem] border theme-border theme-panel px-2 py-2">
+                        <div className="inline-flex flex-wrap items-center gap-1.5 rounded-[1.2rem] border theme-border theme-panel px-1.5 py-1.5">
                           {roundJumpTargets.map((target) => {
                             const Icon = target.icon;
                             const roundLabel = pickRoundLabel(locale, target.round);
@@ -1021,9 +1050,9 @@ export function DashboardPage() {
                                       : `Cuộn tới ${pickRoundLabel(locale, target.round)}`
                                   }
                                   onClick={() => scrollToDashboardSection(target.sectionId)}
-                                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${target.buttonClass}`}
+                                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-xs font-semibold transition hover:-translate-y-0.5 active:translate-y-0 ${target.buttonClass}`}
                                 >
-                                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/58 dark:bg-white/12">
+                                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/58 dark:bg-white/12">
                                     <Icon className="h-4 w-4" />
                                   </span>
                                   <span>{roundLabel}</span>
@@ -1045,21 +1074,18 @@ export function DashboardPage() {
             </div>
 
             <div className="grid gap-3">
-              <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-5 py-5">
-                <div className="flex items-start gap-4">
-                  <div className="theme-brand-gradient flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.5rem] text-lg font-semibold text-white">
+              <div className="rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="theme-brand-gradient flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] text-sm font-semibold text-white">
                     {currentTeam ? <ShieldCheck className="h-6 w-6" /> : teamReadinessCount}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
+                    <p className="text-[0.68rem] uppercase tracking-[0.2em] theme-text-soft">
                       {locale === "en" ? "Current stage" : "Vị trí hiện tại"}
                     </p>
-                    <p className="mt-3 text-lg font-semibold theme-text-strong">
+                    <p className="mt-2 text-base font-semibold leading-6 theme-text-strong">
                       {currentTeam ? pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems) : "--"}
                     </p>
-                    {competitionWindowLabel ? (
-                      <p className="mt-2 text-sm theme-text-soft">{competitionWindowLabel}</p>
-                    ) : null}
                   </div>
                 </div>
               </div>
@@ -1071,103 +1097,6 @@ export function DashboardPage() {
       {currentTeam ? (
         <>
           <section className="space-y-6">
-            <Surface className="px-6 py-6 md:px-8 md:py-8">
-              <div className="flex flex-wrap items-start justify-between gap-5">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                    {locale === "en" ? "Team identity" : "Nhận diện đội"}
-                  </p>
-                  <p className="theme-heading mt-3 text-3xl font-semibold theme-text-strong">
-                    {currentTeam.name}
-                  </p>
-                  <p className="mt-2 text-sm theme-text-soft">
-                    {locale === "en" ? `Keyword · ${currentTeam.track}` : `Từ khóa · ${currentTeam.track}`}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <StatusPill>{currentTeam.tag}</StatusPill>
-                  <StatusPill tone={pickTeamDisplayStatusTone(currentTeam, new Date(), timelineItems)}>
-                    {pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems)}
-                  </StatusPill>
-                  <StatusPill tone={pickDashboardRoleTone(isLeader)}>
-                    {isLeader
-                      ? locale === "en"
-                        ? "You are the leader"
-                        : "Bạn là đội trưởng"
-                      : locale === "en"
-                        ? "Member view"
-                        : "Góc nhìn thành viên"}
-                  </StatusPill>
-                </div>
-              </div>
-
-              <div className="mt-8 grid gap-4 md:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Team name" : "Tên đội"}</span>
-                  <input
-                    value={teamForm.name}
-                    disabled={!isLeader}
-                    onChange={(event) => setTeamForm((current) => ({ ...current, name: event.target.value }))}
-                    className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none disabled:opacity-60"
-                  />
-                </label>
-                <label className="space-y-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Team tag" : "Mã đội"}</span>
-                  <input
-                    value={teamForm.tag}
-                    disabled={!isLeader}
-                    onChange={(event) =>
-                      setTeamForm((current) => ({
-                        ...current,
-                        tag: event.target.value.toUpperCase().slice(0, 4),
-                      }))
-                    }
-                    className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none disabled:opacity-60"
-                  />
-                </label>
-                <label className="space-y-2 md:col-span-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Keyword" : "Từ khóa"}</span>
-                  <input
-                    value={teamForm.track}
-                    disabled={!isLeader}
-                    onChange={(event) => setTeamForm((current) => ({ ...current, track: event.target.value }))}
-                    className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none disabled:opacity-60"
-                  />
-                </label>
-                <label className="space-y-2 md:col-span-2">
-                  <span className="text-sm theme-text-muted">{locale === "en" ? "Team bio" : "Bio của đội"}</span>
-                  <textarea
-                    value={teamForm.bio}
-                    rows={5}
-                    disabled={!isLeader}
-                    onChange={(event) => setTeamForm((current) => ({ ...current, bio: event.target.value }))}
-                    className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none disabled:opacity-60"
-                  />
-                </label>
-              </div>
-
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                {isLeader ? (
-                  <button
-                    type="button"
-                    onClick={handleTeamSave}
-                    className="theme-button-primary rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
-                  >
-                    {locale === "en" ? "Save team profile" : "Lưu hồ sơ đội"}
-                  </button>
-                ) : null}
-                <p className="self-center text-sm theme-text-soft">
-                  {isLeader
-                    ? locale === "en"
-                      ? "Only the leader can edit and submit."
-                      : "Chỉ đội trưởng mới có thể sửa và nộp."
-                    : locale === "en"
-                      ? "This account can review but not edit team submissions."
-                      : "Tài khoản này có thể xem nhưng không thể sửa bài nộp của đội."}
-                </p>
-              </div>
-            </Surface>
-
             <Surface className="px-6 py-6 md:px-8 md:py-8">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -1183,8 +1112,8 @@ export function DashboardPage() {
                 </StatusPill>
               </div>
 
-              <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,0.9fr)_minmax(360px,1.1fr)]">
-                <div className="space-y-3">
+              <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(360px,1.1fr)_minmax(0,0.9fr)]">
+                <div className="space-y-3 xl:order-2">
                 {currentTeamMembers.map((member) => (
                   <div
                     key={member.id}
@@ -1212,7 +1141,7 @@ export function DashboardPage() {
                 ))}
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 xl:order-1">
               <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-sm font-semibold theme-text-strong">
                   {locale === "en" ? "Team actions" : "Thao tác của đội"}
@@ -1719,7 +1648,7 @@ export function DashboardPage() {
             </Surface>
           </section>
 
-          {currentRound1Submission ? (
+          {hasAnyTeamRound1Result ? (
             <section id="round1-result" className="scroll-mt-36">
               <Surface className="px-6 py-6 md:px-8 md:py-8">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -1729,59 +1658,45 @@ export function DashboardPage() {
                     </p>
                     <p className="theme-heading mt-4 text-3xl font-semibold theme-text-strong">
                       {locale === "en"
-                        ? "Your individual result is recorded."
-                        : "Kết quả cá nhân của bạn đã được ghi nhận."}
+                        ? "Team average result is recorded."
+                        : "Kết quả trung bình của đội đã được ghi nhận."}
                     </p>
                     <p className="mt-4 text-sm leading-7 theme-text-muted">
-                      {round1EssayPending
+                      {teamRound1ResultPending
                         ? locale === "en"
-                          ? "The objective section is scored immediately. Essay score and total score remain pending until admin or moderator review is completed."
-                          : "Phần trắc nghiệm được chấm ngay. Điểm tự luận và tổng điểm vẫn ở trạng thái chờ cho tới khi admin hoặc moderator chấm xong."
+                          ? "Some team-level averages are not decided yet because at least one member is missing a submission, essay score, or total score."
+                          : "Một số trung bình của đội chưa xác định vì vẫn còn thành viên thiếu bài nộp, điểm tự luận hoặc tổng điểm."
                         : locale === "en"
-                          ? "Multiple-choice score, essay score, and final total are all complete for this Round 1 attempt."
-                          : "Điểm trắc nghiệm, điểm tự luận và tổng điểm cuối cùng của bài Vòng 1 này đều đã hoàn tất."}
+                          ? "Multiple-choice average, essay average, total average, and average completion time are complete for this team."
+                          : "Trung bình trắc nghiệm, trung bình tự luận, tổng điểm trung bình và thời gian làm bài trung bình của đội đã hoàn tất."}
                     </p>
                   </div>
-                  <StatusPill tone={round1EssayPending ? "warning" : "success"}>
-                    {round1EssayPending
+                  <StatusPill tone={teamRound1ResultPending ? "warning" : "success"}>
+                    {teamRound1ResultPending
                       ? locale === "en"
-                        ? "Essay review pending"
-                        : "Đang chờ chấm tự luận"
+                        ? "Not decided yet"
+                        : "Chưa xác định"
                       : locale === "en"
-                        ? "Fully reviewed"
-                        : "Đã chấm hoàn tất"}
+                        ? "Team average complete"
+                        : "Trung bình đội hoàn tất"}
                   </StatusPill>
                 </div>
 
                 <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Multiple choices score" : "Điểm trắc nghiệm"}
+                      {locale === "en" ? "Multiple-choice average" : "Trung bình trắc nghiệm"}
                     </p>
                     <p className="mt-3 text-3xl font-semibold theme-text-strong">
-                      {`${currentRound1Submission.objectiveScore} / ${ROUND1_OBJECTIVE_MAX_SCORE}`}
-                    </p>
-                    <p className="mt-2 text-sm theme-text-soft">
-                      {locale === "en"
-                        ? `${currentRound1Submission.rightCount} right · ${currentRound1Submission.wrongCount} wrong`
-                        : `${currentRound1Submission.rightCount} đúng · ${currentRound1Submission.wrongCount} sai`}
+                      {formatAverageScore(teamRound1ObjectiveAverage, ROUND1_OBJECTIVE_MAX_SCORE, locale)}
                     </p>
                   </div>
                   <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Essay score" : "Điểm tự luận"}
+                      {locale === "en" ? "Essay average" : "Trung bình tự luận"}
                     </p>
                     <p className="mt-3 text-3xl font-semibold theme-text-strong">
-                      {currentRound1Submission.essayScore == null
-                        ? locale === "en"
-                          ? "Pending"
-                          : "Đang chờ"
-                        : `${currentRound1Submission.essayScore} / ${ROUND1_ESSAY_MAX_SCORE}`}
-                    </p>
-                    <p className="mt-2 text-sm theme-text-soft">
-                      {locale === "en"
-                        ? "Manually reviewed by admin or moderator"
-                        : "Được admin hoặc moderator chấm thủ công"}
+                      {formatAverageScore(teamRound1EssayAverage, ROUND1_ESSAY_MAX_SCORE, locale)}
                     </p>
                   </div>
                   <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -1789,27 +1704,19 @@ export function DashboardPage() {
                       {locale === "en" ? "Total score" : "Tổng điểm"}
                     </p>
                     <p className="mt-3 text-3xl font-semibold theme-text-strong">
-                      {currentRound1Submission.totalScore == null
-                        ? locale === "en"
-                          ? "Pending"
-                          : "Đang chờ"
-                        : `${currentRound1Submission.totalScore} / ${ROUND1_TOTAL_MAX_SCORE}`}
-                    </p>
-                    <p className="mt-2 text-sm theme-text-soft">
-                      {locale === "en"
-                        ? "Confirmed after essay review"
-                        : "Được xác nhận sau khi chấm tự luận"}
+                      {formatAverageScore(teamRound1TotalAverage, ROUND1_TOTAL_MAX_SCORE, locale)}
                     </p>
                   </div>
                   <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                     <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Submission info" : "Thông tin bài nộp"}
+                      {locale === "en" ? "Average time" : "Thời gian trung bình"}
                     </p>
                     <p className="mt-3 text-lg font-semibold theme-text-strong">
-                      {`${currentRound1Submission.durationMinutes} ${locale === "en" ? "minutes" : "phút"}`}
-                    </p>
-                    <p className="mt-2 text-sm theme-text-soft">
-                      {formatDateLabel(locale, currentRound1Submission.submittedAt)}
+                      {teamRound1DurationAverage == null
+                        ? locale === "en"
+                          ? "Not decided yet"
+                          : "Chưa xác định"
+                        : `${formatAverageNumber(teamRound1DurationAverage)} ${locale === "en" ? "minutes" : "phút"}`}
                     </p>
                   </div>
                 </div>
@@ -2246,10 +2153,6 @@ function SubmissionRoundCard({
         ? "Only the team leader can submit a new version for this round."
         : "Chỉ đội trưởng mới có thể nộp phiên bản mới cho vòng này.";
 
-  const latestSubmissionHref = latestSubmission
-    ? latestSubmission.resourceUrl
-    : undefined;
-
   return (
     <section id={sectionId} className="scroll-mt-36">
       <Surface className="px-6 py-6 md:px-8 md:py-8">
@@ -2296,19 +2199,7 @@ function SubmissionRoundCard({
                 </div>
                 <div className="flex shrink-0 items-center gap-2 text-xs">
                   <FolderClock className="h-4 w-4 theme-text-soft" />
-                  {latestSubmissionHref ? (
-                    <a
-                      href={latestSubmissionHref}
-                      target={latestSubmission.resourceSource === "external" ? "_blank" : undefined}
-                      rel={latestSubmission.resourceSource === "external" ? "noreferrer" : undefined}
-                      download={latestSubmission.resourceSource === "upload" ? latestSubmission.resourceLabel : undefined}
-                      className="max-w-[180px] truncate font-semibold theme-accent"
-                    >
-                      {latestSubmission.resourceLabel}
-                    </a>
-                  ) : (
-                    <span className="max-w-[180px] truncate theme-text-soft">{latestSubmission.resourceLabel}</span>
-                  )}
+                  <span className="max-w-[180px] truncate theme-text-soft">{latestSubmission.resourceLabel}</span>
                   {latestSubmission.resourceSizeBytes ? (
                     <span className="theme-text-faint">{formatFileSize(latestSubmission.resourceSizeBytes)}</span>
                   ) : null}
@@ -2334,37 +2225,27 @@ function SubmissionRoundCard({
                     key={submission.id}
                     className="overflow-x-auto rounded-[1.15rem] border theme-border theme-panel px-3 py-3"
                   >
-                    <div className="flex min-w-max items-center gap-3 text-sm">
-                      <StatusPill tone={index === 0 ? "success" : "default"}>
-                        {index === 0
-                          ? locale === "en"
-                            ? `Valid v${submission.version}`
-                            : `v${submission.version} hợp lệ`
-                          : locale === "en"
-                            ? `Archived v${submission.version}`
-                            : `v${submission.version} cũ`}
-                      </StatusPill>
-                      <p className="max-w-[220px] truncate font-semibold theme-text-strong">{submission.title}</p>
-                      <span className="text-xs theme-text-soft">{formatDateLabel(locale, submission.submittedAt)}</span>
-                      <span className="text-xs theme-text-soft">
+                    <div className="grid min-w-[760px] grid-cols-[120px_minmax(180px,1fr)_116px_140px_minmax(150px,0.8fr)_72px] items-center gap-3 text-sm">
+                      <div className="min-w-0">
+                        <StatusPill tone={index === 0 ? "success" : "default"}>
+                          {index === 0
+                            ? locale === "en"
+                              ? `Valid v${submission.version}`
+                              : `v${submission.version} hợp lệ`
+                            : locale === "en"
+                              ? `Archived v${submission.version}`
+                              : `v${submission.version} cũ`}
+                        </StatusPill>
+                      </div>
+                      <p className="truncate font-semibold theme-text-strong">{submission.title}</p>
+                      <span className="truncate text-xs theme-text-soft">{formatDateLabel(locale, submission.submittedAt)}</span>
+                      <span className="truncate text-xs theme-text-soft">
                         {(users.find((user) => user.id === submission.submittedByUserId) ?? users[0]).name}
                       </span>
-                      {submission.resourceUrl ? (
-                        <a
-                          href={submission.resourceUrl}
-                          download={submission.resourceSource === "upload" ? submission.resourceLabel : undefined}
-                          target={submission.resourceSource === "external" ? "_blank" : undefined}
-                          rel={submission.resourceSource === "external" ? "noreferrer" : undefined}
-                          className="max-w-[180px] truncate text-xs font-semibold theme-accent"
-                        >
-                          {submission.resourceLabel}
-                        </a>
-                      ) : (
-                        <span className="max-w-[180px] truncate text-xs theme-text-soft">{submission.resourceLabel}</span>
-                      )}
-                      {submission.resourceSizeBytes ? (
-                        <span className="text-xs theme-text-faint">{formatFileSize(submission.resourceSizeBytes)}</span>
-                      ) : null}
+                      <span className="truncate text-xs theme-text-soft">{submission.resourceLabel}</span>
+                      <span className="text-right text-xs theme-text-faint">
+                        {submission.resourceSizeBytes ? formatFileSize(submission.resourceSizeBytes) : "—"}
+                      </span>
                     </div>
                   </div>
                 ))
