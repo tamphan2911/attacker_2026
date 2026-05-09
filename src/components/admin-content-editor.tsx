@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import {
   ArrowLeft,
   BriefcaseBusiness,
+  ChevronDown,
   CircleHelp,
   Clock3,
   FileText,
@@ -19,6 +20,7 @@ import {
   Quote,
   ShieldCheck,
   Sparkles,
+  Tags,
   Trash2,
   Trophy,
   Upload,
@@ -35,7 +37,7 @@ import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
-import type { Locale, LocalizedText, SitePageContent, TestimonialItem } from "@/types/site";
+import type { FAQItem, FAQTopic, Locale, LocalizedText, SitePageContent, TestimonialItem } from "@/types/site";
 import type { SponsorProfile } from "@/types/site";
 
 function cn(...values: Array<string | undefined | false>) {
@@ -115,13 +117,25 @@ function createSponsorDraft(index: number): SponsorProfile {
   };
 }
 
-function createFaqDraft(index: number) {
+function createFaqDraft(index: number, topicId = ""): FAQItem {
   return {
+    topicId,
     question: {
       en: `New FAQ question ${index}`,
       vi: `Câu hỏi FAQ mới ${index}`,
     },
     answer: createBlankLocalizedText(),
+  };
+}
+
+function createFaqTopicDraft(index: number): FAQTopic {
+  return {
+    id: `faq-topic-${Date.now()}-${index}`,
+    title: {
+      en: `FAQ topic ${index}`,
+      vi: `Chủ đề FAQ ${index}`,
+    },
+    description: createBlankLocalizedText(),
   };
 }
 
@@ -784,6 +798,8 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   const { locale, pageContent, savePageContent } = useSiteState();
   useAdminTitleScroll();
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
+  const [faqEditorTab, setFaqEditorTab] = useState<"questions" | "page">("questions");
+  const [expandedFaqItems, setExpandedFaqItems] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     setDraft(clonePageContent(pageContent));
@@ -795,6 +811,23 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   );
 
   const config = contentPageConfigs.find((item) => item.id === pageId)!;
+  const faqTopics = draft.rules.faqTopics;
+  const firstFaqTopicId = faqTopics[0]?.id ?? "";
+  const pickFaqTopicTitle = (topicId: string) => {
+    const topic = faqTopics.find((item) => item.id === topicId) ?? faqTopics[0];
+    return topic ? pickText(locale, topic.title) : locale === "en" ? "No topic" : "Chưa có chủ đề";
+  };
+  const toggleFaqItem = (key: string) => {
+    setExpandedFaqItems((current) => {
+      const next = new Set(current);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -1493,130 +1526,318 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
 
         {pageId === "faq" ? (
           <>
-            <CopySectionEditor
-              title="FAQ / Header"
-              section={draft.rules.faq}
-              onChange={(field, language, value) =>
-                setDraft((current) =>
-                  updateDraftContent(current, (next) => {
-                    next.rules.faq[field][language] = value;
-                  }),
-                )
-              }
-            />
-
-            <LocalizedListBlockEditor
-              title="FAQ / Quick answers"
-              description="These short helper lines appear in the side block above the full question list."
-              items={draft.rules.faqQuickAnswers}
-              itemLabelPrefix="Quick answer"
-              rows={2}
-              onChange={(itemIndex, language, value) =>
-                setDraft((current) =>
-                  updateDraftContent(current, (next) => {
-                    next.rules.faqQuickAnswers[itemIndex][language] = value;
-                  }),
-                )
-              }
-            />
-
             <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
-              <BlockIntro
-                title="FAQ / Question cards"
-                description="Manage the full list of FAQ cards shown on the public FAQ page."
-              />
-              <LocalizedFieldEditor
-                label="Quick answers label"
-                rows={2}
-                value={draft.rules.faqQuickAnswersLabel}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.rules.faqQuickAnswersLabel[language] = value;
-                    }),
-                  )
-                }
-              />
-              <LocalizedFieldEditor
-                label="Question prefix"
-                rows={2}
-                value={draft.rules.faqQuestionPrefix}
-                onChange={(language, value) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.rules.faqQuestionPrefix[language] = value;
-                    }),
-                  )
-                }
-              />
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() =>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <BlockIntro
+                  title="FAQ editor"
+                  description="Switch between topic/question management and the general text shown at the top of the FAQ page."
+                />
+                <div className="theme-panel-subtle inline-flex rounded-full border theme-border p-1">
+                  {[
+                    { id: "questions" as const, label: locale === "en" ? "Topics & questions" : "Chủ đề & câu hỏi", icon: Tags },
+                    { id: "page" as const, label: locale === "en" ? "Page text" : "Text của trang", icon: FileText },
+                  ].map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = faqEditorTab === tab.id;
+
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setFaqEditorTab(tab.id)}
+                        className={cn(
+                          "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition",
+                          isActive
+                            ? "bg-[linear-gradient(135deg,#38bdf8,#2563eb)] text-white shadow-[0_14px_32px_rgba(37,99,235,0.2)]"
+                            : "theme-text-soft hover:bg-white/70 hover:text-slate-950 dark:hover:bg-white/10 dark:hover:text-white",
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </Surface>
+
+            {faqEditorTab === "page" ? (
+              <>
+                <CopySectionEditor
+                  title="FAQ / Header"
+                  section={draft.rules.faq}
+                  onChange={(field, language, value) =>
                     setDraft((current) =>
                       updateDraftContent(current, (next) => {
-                        next.rules.faqItems.push(createFaqDraft(next.rules.faqItems.length + 1));
+                        next.rules.faq[field][language] = value;
                       }),
                     )
                   }
-                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-                >
-                  <Plus className="h-4 w-4" />
-                  {locale === "en" ? "Add question" : "Thêm câu hỏi"}
-                </button>
-              </div>
-              <div className="space-y-4">
-                {draft.rules.faqItems.map((item, index) => (
-                  <div key={`faq-item-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold theme-text-strong">FAQ item {index + 1}</p>
-                      <button
-                        type="button"
-                        disabled={draft.rules.faqItems.length <= 1}
-                        onClick={() =>
-                          setDraft((current) =>
-                            updateDraftContent(current, (next) => {
-                              next.rules.faqItems = next.rules.faqItems.filter((_, currentIndex) => currentIndex !== index);
-                            }),
-                          )
-                        }
-                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={locale === "en" ? "Delete FAQ item" : "Xóa câu hỏi FAQ"}
-                        title={locale === "en" ? "Delete FAQ item" : "Xóa câu hỏi FAQ"}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <LocalizedFieldEditor
-                      label="Question"
-                      rows={3}
-                      value={item.question}
-                      onChange={(language, value) =>
+                />
+
+                <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                  <BlockIntro
+                    title="FAQ / Quick answers"
+                    description="These short helper lines appear in the side block above the topic-based FAQ list."
+                  />
+                  <LocalizedFieldEditor
+                    label="Quick answers label"
+                    rows={2}
+                    value={draft.rules.faqQuickAnswersLabel}
+                    onChange={(language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.faqQuickAnswersLabel[language] = value;
+                        }),
+                      )
+                    }
+                  />
+                  <LocalizedListBlockEditor
+                    title="Quick answer items"
+                    description="Edit each compact guidance line."
+                    items={draft.rules.faqQuickAnswers}
+                    itemLabelPrefix="Quick answer"
+                    rows={2}
+                    onChange={(itemIndex, language, value) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          next.rules.faqQuickAnswers[itemIndex][language] = value;
+                        }),
+                      )
+                    }
+                  />
+                </Surface>
+              </>
+            ) : (
+              <>
+                <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <BlockIntro
+                      title="FAQ / Topics"
+                      description="Topics work like tags. Public FAQ cards are grouped by these topics."
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
                         setDraft((current) =>
                           updateDraftContent(current, (next) => {
-                            next.rules.faqItems[index].question[language] = value;
+                            next.rules.faqTopics.push(createFaqTopicDraft(next.rules.faqTopics.length + 1));
                           }),
                         )
                       }
-                    />
-                    <div className="mt-4">
-                      <LocalizedFieldEditor
-                        label="Answer"
-                        rows={5}
-                        value={item.answer}
-                        onChange={(language, value) =>
-                          setDraft((current) =>
-                            updateDraftContent(current, (next) => {
-                              next.rules.faqItems[index].answer[language] = value;
-                            }),
-                          )
-                        }
-                      />
-                    </div>
+                      className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {locale === "en" ? "Add topic" : "Thêm chủ đề"}
+                    </button>
                   </div>
-                ))}
-              </div>
-            </Surface>
+
+                  <div className="space-y-4">
+                    {faqTopics.map((topic, topicIndex) => (
+                      <div key={topic.id} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold theme-text-strong">
+                              {locale === "en" ? `Topic ${topicIndex + 1}` : `Chủ đề ${topicIndex + 1}`}
+                            </p>
+                            <p className="mt-1 text-xs theme-text-soft">
+                              {draft.rules.faqItems.filter((item) => item.topicId === topic.id).length} FAQ
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            disabled={faqTopics.length <= 1}
+                            onClick={() =>
+                              setDraft((current) =>
+                                updateDraftContent(current, (next) => {
+                                  const fallbackTopicId = next.rules.faqTopics.find((item) => item.id !== topic.id)?.id ?? "";
+                                  next.rules.faqTopics = next.rules.faqTopics.filter((item) => item.id !== topic.id);
+                                  next.rules.faqItems = next.rules.faqItems.map((item) =>
+                                    item.topicId === topic.id ? { ...item, topicId: fallbackTopicId } : item,
+                                  );
+                                }),
+                              )
+                            }
+                            className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                            aria-label={locale === "en" ? "Delete FAQ topic" : "Xóa chủ đề FAQ"}
+                            title={locale === "en" ? "Delete FAQ topic" : "Xóa chủ đề FAQ"}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+
+                        <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+                          <label className="space-y-2">
+                            <span className="text-sm theme-text-muted">Topic ID</span>
+                            <input
+                              value={topic.id}
+                              readOnly
+                              className={`${fieldClassName} cursor-not-allowed opacity-75`}
+                            />
+                          </label>
+                          <LocalizedFieldEditor
+                            label="Topic title"
+                            rows={2}
+                            value={topic.title}
+                            onChange={(language, value) =>
+                              setDraft((current) =>
+                                updateDraftContent(current, (next) => {
+                                  next.rules.faqTopics[topicIndex].title[language] = value;
+                                }),
+                              )
+                            }
+                          />
+                        </div>
+
+                        <div className="mt-4">
+                          <LocalizedFieldEditor
+                            label="Topic description"
+                            rows={3}
+                            value={topic.description}
+                            onChange={(language, value) =>
+                              setDraft((current) =>
+                                updateDraftContent(current, (next) => {
+                                  next.rules.faqTopics[topicIndex].description[language] = value;
+                                }),
+                              )
+                            }
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Surface>
+
+                <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                    <BlockIntro
+                      title="FAQ / Questions"
+                      description="Question blocks are minimized by default. Open a block to edit its topic, question, and answer."
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.rules.faqItems.push(createFaqDraft(next.rules.faqItems.length + 1, firstFaqTopicId));
+                          }),
+                        )
+                      }
+                      className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                    >
+                      <Plus className="h-4 w-4" />
+                      {locale === "en" ? "Add question" : "Thêm câu hỏi"}
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {draft.rules.faqItems.map((item, index) => {
+                      const itemKey = `faq-item-${index}`;
+                      const isExpanded = expandedFaqItems.has(itemKey);
+                      const topicId = item.topicId || firstFaqTopicId;
+
+                      return (
+                        <div key={itemKey} className="overflow-hidden rounded-[1.5rem] border theme-border">
+                          <div className="theme-panel-subtle flex flex-wrap items-center justify-between gap-3 px-4 py-4">
+                            <button
+                              type="button"
+                              onClick={() => toggleFaqItem(itemKey)}
+                              className="group flex min-w-0 flex-1 items-center gap-3 text-left"
+                              aria-expanded={isExpanded}
+                            >
+                              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-sky-500/20 bg-sky-500/10 text-sky-700 dark:border-sky-300/20 dark:bg-sky-300/12 dark:text-sky-100">
+                                <ChevronDown className={cn("h-4 w-4 transition", isExpanded ? "rotate-180" : "")} />
+                              </span>
+                              <span className="min-w-0">
+                                <span className="block text-sm font-semibold theme-text-strong">
+                                  {locale === "en" ? `Question ${index + 1}` : `Câu hỏi ${index + 1}`}
+                                  <span className="theme-text-soft"> · {pickFaqTopicTitle(topicId)}</span>
+                                </span>
+                                <span className="mt-1 block truncate text-xs theme-text-soft">
+                                  {pickText(locale, item.question)}
+                                </span>
+                              </span>
+                            </button>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex min-h-8 items-center rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-slate-950 dark:border-emerald-300/18 dark:bg-emerald-300/12 dark:text-emerald-100">
+                                {pickFaqTopicTitle(topicId)}
+                              </span>
+                              <button
+                                type="button"
+                                disabled={draft.rules.faqItems.length <= 1}
+                                onClick={() =>
+                                  setDraft((current) =>
+                                    updateDraftContent(current, (next) => {
+                                      next.rules.faqItems = next.rules.faqItems.filter((_, currentIndex) => currentIndex !== index);
+                                    }),
+                                  )
+                                }
+                                className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label={locale === "en" ? "Delete FAQ item" : "Xóa câu hỏi FAQ"}
+                                title={locale === "en" ? "Delete FAQ item" : "Xóa câu hỏi FAQ"}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {isExpanded ? (
+                            <div className="space-y-4 px-4 py-4">
+                              <label className="space-y-2">
+                                <span className="text-sm theme-text-muted">
+                                  {locale === "en" ? "Topic" : "Chủ đề"}
+                                </span>
+                                <select
+                                  value={topicId}
+                                  onChange={(event) =>
+                                    setDraft((current) =>
+                                      updateDraftContent(current, (next) => {
+                                        next.rules.faqItems[index].topicId = event.target.value;
+                                      }),
+                                    )
+                                  }
+                                  className={fieldClassName}
+                                >
+                                  {faqTopics.map((topic) => (
+                                    <option key={topic.id} value={topic.id}>
+                                      {pickText(locale, topic.title)}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                              <LocalizedFieldEditor
+                                label="Question"
+                                rows={3}
+                                value={item.question}
+                                onChange={(language, value) =>
+                                  setDraft((current) =>
+                                    updateDraftContent(current, (next) => {
+                                      next.rules.faqItems[index].question[language] = value;
+                                    }),
+                                  )
+                                }
+                              />
+                              <LocalizedFieldEditor
+                                label="Answer"
+                                rows={5}
+                                value={item.answer}
+                                onChange={(language, value) =>
+                                  setDraft((current) =>
+                                    updateDraftContent(current, (next) => {
+                                      next.rules.faqItems[index].answer[language] = value;
+                                    }),
+                                  )
+                                }
+                              />
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </Surface>
+              </>
+            )}
           </>
         ) : null}
 

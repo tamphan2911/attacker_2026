@@ -1063,8 +1063,35 @@ export const defaultPageContent: SitePageContent = {
       },
     ],
     faqQuestionPrefix: { en: "Question", vi: "Câu hỏi" },
+    faqTopics: [
+      {
+        id: "registration-team",
+        title: { en: "Registration and team setup", vi: "Đăng ký và lập đội" },
+        description: {
+          en: "Account creation, teammate matching, invitations, and leadership rules.",
+          vi: "Tạo tài khoản, tìm đồng đội, lời mời vào đội và quy định về đội trưởng.",
+        },
+      },
+      {
+        id: "round-1-scoring",
+        title: { en: "Round 1 eligibility and scoring", vi: "Điều kiện và điểm Vòng 1" },
+        description: {
+          en: "Who can enter Round 1 and how individual papers become team results.",
+          vi: "Ai được vào Vòng 1 và cách điểm cá nhân được tính thành kết quả đội.",
+        },
+      },
+      {
+        id: "progression-results",
+        title: { en: "Submissions and progression", vi: "Bài nộp và đi tiếp" },
+        description: {
+          en: "Report versions, finalist announcement, and final ranking logic.",
+          vi: "Phiên bản báo cáo, công bố finalist và nguyên tắc xếp hạng chung cuộc.",
+        },
+      },
+    ],
     faqItems: [
       {
+        topicId: "registration-team",
         question: {
           en: "Can I register first and decide on teammates later?",
           vi: "Tôi có thể đăng ký trước rồi tìm đồng đội sau không?",
@@ -1075,6 +1102,7 @@ export const defaultPageContent: SitePageContent = {
         },
       },
       {
+        topicId: "registration-team",
         question: {
           en: "If I am the team leader, can I leave the team directly?",
           vi: "Nếu tôi là đội trưởng thì có thể rời đội ngay không?",
@@ -1085,6 +1113,7 @@ export const defaultPageContent: SitePageContent = {
         },
       },
       {
+        topicId: "round-1-scoring",
         question: {
           en: "Does Round 1 select individuals or teams?",
           vi: "Vòng 1 chọn theo cá nhân hay theo đội?",
@@ -1095,6 +1124,7 @@ export const defaultPageContent: SitePageContent = {
         },
       },
       {
+        topicId: "progression-results",
         question: {
           en: "Can our team upload more than one Round 2 report version?",
           vi: "Đội tôi có thể nộp nhiều phiên bản báo cáo Vòng 2 không?",
@@ -1105,6 +1135,7 @@ export const defaultPageContent: SitePageContent = {
         },
       },
       {
+        topicId: "progression-results",
         question: {
           en: "When do finalist teams know the final ranking?",
           vi: "Khi nào các đội vào chung kết biết thứ hạng cuối cùng?",
@@ -2718,6 +2749,7 @@ export const timelineItems: TimelineItem[] = [
 
 export const faqItems: FAQItem[] = [
   {
+    topicId: "round-1-scoring",
     question: {
       en: "Who is allowed to take the Round 1 test?",
       vi: "Ai được phép vào bài thi Vòng 1?",
@@ -2728,6 +2760,7 @@ export const faqItems: FAQItem[] = [
     },
   },
   {
+    topicId: "round-1-scoring",
     question: {
       en: "How is Round 1 scored if the test is individual?",
       vi: "Vòng 1 được chấm điểm thế nào nếu bài thi là cá nhân?",
@@ -2738,6 +2771,7 @@ export const faqItems: FAQItem[] = [
     },
   },
   {
+    topicId: "progression-results",
     question: {
       en: "What happens after Round 2 judge scoring?",
       vi: "Sau khi Vòng 2 được giám khảo chấm điểm thì sao?",
@@ -2748,6 +2782,7 @@ export const faqItems: FAQItem[] = [
     },
   },
   {
+    topicId: "registration-team",
     question: {
       en: "Can a student accept an invitation while already in another team?",
       vi: "Sinh viên đang ở đội khác có thể chấp nhận lời mời hay không?",
@@ -2758,6 +2793,7 @@ export const faqItems: FAQItem[] = [
     },
   },
   {
+    topicId: "registration-team",
     question: {
       en: "Can the leader leave the team?",
       vi: "Đội trưởng có thể rời đội không?",

@@ -72,8 +72,15 @@ export interface CompetitionRoundWindow {
 }
 
 export interface FAQItem {
+  topicId: string;
   question: LocalizedText;
   answer: LocalizedText;
+}
+
+export interface FAQTopic {
+  id: string;
+  title: LocalizedText;
+  description: LocalizedText;
 }
 
 export interface SponsorProfile {
@@ -560,6 +567,7 @@ export interface SitePageContent {
     faqQuickAnswersLabel: LocalizedText;
     faqQuickAnswers: LocalizedText[];
     faqQuestionPrefix: LocalizedText;
+    faqTopics: FAQTopic[];
     faqItems: FAQItem[];
     timeline: EditableSectionCopy;
     faq: EditableSectionCopy;
