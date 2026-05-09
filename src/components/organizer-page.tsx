@@ -18,11 +18,15 @@ export function getOrganizerSeasonHref(year: string) {
   return `/organizer/seasons/${encodeURIComponent(year)}`;
 }
 
+type OrganizerContentProps = {
+  showGallery?: boolean;
+};
+
 export function OrganizerPage() {
   return <OrganizerContent />;
 }
 
-export function OrganizerContent() {
+export function OrganizerContent({ showGallery = true }: OrganizerContentProps = {}) {
   const { locale, pageContent } = useSiteState();
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
   const [expandedGalleryIndex, setExpandedGalleryIndex] = useState<number | null>(null);
@@ -202,6 +206,7 @@ export function OrganizerContent() {
         </div>
       </section>
 
+      {showGallery ? (
       <section className="space-y-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -336,8 +341,9 @@ export function OrganizerContent() {
           </Surface>
         </div>
       </section>
+      ) : null}
 
-      {expandedGallerySlide ? (
+      {showGallery && expandedGallerySlide ? (
         <div className="fixed inset-0 z-[80] bg-[rgba(6,12,22,0.82)] p-4 backdrop-blur-md md:p-8">
           <div className="mx-auto flex h-full max-w-7xl flex-col overflow-hidden rounded-[2rem] border border-white/12 bg-[rgba(6,12,22,0.72)] shadow-[0_30px_120px_rgba(2,8,20,0.44)]">
             <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 md:px-6">

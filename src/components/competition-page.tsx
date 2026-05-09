@@ -271,7 +271,7 @@ export function CompetitionPage() {
         </div>
       </section>
 
-      <OrganizerContent />
+      <OrganizerContent showGallery={false} />
     </div>
   );
 }
