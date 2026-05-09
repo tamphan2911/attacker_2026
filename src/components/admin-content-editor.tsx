@@ -479,7 +479,7 @@ function EditorTopBar({
             onClick={onReset}
             className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
           >
-            {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
+            {locale === "en" ? "Reset draft" : "Đặt lại bản nháp"}
           </button>
           <button
             type="button"
@@ -487,7 +487,7 @@ function EditorTopBar({
             onClick={onSave}
             className="theme-button-primary rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {locale === "en" ? "Save changes" : "Luu thay doi"}
+            {locale === "en" ? "Save changes" : "Lưu thay đổi"}
           </button>
         </div>
       </div>
@@ -799,7 +799,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   return (
     <div className="space-y-8">
       <EditorTopBar
-        eyebrow={locale === "en" ? "Admin / Content / Page" : "Admin / Noi dung / Trang"}
+        eyebrow={locale === "en" ? "Admin / Content / Page" : "Admin / Nội dung / Trang"}
         title={pickText(locale, config.label)}
         description={pickText(locale, config.description)}
         isDirty={isDirty}
@@ -3377,7 +3377,7 @@ export function ContentSponsorsEditor() {
   return (
     <div className="space-y-8">
       <EditorTopBar
-        eyebrow={locale === "en" ? "Admin / Content / Sponsors" : "Admin / Noi dung / Nha tai tro"}
+        eyebrow={locale === "en" ? "Admin / Content / Sponsors" : "Admin / Nội dung / Nhà tài trợ"}
         title={locale === "en" ? "Sponsor records" : "Danh sách nhà tài trợ"}
         description={
           locale === "en"
@@ -3643,7 +3643,7 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
   return (
     <div className="space-y-8">
       <EditorTopBar
-        eyebrow={locale === "en" ? "Admin / Content / Type" : "Admin / Noi dung / Loai"}
+        eyebrow={locale === "en" ? "Admin / Content / Type" : "Admin / Nội dung / Loại"}
         title={pickText(locale, config.label)}
         description={pickText(locale, config.description)}
         isDirty={isDirty}
@@ -4281,7 +4281,7 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
       {typeId === "workspace-states" ? (
         <Surface className="space-y-5 px-5 py-5">
           <p className="text-lg font-semibold theme-text-strong">
-            {locale === "en" ? "Workspace states" : "Trang thai workspace"}
+            {locale === "en" ? "Workspace states" : "Trạng thái workspace"}
           </p>
           <LocalizedFieldEditor
             label="No team title"

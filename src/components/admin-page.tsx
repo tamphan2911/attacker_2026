@@ -555,7 +555,7 @@ function UsersTableSection() {
                           const confirmed = window.confirm(
                             locale === "en"
                               ? `Delete ${row.name} from the admin dataset?`
-                              : `Xoa ${row.name} khoi bo du lieu admin?`,
+                              : `Xóa ${row.name} khỏi bộ dữ liệu admin?`,
                           );
 
                           if (confirmed) {
@@ -673,7 +673,7 @@ function TeamsTableSection() {
             ? "Review team leadership, membership count, readiness, and creation date."
             : "Xem đội trưởng, số thành viên, mức độ sẵn sàng và ngày tạo đội."
         }
-        exportLabel={locale === "en" ? "Export teams.xlsx" : "Xuat teams.xlsx"}
+        exportLabel={locale === "en" ? "Export teams.xlsx" : "Xuất teams.xlsx"}
         onExport={() => exportRowsToWorkbook("attacker-2026-teams.xlsx", "Teams", exportRows)}
       />
 
@@ -795,7 +795,7 @@ function TeamsTableSection() {
                           const confirmed = window.confirm(
                             locale === "en"
                               ? `Delete team ${row.team} from the admin dataset?`
-                              : `Xoa doi ${row.team} khoi bo du lieu admin?`,
+                              : `Xóa đội ${row.team} khỏi bộ dữ liệu admin?`,
                           );
 
                           if (confirmed) {

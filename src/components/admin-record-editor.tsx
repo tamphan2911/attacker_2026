@@ -100,7 +100,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
     const confirmed = window.confirm(
       locale === "en"
         ? `Delete ${user.name} from the admin dataset?`
-        : `Xoa ${user.name} khoi bo du lieu admin?`,
+        : `Xóa ${user.name} khỏi bộ dữ liệu admin?`,
     );
 
     if (!confirmed) {
@@ -122,12 +122,12 @@ export function AdminUserEditor({ userId }: { userId: string }) {
         <SectionHeading
           id={ADMIN_TITLE_ID}
           className="scroll-mt-32"
-          eyebrow={locale === "en" ? "Admin / Users / Edit" : "Admin / Nguoi dung / Chinh sua"}
+          eyebrow={locale === "en" ? "Admin / Users / Edit" : "Admin / Người dùng / Chỉnh sửa"}
           title={draft.name}
           description={
             locale === "en"
               ? "Edit the user profile fields used across the frontend prototype."
-              : "Chinh sua cac truong ho so nguoi dung dang duoc su dung tren frontend prototype."
+              : "Chỉnh sửa các trường hồ sơ người dùng đang được sử dụng trên frontend prototype."
           }
         />
         <div className="flex gap-3">
@@ -136,7 +136,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             onClick={() => setDraft(user)}
             className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
           >
-            {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
+            {locale === "en" ? "Reset draft" : "Đặt lại bản nháp"}
           </button>
           <button
             type="button"
@@ -144,7 +144,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             onClick={() => updateUserByAdmin(user.id, draft)}
             className="theme-button-primary rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {locale === "en" ? "Save changes" : "Luu thay doi"}
+            {locale === "en" ? "Save changes" : "Lưu thay đổi"}
           </button>
           <button
             type="button"
@@ -153,7 +153,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2 className="h-4 w-4" />
-            {locale === "en" ? "Delete user" : "Xoa nguoi dung"}
+            {locale === "en" ? "Delete user" : "Xóa người dùng"}
           </button>
         </div>
       </div>
@@ -260,7 +260,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Class year" : "Nam hoc"}
+                {locale === "en" ? "Class year" : "Năm học"}
               </span>
               <input
                 value={draft.classYear}
@@ -270,7 +270,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "University" : "Truong"}
+                {locale === "en" ? "University" : "Trường"}
               </span>
               <input
                 value={draft.university}
@@ -300,7 +300,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             </label>
             <label className="space-y-2 md:col-span-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Avatar image source" : "Nguon anh avatar"}
+                {locale === "en" ? "Avatar image source" : "Nguồn ảnh avatar"}
               </span>
               <textarea
                 rows={3}
@@ -337,7 +337,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
 
         <Surface className="h-fit px-6 py-6">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Record status" : "Trang thai ban ghi"}
+            {locale === "en" ? "Record status" : "Trạng thái bản ghi"}
           </p>
           <div className="mt-5 space-y-4">
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -352,7 +352,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Providers" : "Nha cung cap"}
+                {locale === "en" ? "Providers" : "Nhà cung cấp"}
               </p>
               <p className="mt-2 text-sm font-semibold theme-text-strong">{user.providers.join(", ")}</p>
             </div>
@@ -386,17 +386,17 @@ export function AdminUserEditor({ userId }: { userId: string }) {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Protection" : "Bao ve"}
+                {locale === "en" ? "Protection" : "Bảo vệ"}
               </p>
               {isLocked ? (
                 <p className="mt-2 text-sm theme-text-soft">
                   {locale === "en"
                     ? "This fixed admin account is locked from edits and deletion."
-                    : "Tai khoan admin co dinh nay duoc khoa, khong the sua hoac xoa."}
+                    : "Tài khoản admin cố định này được khóa, không thể sửa hoặc xóa."}
                 </p>
               ) : (
                 <StatusPill tone="success">
-                  {locale === "en" ? "Editable" : "Co the chinh sua"}
+                  {locale === "en" ? "Editable" : "Có thể chỉnh sửa"}
                 </StatusPill>
               )}
             </div>
@@ -445,7 +445,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
     const confirmed = window.confirm(
       locale === "en"
         ? `Delete team ${team.name} from the admin dataset?`
-        : `Xoa doi ${team.name} khoi bo du lieu admin?`,
+        : `Xóa đội ${team.name} khỏi bộ dữ liệu admin?`,
     );
 
     if (!confirmed) {
@@ -481,7 +481,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             onClick={() => setDraft(team)}
             className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
           >
-            {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
+            {locale === "en" ? "Reset draft" : "Đặt lại bản nháp"}
           </button>
           <button
             type="button"
@@ -489,7 +489,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             onClick={() => updateTeamByAdmin(team.id, draft)}
             className="theme-button-primary rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {locale === "en" ? "Save changes" : "Luu thay doi"}
+            {locale === "en" ? "Save changes" : "Lưu thay đổi"}
           </button>
           <button
             type="button"
@@ -497,7 +497,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
           >
             <Trash2 className="h-4 w-4" />
-            {locale === "en" ? "Delete team" : "Xoa doi"}
+            {locale === "en" ? "Delete team" : "Xóa đội"}
           </button>
         </div>
       </div>
@@ -563,7 +563,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Competition stage" : "Giai doan thi dau"}
+                {locale === "en" ? "Competition stage" : "Giai đoạn thi đấu"}
               </span>
               <select
                 value={draft.stage}
@@ -617,7 +617,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             </label>
             <label className="space-y-2 md:col-span-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Avatar image source" : "Nguon anh avatar"}
+                {locale === "en" ? "Avatar image source" : "Nguồn ảnh avatar"}
               </span>
               <textarea
                 rows={3}
@@ -640,7 +640,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
           <div className="mt-6">
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Team bio" : "Bio cua doi"}
+                {locale === "en" ? "Team bio" : "Bio của đội"}
               </span>
               <textarea
                 rows={5}
@@ -658,7 +658,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
 
         <Surface className="h-fit px-6 py-6">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-            {locale === "en" ? "Team summary" : "Tong quan doi"}
+            {locale === "en" ? "Team summary" : "Tổng quan đội"}
           </p>
           <div className="mt-5 space-y-4">
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -667,7 +667,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Members" : "Thanh vien"}
+                {locale === "en" ? "Members" : "Thành viên"}
               </p>
               <p className="mt-2 text-sm font-semibold theme-text-strong">{team.memberIds.length}</p>
               <div className="mt-4 space-y-2">
@@ -680,7 +680,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Competition status" : "Trang thai thi dau"}
+                {locale === "en" ? "Competition status" : "Trạng thái thi đấu"}
               </p>
               <div className="mt-2">
                 <StatusPill tone={pickTeamDisplayStatusTone(draft, new Date(), timelineItems)}>
@@ -693,7 +693,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Created" : "Ngay tao"}
+                {locale === "en" ? "Created" : "Ngày tạo"}
               </p>
               <p className="mt-2 text-sm font-semibold theme-text-strong">
                 {formatDateLabel(locale, team.createdAt)}

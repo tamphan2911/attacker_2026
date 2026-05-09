@@ -185,7 +185,7 @@ function createQuestionShapeForType(type: Round1QuestionType, seed?: Partial<Rou
     return {
       ...base,
       options: [
-        createRound1Option("a", "A", { en: "True", vi: "Dung" }),
+        createRound1Option("a", "A", { en: "True", vi: "Đúng" }),
         createRound1Option("b", "B", { en: "False", vi: "Sai" }),
       ],
       correctOptionIds: ["a"],
@@ -576,6 +576,23 @@ function truncateQuestionPreview(value: string) {
   return `${words.slice(0, 5).join(" ")}...`;
 }
 
+function pickRound1DifficultyLabel(locale: Locale, difficulty: Round1Question["difficulty"]) {
+  if (locale === "en") {
+    return difficulty;
+  }
+
+  switch (difficulty) {
+    case "easy":
+      return "Dễ";
+    case "medium":
+      return "Trung bình";
+    case "hard":
+      return "Khó";
+    default:
+      return difficulty;
+  }
+}
+
 function SortableTableHeader({
   label,
   active,
@@ -709,10 +726,10 @@ function getStandingLabel(locale: Locale, group: TeamResultGroup) {
   }
 
   if ((group.rank ?? Number.POSITIVE_INFINITY) <= 50) {
-    return locale === "en" ? "Top 50 provisional" : "Top 50 tam thoi";
+    return locale === "en" ? "Top 50 provisional" : "Top 50 tạm thời";
   }
 
-  return locale === "en" ? "Ranked" : "Da xep hang";
+  return locale === "en" ? "Ranked" : "Đã xếp hạng";
 }
 
 function MetricCard({
@@ -938,7 +955,7 @@ export function AdminRound1Manager() {
             >
               <span className="inline-flex items-center gap-2">
                 <Download className="h-4 w-4" />
-                {locale === "en" ? "Export banks.xlsx" : "Xuat banks.xlsx"}
+                {locale === "en" ? "Export banks.xlsx" : "Xuất banks.xlsx"}
               </span>
             </button>
           </div>
@@ -1130,7 +1147,7 @@ export function AdminRound1Manager() {
               : "Hãy seed hoặc tạo bank trước khi xem cấu hình phát đề Vòng 1."
           }
           href="/admin"
-          actionLabel={locale === "en" ? "Back to admin" : "Quay lai admin"}
+          actionLabel={locale === "en" ? "Back to admin" : "Quay lại admin"}
         />
       )}
     </div>
@@ -1718,14 +1735,14 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
   if (!bank) {
     return (
       <NotFoundState
-        title={locale === "en" ? "Round 1 bank not found." : "Khong tim thay bank Vong 1."}
+        title={locale === "en" ? "Round 1 bank not found." : "Không tìm thấy bank Vòng 1."}
         description={
           locale === "en"
             ? "This bank may not exist in the current browser dataset."
-            : "Bank nay co the khong ton tai trong bo du lieu hien tai cua trinh duyet."
+            : "Bank này có thể không tồn tại trong bộ dữ liệu hiện tại của trình duyệt."
         }
         href="/admin/round-1"
-        actionLabel={locale === "en" ? "Back to Round 1" : "Quay lai Vong 1"}
+        actionLabel={locale === "en" ? "Back to Round 1" : "Quay lại Vòng 1"}
       />
     );
   }
@@ -1743,14 +1760,14 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
     <div className="space-y-8">
       <Link href="/admin/round-1" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
         <ArrowLeft className="h-4 w-4" />
-        {locale === "en" ? "Back to Round 1" : "Quay lai Vong 1"}
+        {locale === "en" ? "Back to Round 1" : "Quay lại Vòng 1"}
       </Link>
 
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <SectionHeading
           id={ADMIN_TITLE_ID}
           className="scroll-mt-32"
-          eyebrow={locale === "en" ? "Admin / Round 1 / Test bank" : "Admin / Vong 1 / Test bank"}
+          eyebrow={locale === "en" ? "Admin / Round 1 / Test bank" : "Admin / Vòng 1 / Test bank"}
           title={bankDetailTitle}
         />
         <div className="flex flex-wrap gap-3">
@@ -1759,7 +1776,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
             className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
           >
             <CirclePlus className="h-4 w-4" />
-            {locale === "en" ? "Add question" : "Them cau hoi"}
+            {locale === "en" ? "Add question" : "Thêm câu hỏi"}
           </Link>
           <button
             type="button"
@@ -1770,7 +1787,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           >
             <span className="inline-flex items-center gap-2">
               <Download className="h-4 w-4" />
-              {locale === "en" ? "Export bank detail" : "Xuat chi tiet bank"}
+              {locale === "en" ? "Export bank detail" : "Xuất chi tiết bank"}
             </span>
           </button>
         </div>
@@ -1952,7 +1969,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                               : "default"
                         }
                       >
-                        {question.difficulty}
+                        {pickRound1DifficultyLabel(locale, question.difficulty)}
                       </StatusPill>
                     </td>
                   )}
@@ -2049,11 +2066,11 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
   if (!team || !group) {
     return (
       <NotFoundState
-        title={locale === "en" ? "Team result not found." : "Khong tim thay ket qua doi."}
+        title={locale === "en" ? "Team result not found." : "Không tìm thấy kết quả đội."}
         description={
           locale === "en"
             ? "This team may no longer exist in the current admin dataset."
-            : "Doi nay co the khong con ton tai trong bo du lieu admin hien tai."
+            : "Đội này có thể không còn tồn tại trong bộ dữ liệu admin hiện tại."
         }
         href="/admin/round-1/scores"
         actionLabel={locale === "en" ? "Back to Round 1 scores" : "Quay lại điểm Vòng 1"}
@@ -2105,7 +2122,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
             href={`/admin/teams/${group.team.id}`}
             className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
           >
-            {locale === "en" ? "Open team record" : "Mo ho so doi"}
+            {locale === "en" ? "Open team record" : "Mở hồ sơ đội"}
           </Link>
           <button
             type="button"
@@ -2120,7 +2137,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
           >
             <span className="inline-flex items-center gap-2">
               <Download className="h-4 w-4" />
-              {locale === "en" ? "Export team detail" : "Xuat chi tiet doi"}
+              {locale === "en" ? "Export team detail" : "Xuất chi tiết đội"}
             </span>
           </button>
         </div>
@@ -2129,18 +2146,18 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={<Trophy className="h-5 w-5 text-amber-300" />}
-          label={locale === "en" ? "Current rank" : "Hang hien tai"}
+          label={locale === "en" ? "Current rank" : "Hạng hiện tại"}
           value={group.rank ? `#${group.rank}` : "--"}
           note={getStandingLabel(locale, group)}
         />
         <MetricCard
           icon={<UsersRound className="h-5 w-5 text-cyan-300" />}
-          label={locale === "en" ? "Completed members" : "Thanh vien da lam"}
+          label={locale === "en" ? "Completed members" : "Thành viên đã làm"}
           value={`${group.completedRows.length}/${group.memberRows.length}`}
           note={
             locale === "en"
               ? "Only completed attempts count into the current average"
-              : "Chi cac bai da nop moi duoc tinh vao diem trung binh hien tai"
+              : "Chỉ các bài đã nộp mới được tính vào điểm trung bình hiện tại"
           }
         />
         <MetricCard
@@ -2152,7 +2169,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
               ? `${group.averageRight.toFixed(1)} / ${group.averageWrong.toFixed(1)}`
               : locale === "en"
                 ? "No completed attempt yet"
-                : "Chua co bai lam nao"
+                : "Chưa có bài làm nào"
           }
         />
         <MetricCard
@@ -2182,12 +2199,12 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <Surface className="px-6 py-6 md:px-8 md:py-8">
           <p className="theme-heading text-2xl font-semibold theme-text-strong">
-            {locale === "en" ? "Team context" : "Thong tin doi"}
+            {locale === "en" ? "Team context" : "Thông tin đội"}
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Leader" : "Doi truong"}
+                {locale === "en" ? "Leader" : "Đội trưởng"}
               </p>
               <p className="mt-2 text-lg font-semibold theme-text-strong">
                 {leader?.name ?? "--"}
@@ -2206,7 +2223,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 md:col-span-2">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Team bio" : "Bio cua doi"}
+                {locale === "en" ? "Team bio" : "Bio của đội"}
               </p>
               <p className="mt-2 text-sm leading-7 theme-text-muted">
                 {team.bio || "--"}
@@ -2217,12 +2234,12 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
 
         <Surface className="px-6 py-6">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-text-soft">
-            {locale === "en" ? "Round 1 standing" : "Trang thai Vong 1"}
+            {locale === "en" ? "Round 1 standing" : "Trạng thái Vòng 1"}
           </p>
           <div className="mt-5 space-y-4">
             <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-sm theme-text-muted">
-                {locale === "en" ? "Current status" : "Trang thai hien tai"}
+                {locale === "en" ? "Current status" : "Trạng thái hiện tại"}
               </p>
               <div className="mt-3">
                 <StatusPill tone={getStandingTone(group)}>
@@ -2232,7 +2249,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
             </div>
             <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-sm theme-text-muted">
-                {locale === "en" ? "Scoring rule" : "Quy tac tinh diem"}
+                {locale === "en" ? "Scoring rule" : "Quy tắc tính điểm"}
               </p>
               <p className="mt-3 text-sm leading-7 theme-text-muted">
                 {locale === "en"
@@ -2247,12 +2264,12 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <div className="max-w-3xl">
           <p className="theme-heading text-3xl font-semibold theme-text-strong">
-            {locale === "en" ? "Member-by-member Round 1 results" : "Ket qua Vong 1 theo tung thanh vien"}
+            {locale === "en" ? "Member-by-member Round 1 results" : "Kết quả Vòng 1 theo từng thành viên"}
           </p>
           <p className="mt-3 text-sm leading-7 theme-text-muted">
             {locale === "en"
               ? "This table shows every current member in the team. Pending members remain visible so admin and moderator accounts can see completion gaps immediately."
-              : "Bang nay hien tat ca thanh vien hien tai cua doi. Thanh vien chua nop bai van duoc hien de admin va moderator thay ngay cac khoang trong ve tien do."}
+              : "Bảng này hiện tất cả thành viên hiện tại của đội. Thành viên chưa nộp bài vẫn được hiện để admin và moderator thấy ngay các khoảng trống về tiến độ."}
           </p>
         </div>
 
@@ -2262,17 +2279,17 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
               <tr>
                 {[
                   "#",
-                  locale === "en" ? "Member" : "Thanh vien",
-                  locale === "en" ? "Role" : "Vai tro",
-                  locale === "en" ? "University / Major" : "Truong / Nganh",
-                  locale === "en" ? "Right" : "Dung",
+                  locale === "en" ? "Member" : "Thành viên",
+                  locale === "en" ? "Role" : "Vai trò",
+                  locale === "en" ? "University / Major" : "Trường / Ngành",
+                  locale === "en" ? "Right" : "Đúng",
                   locale === "en" ? "Wrong" : "Sai",
-                  locale === "en" ? "Objective" : "Khach quan",
-                  locale === "en" ? "Essay" : "Tu luan",
-                  locale === "en" ? "Total" : "Tong",
-                  locale === "en" ? "Duration" : "Thoi gian",
-                  locale === "en" ? "Submitted at" : "Thoi diem nop",
-                  locale === "en" ? "Review" : "Cham diem",
+                  locale === "en" ? "Objective" : "Trắc nghiệm",
+                  locale === "en" ? "Essay" : "Tự luận",
+                  locale === "en" ? "Total" : "Tổng",
+                  locale === "en" ? "Duration" : "Thời gian",
+                  locale === "en" ? "Submitted at" : "Thời điểm nộp",
+                  locale === "en" ? "Review" : "Chấm điểm",
                 ].map((label) => (
                   <th key={label} className="px-4 py-3 font-medium">
                     {label}
@@ -2294,10 +2311,10 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
                     {row.student.id === group.team.leaderId
                       ? locale === "en"
                         ? "Leader"
-                        : "Doi truong"
+                        : "Đội trưởng"
                       : locale === "en"
                         ? "Member"
-                        : "Thanh vien"}
+	                        : "Thành viên"}
                   </td>
                   <td className="px-4 py-4 theme-text-body">
                     <p>{row.student.university}</p>
@@ -2326,7 +2343,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
                     {row.submission ? (
                       row.submission.essayScore == null ? (
                         <StatusPill tone="warning">
-                          {locale === "en" ? "Pending" : "Dang cho"}
+                          {locale === "en" ? "Pending" : "Đang chờ"}
                         </StatusPill>
                       ) : (
                         <StatusPill tone="default">{`${row.submission.essayScore} / ${ROUND1_ESSAY_MAX_SCORE}`}</StatusPill>
@@ -2339,7 +2356,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
                     {row.submission ? (
                       row.submission.totalScore == null ? (
                         <StatusPill tone="warning">
-                          {locale === "en" ? "Pending" : "Dang cho"}
+                          {locale === "en" ? "Pending" : "Đang chờ"}
                         </StatusPill>
                       ) : (
                         <StatusPill tone={row.submission.totalScore >= 80 ? "success" : row.submission.totalScore >= 65 ? "default" : "warning"}>
@@ -2368,7 +2385,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
                       </Link>
                     ) : (
                       <StatusPill tone="default">
-                        {locale === "en" ? "Pending" : "Dang cho"}
+                        {locale === "en" ? "Pending" : "Đang chờ"}
                       </StatusPill>
                     )}
                   </td>
@@ -2485,22 +2502,22 @@ function AdminRound1QuestionEditorInner({
           mode === "create"
             ? locale === "en"
               ? "Round 1 bank not found."
-              : "Khong tim thay bank Vong 1."
+              : "Không tìm thấy bank Vòng 1."
             : locale === "en"
               ? "Round 1 question not found."
-              : "Khong tim thay cau hoi Vong 1."
+              : "Không tìm thấy câu hỏi Vòng 1."
         }
         description={
           mode === "create"
             ? locale === "en"
               ? "This bank may not exist in the current browser dataset."
-              : "Bank nay co the khong ton tai trong bo du lieu hien tai cua trinh duyet."
+              : "Bank này có thể không tồn tại trong bộ dữ liệu hiện tại của trình duyệt."
             : locale === "en"
               ? "This question may not exist in the current bank dataset."
-              : "Cau hoi nay co the khong ton tai trong du lieu bank hien tai."
+              : "Câu hỏi này có thể không tồn tại trong dữ liệu bank hiện tại."
         }
         href={bank ? `/admin/round-1/banks/${bank.id}` : "/admin/round-1"}
-        actionLabel={locale === "en" ? "Back to test bank" : "Quay lai test bank"}
+        actionLabel={locale === "en" ? "Back to test bank" : "Quay lại test bank"}
       />
     );
   }
@@ -2535,11 +2552,11 @@ function AdminRound1QuestionEditorInner({
       <div className="flex flex-wrap gap-3 text-sm font-semibold">
         <Link href="/admin/round-1" className="inline-flex items-center gap-2 theme-accent">
           <ArrowLeft className="h-4 w-4" />
-          {locale === "en" ? "Back to Round 1" : "Quay lai Vong 1"}
+          {locale === "en" ? "Back to Round 1" : "Quay lại Vòng 1"}
         </Link>
         <span className="theme-text-soft">/</span>
         <Link href={`/admin/round-1/banks/${bank.id}`} className="theme-accent">
-          {locale === "en" ? "Back to bank detail" : "Quay lai chi tiet bank"}
+          {locale === "en" ? "Back to bank detail" : "Quay lại chi tiết bank"}
         </Link>
       </div>
 
@@ -2551,10 +2568,10 @@ function AdminRound1QuestionEditorInner({
             mode === "create"
               ? locale === "en"
                 ? "Admin / Round 1 / Add question"
-                : "Admin / Vong 1 / Them cau hoi"
+                : "Admin / Vòng 1 / Thêm câu hỏi"
               : locale === "en"
                 ? "Admin / Round 1 / Edit question"
-                : "Admin / Vong 1 / Sua cau hoi"
+                : "Admin / Vòng 1 / Sửa câu hỏi"
           }
           title={
             mode === "create"
@@ -2563,7 +2580,7 @@ function AdminRound1QuestionEditorInner({
                 : "Bản nháp câu hỏi mới"
               : locale === "en"
                 ? `Question ${questionIndex + 1} editor`
-                : `Editor cau hoi ${questionIndex + 1}`
+                : `Editor câu hỏi ${questionIndex + 1}`
           }
           description={
             mode === "create"
@@ -2575,8 +2592,8 @@ function AdminRound1QuestionEditorInner({
                   ? "Update the question prompt, topic, difficulty, and response structure for this question inside the selected test bank."
                   : "Update the question prompt, topic, and response structure for this question inside the selected test bank."
                 : usesDifficulty
-                  ? "Cap nhat prompt, chu de, do kho va cau truc tra loi cho cau hoi nay trong test bank da chon."
-                  : "Cap nhat prompt, chu de va cau truc tra loi cho cau hoi nay trong test bank da chon."
+                  ? "Cập nhật prompt, chủ đề, độ khó và cấu trúc trả lời cho câu hỏi này trong test bank đã chọn."
+                  : "Cập nhật prompt, chủ đề và cấu trúc trả lời cho câu hỏi này trong test bank đã chọn."
           }
         />
         <div className="flex gap-3">
@@ -2585,7 +2602,7 @@ function AdminRound1QuestionEditorInner({
             onClick={() => pristineQuestion && setDraft(cloneRound1Question(pristineQuestion))}
             className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
           >
-            {locale === "en" ? "Reset draft" : "Dat lai ban nhap"}
+            {locale === "en" ? "Reset draft" : "Đặt lại bản nháp"}
           </button>
           <button
             type="button"
@@ -2597,10 +2614,10 @@ function AdminRound1QuestionEditorInner({
             {mode === "create"
               ? locale === "en"
                 ? "Create question"
-                : "Tao cau hoi"
+                : "Tạo câu hỏi"
               : locale === "en"
                 ? "Save question"
-                : "Luu cau hoi"}
+                : "Lưu câu hỏi"}
           </button>
         </div>
       </div>
@@ -2636,7 +2653,7 @@ function AdminRound1QuestionEditorInner({
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Topic" : "Chu de"}
+                {locale === "en" ? "Topic" : "Chủ đề"}
               </span>
               <select
                 value={draft.topic}
@@ -2663,7 +2680,7 @@ function AdminRound1QuestionEditorInner({
             {usesDifficulty ? (
               <label className="space-y-2">
                 <span className="text-sm theme-text-muted">
-                  {locale === "en" ? "Difficulty" : "Do kho"}
+                  {locale === "en" ? "Difficulty" : "Độ khó"}
                 </span>
                 <select
                   value={draft.difficulty}
@@ -2679,15 +2696,15 @@ function AdminRound1QuestionEditorInner({
                   }
                   className={fieldClassName}
                 >
-                  <option value="easy">easy</option>
-                  <option value="medium">medium</option>
-                  <option value="hard">hard</option>
+                  <option value="easy">{pickRound1DifficultyLabel(locale, "easy")}</option>
+                  <option value="medium">{pickRound1DifficultyLabel(locale, "medium")}</option>
+                  <option value="hard">{pickRound1DifficultyLabel(locale, "hard")}</option>
                 </select>
               </label>
             ) : null}
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Question type" : "Loai cau hoi"}
+                {locale === "en" ? "Question type" : "Loại câu hỏi"}
               </span>
               <select
                 value={draft.type}
@@ -2723,7 +2740,7 @@ function AdminRound1QuestionEditorInner({
 
           <div className="mt-6">
             <QuestionContentFieldEditor
-              label={locale === "en" ? "Question prompt" : "Prompt cau hoi"}
+              label={locale === "en" ? "Question prompt" : "Prompt câu hỏi"}
               locale={locale}
               rows={5}
               value={draft.prompt}
@@ -2745,23 +2762,23 @@ function AdminRound1QuestionEditorInner({
                     {draft.type === "pairing"
                       ? locale === "en"
                         ? "Pairing structure"
-                        : "Cau truc noi cap"
+                        : "Cấu trúc nối cặp"
                       : locale === "en"
                         ? "Answer options"
-                        : "Cac dap an"}
+                        : "Các đáp án"}
                   </p>
                   <p className="mt-2 text-sm leading-7 theme-text-muted">
                     {draft.type === "multiple-choice"
                       ? locale === "en"
                         ? "Edit the answer options, then mark all correct answers."
-                        : "Chinh sua cac lua chon, sau do danh dau tat ca dap an dung."
+                        : "Chỉnh sửa các lựa chọn, sau đó đánh dấu tất cả đáp án đúng."
                       : draft.type === "pairing"
                         ? locale === "en"
                           ? "Configure the right-side answer list, then map each left-side prompt to its correct match."
-                          : "Cau hinh danh sach ben phai, sau do noi moi prompt ben trai voi dap an dung."
+                          : "Cấu hình danh sách bên phải, sau đó nối mỗi prompt bên trái với đáp án đúng."
                         : locale === "en"
                           ? "Edit the answer options, then mark the correct answer."
-                          : "Chinh sua cac lua chon, sau do danh dau dap an dung."}
+                          : "Chỉnh sửa các lựa chọn, sau đó đánh dấu đáp án đúng."}
                   </p>
                 </div>
               </div>
@@ -2778,7 +2795,7 @@ function AdminRound1QuestionEditorInner({
                       >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <p className="text-lg font-semibold theme-text-strong">
-                            {locale === "en" ? `Option ${option.label}` : `Lua chon ${option.label}`}
+                            {locale === "en" ? `Option ${option.label}` : `Lựa chọn ${option.label}`}
                           </p>
                           <label className="inline-flex items-center gap-2 text-sm font-semibold theme-text-strong">
                             <input
@@ -2813,17 +2830,17 @@ function AdminRound1QuestionEditorInner({
                               {draft.type === "multiple-choice"
                                 ? locale === "en"
                                   ? "Correct choice"
-                                  : "Dap an dung"
+                                  : "Đáp án đúng"
                                 : locale === "en"
                                   ? "Correct answer"
-                                  : "Dap an dung"}
+                                  : "Đáp án đúng"}
                             </span>
                           </label>
                         </div>
 
                         <div className="mt-4">
                           <QuestionContentFieldEditor
-                            label={locale === "en" ? `Option ${option.label} text` : `Noi dung ${option.label}`}
+                            label={locale === "en" ? `Option ${option.label} text` : `Nội dung ${option.label}`}
                             locale={locale}
                             rows={3}
                             value={option.text}
@@ -2852,7 +2869,7 @@ function AdminRound1QuestionEditorInner({
               {draft.type === "pairing" && draft.pairingItems?.length ? (
                 <div className="mt-8">
                   <p className="theme-heading text-2xl font-semibold theme-text-strong">
-                    {locale === "en" ? "Left-side prompts" : "Cac muc ben trai"}
+	                    {locale === "en" ? "Left-side prompts" : "Các mục bên trái"}
                   </p>
                   <div className="mt-6 grid gap-4">
                     {draft.pairingItems.map((item) => (
@@ -2862,11 +2879,11 @@ function AdminRound1QuestionEditorInner({
                       >
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <p className="text-lg font-semibold theme-text-strong">
-                            {locale === "en" ? `Prompt ${item.label}` : `Muc ${item.label}`}
+	                            {locale === "en" ? `Prompt ${item.label}` : `Mục ${item.label}`}
                           </p>
                           <label className="space-y-2">
                             <span className="text-sm theme-text-muted">
-                              {locale === "en" ? "Correct match" : "Cap noi dung"}
+	                              {locale === "en" ? "Correct match" : "Cặp nội dung"}
                             </span>
                             <select
                               value={item.correctOptionId}
@@ -2896,7 +2913,7 @@ function AdminRound1QuestionEditorInner({
                         </div>
                         <div className="mt-4">
                           <QuestionContentFieldEditor
-                            label={locale === "en" ? `Prompt ${item.label}` : `Noi dung ${item.label}`}
+	                            label={locale === "en" ? `Prompt ${item.label}` : `Nội dung ${item.label}`}
                             locale={locale}
                             rows={3}
                             value={item.prompt}
@@ -2929,16 +2946,16 @@ function AdminRound1QuestionEditorInner({
             <div className="mt-8 space-y-6">
               <div>
                 <p className="theme-heading text-2xl font-semibold theme-text-strong">
-                  {locale === "en" ? "Essay settings" : "Cau hinh tu luan"}
+                  {locale === "en" ? "Essay settings" : "Cấu hình tự luận"}
                 </p>
                 <p className="mt-2 text-sm leading-7 theme-text-muted">
                   {locale === "en"
                     ? "Define what students see inside the text area and what moderators should use to review the response."
-                    : "Xac dinh noi dung sinh vien nhin thay trong o nhap va ghi chu de moderator dung khi xem bai."}
+                    : "Xác định nội dung sinh viên nhìn thấy trong ô nhập và ghi chú để moderator dùng khi xem bài."}
                 </p>
               </div>
               <QuestionContentFieldEditor
-                label={locale === "en" ? "Essay placeholder" : "Placeholder bai viet"}
+                label={locale === "en" ? "Essay placeholder" : "Placeholder bài viết"}
                 locale={locale}
                 rows={3}
                 value={draft.placeholder ?? createLocalizedEmpty()}
@@ -2957,7 +2974,7 @@ function AdminRound1QuestionEditorInner({
                 }
               />
               <QuestionContentFieldEditor
-                label={locale === "en" ? "Rubric note" : "Ghi chu rubric"}
+	                label={locale === "en" ? "Rubric note" : "Ghi chú rubric"}
                 locale={locale}
                 rows={4}
                 value={draft.rubricNote ?? createLocalizedEmpty()}
