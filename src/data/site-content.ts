@@ -464,12 +464,12 @@ export const defaultPageContent: SitePageContent = {
     rewards: {
       eyebrow: { en: "Rewards", vi: "Giải thưởng" },
       title: {
-        en: "A prize structure that makes the top 5 instantly clear.",
-        vi: "Cấu trúc giải thưởng giúp top 5 được nhìn ra ngay lập tức.",
+        en: "Prize structure",
+        vi: "Cơ cấu giải thưởng",
       },
       description: {
-        en: "The main awards are separated by final ranking from 1st to 4th, while Emerging Teams stay in their own smaller recognition block after Round 2.",
-        vi: "Các giải chính được tách rõ theo thứ hạng chung kết từ hạng 1 đến hạng 4, trong khi Đội tiềm năng nằm ở một block riêng nhỏ hơn sau Vòng 2.",
+        en: "",
+        vi: "",
       },
     },
     rewardCards: [
@@ -708,12 +708,12 @@ export const defaultPageContent: SitePageContent = {
     rewards: {
       eyebrow: { en: "Rewards", vi: "Giải thưởng" },
       title: {
-        en: "A reward structure that makes every result band clear.",
-        vi: "Cấu trúc giải thưởng giúp từng nhóm kết quả được nhìn rõ ngay lập tức.",
+        en: "Prize structure",
+        vi: "Cơ cấu giải thưởng",
       },
       description: {
-        en: "The main awards are separated by final ranking from 1st to 4th, while Emerging Teams stay in their own smaller recognition block after Round 2.",
-        vi: "Các giải chính được tách rõ theo thứ hạng chung kết từ hạng 1 đến hạng 4, trong khi Đội tiềm năng nằm ở một block riêng nhỏ hơn sau Vòng 2.",
+        en: "",
+        vi: "",
       },
     },
     rewardCards: [

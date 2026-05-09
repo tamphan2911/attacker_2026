@@ -120,8 +120,8 @@ export function HomePage() {
   const rewardCards =
     pageContent.home.rewardCards.length > 0 ? pageContent.home.rewardCards : defaultPageContent.home.rewardCards;
   const rewardSection = pageContent.home.rewards;
+  const rewardSectionTitle = locale === "vi" ? "Cơ cấu giải thưởng" : "Prize structure";
   const emergingReward = pageContent.home.emergingReward;
-  const additionalRewardOpportunities = pageContent.home.competitionPath;
   const testimonialsSection = pageContent.home.testimonialsSection;
   const testimonialsTitle =
     locale === "vi" ? "Cảm nhận Attacker 2025" : "Attacker 2025 voices";
@@ -298,11 +298,8 @@ export function HomePage() {
               {pickText(locale, rewardSection.eyebrow)}
             </p>
             <h2 className="theme-heading mt-5 max-w-3xl text-3xl font-semibold leading-[1.08] theme-text-strong md:text-[3rem]">
-              {pickText(locale, rewardSection.title)}
+              {rewardSectionTitle}
             </h2>
-            <p className="theme-text-muted mt-5 max-w-3xl text-base leading-8">
-              {pickText(locale, rewardSection.description)}
-            </p>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
               {rewardCards.map((item, index) => {
@@ -359,25 +356,6 @@ export function HomePage() {
               </p>
               <p className="theme-text-muted mt-3 text-sm leading-7">
                 {pickText(locale, emergingReward.note)}
-              </p>
-            </div>
-
-            <div className="theme-home-reward-aside rounded-[2rem] border px-5 py-5 backdrop-blur-md">
-              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.28em]">
-                {pickText(locale, additionalRewardOpportunities.eyebrow)}
-              </p>
-              <div className="mt-5 space-y-3">
-                {additionalRewardOpportunities.items.map((item) => (
-                  <div
-                    key={item.en}
-                    className="theme-home-path-item theme-text-body rounded-2xl border px-4 py-3 text-sm"
-                  >
-                    {pickText(locale, item)}
-                  </div>
-                ))}
-              </div>
-              <p className="theme-text-muted mt-4 text-sm leading-7">
-                {pickText(locale, additionalRewardOpportunities.note)}
               </p>
             </div>
           </div>
