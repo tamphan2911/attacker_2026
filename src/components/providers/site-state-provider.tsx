@@ -186,8 +186,12 @@ interface SiteStateValue {
   updateActiveUserProfile: (payload: Partial<UserProfile>) => void;
   updateUserByAdmin: (userId: string, payload: Partial<UserProfile>) => void;
   deleteUserByAdmin: (userId: string) => void;
-  createTeam: (payload: Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio">) => void;
-  updateCurrentTeam: (payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio">>) => void;
+  createTeam: (
+    payload: Pick<TeamProfile, "name" | "tag" | "avatarTone" | "track" | "bio"> & { avatarImageSrc?: string | null },
+  ) => void;
+  updateCurrentTeam: (
+    payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "track" | "bio">> & { avatarImageSrc?: string | null },
+  ) => void;
   updateTeamByAdmin: (
     teamId: string,
     payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio" | "leaderId" | "stage" | "finalOutcome">>,
@@ -1249,7 +1253,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
   };
 
   const createTeam = (
-    payload: Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio">,
+    payload: Pick<TeamProfile, "name" | "tag" | "avatarTone" | "track" | "bio"> & { avatarImageSrc?: string | null },
   ) => {
     if (!isAuthenticated) {
       pushToast(
@@ -1309,7 +1313,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
   };
 
   const updateCurrentTeam = (
-    payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "avatarImageSrc" | "track" | "bio">>,
+    payload: Partial<Pick<TeamProfile, "name" | "tag" | "avatarTone" | "track" | "bio">> & { avatarImageSrc?: string | null },
   ) => {
     const team = getTeamForUser(activeUserId, teams);
 

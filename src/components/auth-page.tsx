@@ -74,6 +74,10 @@ const authFieldClassName =
 const authTextareaClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3.5 text-[0.95rem] theme-text-strong outline-none placeholder:text-[0.78rem] md:placeholder:text-[0.84rem] lg:placeholder:text-[0.9rem]";
 
+function requiredFieldLabel(label: string) {
+  return `${label} (*)`;
+}
+
 export function AuthPage() {
   const router = useRouter();
   const { authStatus, canAccessAdminMode, isAuthenticated, locale, pageContent, theme } = useSiteState();
@@ -597,7 +601,7 @@ export function AuthPage() {
               <form onSubmit={handleRegisterSubmit} className="space-y-4">
                 <div className="grid gap-4 xl:grid-cols-2">
                   <label className="space-y-2 xl:col-span-2">
-                    <span className="text-sm theme-text-muted">{locale === "en" ? "Full name" : "Họ tên"}</span>
+	                    <span className="text-sm theme-text-muted">{requiredFieldLabel(locale === "en" ? "Full name" : "Họ tên")}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <UserRound className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
@@ -610,8 +614,8 @@ export function AuthPage() {
                     </div>
                   </label>
 
-                  <label className="space-y-2">
-                    <span className="text-sm theme-text-muted">Email</span>
+	                  <label className="space-y-2 xl:col-span-2">
+	                    <span className="text-sm theme-text-muted">Email (*)</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <Mail className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
@@ -625,7 +629,7 @@ export function AuthPage() {
                   </label>
 
                   <label className="space-y-2 xl:col-span-2">
-                    <span className="text-sm theme-text-muted">{locale === "en" ? "University" : "Trường"}</span>
+	                    <span className="text-sm theme-text-muted">{requiredFieldLabel(locale === "en" ? "University" : "Trường")}</span>
                     <div ref={universityMenuRef} className="relative">
                       <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                         <Building2 className="mr-3 h-4 w-4 theme-text-faint" />
@@ -652,7 +656,7 @@ export function AuthPage() {
                       </div>
 
                       {isUniversityMenuOpen ? (
-                        <div className="theme-panel-strong absolute left-0 right-0 top-[calc(100%+0.6rem)] z-20 rounded-[1.4rem] border theme-border p-2 shadow-[0_22px_55px_rgba(15,23,42,0.14)]">
+                        <div className="theme-auth-university-menu theme-panel-strong absolute left-0 right-0 top-[calc(100%+0.6rem)] z-20 rounded-[1.4rem] border theme-border p-2 shadow-[0_22px_55px_rgba(15,23,42,0.14)]">
                           <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
                             {filteredUniversities.slice(0, 8).map((entry) => {
                               const label = pickText(locale, entry);
@@ -698,7 +702,7 @@ export function AuthPage() {
                   </label>
 
                   <label className="space-y-2">
-                    <span className="text-sm theme-text-muted">{locale === "en" ? "Major" : "Chuyên ngành"}</span>
+	                    <span className="text-sm theme-text-muted">{requiredFieldLabel(locale === "en" ? "Major" : "Chuyên ngành")}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <Building2 className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
@@ -712,7 +716,7 @@ export function AuthPage() {
                   </label>
 
                   <label className="space-y-2">
-                    <span className="text-sm theme-text-muted">{locale === "en" ? "Student ID" : "Mã số sinh viên"}</span>
+	                    <span className="text-sm theme-text-muted">{requiredFieldLabel(locale === "en" ? "Student ID" : "Mã số sinh viên")}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <UserRound className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
@@ -726,13 +730,13 @@ export function AuthPage() {
                   </label>
 
                   <label className="space-y-2">
-                    <span className="text-sm theme-text-muted">{locale === "en" ? "Class year" : "Năm học"}</span>
+	                    <span className="text-sm theme-text-muted">{requiredFieldLabel(locale === "en" ? "Class year" : "Năm học")}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <CalendarDays className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
                         value={registerForm.classYear}
                         onChange={handleRegisterFieldChange("classYear")}
-                        placeholder={locale === "en" ? "K24, 2026..." : "K24, 2026..."}
+                        placeholder={locale === "en" ? "Year 2..." : "Năm 2..."}
                         className={authFieldClassName}
                         required
                       />
@@ -755,7 +759,7 @@ export function AuthPage() {
                   </label>
 
                   <label className="space-y-2 xl:col-span-2">
-                    <span className="text-sm theme-text-muted">{locale === "en" ? "Password" : "Mật khẩu"}</span>
+	                    <span className="text-sm theme-text-muted">{requiredFieldLabel(locale === "en" ? "Password" : "Mật khẩu")}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <LockKeyhole className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
@@ -771,7 +775,7 @@ export function AuthPage() {
 
                   <label className="space-y-2 xl:col-span-2">
                     <span className="text-sm theme-text-muted">
-                      {locale === "en" ? "Confirm password" : "Xác nhận mật khẩu"}
+	                      {requiredFieldLabel(locale === "en" ? "Confirm password" : "Xác nhận mật khẩu")}
                     </span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <CircleCheck className="mr-3 h-4 w-4 theme-text-faint" />

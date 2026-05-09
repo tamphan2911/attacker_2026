@@ -33,6 +33,19 @@ function fieldClassName() {
   return "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
 }
 
+function AuthWarningMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-[1.35rem] border border-amber-500/22 bg-[linear-gradient(135deg,rgba(251,191,36,0.18),rgba(245,158,11,0.08))] px-4 py-3 text-sm leading-7 text-slate-950 shadow-[0_16px_34px_rgba(245,158,11,0.08)] dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-50 dark:shadow-none">
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-amber-500/24 bg-amber-400/18 text-amber-700 dark:border-amber-200/18 dark:bg-amber-200/10 dark:text-amber-100">
+          <TriangleAlert className="h-4 w-4" />
+        </span>
+        <p className="font-medium">{children}</p>
+      </div>
+    </div>
+  );
+}
+
 export function AuthCheckEmailPage() {
   const { locale } = useSiteState();
   const searchParams = useSearchParams();
@@ -182,7 +195,7 @@ export function AuthCheckEmailPage() {
           </Surface>
         ) : null}
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 pt-3 sm:pt-4">
           <Link
             href="/auth"
             className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
@@ -413,7 +426,7 @@ export function PasswordResetRequestPage() {
           </Link>
         </div>
 
-        {message ? <p className="text-sm theme-text-soft">{message}</p> : null}
+        {message ? <AuthWarningMessage>{message}</AuthWarningMessage> : null}
       </form>
     </AuthFlowShell>
   );
@@ -550,7 +563,7 @@ export function PasswordResetConfirmPage() {
               </div>
             </label>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 pt-3 sm:pt-4">
               <button
                 type="submit"
                 disabled={isBusy}
@@ -585,7 +598,7 @@ export function PasswordResetConfirmPage() {
           </div>
         )}
 
-        {message ? <p className="text-sm theme-text-soft">{message}</p> : null}
+        {message ? <AuthWarningMessage>{message}</AuthWarningMessage> : null}
       </div>
     </AuthFlowShell>
   );

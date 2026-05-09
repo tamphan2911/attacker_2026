@@ -45,6 +45,7 @@ import {
 import {
   MAX_SUBMISSION_FILE_BYTES,
 } from "@/lib/submission-files";
+import { ALLOWED_AVATAR_IMAGE_TYPES, MAX_AVATAR_IMAGE_BYTES } from "@/lib/avatar-images";
 import { formatDateLabel, formatDateRangeLabel, getTeamForUser, pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import {
@@ -84,8 +85,6 @@ interface SubmissionFormState {
   summary: string;
   resourceFile: File | null;
 }
-
-const MAX_AVATAR_FILE_BYTES = 1024 * 1024;
 
 function createTeamFormState(team?: TeamProfile): TeamFormState {
   return {
@@ -499,7 +498,7 @@ export function DashboardPage() {
         tag: teamForm.tag,
         track: teamForm.track,
         avatarTone: teamForm.avatarTone,
-        avatarImageSrc: teamForm.avatarImageSrc,
+        avatarImageSrc: teamForm.avatarImageSrc ?? null,
         bio: teamForm.bio,
       });
       return;
@@ -523,11 +522,20 @@ export function DashboardPage() {
       return;
     }
 
-    if (file.size > MAX_AVATAR_FILE_BYTES) {
+    if (!ALLOWED_AVATAR_IMAGE_TYPES.has(file.type)) {
       setTeamAvatarError(
         locale === "en"
-          ? `Avatar images must be ${formatFileSize(MAX_AVATAR_FILE_BYTES)} or smaller.`
-          : `Ảnh avatar phải có dung lượng ${formatFileSize(MAX_AVATAR_FILE_BYTES)} trở xuống.`,
+          ? "Only JPEG, PNG, WebP, or GIF images are allowed."
+          : "Chỉ chấp nhận ảnh JPEG, PNG, WebP hoặc GIF.",
+      );
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_IMAGE_BYTES) {
+      setTeamAvatarError(
+        locale === "en"
+          ? `Avatar images must be ${formatFileSize(MAX_AVATAR_IMAGE_BYTES)} or smaller.`
+          : `Ảnh avatar phải có dung lượng ${formatFileSize(MAX_AVATAR_IMAGE_BYTES)} trở xuống.`,
       );
       return;
     }
@@ -1219,8 +1227,8 @@ export function DashboardPage() {
                 {teamAvatarError ? <p className="mt-3 text-xs leading-6 text-rose-300">{teamAvatarError}</p> : null}
                 <p className="mt-3 text-xs leading-6 theme-text-faint">
                   {locale === "en"
-                    ? `Uploaded team photos override the gradient. The selected tone remains as the fallback. Maximum size ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`
-                    : `Ảnh đội tải lên sẽ hiển thị độc lập với avatar đội trưởng. Nếu chưa có ảnh, hệ thống dùng gradient và tông màu đã chọn làm phương án dự phòng. Dung lượng tối đa ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
+                    ? `Uploaded team photos override the gradient. The selected tone remains as the fallback. Maximum size ${formatFileSize(MAX_AVATAR_IMAGE_BYTES)}.`
+                    : `Ảnh đội tải lên sẽ hiển thị độc lập với avatar đội trưởng. Nếu chưa có ảnh, hệ thống dùng gradient và tông màu đã chọn làm phương án dự phòng. Dung lượng tối đa ${formatFileSize(MAX_AVATAR_IMAGE_BYTES)}.`}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-3">
                   {avatarTones.map((tone) => (
@@ -2151,8 +2159,8 @@ export function DashboardPage() {
               {teamAvatarError ? <p className="mt-3 text-xs leading-6 text-rose-300">{teamAvatarError}</p> : null}
               <p className="mt-3 text-xs leading-6 theme-text-faint">
                 {locale === "en"
-                  ? `The team avatar is independent from the leader avatar. If no image is uploaded, the team keeps its own gradient identity. Maximum size ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`
-                  : `Avatar đội được tách riêng khỏi avatar đội trưởng. Nếu chưa tải ảnh, đội sẽ dùng nhận diện gradient riêng của mình. Dung lượng tối đa ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
+                  ? `The team avatar is independent from the leader avatar. If no image is uploaded, the team keeps its own gradient identity. Maximum size ${formatFileSize(MAX_AVATAR_IMAGE_BYTES)}.`
+                  : `Avatar đội được tách riêng khỏi avatar đội trưởng. Nếu chưa tải ảnh, đội sẽ dùng nhận diện gradient riêng của mình. Dung lượng tối đa ${formatFileSize(MAX_AVATAR_IMAGE_BYTES)}.`}
               </p>
               <div className="mt-3 flex flex-wrap gap-3">
                 {avatarTones.map((tone) => (

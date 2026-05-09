@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { getAuthSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { serializeUser } from "@/server/site-serializers";
 
 const updateProfileSchema = z.object({
@@ -15,7 +16,7 @@ const updateProfileSchema = z.object({
   major: z.string().trim().min(1),
   classYear: z.string().trim().min(1),
   bio: z.string().trim().min(1).max(600),
-  avatarImageSrc: z.string().trim().optional(),
+  avatarImageSrc: z.string().trim().nullable().optional(),
 });
 
 export async function GET() {
@@ -46,6 +47,7 @@ export async function PATCH(request: Request) {
     where: { id: session.user.id },
     select: {
       role: true,
+      avatarImageSrc: true,
     },
   });
 
@@ -83,26 +85,49 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const updated = await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      name: payload.data.name.trim(),
-      email: normalizedEmail,
-      studentId: existingUser.role === UserRole.STUDENT ? normalizedStudentId || null : undefined,
-      loginId: existingUser.role === UserRole.STUDENT ? normalizedStudentId || undefined : undefined,
-      phoneNumber: normalizedPhoneNumber || null,
-      university: payload.data.university.trim(),
-      major: payload.data.major.trim(),
-      classYear: payload.data.classYear.trim(),
-      bio: payload.data.bio.trim(),
-      avatarImageSrc: payload.data.avatarImageSrc || null,
-    },
-    include: {
-      accounts: {
-        select: { provider: true },
+  let avatarReplacement: Awaited<ReturnType<typeof prepareAvatarImageReplacement>>;
+  try {
+    avatarReplacement = await prepareAvatarImageReplacement({
+      ownerKind: "user",
+      ownerId: session.user.id,
+      previousImageSrc: existingUser.avatarImageSrc,
+      nextImageSrc: payload.data.avatarImageSrc,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Invalid avatar image." },
+      { status: 400 },
+    );
+  }
+
+  let updated;
+  try {
+    updated = await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        name: payload.data.name.trim(),
+        email: normalizedEmail,
+        studentId: existingUser.role === UserRole.STUDENT ? normalizedStudentId || null : undefined,
+        loginId: existingUser.role === UserRole.STUDENT ? normalizedStudentId || undefined : undefined,
+        phoneNumber: normalizedPhoneNumber || null,
+        university: payload.data.university.trim(),
+        major: payload.data.major.trim(),
+        classYear: payload.data.classYear.trim(),
+        bio: payload.data.bio.trim(),
+        avatarImageSrc: avatarReplacement.imageSrc,
       },
-    },
-  });
+      include: {
+        accounts: {
+          select: { provider: true },
+        },
+      },
+    });
+  } catch (error) {
+    await avatarReplacement.cleanupNew();
+    throw error;
+  }
+
+  await avatarReplacement.deletePrevious();
 
   return NextResponse.json({ user: serializeUser(updated) }, { status: 200 });
 }

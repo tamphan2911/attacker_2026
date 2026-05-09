@@ -9,7 +9,7 @@ const updateCurrentTeamSchema = z.object({
   name: z.string().trim().min(1),
   tag: z.string().trim().min(1).max(8),
   avatarTone: z.string().trim().min(1),
-  avatarImageSrc: z.string().trim().optional(),
+  avatarImageSrc: z.string().trim().nullable().optional(),
   track: z.string().trim().min(1),
   bio: z.string().trim().min(1),
 });

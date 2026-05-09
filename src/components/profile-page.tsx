@@ -16,10 +16,9 @@ import { useEffect, useState, type ChangeEvent } from "react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { ALLOWED_AVATAR_IMAGE_TYPES, MAX_AVATAR_IMAGE_BYTES, formatAvatarFileSize } from "@/lib/avatar-images";
 import { getTeamCompetitionState, pickCompetitionStateLabel } from "@/lib/competition";
 import { pickText } from "@/lib/site";
-
-const MAX_AVATAR_FILE_BYTES = 1024 * 1024;
 
 interface ProfileFormState {
   name: string;
@@ -45,18 +44,6 @@ function createProfileFormState(user: ReturnType<typeof useSiteState>["currentUs
     bio: user.bio,
     avatarImageSrc: user.avatarImageSrc,
   };
-}
-
-function formatFileSize(bytes?: number) {
-  if (!bytes) {
-    return "";
-  }
-
-  if (bytes >= 1024 * 1024) {
-    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-  }
-
-  return `${Math.ceil(bytes / 1024)}KB`;
 }
 
 function readImageFileAsDataUrl(file: File) {
@@ -160,11 +147,20 @@ function ProfileEditor({
       return;
     }
 
-    if (file.size > MAX_AVATAR_FILE_BYTES) {
+    if (!ALLOWED_AVATAR_IMAGE_TYPES.has(file.type)) {
       setAvatarError(
         locale === "en"
-          ? `Avatar images must be ${formatFileSize(MAX_AVATAR_FILE_BYTES)} or smaller.`
-          : `Ảnh avatar phải có dung lượng ${formatFileSize(MAX_AVATAR_FILE_BYTES)} trở xuống.`,
+          ? "Only JPEG, PNG, WebP, or GIF images are allowed."
+          : "Chỉ chấp nhận ảnh JPEG, PNG, WebP hoặc GIF.",
+      );
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_IMAGE_BYTES) {
+      setAvatarError(
+        locale === "en"
+          ? `Avatar images must be ${formatAvatarFileSize(MAX_AVATAR_IMAGE_BYTES)} or smaller.`
+          : `Ảnh avatar phải có dung lượng ${formatAvatarFileSize(MAX_AVATAR_IMAGE_BYTES)} trở xuống.`,
       );
       return;
     }
@@ -363,8 +359,8 @@ function ProfileEditor({
             {avatarError ? <p className="mt-3 text-xs leading-6 text-rose-300">{avatarError}</p> : null}
             <p className="mt-3 text-xs leading-6 theme-text-faint">
               {locale === "en"
-                ? `Avatar images appear in profile, workspace cards, and invitation views. Maximum size ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`
-                : `Ảnh avatar xuất hiện trên hồ sơ, thẻ thành viên trong workspace và danh sách lời mời. Dung lượng tối đa ${formatFileSize(MAX_AVATAR_FILE_BYTES)}.`}
+                ? `Avatar images appear in profile, workspace cards, and invitation views. Maximum size ${formatAvatarFileSize(MAX_AVATAR_IMAGE_BYTES)}.`
+                : `Ảnh avatar xuất hiện trên hồ sơ, thẻ thành viên trong workspace và danh sách lời mời. Dung lượng tối đa ${formatAvatarFileSize(MAX_AVATAR_IMAGE_BYTES)}.`}
             </p>
           </div>
         </Surface>

@@ -19,6 +19,7 @@ import {
 import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import { prisma } from "@/lib/db";
 import { getCompetitionRoundWindow, getTimelineItemById } from "@/lib/competition";
+import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
   createRound1ExamPaper,
@@ -355,7 +356,7 @@ export async function createTeamForUser(
     name: string;
     tag: string;
     avatarTone: string;
-    avatarImageSrc?: string;
+    avatarImageSrc?: string | null;
     track: string;
     bio: string;
   },
@@ -400,7 +401,7 @@ export async function createTeamForUser(
       tag,
       leaderId: userId,
       avatarTone: payload.avatarTone,
-      avatarImageSrc: payload.avatarImageSrc,
+      avatarImageSrc: null,
       track,
       bio,
       members: {
@@ -411,6 +412,32 @@ export async function createTeamForUser(
     },
   });
 
+  if (payload.avatarImageSrc) {
+    let avatarReplacement: Awaited<ReturnType<typeof prepareAvatarImageReplacement>>;
+    try {
+      avatarReplacement = await prepareAvatarImageReplacement({
+        ownerKind: "team",
+        ownerId: team.id,
+        previousImageSrc: null,
+        nextImageSrc: payload.avatarImageSrc,
+      });
+    } catch (error) {
+      await prisma.team.delete({ where: { id: team.id } }).catch(() => {});
+      return fail(400, error instanceof Error ? error.message : "Invalid team avatar image.");
+    }
+
+    try {
+      await prisma.team.update({
+        where: { id: team.id },
+        data: { avatarImageSrc: avatarReplacement.imageSrc },
+      });
+    } catch (error) {
+      await avatarReplacement.cleanupNew();
+      await prisma.team.delete({ where: { id: team.id } }).catch(() => {});
+      throw error;
+    }
+  }
+
   return ok({ teamId: team.id }, 201);
 }
 
@@ -420,47 +447,59 @@ export async function updateCurrentTeamProfile(
     name: string;
     tag: string;
     avatarTone: string;
-    avatarImageSrc?: string;
+    avatarImageSrc?: string | null;
     track: string;
     bio: string;
   },
 ): Promise<ServiceResult<{ teamId: string }>> {
-  return prisma.$transaction(async (tx) => {
-    const membership = await tx.teamMember.findUnique({
-      where: { userId: actorId },
-      include: { team: true },
+  const membership = await prisma.teamMember.findUnique({
+    where: { userId: actorId },
+    include: { team: true },
+  });
+
+  if (!membership) {
+    return fail(404, "This user is not currently in a team.");
+  }
+
+  if (membership.team.leaderId !== actorId) {
+    return fail(403, "Only the current team leader can edit team settings.");
+  }
+
+  const name = trimInput(payload.name);
+  const tag = trimInput(payload.tag).toUpperCase();
+  const track = trimInput(payload.track);
+  const bio = trimInput(payload.bio);
+
+  if (!name || !tag || !track || !bio) {
+    return fail(400, "Team name, tag, keyword, and bio are required.");
+  }
+
+  const duplicateTag = await prisma.team.findFirst({
+    where: {
+      tag,
+      id: { not: membership.teamId },
+    },
+    select: { id: true },
+  });
+
+  if (duplicateTag) {
+    return fail(409, "That team tag already exists.");
+  }
+
+  let avatarReplacement: Awaited<ReturnType<typeof prepareAvatarImageReplacement>>;
+  try {
+    avatarReplacement = await prepareAvatarImageReplacement({
+      ownerKind: "team",
+      ownerId: membership.teamId,
+      previousImageSrc: membership.team.avatarImageSrc,
+      nextImageSrc: payload.avatarImageSrc,
     });
+  } catch (error) {
+    return fail(400, error instanceof Error ? error.message : "Invalid team avatar image.");
+  }
 
-    if (!membership) {
-      return fail(404, "This user is not currently in a team.");
-    }
-
-    if (membership.team.leaderId !== actorId) {
-      return fail(403, "Only the current team leader can edit team settings.");
-    }
-
-    const name = trimInput(payload.name);
-    const tag = trimInput(payload.tag).toUpperCase();
-    const track = trimInput(payload.track);
-    const bio = trimInput(payload.bio);
-
-    if (!name || !tag || !track || !bio) {
-      return fail(400, "Team name, tag, keyword, and bio are required.");
-    }
-
-    const duplicateTag = await tx.team.findFirst({
-      where: {
-        tag,
-        id: { not: membership.teamId },
-      },
-      select: { id: true },
-    });
-
-    if (duplicateTag) {
-      return fail(409, "That team tag already exists.");
-    }
-
-    await tx.team.update({
+  try {
+    await prisma.team.update({
       where: { id: membership.teamId },
       data: {
         name,
@@ -468,12 +507,17 @@ export async function updateCurrentTeamProfile(
         track,
         bio,
         avatarTone: payload.avatarTone,
-        avatarImageSrc: payload.avatarImageSrc,
+        avatarImageSrc: avatarReplacement.imageSrc,
       },
     });
+  } catch (error) {
+    await avatarReplacement.cleanupNew();
+    throw error;
+  }
 
-    return ok({ teamId: membership.teamId });
-  });
+  await avatarReplacement.deletePrevious();
+
+  return ok({ teamId: membership.teamId });
 }
 
 export async function inviteUserToTeam(
