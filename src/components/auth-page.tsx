@@ -10,6 +10,8 @@ import {
   CalendarDays,
   ChevronDown,
   CircleCheck,
+  Eye,
+  EyeOff,
   LockKeyhole,
   Mail,
   ShieldCheck,
@@ -78,6 +80,30 @@ function requiredFieldLabel(label: string) {
   return `${label} (*)`;
 }
 
+function PasswordVisibilityButton({
+  visible,
+  label,
+  onClick,
+}: {
+  visible: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  const Icon = visible ? EyeOff : Eye;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="ml-3 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border theme-border theme-panel-subtle theme-text-soft transition hover:border-sky-400/36 hover:bg-sky-400/10 hover:text-sky-700 dark:hover:text-sky-100"
+      aria-label={label}
+      title={label}
+    >
+      <Icon className="h-4 w-4" />
+    </button>
+  );
+}
+
 export function AuthPage() {
   const router = useRouter();
   const { authStatus, canAccessAdminMode, isAuthenticated, locale, pageContent, theme } = useSiteState();
@@ -91,6 +117,9 @@ export function AuthPage() {
   const [signinActionHref, setSigninActionHref] = useState<string | null>(null);
   const [signinActionLabel, setSigninActionLabel] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const [isSigninPasswordVisible, setIsSigninPasswordVisible] = useState(false);
+  const [isRegisterPasswordVisible, setIsRegisterPasswordVisible] = useState(false);
+  const [isRegisterConfirmPasswordVisible, setIsRegisterConfirmPasswordVisible] = useState(false);
   const [registerForm, setRegisterForm] = useState({
     name: "",
     email: "",
@@ -432,6 +461,9 @@ export function AuthPage() {
     setSigninActionHref(null);
     setSigninActionLabel(null);
     setIsUniversityMenuOpen(false);
+    setIsSigninPasswordVisible(false);
+    setIsRegisterPasswordVisible(false);
+    setIsRegisterConfirmPasswordVisible(false);
   };
 
   const applyUniversityValue = (value: string) => {
@@ -533,7 +565,7 @@ export function AuthPage() {
                         autoCorrect="off"
                         autoComplete="username"
                         placeholder={locale === "en" ? "Email or account ID" : "Email hoặc ID tài khoản"}
-                        className={authFieldClassName}
+                        className={`${authFieldClassName} min-w-0`}
                         required
                       />
                     </div>
@@ -544,12 +576,26 @@ export function AuthPage() {
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <LockKeyhole className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
-                        type="password"
+                        type={isSigninPasswordVisible ? "text" : "password"}
                         value={password}
                         onChange={(event) => setPassword(event.target.value)}
+                        autoComplete="current-password"
                         placeholder={locale === "en" ? "Enter password" : "Nhập mật khẩu"}
-                        className={authFieldClassName}
+                        className={`${authFieldClassName} min-w-0`}
                         required
+                      />
+                      <PasswordVisibilityButton
+                        visible={isSigninPasswordVisible}
+                        onClick={() => setIsSigninPasswordVisible((current) => !current)}
+                        label={
+                          isSigninPasswordVisible
+                            ? locale === "en"
+                              ? "Hide password"
+                              : "Ẩn mật khẩu"
+                            : locale === "en"
+                              ? "Show password"
+                              : "Hiện mật khẩu"
+                        }
                       />
                     </div>
                   </label>
@@ -763,12 +809,26 @@ export function AuthPage() {
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <LockKeyhole className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
-                        type="password"
+                        type={isRegisterPasswordVisible ? "text" : "password"}
                         value={registerForm.password}
                         onChange={handleRegisterFieldChange("password")}
+                        autoComplete="new-password"
                         placeholder={locale === "en" ? "Enter password" : "Nhập mật khẩu"}
-                        className={authFieldClassName}
+                        className={`${authFieldClassName} min-w-0`}
                         required
+                      />
+                      <PasswordVisibilityButton
+                        visible={isRegisterPasswordVisible}
+                        onClick={() => setIsRegisterPasswordVisible((current) => !current)}
+                        label={
+                          isRegisterPasswordVisible
+                            ? locale === "en"
+                              ? "Hide password"
+                              : "Ẩn mật khẩu"
+                            : locale === "en"
+                              ? "Show password"
+                              : "Hiện mật khẩu"
+                        }
                       />
                     </div>
                   </label>
@@ -780,12 +840,26 @@ export function AuthPage() {
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <CircleCheck className="mr-3 h-4 w-4 theme-text-faint" />
                       <input
-                        type="password"
+                        type={isRegisterConfirmPasswordVisible ? "text" : "password"}
                         value={registerForm.confirmPassword}
                         onChange={handleRegisterFieldChange("confirmPassword")}
+                        autoComplete="new-password"
                         placeholder={locale === "en" ? "Re-enter password" : "Nhập lại mật khẩu"}
-                        className={authFieldClassName}
+                        className={`${authFieldClassName} min-w-0`}
                         required
+                      />
+                      <PasswordVisibilityButton
+                        visible={isRegisterConfirmPasswordVisible}
+                        onClick={() => setIsRegisterConfirmPasswordVisible((current) => !current)}
+                        label={
+                          isRegisterConfirmPasswordVisible
+                            ? locale === "en"
+                              ? "Hide confirm password"
+                              : "Ẩn xác nhận mật khẩu"
+                            : locale === "en"
+                              ? "Show confirm password"
+                              : "Hiện xác nhận mật khẩu"
+                        }
                       />
                     </div>
                   </label>
