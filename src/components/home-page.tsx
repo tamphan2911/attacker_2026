@@ -123,6 +123,8 @@ export function HomePage() {
   const emergingReward = pageContent.home.emergingReward;
   const additionalRewardOpportunities = pageContent.home.competitionPath;
   const testimonialsSection = pageContent.home.testimonialsSection;
+  const testimonialsTitle =
+    locale === "vi" ? "Cảm nhận Attacker 2025" : "Attacker 2025 voices";
   const currentHeroSlide = heroDeck[activeSlide] ?? heroDeck[0];
   const sponsorMarqueeItems = [...sponsors, ...sponsors];
   const testimonialItems = pageContent.home.testimonials;
@@ -422,20 +424,14 @@ export function HomePage() {
         <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-cyan-200/36 blur-3xl" />
 
         <div className="relative space-y-7">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
             <div className="max-w-3xl">
               <p className="text-center text-xs font-semibold uppercase tracking-[0.3em] theme-eyebrow md:text-left">
                 {pickText(locale, testimonialsSection.eyebrow)}
               </p>
-              <h2 className="theme-heading mt-3 text-center text-3xl font-semibold leading-[1.08] theme-text-strong md:text-left md:text-[2.75rem]">
-                {pickText(locale, testimonialsSection.title)}
+              <h2 className="theme-heading mt-3 text-center text-3xl font-semibold leading-[1.08] theme-text-strong md:text-left md:text-[2.4rem]">
+                {testimonialsTitle}
               </h2>
-              <p className="mt-3 text-center text-sm leading-7 theme-text-muted md:text-left md:text-base">
-                {pickText(locale, testimonialsSection.description)}
-              </p>
-            </div>
-            <div className="rounded-full border theme-border bg-white/70 px-4 py-2 text-center text-[0.72rem] font-semibold uppercase tracking-[0.18em] theme-text-soft dark:bg-white/[0.05]">
-              {pickText(locale, pageContent.home.testimonialsBadgeLabel)}
             </div>
           </div>
 

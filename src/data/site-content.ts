@@ -542,15 +542,15 @@ export const defaultPageContent: SitePageContent = {
     testimonialsSection: {
       eyebrow: { en: "Testimonial", vi: "Cảm nhận" },
       title: {
-        en: "What Attacker 2025 participants think about the journey",
-        vi: "Những gì thí sinh Attacker 2025 cảm nhận sau hành trình cuộc thi",
+        en: "Attacker 2025 voices",
+        vi: "Cảm nhận Attacker 2025",
       },
       description: {
-        en: "A sliding collection of short voices from finalists, champions, and emerging teams across last season.",
-        vi: "Một cụm trích dẫn dạng slider, tổng hợp cảm nhận ngắn từ các đội chung kết, quán quân và đội tiềm năng của mùa trước.",
+        en: "",
+        vi: "",
       },
     },
-    testimonialsBadgeLabel: { en: "Auto-sliding voices", vi: "Trích dẫn tự động" },
+    testimonialsBadgeLabel: { en: "", vi: "" },
     testimonialsLinkLabel: { en: "About Attacker", vi: "Giới thiệu Attacker" },
     news: {
       eyebrow: { en: "Latest news & updates", vi: "Tin tức và cập nhật mới" },
