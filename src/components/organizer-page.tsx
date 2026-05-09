@@ -14,7 +14,15 @@ import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 
+export function getOrganizerSeasonHref(year: string) {
+  return `/organizer/seasons/${encodeURIComponent(year)}`;
+}
+
 export function OrganizerPage() {
+  return <OrganizerContent />;
+}
+
+export function OrganizerContent() {
   const { locale, pageContent } = useSiteState();
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
   const [expandedGalleryIndex, setExpandedGalleryIndex] = useState<number | null>(null);
@@ -24,16 +32,6 @@ export function OrganizerPage() {
   const activeGallerySlide = gallerySlides[activeGalleryIndex];
   const expandedGallerySlide =
     expandedGalleryIndex === null ? null : gallerySlides[expandedGalleryIndex];
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setActiveGalleryIndex((current) => (current + 1) % gallerySlides.length);
-    }, 4600);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [gallerySlides.length]);
 
   useEffect(() => {
     if (expandedGalleryIndex === null) {
@@ -78,45 +76,48 @@ export function OrganizerPage() {
 
   return (
     <div className="space-y-16">
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
-        <div>
-          <SectionHeading
-            eyebrow={pickText(locale, pageContent.organizer.header.eyebrow)}
-            title={pickText(locale, pageContent.organizer.header.title)}
-            description={pickText(locale, pageContent.organizer.header.description)}
-          />
-          <div className="mt-8 flex flex-wrap gap-3">
-            {organizerContent.heroBadges.map((item) => (
-              <span
-                key={item.en}
-                className="rounded-full border theme-border bg-white/72 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] theme-text-soft"
-              >
-                {pickText(locale, item)}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <Surface className="overflow-hidden px-0 py-0">
-          <div className="relative min-h-[360px]">
-            <Image
-              src={organizerContent.heroImage}
-              alt={pickText(locale, organizerContent.heroCard.title)}
-              fill
-              sizes="(min-width: 1024px) 420px, 100vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.08),rgba(7,18,35,0.18),rgba(7,18,35,0.82))]" />
-            <div className="absolute inset-x-0 bottom-0 p-6 text-white md:p-7">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/66">
+      <section className="theme-card-shadow-soft relative min-h-[520px] overflow-hidden rounded-[2.4rem] border theme-border-strong">
+        <Image
+          src={organizerContent.heroImage}
+          alt={pickText(locale, organizerContent.heroCard.title)}
+          fill
+          sizes="100vw"
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(106deg,rgba(4,14,30,0.86)_0%,rgba(5,18,39,0.66)_45%,rgba(5,18,39,0.28)_72%,rgba(5,18,39,0.42)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.24),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(251,146,60,0.16),transparent_30%)]" />
+        <div className="relative flex min-h-[520px] items-end px-5 py-8 md:px-9 md:py-10 lg:px-12">
+          <div className="max-w-4xl text-white">
+            <p className="text-xs font-semibold uppercase tracking-[0.34em] text-cyan-100/80">
+              {pickText(locale, pageContent.organizer.header.eyebrow)}
+            </p>
+            <h1 className="theme-heading mt-5 max-w-4xl text-3xl font-semibold tracking-tight text-white md:text-[3.4rem] md:leading-[1.02]">
+              {pickText(locale, pageContent.organizer.header.title)}
+            </h1>
+            <p className="mt-5 max-w-3xl text-sm leading-7 text-white/78 md:text-base md:leading-8">
+              {pickText(locale, pageContent.organizer.header.description)}
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              {organizerContent.heroBadges.map((item) => (
+                <span
+                  key={item.en}
+                  className="rounded-full border border-white/16 bg-white/12 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/88 shadow-[0_14px_34px_rgba(2,8,20,0.18)] backdrop-blur-md"
+                >
+                  {pickText(locale, item)}
+                </span>
+              ))}
+            </div>
+            <div className="mt-8 max-w-2xl rounded-[1.8rem] border border-white/14 bg-[rgba(7,18,35,0.38)] px-5 py-5 shadow-[0_24px_70px_rgba(2,8,20,0.24)] backdrop-blur-xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/72">
                 {pickText(locale, organizerContent.heroCard.eyebrow)}
               </p>
-              <p className="theme-heading mt-4 text-2xl font-semibold leading-[1.15]">
+              <p className="theme-heading mt-3 text-xl font-semibold leading-[1.2] text-white md:text-2xl">
                 {pickText(locale, organizerContent.heroCard.title)}
               </p>
             </div>
           </div>
-        </Surface>
+        </div>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -148,14 +149,20 @@ export function OrganizerPage() {
             <Surface key={season.year} className="overflow-hidden px-0 py-0">
               <div className="grid gap-0 lg:min-h-[336px] lg:grid-cols-[220px_minmax(0,1fr)] lg:items-stretch">
                 <div className="relative min-h-[260px] overflow-hidden lg:h-full lg:min-h-full">
-                  <Image
-                    src={season.image}
-                    alt={pickText(locale, season.title)}
-                    fill
-                    sizes="(min-width: 1280px) 220px, 100vw"
-                    className="object-cover object-center"
-                  />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.08),rgba(7,18,35,0.24),rgba(7,18,35,0.84))]" />
+                  <Link
+                    href={getOrganizerSeasonHref(season.year)}
+                    aria-label={pickText(locale, season.title)}
+                    className="group absolute inset-0"
+                  >
+                    <Image
+                      src={season.image}
+                      alt={pickText(locale, season.title)}
+                      fill
+                      sizes="(min-width: 1280px) 220px, 100vw"
+                      className="object-cover object-center transition duration-500 group-hover:scale-[1.04]"
+                    />
+                  </Link>
+                  <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.08),rgba(7,18,35,0.24),rgba(7,18,35,0.84))]" />
                   <div className="absolute left-4 top-4 rounded-[1.4rem] border border-white/18 bg-[rgba(6,20,38,0.78)] px-4 py-3 text-white shadow-[0_18px_44px_rgba(2,8,20,0.38)] backdrop-blur-md">
                     <p className="text-[0.58rem] font-semibold uppercase tracking-[0.3em] text-cyan-100/76">
                       {pickText(locale, organizerContent.seasonBadgeLabel)}
@@ -169,9 +176,12 @@ export function OrganizerPage() {
                   <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
                     {pickText(locale, season.label)}
                   </p>
-                  <p className="theme-heading mt-4 text-2xl font-semibold leading-[1.15] theme-text-strong">
+                  <Link
+                    href={getOrganizerSeasonHref(season.year)}
+                    className="theme-heading mt-4 block text-2xl font-semibold leading-[1.15] theme-text-strong transition hover:text-[var(--brand)]"
+                  >
                     {pickText(locale, season.title)}
-                  </p>
+                  </Link>
                   <p className="mt-4 text-sm leading-7 theme-text-muted">
                     {pickText(locale, season.body)}
                   </p>

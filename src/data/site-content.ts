@@ -1581,8 +1581,8 @@ export const defaultPageContent: SitePageContent = {
     },
     galleryNotes: [
       {
-        en: "Autoplay keeps the section moving without feeling static.",
-        vi: "Autoplay giúp section chuyển động mà không tạo cảm giác tĩnh.",
+        en: "Manual controls keep the gallery stable while still letting users move through season moments.",
+        vi: "Điều khiển thủ công giúp thư viện ảnh ổn định hơn nhưng vẫn cho phép người xem chuyển qua các khoảnh khắc từng mùa.",
       },
       {
         en: "Thumbnail clicks let users jump directly to a specific season moment.",

@@ -4,6 +4,7 @@ import { Award, Badge, BadgeCheck, Crown, Sparkles, Star, Trophy, Users2 } from 
 
 import { getCompetitionRoundWindow } from "@/lib/competition";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
+import { OrganizerContent } from "@/components/organizer-page";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { InfoKicker, PageIntro, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 
@@ -275,6 +276,8 @@ export function CompetitionPage() {
           </div>
         </div>
       </section>
+
+      <OrganizerContent />
     </div>
   );
 }

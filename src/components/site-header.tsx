@@ -64,15 +64,14 @@ const primaryNavItems: Array<{
       { href: "/rules", label: { en: "Rules", vi: "Thể lệ" } },
       { href: "/competition/timeline", label: { en: "Timeline", vi: "Lịch trình" } },
       { href: "/round-1", label: { en: "Round 1 Test", vi: "Bài thi Vòng 1" } },
-      { href: "/competition/faq", label: { en: "FAQ", vi: "FAQ" } },
       { href: "/competition/sponsors", label: { en: "Sponsors", vi: "Nhà tài trợ" } },
       { href: "/competition/judges", label: { en: "Judges", vi: "Giám khảo" } },
+      { href: "/competition/faq", label: { en: "FAQ", vi: "FAQ" } },
     ],
   },
   { href: "/news", label: { en: "News", vi: "Tin tức" } },
   { href: "/forum", label: { en: "Forum", vi: "Diễn đàn" } },
   { href: "/dashboard", label: { en: "Team Workspace", vi: "Không gian đội" } },
-  { href: "/organizer", label: { en: "About", vi: "Giới thiệu" } },
   { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
 ];
 
