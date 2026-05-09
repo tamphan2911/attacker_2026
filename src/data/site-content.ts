@@ -511,12 +511,12 @@ export const defaultPageContent: SitePageContent = {
       },
     ],
     emergingReward: {
-      eyebrow: { en: "Side recognition", vi: "Danh hieu bo sung" },
+      eyebrow: { en: "Side recognition", vi: "Danh hiệu bổ sung" },
       title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
       amount: { en: "Top 10 teams", vi: "Top 10 đội" },
       note: {
-        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
-        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
+        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities. Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.",
+        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác. Tùy theo chương trình đồng hành tại ngày thuyết trình chung kết, các đội nổi bật có thể nhận thêm quà tặng, học bổng, mentoring, tuyển dụng hoặc cơ hội trao đổi đầu tư từ giám khảo, nhà tài trợ và khách mời.",
       },
     },
     competitionPath: {
@@ -759,8 +759,8 @@ export const defaultPageContent: SitePageContent = {
       title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
       amount: { en: "Top 10 teams", vi: "Top 10 đội" },
       note: {
-        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
-        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
+        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities. Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.",
+        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác. Tùy theo chương trình đồng hành tại ngày thuyết trình chung kết, các đội nổi bật có thể nhận thêm quà tặng, học bổng, mentoring, tuyển dụng hoặc cơ hội trao đổi đầu tư từ giám khảo, nhà tài trợ và khách mời.",
       },
     },
     competitionPath: {

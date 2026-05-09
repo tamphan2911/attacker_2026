@@ -76,6 +76,11 @@ export function CompetitionPage() {
   const rewardSection = pageContent.competition.rewards;
   const rewardSectionTitle = locale === "vi" ? "Cơ cấu giải thưởng" : "Prize structure";
   const emergingReward = pageContent.competition.emergingReward;
+  const emergingRewardEyebrow = locale === "vi" ? "Danh hiệu bổ sung" : "Side recognition";
+  const emergingRewardNote =
+    locale === "vi"
+      ? "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác. Tùy theo chương trình đồng hành tại ngày thuyết trình chung kết, các đội nổi bật có thể nhận thêm quà tặng, học bổng, mentoring, tuyển dụng hoặc cơ hội trao đổi đầu tư từ giám khảo, nhà tài trợ và khách mời."
+      : "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities. Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.";
   const pillars = pageContent.competition.pillars;
 
   return (
@@ -240,7 +245,7 @@ export function CompetitionPage() {
                 </div>
                 <div>
                   <p className="theme-text-soft text-[0.72rem] font-semibold uppercase tracking-[0.24em]">
-                    {pickText(locale, emergingReward.eyebrow)}
+                    {emergingRewardEyebrow}
                   </p>
                   <p className="theme-text-strong mt-1 text-lg font-semibold">
                     {pickText(locale, emergingReward.title)}
@@ -251,7 +256,7 @@ export function CompetitionPage() {
                 {pickText(locale, emergingReward.amount)}
               </p>
               <p className="theme-text-muted mt-3 text-sm leading-7">
-                {pickText(locale, emergingReward.note)}
+                {emergingRewardNote}
               </p>
             </div>
           </div>
