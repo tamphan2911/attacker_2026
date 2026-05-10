@@ -95,6 +95,19 @@ export async function GET() {
                 ...(currentTeamId ? [{ teamId: currentTeamId }] : []),
               ],
             },
+        include: {
+          judgeReviews: {
+            orderBy: [{ createdAt: "asc" }],
+            include: {
+              judgeUser: {
+                select: {
+                  name: true,
+                  loginId: true,
+                },
+              },
+            },
+          },
+        },
         orderBy: { submittedAt: "desc" },
       }),
       elevated

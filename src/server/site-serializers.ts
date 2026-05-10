@@ -420,7 +420,17 @@ export function serializeRound1LockRequest(
 }
 
 export function serializeRound1Submission(
-  submission: Round1Submission,
+  submission: Round1Submission & {
+    judgeReviews?: Array<{
+      judgeUserId: string;
+      score: number | null;
+      scoredAt: Date | null;
+      judgeUser: {
+        name: string;
+        loginId: string;
+      };
+    }>;
+  },
 ): AppRound1Submission {
   return {
     id: submission.id,
@@ -435,6 +445,13 @@ export function serializeRound1Submission(
     essayScore: submission.essayScore,
     totalScore: submission.totalScore,
     durationMinutes: submission.durationMinutes,
+    judgeReviews: submission.judgeReviews?.map((review) => ({
+      judgeUserId: review.judgeUserId,
+      judgeName: review.judgeUser.name,
+      judgeLoginId: review.judgeUser.loginId,
+      score: review.score,
+      scoredAt: review.scoredAt?.toISOString(),
+    })),
   };
 }
 

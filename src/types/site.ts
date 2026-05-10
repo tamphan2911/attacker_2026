@@ -262,6 +262,13 @@ export interface Round1Submission {
   essayScore: number | null;
   totalScore: number | null;
   durationMinutes: number;
+  judgeReviews?: Array<{
+    judgeUserId: string;
+    judgeName: string;
+    judgeLoginId?: string;
+    score: number | null;
+    scoredAt?: string;
+  }>;
 }
 
 export interface UserProfile {

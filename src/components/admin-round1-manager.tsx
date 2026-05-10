@@ -97,6 +97,9 @@ interface IndividualScoreRow {
   totalScore: number | null;
   submittedAt: string;
   reviewStatus: "pending" | "reviewed";
+  judgeName?: string;
+  judgeLoginId?: string;
+  judgeScoredAt?: string;
 }
 
 const fieldClassName =
@@ -639,6 +642,10 @@ function buildIndividualScoreRows(
         return null;
       }
 
+      const judgeReview =
+        submission.judgeReviews?.find((review) => review.score != null || review.scoredAt) ??
+        submission.judgeReviews?.[0];
+
       return {
         submissionId: submission.id,
         userId: user.id,
@@ -652,6 +659,9 @@ function buildIndividualScoreRows(
         totalScore: submission.totalScore,
         submittedAt: submission.submittedAt,
         reviewStatus: isRound1EssayPending(submission) ? "pending" : "reviewed",
+        judgeName: judgeReview?.judgeName,
+        judgeLoginId: judgeReview?.judgeLoginId,
+        judgeScoredAt: judgeReview?.scoredAt,
       };
     })
     .filter((row): row is IndividualScoreRow => Boolean(row))
@@ -1177,6 +1187,9 @@ export function AdminRound1ScoresManager() {
         objectiveScore: row.objectiveScore,
         essayScore: row.essayScore ?? "",
         totalScore: row.totalScore ?? "",
+        judge: row.judgeName ?? "",
+        judgeLoginId: row.judgeLoginId ?? "",
+        judgeScoredAt: row.judgeScoredAt ?? "",
         submittedAt: row.submittedAt,
         reviewStatus: row.reviewStatus,
       })),
@@ -1335,6 +1348,7 @@ export function AdminRound1ScoresManager() {
                   locale === "en" ? "Multiple choice score" : "Điểm trắc nghiệm",
                   locale === "en" ? "Essay score" : "Điểm tự luận",
                   locale === "en" ? "Total score" : "Tổng điểm",
+                  locale === "en" ? "Judge" : "Giám khảo",
                   locale === "en" ? "Submitted at" : "Thời điểm nộp",
                   locale === "en" ? "Review" : "Chấm điểm",
                   locale === "en" ? "Detail" : "Chi tiết",
@@ -1412,6 +1426,24 @@ export function AdminRound1ScoresManager() {
                       >
                         {`${row.totalScore.toFixed(2)} / ${ROUND1_TOTAL_MAX_SCORE}`}
                       </StatusPill>
+                    )}
+                  </td>
+                  <td className="px-4 py-4">
+                    {row.judgeName ? (
+                      <div className="space-y-1">
+                        <p className="font-semibold theme-text-strong">{row.judgeName}</p>
+                        <p className="text-xs theme-text-soft">
+                          {row.judgeScoredAt
+                            ? locale === "en"
+                              ? `Scored ${formatDateLabel(locale, row.judgeScoredAt)}`
+                              : `Đã chấm ${formatDateLabel(locale, row.judgeScoredAt)}`
+                            : locale === "en"
+                              ? "Assigned, pending score"
+                              : "Đã phân công, chờ chấm"}
+                        </p>
+                      </div>
+                    ) : (
+                      <StatusPill tone="warning">{locale === "en" ? "Not assigned" : "Chưa phân công"}</StatusPill>
                     )}
                   </td>
                   <td className="px-4 py-4 theme-text-body">{formatDateLabel(locale, row.submittedAt)}</td>

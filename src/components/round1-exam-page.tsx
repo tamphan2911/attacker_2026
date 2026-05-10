@@ -288,11 +288,13 @@ export function Round1ExamPage() {
   const [dialogError, setDialogError] = useState<string | null>(null);
   const [pageError, setPageError] = useState<string | null>(null);
   const [captureWarning, setCaptureWarning] = useState<string | null>(null);
+  const [essayPasteWarning, setEssayPasteWarning] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const sessionRef = useRef<Round1ExamSession | null>(null);
   const submissionRef = useRef<Round1Submission | null>(null);
   const submitInFlightRef = useRef(false);
   const captureWarningTimeoutRef = useRef<number | null>(null);
+  const essayPasteWarningTimeoutRef = useRef<number | null>(null);
 
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
@@ -315,6 +317,32 @@ export function Round1ExamPage() {
         answers: session.answers,
       })
     : "";
+
+  const showEssayPasteWarning = useCallback(() => {
+    if (essayPasteWarningTimeoutRef.current) {
+      window.clearTimeout(essayPasteWarningTimeoutRef.current);
+    }
+
+    setEssayPasteWarning(
+      locale === "en"
+        ? "Pasting is prohibited for essay answers. Please type your response directly in this field."
+        : "Không được dán nội dung vào câu tự luận. Vui lòng tự nhập câu trả lời trực tiếp trong ô này.",
+    );
+
+    essayPasteWarningTimeoutRef.current = window.setTimeout(() => {
+      setEssayPasteWarning(null);
+      essayPasteWarningTimeoutRef.current = null;
+    }, 4200);
+  }, [locale]);
+
+  useEffect(
+    () => () => {
+      if (essayPasteWarningTimeoutRef.current) {
+        window.clearTimeout(essayPasteWarningTimeoutRef.current);
+      }
+    },
+    [],
+  );
 
   const applyAttemptPayload = useCallback(
     (payload: AttemptStateResponse) => {
@@ -552,6 +580,16 @@ export function Round1ExamPage() {
       event.preventDefault();
     };
 
+    const handlePaste = (event: ClipboardEvent) => {
+      event.preventDefault();
+      if (
+        event.target instanceof HTMLElement &&
+        event.target.dataset.round1EssayAnswer === "true"
+      ) {
+        showEssayPasteWarning();
+      }
+    };
+
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       const isCommandModifier = event.ctrlKey || event.metaKey;
@@ -570,6 +608,13 @@ export function Round1ExamPage() {
         return;
       }
       if (key === "a" || key === "c" || key === "v" || key === "x") {
+        if (
+          key === "v" &&
+          event.target instanceof HTMLElement &&
+          event.target.dataset.round1EssayAnswer === "true"
+        ) {
+          showEssayPasteWarning();
+        }
         event.preventDefault();
       }
     };
@@ -581,7 +626,7 @@ export function Round1ExamPage() {
 
     document.addEventListener("copy", blockEvent);
     document.addEventListener("cut", blockEvent);
-    document.addEventListener("paste", blockEvent);
+    document.addEventListener("paste", handlePaste);
     document.addEventListener("selectstart", blockEvent);
     document.addEventListener("dragstart", blockEvent);
     document.addEventListener("contextmenu", blockEvent);
@@ -593,14 +638,14 @@ export function Round1ExamPage() {
       document.body.classList.remove("theme-round1-exam-locked");
       document.removeEventListener("copy", blockEvent);
       document.removeEventListener("cut", blockEvent);
-      document.removeEventListener("paste", blockEvent);
+      document.removeEventListener("paste", handlePaste);
       document.removeEventListener("selectstart", blockEvent);
       document.removeEventListener("dragstart", blockEvent);
       document.removeEventListener("contextmenu", blockEvent);
       document.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("beforeprint", handleBeforePrint);
     };
-  }, [existingSubmission, session, showCaptureWarning]);
+  }, [existingSubmission, session, showCaptureWarning, showEssayPasteWarning]);
 
   const submitExamAttempt = useCallback(
     async (targetSession: Round1ExamSession) => {
@@ -1682,6 +1727,7 @@ export function Round1ExamPage() {
                     </div>
                   </div>
                   <textarea
+                    data-round1-essay-answer="true"
                     rows={8}
                     value={currentResponse?.essayText ?? ""}
                     placeholder={pickRound1QuestionText(
@@ -1702,8 +1748,20 @@ export function Round1ExamPage() {
                           : current,
                       )
                     }
+                    onPaste={(event) => {
+                      event.preventDefault();
+                      showEssayPasteWarning();
+                    }}
                     className="theme-placeholder w-full rounded-[1.5rem] border theme-border theme-panel px-5 py-4 text-sm leading-7 theme-text-strong outline-none"
                   />
+                  {essayPasteWarning ? (
+                    <div className="rounded-[1.35rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                        <p className="font-medium">{essayPasteWarning}</p>
+                      </div>
+                    </div>
+                  ) : null}
                   <div className="flex flex-col gap-2 text-sm leading-7 sm:flex-row sm:items-center sm:justify-between">
                     <p className={currentEssayExceedsLimit ? "font-medium text-amber-800 dark:text-amber-100" : "theme-text-soft"}>
                       {locale === "en"
