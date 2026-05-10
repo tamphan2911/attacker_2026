@@ -107,7 +107,7 @@ function PasswordVisibilityButton({
 export function AuthPage() {
   const router = useRouter();
   const { authStatus, canAccessAdminMode, isAuthenticated, locale, pageContent, theme } = useSiteState();
-  const [mode, setMode] = useState<"signin" | "register">("register");
+  const [mode, setMode] = useState<"signin" | "register">("signin");
   const [loginId, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");

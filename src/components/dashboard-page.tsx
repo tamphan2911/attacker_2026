@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
   ArrowRight,
   Camera,
@@ -222,6 +222,8 @@ export function DashboardPage() {
   const [pendingInviteUserId, setPendingInviteUserId] = useState<string | null>(null);
   const [pendingRecallInvitationId, setPendingRecallInvitationId] = useState<string | null>(null);
   const [leadershipTargetId, setLeadershipTargetId] = useState("");
+  const [isLeadershipMenuOpen, setIsLeadershipMenuOpen] = useState(false);
+  const leadershipMenuRef = useRef<HTMLDivElement | null>(null);
   const [submissionForms, setSubmissionForms] = useState<Record<SubmissionRound, SubmissionFormState>>({
     "round-2": createSubmissionFormState(),
     "round-3": createSubmissionFormState(),
@@ -239,7 +241,21 @@ export function DashboardPage() {
 
   useEffect(() => {
     setLeadershipTargetId("");
+    setIsLeadershipMenuOpen(false);
   }, [currentTeam?.id]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!leadershipMenuRef.current?.contains(event.target as Node)) {
+        setIsLeadershipMenuOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
 
   if (authStatus === "loading") {
     return (
@@ -342,6 +358,8 @@ export function DashboardPage() {
         .map((memberId) => users.find((user) => user.id === memberId))
         .filter((user): user is UserProfile => Boolean(user))
     : [];
+  const leadershipTransferOptions = currentTeamMembers.filter((member) => member.id !== activeUserId);
+  const selectedLeadershipTarget = leadershipTransferOptions.find((member) => member.id === leadershipTargetId);
 
   const incomingInvitations = invitations.filter(
     (invitation) => invitation.toUserId === activeUserId && invitation.status === "pending",
@@ -1291,12 +1309,69 @@ export function DashboardPage() {
                     <span className="text-sm theme-text-muted">
                       {locale === "en" ? "Transfer leadership" : "Chuyển đội trưởng"}
                     </span>
-                    <div className="relative">
+                    <div ref={leadershipMenuRef} className="relative">
+                      <button
+                        type="button"
+                        disabled={!isLeader || Boolean(outgoingLeadershipTransfer) || teamRosterLocked}
+                        onClick={() => setIsLeadershipMenuOpen((current) => !current)}
+                        className="flex w-full items-center justify-between gap-3 rounded-2xl border theme-border theme-panel px-4 py-3.5 text-left text-sm font-semibold theme-text-strong outline-none transition hover:border-sky-400/34 hover:bg-white/78 focus:border-sky-400/50 focus:ring-4 focus:ring-sky-400/12 disabled:cursor-not-allowed disabled:opacity-45 dark:hover:bg-white/8"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate">
+                            {selectedLeadershipTarget?.name ?? (locale === "en" ? "Select teammate" : "Chọn thành viên")}
+                          </span>
+                          {selectedLeadershipTarget ? (
+                            <span className="mt-1 block truncate text-xs font-medium theme-text-soft">
+                              {selectedLeadershipTarget.major} · {selectedLeadershipTarget.university}
+                            </span>
+                          ) : null}
+                        </span>
+                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border theme-border bg-white/65 theme-text-soft dark:bg-white/8">
+                          <ChevronDown className={`h-4 w-4 transition-transform ${isLeadershipMenuOpen ? "rotate-180" : ""}`} />
+                        </span>
+                      </button>
+
+                      {isLeadershipMenuOpen ? (
+                        <div className="theme-auth-university-menu theme-panel-strong absolute left-0 right-0 top-[calc(100%+0.55rem)] z-30 rounded-[1.35rem] border theme-border p-2 shadow-[0_22px_55px_rgba(15,23,42,0.14)]">
+                          <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                            {leadershipTransferOptions.length > 0 ? (
+                              leadershipTransferOptions.map((member) => (
+                                <button
+                                  key={member.id}
+                                  type="button"
+                                  onMouseDown={(event) => event.preventDefault()}
+                                  onClick={() => {
+                                    setLeadershipTargetId(member.id);
+                                    setIsLeadershipMenuOpen(false);
+                                  }}
+                                  className={`flex w-full items-center justify-between gap-3 rounded-[1rem] px-3 py-3 text-left text-sm transition hover:bg-[rgba(23,114,208,0.06)] ${
+                                    leadershipTargetId === member.id ? "bg-sky-500/10" : ""
+                                  }`}
+                                >
+                                  <span className="min-w-0">
+                                    <span className="block truncate font-semibold theme-text-strong">{member.name}</span>
+                                    <span className="mt-1 block truncate text-xs theme-text-soft">
+                                      {member.major} · {member.university}
+                                    </span>
+                                  </span>
+                                  <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.22em] theme-text-faint">
+                                    {locale === "en" ? "Pick" : "Chọn"}
+                                  </span>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="rounded-[1rem] px-3 py-3 text-sm leading-6 theme-text-muted">
+                                {locale === "en" ? "No teammate is available for transfer." : "Chưa có thành viên phù hợp để chuyển quyền."}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : null}
                       <select
                         disabled={!isLeader || Boolean(outgoingLeadershipTransfer) || teamRosterLocked}
                         value={leadershipTargetId}
                         onChange={(event) => setLeadershipTargetId(event.target.value)}
-                        className="w-full appearance-none rounded-2xl border theme-border theme-panel px-4 py-3 pr-11 text-sm font-semibold theme-text-strong outline-none transition focus:border-sky-400/50 focus:ring-4 focus:ring-sky-400/12 disabled:cursor-not-allowed disabled:opacity-45"
+                        className="sr-only"
                       >
                         <option value="" className="bg-slate-950">
                           {locale === "en" ? "Select teammate" : "Chọn thành viên"}
@@ -1309,7 +1384,7 @@ export function DashboardPage() {
                             </option>
                           ))}
                       </select>
-                      <span className="pointer-events-none absolute right-3 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border theme-border bg-white/65 theme-text-soft dark:bg-white/8">
+                      <span className="hidden">
                         <ChevronDown className="h-4 w-4" />
                       </span>
                     </div>
@@ -1322,6 +1397,7 @@ export function DashboardPage() {
                       onClick={() => {
                         transferLeadership(leadershipTargetId);
                         setLeadershipTargetId("");
+                        setIsLeadershipMenuOpen(false);
                       }}
                       className="inline-flex items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-40"
                     >

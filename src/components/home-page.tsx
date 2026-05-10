@@ -65,7 +65,7 @@ const homepageRewardItems = [
   {
     rank: { en: "4th place", vi: "Hạng 4" },
     title: { en: "Two finalist teams", vi: "Hai đội đồng hạng 4" },
-    amount: { en: "2 x 5,000,000 VND", vi: "2 x 5.000.000 VND" },
+    amount: { en: "5,000,000 VND each team", vi: "5.000.000 VND mỗi đội" },
     note: {
       en: "The remaining two finalists each receive the fourth-place award.",
       vi: "Hai đội còn lại trong top 5 chung kết, mỗi đội nhận giải hạng 4.",
@@ -93,6 +93,14 @@ const testimonialQuoteClasses = [
   "text-[#ec4899] bg-[rgba(236,72,153,0.1)]",
   "text-[#2563eb] bg-[rgba(37,99,235,0.1)]",
 ] as const;
+
+function pickRewardAmount(locale: "en" | "vi", amount: { en: string; vi: string }, index: number) {
+  if (index === 3) {
+    return locale === "en" ? "5,000,000 VND each team" : "5.000.000 VND mỗi đội";
+  }
+
+  return pickText(locale, amount);
+}
 
 export function HomePage() {
   const { locale, pageContent, sponsors } = useSiteState();
@@ -334,7 +342,7 @@ export function HomePage() {
                       </div>
                     </div>
                     <p className="theme-text-strong mt-5 text-2xl font-semibold md:text-[1.8rem]">
-                      {pickText(locale, item.amount)}
+                      {pickRewardAmount(locale, item.amount, index)}
                     </p>
                     <p className="theme-text-muted mt-3 text-sm leading-7">
                       {pickText(locale, item.note)}

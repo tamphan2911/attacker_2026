@@ -103,8 +103,8 @@ export const contactLocation = {
     vi: "Khoa Tài chính - Ngân hàng, Trường Đại học Kinh tế - Luật",
   },
   address: {
-    en: "669 National Highway 1A, Quarter 3, Linh Xuan Ward, Thu Duc City, Ho Chi Minh City",
-    vi: "669 Quốc lộ 1A, Khu phố 3, phường Linh Xuân, TP. Thủ Đức, TP. Hồ Chí Minh",
+    en: "Số 669 Đỗ Mười, khu phố 13, phường Linh Xuân, TP.HCM",
+    vi: "Số 669 Đỗ Mười, khu phố 13, phường Linh Xuân, TP.HCM",
   },
   note: {
     en: "",
@@ -503,7 +503,7 @@ export const defaultPageContent: SitePageContent = {
       {
         rank: { en: "4th place", vi: "Hạng 4" },
         title: { en: "Two finalist teams", vi: "Hai đội đồng hạng 4" },
-        amount: { en: "2 x 5,000,000 VND", vi: "2 x 5.000.000 VND" },
+        amount: { en: "5,000,000 VND each team", vi: "5.000.000 VND mỗi đội" },
         note: {
           en: "The remaining two finalists each receive the fourth-place award.",
           vi: "Hai đội còn lại trong top 5 chung kết, mỗi đội nhận giải hạng 4.",
@@ -747,7 +747,7 @@ export const defaultPageContent: SitePageContent = {
       {
         rank: { en: "4th place", vi: "Hạng 4" },
         title: { en: "Two finalist teams", vi: "Hai đội đồng hạng 4" },
-        amount: { en: "2 x 5,000,000 VND", vi: "2 x 5.000.000 VND" },
+        amount: { en: "5,000,000 VND each team", vi: "5.000.000 VND mỗi đội" },
         note: {
           en: "The remaining two finalists each receive the fourth-place award.",
           vi: "Hai đội còn lại trong top 5 chung kết, mỗi đội nhận giải hạng 4.",
@@ -1637,7 +1637,7 @@ export const defaultPageContent: SitePageContent = {
     },
     scheduleToBeUpdated: { en: "Schedule to be updated", vi: "Lịch sẽ được cập nhật" },
     openDetailLabel: { en: "Open detail", vi: "Mở chi tiết" },
-    openRuleBlockLabel: { en: "Open rule block", vi: "Mở khối thể lệ" },
+    openRuleBlockLabel: { en: "View rules", vi: "Xem thể lệ" },
     readResultUpdateLabel: { en: "Read result update", vi: "Đọc cập nhật kết quả" },
     round2SubmissionClosedTitle: {
       en: "Round 2 submission window has closed.",
@@ -2590,7 +2590,7 @@ export const timelineItems: TimelineItem[] = [
     phase: "general",
     startDate: "2026-05-10",
     endDate: "2026-05-10",
-    title: { en: "Registration deadline and team lock", vi: "Đóng đăng ký và chốt đội" },
+    title: { en: "Registration and team lock", vi: "Đăng ký và chốt đội" },
     description: {
       en: "Teams must complete the minimum 3-member requirement before this checkpoint to unlock Round 1 eligibility.",
       vi: "Các đội phải đạt mức tối thiểu 3 thành viên trước mốc này để mở điều kiện vào Vòng 1.",
@@ -2604,6 +2604,7 @@ export const timelineItems: TimelineItem[] = [
       vi: "Khóa danh sách đội và xác nhận chốt đội trên nền tảng",
     },
     supportLinks: [
+      { href: "/auth", label: { en: "Create account", vi: "Tạo tài khoản" } },
       { href: "/dashboard", label: { en: "Finalize team", vi: "Hoàn thiện đội" } },
       { href: "/rules#general-rules", label: { en: "Check eligibility", vi: "Kiểm tra điều kiện" } },
     ],
