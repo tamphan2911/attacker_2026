@@ -316,8 +316,6 @@ export interface JudgeDashboardRound1Task {
   teamName: string;
   teamTag: string;
   submittedAt: string;
-  objectiveScore: number;
-  durationMinutes: number;
   status: JudgeTaskStatus;
   scoredAt?: string;
 }

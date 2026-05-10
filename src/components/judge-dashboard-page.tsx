@@ -10,8 +10,6 @@ import {
   FilePenLine,
   Medal,
   NotebookPen,
-  Scale,
-  TimerReset,
   UserRound,
 } from "lucide-react";
 
@@ -29,6 +27,16 @@ import type {
 
 function cn(...values: Array<string | false | undefined>) {
   return values.filter(Boolean).join(" ");
+}
+
+function formatDateTimeLabel(locale: Locale, value: string) {
+  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 const roundMeta: Record<
@@ -125,7 +133,7 @@ function JudgeRound1Table({
           <tr className="border-b theme-border text-xs uppercase tracking-[0.2em] theme-text-soft">
             <th className="px-4 py-3 font-semibold">{locale === "en" ? "Participant" : "Thí sinh"}</th>
             <th className="px-4 py-3 font-semibold">{locale === "en" ? "Team" : "Đội thi"}</th>
-            <th className="px-4 py-3 font-semibold">{locale === "en" ? "Submission" : "Bài làm"}</th>
+            <th className="px-4 py-3 font-semibold">{locale === "en" ? "Submitted" : "Thời gian nộp"}</th>
             <th className="px-4 py-3 text-center font-semibold">{locale === "en" ? "Status" : "Trạng thái"}</th>
             <th className="px-4 py-3 text-right font-semibold">{locale === "en" ? "Score" : "Chấm điểm"}</th>
           </tr>
@@ -143,12 +151,8 @@ function JudgeRound1Table({
               </td>
               <td className="px-4 py-4">
                 <p className="inline-flex items-center gap-2 text-sm theme-text-body">
-                  <Scale className="h-4 w-4 text-sky-500" />
-                  {`${task.objectiveScore} ${locale === "en" ? "objective points" : "điểm trắc nghiệm"}`}
-                </p>
-                <p className="mt-2 inline-flex items-center gap-2 text-xs theme-text-soft">
-                  <TimerReset className="h-4 w-4 text-emerald-500" />
-                  {`${task.durationMinutes} ${locale === "en" ? "minutes" : "phút"} · ${formatDateLabel(locale, task.submittedAt)}`}
+                  <FileCheck2 className="h-4 w-4 text-sky-500" />
+                  {formatDateTimeLabel(locale, task.submittedAt)}
                 </p>
               </td>
               <td className="px-4 py-4 text-center">

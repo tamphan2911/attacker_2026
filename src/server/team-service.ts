@@ -20,6 +20,7 @@ import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import { prisma } from "@/lib/db";
 import { getCompetitionRoundWindow, getTimelineItemById } from "@/lib/competition";
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
+import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
   createRound1ExamPaper,
@@ -287,6 +288,7 @@ async function finalizeRound1AttemptRecord(
   });
 
   if (existingSubmission) {
+    await assignRound1SubmissionToRandomJudge(tx, existingSubmission.id);
     await tx.round1ExamAttempt.delete({ where: { id: attempt.id } });
     return existingSubmission;
   }
@@ -342,6 +344,8 @@ async function finalizeRound1AttemptRecord(
       }),
     },
   });
+
+  await assignRound1SubmissionToRandomJudge(tx, submission.id);
 
   await tx.round1ExamAttempt.delete({
     where: { id: attempt.id },
@@ -1453,6 +1457,8 @@ export async function submitRound1Attempt(
         answers: payload.answers == null ? undefined : JSON.stringify(payload.answers),
       },
     });
+
+    await assignRound1SubmissionToRandomJudge(tx, submission.id);
 
     await tx.round1ExamAttempt.deleteMany({
       where: { userId: actorId },

@@ -46,6 +46,7 @@ function ReviewPanel({
   message,
   title,
   description,
+  scoreStep = "0.5",
 }: {
   locale: Locale;
   maxScore: number;
@@ -59,6 +60,7 @@ function ReviewPanel({
   message: string;
   title: string;
   description: string;
+  scoreStep?: string;
 }) {
   return (
     <Surface className="xl:sticky xl:top-24 px-5 py-5 md:px-6 md:py-6">
@@ -77,7 +79,7 @@ function ReviewPanel({
             type="number"
             min={0}
             max={maxScore}
-            step="0.5"
+            step={scoreStep}
             value={score}
             onChange={(event) => onScoreChange(event.target.value)}
             className="theme-placeholder h-12 w-full rounded-2xl border theme-border theme-panel px-4 text-sm theme-text-strong outline-none"
@@ -151,6 +153,11 @@ export function JudgeRound1ScorePage({
 
   const handleSubmit = async () => {
     const parsedScore = Number(score);
+    if (Number.isFinite(parsedScore) && !Number.isInteger(parsedScore)) {
+      setMessage(locale === "en" ? "Round 1 essay score must be a whole number." : "Điểm tự luận Vòng 1 phải là số nguyên.");
+      return;
+    }
+
     if (!Number.isFinite(parsedScore)) {
       setMessage(locale === "en" ? "Please enter a valid score." : "Hãy nhập một mức điểm hợp lệ.");
       return;
@@ -324,11 +331,12 @@ export function JudgeRound1ScorePage({
           onSubmit={handleSubmit}
           isSaving={isSaving}
           message={message}
+          scoreStep="1"
           title={locale === "en" ? "Round 1 essay score" : "Điểm tự luận Vòng 1"}
           description={
             locale === "en"
-              ? "Save your score independently from other judges. This does not overwrite another judge's review."
-              : "Điểm chấm của bạn được lưu độc lập với giám khảo khác. Thao tác này không ghi đè bài chấm của người khác."
+              ? "This submission is assigned to you. Saving here updates the official Round 1 essay score."
+              : "Bài nộp này được phân công cho bạn. Điểm lưu tại đây sẽ cập nhật điểm tự luận chính thức của Vòng 1."
           }
         />
       </div>

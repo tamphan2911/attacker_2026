@@ -15,7 +15,6 @@ import {
   Eye,
   Filter,
   ListFilter,
-  Save,
   Search,
   ShieldCheck,
   Target,
@@ -866,17 +865,11 @@ function PairingAnswerList({
 function QuestionRecordCard({
   locale,
   question,
-  essayDraft,
   essayQuestionMaxScore,
-  canScoreEssay,
-  onEssayScoreChange,
 }: {
   locale: "en" | "vi";
   question: AdminRound1ExamDetail["questions"][number];
-  essayDraft?: string;
   essayQuestionMaxScore: number;
-  canScoreEssay: boolean;
-  onEssayScoreChange?: (questionId: string, nextValue: string) => void;
 }) {
   const statusTone = question.answered
     ? question.autoScored
@@ -1006,35 +999,14 @@ function QuestionRecordCard({
               </div>
             ) : null}
             <div className="rounded-[1rem] border theme-border bg-white/82 px-4 py-4 dark:bg-white/[0.03]">
-              <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                <label className="space-y-2">
-                  <span className="text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
-                    {locale === "en" ? "Essay question score" : "Điểm câu tự luận"}
-                  </span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={essayQuestionMaxScore}
-                    step="1"
-                    value={essayDraft ?? ""}
-                    onChange={(event) => onEssayScoreChange?.(question.id, event.target.value)}
-                    disabled={!canScoreEssay}
-                    placeholder={`0-${essayQuestionMaxScore}`}
-                    className="theme-placeholder w-28 rounded-xl border theme-border theme-panel px-3 py-2 text-sm theme-text-strong outline-none disabled:cursor-not-allowed disabled:opacity-60"
-                  />
-                </label>
-                <div className="text-sm leading-7 theme-text-soft md:text-right">
-                  <p>
-                    {canScoreEssay
-                      ? locale === "en"
-                        ? `Enter a score from 0 to ${essayQuestionMaxScore} for this essay.`
-                        : `Nhập điểm từ 0 đến ${essayQuestionMaxScore} cho câu tự luận này.`
-                      : locale === "en"
-                        ? "Scores are only available after the participant submits the official exam."
-                        : "Chỉ có thể nhập điểm sau khi thí sinh nộp bài thi chính thức."}
-                  </p>
-                </div>
-              </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
+                {locale === "en" ? "Judge scoring" : "Chấm bởi giám khảo"}
+              </p>
+              <p className="mt-2 text-sm leading-7 theme-text-soft">
+                {locale === "en"
+                  ? "Round 1 essay scores are entered only by the assigned judge in the judge dashboard."
+                  : "Điểm tự luận Vòng 1 chỉ được nhập bởi giám khảo được phân công trong bảng chấm giám khảo."}
+              </p>
             </div>
           </div>
         ) : null}
@@ -1050,14 +1022,11 @@ function QuestionRecordCard({
 }
 
 export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
-  const { locale, updateRound1EssayScoreByAdmin } = useSiteState();
+  const { locale } = useSiteState();
   const [detail, setDetail] = useState<AdminRound1ExamDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [questionFilter, setQuestionFilter] = useState<"objective" | "essay">("objective");
-  const [essayDrafts, setEssayDrafts] = useState<Record<string, string>>({});
-  const [savePending, setSavePending] = useState(false);
-  const [saveError, setSaveError] = useState("");
   const [queuedQuestionId, setQueuedQuestionId] = useState<string | null>(null);
   useAdminTitleScroll();
 
@@ -1104,34 +1073,16 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
     ? Math.round(ROUND1_ESSAY_MAX_SCORE / essayQuestions.length)
     : ROUND1_ESSAY_MAX_SCORE;
   const visibleQuestions = questionFilter === "essay" ? essayQuestions : objectiveQuestions;
-  const canScoreEssay = Boolean(detail?.submissionId && detail.status === "submitted" && essayQuestions.length > 0);
   const hasSavedEssayTotalWithoutQuestionBreakdown =
     typeof detail?.essayScore === "number" &&
     essayQuestions.length > 0 &&
     essayQuestions.every((question) => typeof question.essayScore !== "number");
-  const enteredEssayScoreTotal = essayQuestions.reduce((total, question) => {
-    const rawValue = essayDrafts[question.id];
-    const value = typeof rawValue === "string" && rawValue.trim() !== "" ? Number(rawValue) : NaN;
-    return Number.isFinite(value) ? total + value : total;
-  }, 0);
   const statusMeta = detail ? createStatusMeta(locale, detail.status) : null;
 
   useEffect(() => {
     if (!detail) {
-      setEssayDrafts({});
       return;
     }
-
-    setEssayDrafts(
-      Object.fromEntries(
-        detail.questions
-          .filter((question) => question.type === "essay")
-          .map((question) => [
-            question.id,
-            typeof question.essayScore === "number" ? String(question.essayScore) : "",
-        ]),
-      ),
-    );
 
     setQuestionFilter((current) => {
       const hasObjective = detail.questions.some((question) => question.type !== "essay");
@@ -1186,74 +1137,6 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
   if (error || !detail || !statusMeta) {
     return <DetailError locale={locale} message={error || (locale === "en" ? "Exam detail is unavailable." : "Chi tiết bài thi hiện không khả dụng.")} />;
   }
-
-  const saveEssayQuestionScores = async () => {
-    if (!detail.submissionId || !canScoreEssay) {
-      return;
-    }
-
-    const nextQuestionScores: Record<string, number> = {};
-
-    for (const question of essayQuestions) {
-      const rawValue = essayDrafts[question.id]?.trim() ?? "";
-      if (!rawValue) {
-        continue;
-      }
-
-      const value = Number(rawValue);
-      if (!Number.isFinite(value) || value < 0 || value > essayQuestionMaxScore) {
-        setSaveError(
-          locale === "en"
-            ? `Each essay question score must be a whole number from 0 to ${essayQuestionMaxScore}.`
-            : `Mỗi câu tự luận phải được nhập điểm nguyên từ 0 đến ${essayQuestionMaxScore}.`,
-        );
-        return;
-      }
-
-      nextQuestionScores[question.id] = value;
-    }
-
-    if (Object.keys(nextQuestionScores).length === 0) {
-      setSaveError(
-        locale === "en"
-          ? "Enter at least one essay question score before saving."
-          : "Hãy nhập ít nhất một điểm câu tự luận trước khi lưu.",
-      );
-      return;
-    }
-
-    setSavePending(true);
-    setSaveError("");
-
-    const result = await updateRound1EssayScoreByAdmin(detail.submissionId, {
-      questionScores: nextQuestionScores,
-    });
-
-    if (result) {
-      setDetail((current) =>
-        current
-          ? {
-              ...current,
-              essayScore: result.essayScore,
-              totalScore: result.totalScore,
-              questions: current.questions.map((question) =>
-                question.type === "essay"
-                  ? {
-                      ...question,
-                      essayScore:
-                        typeof result.essayQuestionScores[question.id] === "number"
-                          ? result.essayQuestionScores[question.id]
-                          : null,
-                    }
-                  : question,
-              ),
-            }
-          : current,
-      );
-    }
-
-    setSavePending(false);
-  };
 
   return (
     <div className="space-y-8">
@@ -1414,22 +1297,9 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
                     : `Tổng tự luận ${typeof detail.essayScore === "number" ? detail.essayScore : "--"} / ${ROUND1_ESSAY_MAX_SCORE}`}
                 </StatusPill>
                 <StatusPill tone="info">
-                  {locale === "en"
-                    ? `Draft sum ${enteredEssayScoreTotal} / ${ROUND1_ESSAY_MAX_SCORE}`
-                    : `Tổng nhập ${enteredEssayScoreTotal} / ${ROUND1_ESSAY_MAX_SCORE}`}
+                  {locale === "en" ? "Judge dashboard scoring" : "Chấm trong bảng giám khảo"}
                 </StatusPill>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  void saveEssayQuestionScores();
-                }}
-                disabled={!canScoreEssay || savePending}
-                className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-55"
-              >
-                <Save className={`h-4 w-4 ${savePending ? "animate-pulse" : ""}`} />
-                {locale === "en" ? "Save essay scores" : "Lưu điểm tự luận"}
-              </button>
             </div>
           ) : null}
         </div>
@@ -1501,17 +1371,11 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
           </div>
         </div>
 
-        {saveError ? (
-          <div className="mt-5 rounded-[1.2rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
-            {saveError}
-          </div>
-        ) : null}
-
         {questionFilter === "essay" && hasSavedEssayTotalWithoutQuestionBreakdown ? (
           <div className="mt-5 rounded-[1.2rem] border border-sky-700/18 bg-[linear-gradient(135deg,rgba(239,246,255,0.98),rgba(224,242,254,0.92))] px-4 py-3.5 text-sm leading-7 text-slate-900 dark:border-sky-300/18 dark:bg-sky-300/10 dark:text-sky-100">
             {locale === "en"
-              ? `This submission already has a saved total essay score of ${detail.essayScore} / ${ROUND1_ESSAY_MAX_SCORE}, but no question-by-question breakdown was archived. Save the two essay question scores below if you want the detail page and summary reports to carry the same breakdown.`
-              : `Bài nộp này đã có tổng điểm tự luận ${detail.essayScore} / ${ROUND1_ESSAY_MAX_SCORE}, nhưng chưa lưu phần chia điểm theo từng câu. Hãy lưu điểm cho 2 câu tự luận bên dưới nếu bạn muốn trang chi tiết và các báo cáo tóm tắt dùng cùng một breakdown.`}
+              ? `This submission already has a saved total essay score of ${detail.essayScore} / ${ROUND1_ESSAY_MAX_SCORE}, but no question-by-question breakdown was archived. The assigned judge can refresh the essay breakdown from the judge dashboard when needed.`
+              : `Bài nộp này đã có tổng điểm tự luận ${detail.essayScore} / ${ROUND1_ESSAY_MAX_SCORE}, nhưng chưa lưu phần chia điểm theo từng câu. Giám khảo được phân công sẽ cập nhật phần chia điểm từ bảng chấm khi cần.`}
           </div>
         ) : null}
       </Surface>
@@ -1535,16 +1399,7 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
               <QuestionRecordCard
                 locale={locale}
                 question={question}
-                essayDraft={essayDrafts[question.id] ?? ""}
                 essayQuestionMaxScore={essayQuestionMaxScore}
-                canScoreEssay={canScoreEssay}
-                onEssayScoreChange={(questionId, nextValue) => {
-                  setSaveError("");
-                  setEssayDrafts((current) => ({
-                    ...current,
-                    [questionId]: nextValue,
-                  }));
-                }}
               />
             </div>
           ))}

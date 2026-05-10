@@ -3,6 +3,7 @@ import { SubmissionRound, UserRole } from "@prisma/client";
 import { ROUND1_ESSAY_MAX_SCORE, countWords } from "@/lib/round1";
 import { prisma } from "@/lib/db";
 import { readStoredJudges } from "@/server/admin-service";
+import { ensureRound1JudgeAssignments } from "@/server/round1-judge-assignment";
 import { ensureRound1SubmissionArchive } from "@/server/round1-submission-archive";
 import type {
   CompetitionRoundKey,
@@ -96,7 +97,14 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
   const groups: JudgeDashboardRoundGroup[] = [];
 
   if (rounds.includes("round-1")) {
+    await ensureRound1JudgeAssignments(prisma);
+
     const round1Submissions = await prisma.round1Submission.findMany({
+      where: {
+        judgeReviews: {
+          some: { judgeUserId: userId },
+        },
+      },
       orderBy: { submittedAt: "desc" },
       include: {
         user: {
@@ -137,8 +145,6 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
         teamName: submission.team.name,
         teamTag: submission.team.tag,
         submittedAt: submission.submittedAt.toISOString(),
-        objectiveScore: submission.objectiveScore,
-        durationMinutes: submission.durationMinutes,
         status: isScored(review) ? "scored" : "pending",
         scoredAt: review?.scoredAt?.toISOString(),
       };
@@ -261,6 +267,8 @@ export async function getJudgeRound1Detail(
     return fail(403, "This judge is not assigned to Round 1.");
   }
 
+  await ensureRound1JudgeAssignments(prisma);
+
   const submission = await prisma.round1Submission.findUnique({
     where: { id: submissionId },
     include: {
@@ -292,6 +300,10 @@ export async function getJudgeRound1Detail(
 
   if (!submission) {
     return fail(404, "Round 1 submission not found.");
+  }
+
+  if (submission.judgeReviews.length === 0) {
+    return fail(403, "This judge is not assigned to this Round 1 submission.");
   }
 
   const archive = await ensureRound1SubmissionArchive({
@@ -367,25 +379,33 @@ export async function saveJudgeRound1Review(
     return fail(400, `Round 1 essay score must be between 0 and ${ROUND1_ESSAY_MAX_SCORE}.`);
   }
 
-  await prisma.round1JudgeReview.upsert({
-    where: {
-      judgeUserId_submissionId: {
-        judgeUserId: userId,
-        submissionId,
+  const scoredAt = new Date();
+  const essayScore = Math.round(payload.score);
+  const totalScore = detail.data.objectiveScore + essayScore;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.round1JudgeReview.update({
+      where: {
+        judgeUserId_submissionId: {
+          judgeUserId: userId,
+          submissionId,
+        },
       },
-    },
-    update: {
-      score: payload.score,
-      note: payload.note?.trim() ?? "",
-      scoredAt: new Date(),
-    },
-    create: {
-      judgeUserId: userId,
-      submissionId,
-      score: payload.score,
-      note: payload.note?.trim() ?? "",
-      scoredAt: new Date(),
-    },
+      data: {
+        score: essayScore,
+        note: payload.note?.trim() ?? "",
+        scoredAt,
+      },
+    });
+
+    await tx.round1Submission.update({
+      where: { id: submissionId },
+      data: {
+        essayScore,
+        totalScore,
+        score: totalScore,
+      },
+    });
   });
 
   return ok({ reviewSaved: true });

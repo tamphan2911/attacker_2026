@@ -5,7 +5,7 @@ import { getCurrentDbUser, hasJudgeRole } from "@/server/auth-helpers";
 import { saveJudgeRound1Review } from "@/server/judge-service";
 
 const payloadSchema = z.object({
-  score: z.number().min(0).max(28),
+  score: z.number().int().min(0).max(28),
   note: z.string().trim().max(2000).optional().default(""),
 });
 
