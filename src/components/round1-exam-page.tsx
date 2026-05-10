@@ -218,8 +218,8 @@ function Round1ConfirmDialog({
           {essayWarning ? (
             <div className="rounded-[1.4rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
               {locale === "en"
-                ? "One of the essay responses is over the 200-word limit. Consider shortening it before submitting."
-                : "Có câu tự luận đang vượt quá giới hạn 200 từ. Hãy cân nhắc rút gọn trước khi nộp."}
+                ? "One of the essay responses is over the 500-word limit. Consider shortening it before submitting."
+                : "Có câu tự luận đang vượt quá giới hạn 500 từ. Hãy cân nhắc rút gọn trước khi nộp."}
             </div>
           ) : null}
 
@@ -1713,11 +1713,11 @@ export function Round1ExamPage() {
                     <p className={currentEssayExceedsLimit ? "text-amber-800 dark:text-amber-100" : "theme-text-soft"}>
                       {currentEssayExceedsLimit
                         ? locale === "en"
-                          ? "You have exceeded the 200-word limit. Shorten the response before submitting."
-                          : "Bạn đã vượt quá giới hạn 200 từ. Hãy rút gọn câu trả lời trước khi nộp."
+                          ? "You have exceeded the 500-word limit. Shorten the response before submitting."
+                          : "Bạn đã vượt quá giới hạn 500 từ. Hãy rút gọn câu trả lời trước khi nộp."
                         : locale === "en"
-                          ? "Stay within the 200-word limit for this essay answer."
-                          : "Hãy giữ câu trả lời trong giới hạn 200 từ cho câu tự luận này."}
+                          ? "Stay within the 500-word limit for this essay answer."
+                          : "Hãy giữ câu trả lời trong giới hạn 500 từ cho câu tự luận này."}
                     </p>
                   </div>
                   {currentEssayAiGuard.shouldWarn ? (

@@ -43,6 +43,7 @@ import type {
   UserProfile,
   LeadershipTransferRequest as AppLeadershipTransferRequest,
 } from "@/types/site";
+import { ROUND1_ESSAY_WORD_LIMIT } from "@/lib/round1";
 
 type UserWithAccounts = User & {
   accounts?: Pick<Account, "provider">[];
@@ -191,6 +192,10 @@ function mapQuestionType(type: Round1QuestionType): Round1Question["type"] {
 
 function mapBankType(type: Round1TestBankType): AppRound1TestBank["bankType"] {
   return type === Round1TestBankType.ESSAY ? "essay" : "objective";
+}
+
+function mapRound1WordLimit(type: Round1TestBankType, wordLimit: number | null) {
+  return type === Round1TestBankType.ESSAY ? ROUND1_ESSAY_WORD_LIMIT : wordLimit ?? undefined;
 }
 
 function mapForumCategory(category: ForumThreadCategory): AppForumThread["category"] {
@@ -482,7 +487,7 @@ export function serializeRound1TestBank(bank: Round1TestBank): AppRound1TestBank
     shuffleQuestions: bank.shuffleQuestions,
     shuffleOptions: bank.shuffleOptions,
     durationMinutes: bank.durationMinutes,
-    wordLimit: bank.wordLimit ?? undefined,
+    wordLimit: mapRound1WordLimit(bank.bankType, bank.wordLimit),
     publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
     questions: parsedQuestions.map((question) => ({
       ...question,

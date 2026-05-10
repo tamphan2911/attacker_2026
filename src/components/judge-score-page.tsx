@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -11,7 +11,6 @@ import {
   NotebookPen,
   Save,
   Scale,
-  TimerReset,
   UserRound,
 } from "lucide-react";
 
@@ -31,6 +30,14 @@ function formatBytes(bytes?: number) {
   }
 
   return `${Math.ceil(bytes / 1024)} KB`;
+}
+
+function formatScoreNumber(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function pickLocalizedText(value: { en: string; vi: string }, locale: Locale) {
+  return value[locale]?.trim() || value.en.trim() || value.vi.trim();
 }
 
 function ReviewPanel({
@@ -145,22 +152,41 @@ export function JudgeRound1ScorePage({
 }) {
   const { locale } = useSiteState();
   const router = useRouter();
-  const [score, setScore] = useState(detail.review.score == null ? "" : String(detail.review.score));
+  const [questionScores, setQuestionScores] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      detail.essays.map((essay) => [
+        essay.questionId,
+        essay.score == null ? "" : String(essay.score),
+      ]),
+    ),
+  );
   const [note, setNote] = useState(detail.review.note);
   const [scoredAt, setScoredAt] = useState(detail.review.scoredAt);
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const totalEssayScore = useMemo(
+    () =>
+      detail.essays.reduce((total, essay) => {
+        const value = Number(questionScores[essay.questionId]);
+        return total + (Number.isFinite(value) ? value : 0);
+      }, 0),
+    [detail.essays, questionScores],
+  );
 
   const handleSubmit = async () => {
-    const parsedScore = Number(score);
-    if (Number.isFinite(parsedScore) && !Number.isInteger(parsedScore)) {
-      setMessage(locale === "en" ? "Round 1 essay score must be a whole number." : "Điểm tự luận Vòng 1 phải là số nguyên.");
-      return;
-    }
+    const parsedQuestionScores: Record<string, number> = {};
+    for (const essay of detail.essays) {
+      const parsedScore = Number(questionScores[essay.questionId]);
+      if (!Number.isFinite(parsedScore) || !Number.isInteger(parsedScore) || parsedScore < 0 || parsedScore > 14) {
+        setMessage(
+          locale === "en"
+            ? "Each essay question score must be a whole number from 0 to 14."
+            : "Mỗi câu tự luận cần có điểm nguyên từ 0 đến 14.",
+        );
+        return;
+      }
 
-    if (!Number.isFinite(parsedScore)) {
-      setMessage(locale === "en" ? "Please enter a valid score." : "Hãy nhập một mức điểm hợp lệ.");
-      return;
+      parsedQuestionScores[essay.questionId] = parsedScore;
     }
 
     setIsSaving(true);
@@ -173,7 +199,7 @@ export function JudgeRound1ScorePage({
       },
       credentials: "same-origin",
       body: JSON.stringify({
-        score: parsedScore,
+        questionScores: parsedQuestionScores,
         note,
       }),
     });
@@ -187,9 +213,8 @@ export function JudgeRound1ScorePage({
 
     const now = new Date().toISOString();
     setScoredAt(now);
-    setMessage(locale === "en" ? "Judge score saved." : "Đã lưu điểm chấm.");
     setIsSaving(false);
-    router.refresh();
+    router.push(`/judge-dashboard?scored=${encodeURIComponent(detail.submissionId)}`);
   };
 
   return (
@@ -222,49 +247,20 @@ export function JudgeRound1ScorePage({
           <StatusPill tone="info">{detail.teamName}</StatusPill>
           <StatusPill>{detail.teamTag}</StatusPill>
           <StatusPill>{formatDateLabel(locale, detail.submittedAt)}</StatusPill>
+          <StatusPill>
+            {locale === "en"
+              ? `Objective ${detail.objectiveScore}`
+              : `Trắc nghiệm ${detail.objectiveScore}`}
+          </StatusPill>
+          <StatusPill>
+            {`${detail.durationMinutes} ${locale === "en" ? "minutes" : "phút"}`}
+          </StatusPill>
+          <StatusPill>{detail.participantUniversity}</StatusPill>
         </div>
       </Surface>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
-          <Surface className="px-6 py-6 md:px-8 md:py-8">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <Scale className="h-5 w-5 text-sky-500" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Multiple choices score" : "Điểm trắc nghiệm"}
-                    </p>
-                    <p className="mt-2 text-lg font-semibold theme-text-strong">{detail.objectiveScore}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <TimerReset className="h-5 w-5 text-emerald-500" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Duration" : "Thời lượng"}
-                    </p>
-                    <p className="mt-2 text-lg font-semibold theme-text-strong">{`${detail.durationMinutes} ${locale === "en" ? "minutes" : "phút"}`}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <UserRound className="h-5 w-5 text-amber-500" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Participant" : "Thí sinh"}
-                    </p>
-                    <p className="mt-2 text-sm font-semibold theme-text-strong">{detail.participantUniversity}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Surface>
-
           <Surface className="px-6 py-6 md:px-8 md:py-8">
             <div className="flex items-center gap-3">
               <NotebookPen className="h-5 w-5 text-sky-500" />
@@ -320,25 +316,110 @@ export function JudgeRound1ScorePage({
           </Surface>
         </div>
 
-        <ReviewPanel
-          locale={locale}
-          maxScore={detail.maxScore}
-          score={score}
-          note={note}
-          scoredAt={scoredAt}
-          onScoreChange={setScore}
-          onNoteChange={setNote}
-          onSubmit={handleSubmit}
-          isSaving={isSaving}
-          message={message}
-          scoreStep="1"
-          title={locale === "en" ? "Round 1 essay score" : "Điểm tự luận Vòng 1"}
-          description={
-            locale === "en"
-              ? "This submission is assigned to you. Saving here updates the official Round 1 essay score."
-              : "Bài nộp này được phân công cho bạn. Điểm lưu tại đây sẽ cập nhật điểm tự luận chính thức của Vòng 1."
-          }
-        />
+        <Surface className="xl:sticky xl:top-24 px-5 py-5 md:px-6 md:py-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+            {locale === "en" ? "Judge scoring" : "Phiếu chấm"}
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold theme-text-strong">
+            {locale === "en" ? "Round 1 essay score" : "Điểm tự luận Vòng 1"}
+          </h2>
+          <p className="mt-3 text-sm leading-7 theme-text-muted">
+            {locale === "en"
+              ? "Score each essay answer separately. The total essay score is calculated automatically."
+              : "Chấm riêng từng câu tự luận. Tổng điểm tự luận được tự động cộng và không chỉnh sửa trực tiếp."}
+          </p>
+
+          <div className="mt-5 space-y-4">
+            <div className="space-y-3">
+              {detail.essays.map((essay) => (
+                <label
+                  key={essay.questionId}
+                  className="flex items-center justify-between gap-3 rounded-[1.2rem] border theme-border theme-panel px-4 py-3"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-xs font-semibold uppercase tracking-[0.2em] theme-text-soft">
+                      {locale === "en" ? `Essay ${essay.order}` : `Tự luận ${essay.order}`}
+                    </span>
+                    <span className="mt-1 block truncate text-sm font-semibold theme-text-strong">
+                      {pickRound1QuestionText(essay.prompt)}
+                    </span>
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={14}
+                    step={1}
+                    value={questionScores[essay.questionId] ?? ""}
+                    onChange={(event) =>
+                      setQuestionScores((current) => ({
+                        ...current,
+                        [essay.questionId]: event.target.value,
+                      }))
+                    }
+                    className="theme-placeholder h-11 w-20 shrink-0 rounded-2xl border theme-border theme-panel px-3 text-center text-sm font-semibold theme-text-strong outline-none"
+                  />
+                </label>
+              ))}
+            </div>
+
+            <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Auto total" : "Tổng tự động"}
+              </p>
+              <p className="mt-2 text-3xl font-semibold theme-text-strong">
+                {`${formatScoreNumber(totalEssayScore)} / ${detail.maxScore}`}
+              </p>
+            </div>
+
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Judge note" : "Ghi chú chấm"}
+              </span>
+              <textarea
+                rows={5}
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm leading-7 theme-text-strong outline-none"
+              />
+            </label>
+
+            {scoredAt ? (
+              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  <div>
+                    <p className="text-sm font-semibold theme-text-strong">
+                      {locale === "en" ? "Saved review" : "Bản chấm đã lưu"}
+                    </p>
+                    <p className="mt-1 text-xs theme-text-soft">{formatDateLabel(locale, scoredAt)}</p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {message ? (
+              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+                <p className="text-sm theme-text-soft">{message}</p>
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={isSaving}
+              className="theme-button-primary inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-60"
+            >
+              <Save className="h-4 w-4" />
+              {isSaving
+                ? locale === "en"
+                  ? "Saving..."
+                  : "Đang lưu..."
+                : locale === "en"
+                  ? "Save judge score"
+                  : "Lưu điểm chấm"}
+            </button>
+          </div>
+        </Surface>
       </div>
     </div>
   );
@@ -351,17 +432,65 @@ export function JudgeTeamSubmissionScorePage({
 }) {
   const { locale } = useSiteState();
   const router = useRouter();
+  const isRound2 = detail.round === "round-2";
   const [score, setScore] = useState(detail.review.score == null ? "" : String(detail.review.score));
+  const [rubricScores, setRubricScores] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      (detail.rubric ?? []).map((criterion) => [
+        criterion.id,
+        detail.review.rubricScores?.[criterion.id] == null
+          ? ""
+          : String(detail.review.rubricScores[criterion.id]),
+      ]),
+    ),
+  );
   const [note, setNote] = useState(detail.review.note);
   const [scoredAt, setScoredAt] = useState(detail.review.scoredAt);
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const rubricTotal = useMemo(
+    () =>
+      (detail.rubric ?? []).reduce((total, criterion) => {
+        const value = Number(rubricScores[criterion.id]);
+        return total + (Number.isFinite(value) ? value : 0);
+      }, 0),
+    [detail.rubric, rubricScores],
+  );
 
   const handleSubmit = async () => {
-    const parsedScore = Number(score);
-    if (!Number.isFinite(parsedScore)) {
-      setMessage(locale === "en" ? "Please enter a valid score." : "Hãy nhập một mức điểm hợp lệ.");
-      return;
+    let requestBody: { score?: number; rubricScores?: Record<string, number>; note: string };
+
+    if (isRound2) {
+      const parsedRubricScores: Record<string, number> = {};
+      for (const criterion of detail.rubric ?? []) {
+        const parsedScore = Number(rubricScores[criterion.id]);
+        if (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > criterion.maxScore) {
+          setMessage(
+            locale === "en"
+              ? "Each rubric score must stay within its criterion maximum."
+              : "Điểm từng tiêu chí phải nằm trong mức tối đa của tiêu chí đó.",
+          );
+          return;
+        }
+
+        parsedRubricScores[criterion.id] = parsedScore;
+      }
+
+      requestBody = {
+        rubricScores: parsedRubricScores,
+        note,
+      };
+    } else {
+      const parsedScore = Number(score);
+      if (!Number.isFinite(parsedScore)) {
+        setMessage(locale === "en" ? "Please enter a valid score." : "Hãy nhập một mức điểm hợp lệ.");
+        return;
+      }
+
+      requestBody = {
+        score: parsedScore,
+        note,
+      };
     }
 
     setIsSaving(true);
@@ -373,10 +502,7 @@ export function JudgeTeamSubmissionScorePage({
         "Content-Type": "application/json",
       },
       credentials: "same-origin",
-      body: JSON.stringify({
-        score: parsedScore,
-        note,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -388,9 +514,8 @@ export function JudgeTeamSubmissionScorePage({
 
     const now = new Date().toISOString();
     setScoredAt(now);
-    setMessage(locale === "en" ? "Judge score saved." : "Đã lưu điểm chấm.");
     setIsSaving(false);
-    router.refresh();
+    router.push(`/judge-dashboard?scored=${encodeURIComponent(detail.submissionId)}`);
   };
 
   return (
@@ -516,24 +641,135 @@ export function JudgeTeamSubmissionScorePage({
           </Surface>
         </div>
 
-        <ReviewPanel
-          locale={locale}
-          maxScore={detail.maxScore}
-          score={score}
-          note={note}
-          scoredAt={scoredAt}
-          onScoreChange={setScore}
-          onNoteChange={setNote}
-          onSubmit={handleSubmit}
-          isSaving={isSaving}
-          message={message}
-          title={locale === "en" ? "Judge submission score" : "Điểm chấm bài nộp"}
-          description={
-            locale === "en"
-              ? "Use this side panel to save your independent round score and your own judge note."
-              : "Dùng bảng bên này để lưu điểm vòng của bạn và ghi chú chấm riêng của chính bạn."
-          }
-        />
+        {isRound2 ? (
+          <Surface className="xl:sticky xl:top-24 px-5 py-5 md:px-6 md:py-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+              {locale === "en" ? "Round 2 rubric" : "Rubric Vòng 2"}
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold theme-text-strong">
+              {locale === "en" ? "Report score" : "Điểm báo cáo"}
+            </h2>
+            <p className="mt-3 text-sm leading-7 theme-text-muted">
+              {locale === "en"
+                ? "Score each criterion. The total is calculated automatically and cannot be edited directly."
+                : "Chấm từng tiêu chí. Tổng điểm được tự động cộng và không chỉnh sửa trực tiếp."}
+            </p>
+
+            <div className="mt-5 overflow-hidden rounded-[1.4rem] border theme-border">
+              <div className="grid grid-cols-[minmax(0,1fr)_88px] border-b theme-border theme-panel-subtle px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                <span>{locale === "en" ? "Criterion" : "Tiêu chí"}</span>
+                <span className="text-right">{locale === "en" ? "Score" : "Điểm"}</span>
+              </div>
+              {(detail.rubric ?? []).map((criterion) => (
+                <label
+                  key={criterion.id}
+                  className="grid grid-cols-[minmax(0,1fr)_88px] gap-3 border-b theme-border px-4 py-3 last:border-b-0"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold theme-text-strong">
+                      {pickLocalizedText(criterion.label, locale)}
+                    </span>
+                    <span className="mt-1 block text-xs leading-5 theme-text-soft">
+                      {pickLocalizedText(criterion.description, locale)}
+                    </span>
+                  </span>
+                  <span className="flex items-center justify-end gap-2">
+                    <input
+                      type="number"
+                      min={0}
+                      max={criterion.maxScore}
+                      step={0.5}
+                      value={rubricScores[criterion.id] ?? ""}
+                      onChange={(event) =>
+                        setRubricScores((current) => ({
+                          ...current,
+                          [criterion.id]: event.target.value,
+                        }))
+                      }
+                      className="theme-placeholder h-10 w-16 rounded-2xl border theme-border theme-panel px-2 text-center text-sm font-semibold theme-text-strong outline-none"
+                    />
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            <div className="mt-4 rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Auto total" : "Tổng tự động"}
+              </p>
+              <p className="mt-2 text-3xl font-semibold theme-text-strong">
+                {`${formatScoreNumber(rubricTotal)} / ${detail.maxScore}`}
+              </p>
+            </div>
+
+            <label className="mt-4 block space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Judge note" : "Ghi chú chấm"}
+              </span>
+              <textarea
+                rows={5}
+                value={note}
+                onChange={(event) => setNote(event.target.value)}
+                className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm leading-7 theme-text-strong outline-none"
+              />
+            </label>
+
+            {scoredAt ? (
+              <div className="mt-4 rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                  <div>
+                    <p className="text-sm font-semibold theme-text-strong">
+                      {locale === "en" ? "Saved review" : "Bản chấm đã lưu"}
+                    </p>
+                    <p className="mt-1 text-xs theme-text-soft">{formatDateLabel(locale, scoredAt)}</p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {message ? (
+              <div className="mt-4 rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
+                <p className="text-sm theme-text-soft">{message}</p>
+              </div>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => void handleSubmit()}
+              disabled={isSaving}
+              className="theme-button-primary mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-60"
+            >
+              <Save className="h-4 w-4" />
+              {isSaving
+                ? locale === "en"
+                  ? "Saving..."
+                  : "Đang lưu..."
+                : locale === "en"
+                  ? "Save rubric score"
+                  : "Lưu điểm rubric"}
+            </button>
+          </Surface>
+        ) : (
+          <ReviewPanel
+            locale={locale}
+            maxScore={detail.maxScore}
+            score={score}
+            note={note}
+            scoredAt={scoredAt}
+            onScoreChange={setScore}
+            onNoteChange={setNote}
+            onSubmit={handleSubmit}
+            isSaving={isSaving}
+            message={message}
+            title={locale === "en" ? "Judge submission score" : "Điểm chấm bài nộp"}
+            description={
+              locale === "en"
+                ? "Use this side panel to save your independent round score and your own judge note."
+                : "Dùng bảng bên này để lưu điểm vòng của bạn và ghi chú chấm riêng của chính bạn."
+            }
+          />
+        )}
       </div>
     </div>
   );

@@ -25,6 +25,7 @@ import { readTimelineItems } from "@/server/timeline-items";
 import {
   createRound1ExamPaper,
   getRound1ObjectiveScore,
+  ROUND1_ESSAY_WORD_LIMIT,
   scoreRound1Question,
   type Round1PaperQuestion,
   type Round1QuestionResponse,
@@ -245,7 +246,7 @@ function mapStoredBankToAppBank(
     shuffleQuestions: bank.shuffleQuestions,
     shuffleOptions: bank.shuffleOptions,
     durationMinutes: bank.durationMinutes,
-    wordLimit: bank.wordLimit ?? undefined,
+    wordLimit: bank.bankType === Round1TestBankType.ESSAY ? ROUND1_ESSAY_WORD_LIMIT : bank.wordLimit ?? undefined,
     publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
     questions: parseStoredRound1Questions(bank.questions),
   };

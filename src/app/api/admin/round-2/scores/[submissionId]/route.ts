@@ -31,9 +31,5 @@ export async function PUT(
 
   const { submissionId } = await context.params;
   const result = await saveAdminRound2ScoreRow(submissionId, payload.data);
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
-  }
-
-  return NextResponse.json(result.data, { status: result.status });
+  return NextResponse.json({ error: result.error }, { status: result.status });
 }

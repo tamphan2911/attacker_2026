@@ -593,8 +593,8 @@ export function AdminRound2ScoresManager() {
           </p>
           <p className="mt-3 text-sm leading-7 theme-text-muted">
             {locale === "en"
-              ? "Track the latest Round 2 submission of each team, assign the two Round 2 judges after the deadline, and save their scores directly in the table."
-              : "Theo dõi bài nộp Vòng 2 mới nhất của từng đội, phân hai giám khảo Vòng 2 sau hạn nộp và lưu điểm trực tiếp ngay trong bảng."}
+              ? "Track the latest Round 2 submission of each team, the two automatically assigned judges, and scores saved from judge accounts."
+              : "Theo dõi bài nộp Vòng 2 mới nhất của từng đội, hai giám khảo được tự động phân công và điểm được lưu từ tài khoản giám khảo."}
           </p>
         </div>
         <StatusPill tone="info">
@@ -616,8 +616,8 @@ export function AdminRound2ScoresManager() {
           <p className="text-sm theme-text-soft">
             {round2Closed
               ? locale === "en"
-                ? "Judge assignment and score entry are now enabled here."
-                : "Chức năng phân giám khảo và nhập điểm hiện đã được mở tại đây."
+                ? "Judge assignment is automatic; score entry is handled from judge accounts."
+                : "Việc phân giám khảo diễn ra tự động; nhập điểm được thực hiện từ tài khoản giám khảo."
               : locale === "en"
                 ? "This table becomes editable automatically after the Round 2 submission deadline saved in Timeline."
                 : "Bảng này sẽ tự mở quyền chỉnh sửa sau khi hết hạn nộp Vòng 2 đã lưu ở Timeline."}
@@ -750,10 +750,7 @@ export function AdminRound2ScoresManager() {
                   draftScores.length > 0
                     ? draftScores.reduce((total, score) => total + score, 0) / draftScores.length
                     : undefined;
-                const canSave =
-                  round2Closed &&
-                  draft.judgeUserIds.every((judgeUserId) => judgeUserId.trim()) &&
-                  draft.judgeUserIds[0] !== draft.judgeUserIds[1];
+                const canSave = false;
 
                 return (
                   <tr key={row.submissionId} className="border-b theme-border last:border-b-0">
@@ -781,7 +778,7 @@ export function AdminRound2ScoresManager() {
                       <JudgeScoreCell
                         locale={locale}
                         judge={row.judges[0]}
-                        canEdit={round2Closed}
+                        canEdit={false}
                         availableJudges={availableJudges}
                         selectedJudgeId={draft.judgeUserIds[0]}
                         otherSelectedJudgeId={draft.judgeUserIds[1]}
@@ -794,7 +791,7 @@ export function AdminRound2ScoresManager() {
                       <JudgeScoreCell
                         locale={locale}
                         judge={row.judges[1]}
-                        canEdit={round2Closed}
+                        canEdit={false}
                         availableJudges={availableJudges}
                         selectedJudgeId={draft.judgeUserIds[1]}
                         otherSelectedJudgeId={draft.judgeUserIds[0]}

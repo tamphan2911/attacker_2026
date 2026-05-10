@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import {
   ArrowRight,
   CheckCircle2,
@@ -140,7 +142,11 @@ function JudgeRound1Table({
         </thead>
         <tbody>
           {tasks.map((task) => (
-            <tr key={task.submissionId} className="border-b theme-border last:border-b-0">
+            <tr
+              id={`judge-task-${task.submissionId}`}
+              key={task.submissionId}
+              className="border-b theme-border last:border-b-0 scroll-mt-32"
+            >
               <td className="px-4 py-4">
                 <p className="font-semibold theme-text-strong">{task.participantName}</p>
                 <p className="mt-1 text-xs theme-text-soft">{task.participantUniversity}</p>
@@ -196,7 +202,11 @@ function JudgeTeamSubmissionTable({
         </thead>
         <tbody>
           {tasks.map((task) => (
-            <tr key={task.submissionId} className="border-b theme-border last:border-b-0">
+            <tr
+              id={`judge-task-${task.submissionId}`}
+              key={task.submissionId}
+              className="border-b theme-border last:border-b-0 scroll-mt-32"
+            >
               <td className="px-4 py-4">
                 <p className="font-semibold theme-text-strong">{task.teamName}</p>
                 <p className="mt-1 text-xs theme-text-soft">{task.teamTag}</p>
@@ -246,6 +256,20 @@ function JudgeTeamSubmissionTable({
 
 export function JudgeDashboardPage({ data }: { data: JudgeDashboardData }) {
   const { locale } = useSiteState();
+  const searchParams = useSearchParams();
+  const savedSubmissionId = searchParams.get("scored") ?? "";
+
+  useEffect(() => {
+    if (!savedSubmissionId) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      document
+        .getElementById(`judge-task-${savedSubmissionId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 80);
+  }, [savedSubmissionId]);
 
   return (
     <div className="space-y-8">
@@ -279,6 +303,17 @@ export function JudgeDashboardPage({ data }: { data: JudgeDashboardData }) {
           </Surface>
         }
       />
+
+      {savedSubmissionId ? (
+        <Surface className="border-emerald-500/20 px-5 py-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <p className="text-sm font-semibold theme-text-strong">
+              {locale === "en" ? "Judge score saved." : "Đã lưu điểm chấm."}
+            </p>
+          </div>
+        </Surface>
+      ) : null}
 
       {data.rounds.length === 0 ? (
         <Surface className="px-6 py-6 md:px-8 md:py-8">

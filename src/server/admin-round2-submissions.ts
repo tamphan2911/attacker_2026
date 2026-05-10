@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getTimelineItemById } from "@/lib/competition";
 import { syncJudgeAccounts } from "@/server/judge-accounts";
 import { readStoredJudges } from "@/server/admin-service";
+import { ensureRound2JudgeAssignments } from "@/server/round2-judge-assignment";
 import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import type {
@@ -93,6 +94,8 @@ export async function readAdminRound2SubmissionRows(): Promise<{
   availableJudges: AdminRound2JudgeOption[];
   round2Closed: boolean;
 }> {
+  await ensureRound2JudgeAssignments(prisma);
+
   const [submissions, availableJudges, timelineItems] = await Promise.all([
     prisma.teamSubmission.findMany({
       where: {
@@ -199,119 +202,10 @@ export async function assignJudgesToRound2Submission(
   submissionId: string,
   judgeUserIds: string[],
 ): Promise<ServiceResult<{ saved: true }>> {
-  const nextJudgeUserIds = Array.from(
-    new Set(
-      judgeUserIds
-        .map((value) => value.trim())
-        .filter(Boolean),
-    ),
-  );
+  void submissionId;
+  void judgeUserIds;
 
-  if (nextJudgeUserIds.length !== 2) {
-    return fail(400, "Exactly two judges must be assigned.");
-  }
-
-  await syncJudgeAccounts();
-  const storedJudges = await readStoredJudges();
-  const round2JudgeProfileIds = storedJudges
-    .filter((judge) => judge.rounds.includes("round-2"))
-    .map((judge) => judge.id);
-
-  const timelineItems = await readTimelineItems();
-  const round2DeadlineItem = getTimelineItemById("round-2-report-submission", timelineItems);
-  const isRound2SubmissionClosed = round2DeadlineItem
-    ? new Date().getTime() > endOfVietnamDay(round2DeadlineItem.endDate).getTime()
-    : false;
-
-  if (!isRound2SubmissionClosed) {
-    return fail(409, "Judge assignment opens only after the Round 2 submission deadline.");
-  }
-
-  const submission = await prisma.teamSubmission.findUnique({
-    where: { id: submissionId },
-    include: {
-      judgeReviews: {
-        orderBy: [{ createdAt: "asc" }],
-      },
-    },
-  });
-
-  if (!submission || submission.round !== SubmissionRound.ROUND_2) {
-    return fail(404, "Round 2 submission not found.");
-  }
-
-  const latestSubmission = await prisma.teamSubmission.findFirst({
-    where: {
-      teamId: submission.teamId,
-      round: SubmissionRound.ROUND_2,
-    },
-    orderBy: [{ version: "desc" }, { submittedAt: "desc" }],
-    select: {
-      id: true,
-    },
-  });
-
-  if (!latestSubmission || latestSubmission.id !== submission.id) {
-    return fail(409, "Judges can only be assigned to the latest submission version.");
-  }
-
-  const assignableJudges = await prisma.user.findMany({
-    where: {
-      id: {
-        in: nextJudgeUserIds,
-      },
-      role: UserRole.JUDGE,
-      judgeProfileId: {
-        in: round2JudgeProfileIds,
-      },
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (assignableJudges.length !== 2) {
-    return fail(400, "Both assigned judges must belong to the Round 2 judging panel.");
-  }
-
-  const selectedJudgeIds = new Set(nextJudgeUserIds);
-  const wouldRemoveScoredJudge = submission.judgeReviews.some(
-    (review) => review.scoredAt && !selectedJudgeIds.has(review.judgeUserId),
-  );
-
-  if (wouldRemoveScoredJudge) {
-    return fail(409, "Judge assignment is locked once a removed judge has already saved a score.");
-  }
-
-  const existingJudgeIds = new Set(submission.judgeReviews.map((review) => review.judgeUserId));
-  const removableJudgeIds = submission.judgeReviews
-    .filter((review) => !review.scoredAt && !selectedJudgeIds.has(review.judgeUserId))
-    .map((review) => review.judgeUserId);
-  const createJudgeIds = nextJudgeUserIds.filter((judgeUserId) => !existingJudgeIds.has(judgeUserId));
-
-  await prisma.$transaction(async (tx) => {
-    if (removableJudgeIds.length > 0) {
-      await tx.teamSubmissionJudgeReview.deleteMany({
-        where: {
-          submissionId,
-          judgeUserId: {
-            in: removableJudgeIds,
-          },
-        },
-      });
-    }
-
-    if (createJudgeIds.length > 0) {
-      await tx.teamSubmissionJudgeReview.createMany({
-        data: createJudgeIds.map((judgeUserId) => ({
-          submissionId,
-          judgeUserId,
-        })),
-      });
-    }
-  });
-
-  return ok({ saved: true });
+  return fail(403, "Round 2 judge assignment is automatic after the submission deadline.");
 }
 
 export async function deleteRound2SubmissionByAdmin(

@@ -1,10 +1,15 @@
 import { SubmissionRound, UserRole } from "@prisma/client";
 
-import { ROUND1_ESSAY_MAX_SCORE, countWords } from "@/lib/round1";
+import { ROUND1_ESSAY_MAX_SCORE, ROUND1_ESSAY_POINT_VALUE, countWords } from "@/lib/round1";
 import { prisma } from "@/lib/db";
+import { ROUND2_REPORT_RUBRIC, getRubricMaxScore } from "@/lib/judge-rubrics";
 import { readStoredJudges } from "@/server/admin-service";
 import { ensureRound1JudgeAssignments } from "@/server/round1-judge-assignment";
-import { ensureRound1SubmissionArchive } from "@/server/round1-submission-archive";
+import { ensureRound2JudgeAssignments, isRound2SubmissionClosed } from "@/server/round2-judge-assignment";
+import {
+  ensureRound1SubmissionArchive,
+  parseRound1SubmissionArchiveSync,
+} from "@/server/round1-submission-archive";
 import type {
   CompetitionRoundKey,
   JudgeAssignmentSummary,
@@ -87,6 +92,51 @@ function isScored(review?: { score: number | null; scoredAt: Date | null } | nul
   return Boolean(review && review.score != null && review.scoredAt);
 }
 
+const TEAM_REVIEW_NOTE_PREFIX = "__ATTACKER_RUBRIC_REVIEW_V1__";
+
+function decodeTeamReviewNote(rawNote: string | null | undefined) {
+  const note = rawNote ?? "";
+  if (!note.startsWith(TEAM_REVIEW_NOTE_PREFIX)) {
+    return {
+      note,
+      rubricScores: {} as Record<string, number>,
+    };
+  }
+
+  try {
+    const parsed = JSON.parse(note.slice(TEAM_REVIEW_NOTE_PREFIX.length)) as {
+      note?: unknown;
+      rubricScores?: unknown;
+    };
+
+    const rubricScores: Record<string, number> = {};
+    if (parsed.rubricScores && typeof parsed.rubricScores === "object") {
+      for (const [criterionId, value] of Object.entries(parsed.rubricScores as Record<string, unknown>)) {
+        if (typeof value === "number" && Number.isFinite(value)) {
+          rubricScores[criterionId] = value;
+        }
+      }
+    }
+
+    return {
+      note: typeof parsed.note === "string" ? parsed.note : "",
+      rubricScores,
+    };
+  } catch {
+    return {
+      note: "",
+      rubricScores: {} as Record<string, number>,
+    };
+  }
+}
+
+function encodeTeamReviewNote(note: string, rubricScores: Record<string, number>) {
+  return `${TEAM_REVIEW_NOTE_PREFIX}${JSON.stringify({
+    note: note.trim(),
+    rubricScores,
+  })}`;
+}
+
 export async function getJudgeDashboardData(userId: string): Promise<ServiceResult<JudgeDashboardData>> {
   const assignment = await getJudgeAssignmentSummary(userId);
   if (!assignment.ok) {
@@ -161,6 +211,14 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
     .map((round) => (round === "round-3" ? SubmissionRound.ROUND_3 : SubmissionRound.ROUND_2));
 
   if (requestedSubmissionRounds.length > 0) {
+    const round2Closed = requestedSubmissionRounds.includes(SubmissionRound.ROUND_2)
+      ? await isRound2SubmissionClosed()
+      : false;
+
+    if (round2Closed) {
+      await ensureRound2JudgeAssignments(prisma);
+    }
+
     const submissions = await prisma.teamSubmission.findMany({
       where: {
         round: {
@@ -212,7 +270,7 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
           }
 
           if (round === "round-2") {
-            return submission.judgeReviews.length > 0;
+            return round2Closed && submission.judgeReviews.length > 0;
           }
 
           return true;
@@ -332,6 +390,7 @@ export async function getJudgeRound1Detail(
         rubricNote: question.rubricNote,
         answerText,
         wordCount: countWords(answerText),
+        score: archive.essayQuestionScores[question.id] ?? null,
       };
     })
     .sort((left, right) => left.order - right.order);
@@ -357,6 +416,7 @@ export async function getJudgeRound1Detail(
       score: review?.score ?? null,
       note: review?.note ?? "",
       scoredAt: review?.scoredAt?.toISOString(),
+      questionScores: archive.essayQuestionScores,
     },
     maxScore: ROUND1_ESSAY_MAX_SCORE,
   });
@@ -366,7 +426,7 @@ export async function saveJudgeRound1Review(
   userId: string,
   submissionId: string,
   payload: {
-    score: number;
+    questionScores: Record<string, number>;
     note?: string;
   },
 ): Promise<ServiceResult<{ reviewSaved: true }>> {
@@ -375,15 +435,43 @@ export async function saveJudgeRound1Review(
     return detail;
   }
 
-  if (!Number.isFinite(payload.score) || payload.score < 0 || payload.score > ROUND1_ESSAY_MAX_SCORE) {
-    return fail(400, `Round 1 essay score must be between 0 and ${ROUND1_ESSAY_MAX_SCORE}.`);
+  const essayQuestionIds = detail.data.essays.map((essay) => essay.questionId);
+  if (essayQuestionIds.length === 0) {
+    return fail(409, "This Round 1 submission has no archived essay questions to score.");
+  }
+
+  const questionScores: Record<string, number> = {};
+  for (const questionId of essayQuestionIds) {
+    const score = payload.questionScores[questionId];
+    if (!Number.isFinite(score) || !Number.isInteger(score) || score < 0 || score > ROUND1_ESSAY_POINT_VALUE) {
+      return fail(400, `Each Round 1 essay question score must be a whole number between 0 and ${ROUND1_ESSAY_POINT_VALUE}.`);
+    }
+
+    questionScores[questionId] = score;
   }
 
   const scoredAt = new Date();
-  const essayScore = Math.round(payload.score);
+  const essayScore = Object.values(questionScores).reduce((total, score) => total + score, 0);
+  if (essayScore > ROUND1_ESSAY_MAX_SCORE) {
+    return fail(400, `Round 1 essay score must be between 0 and ${ROUND1_ESSAY_MAX_SCORE}.`);
+  }
+
   const totalScore = detail.data.objectiveScore + essayScore;
 
   await prisma.$transaction(async (tx) => {
+    const submission = await tx.round1Submission.findUnique({
+      where: { id: submissionId },
+      select: { answers: true },
+    });
+    const parsedArchive = parseRound1SubmissionArchiveSync(submission?.answers);
+    const nextArchive = {
+      ...parsedArchive,
+      essayQuestionScores: {
+        ...parsedArchive.essayQuestionScores,
+        ...questionScores,
+      },
+    };
+
     await tx.round1JudgeReview.update({
       where: {
         judgeUserId_submissionId: {
@@ -404,6 +492,7 @@ export async function saveJudgeRound1Review(
         essayScore,
         totalScore,
         score: totalScore,
+        answers: JSON.stringify(nextArchive),
       },
     });
   });
@@ -418,6 +507,10 @@ export async function getJudgeTeamSubmissionDetail(
   const assignment = await getJudgeAssignmentSummary(userId);
   if (!assignment.ok) {
     return assignment;
+  }
+
+  if (assignment.data.rounds.includes("round-2")) {
+    await ensureRound2JudgeAssignments(prisma);
   }
 
   const submission = await prisma.teamSubmission.findUnique({
@@ -457,11 +550,32 @@ export async function getJudgeTeamSubmissionDetail(
     return fail(403, "This judge is not assigned to that round.");
   }
 
+  if (round === "round-2" && !(await isRound2SubmissionClosed())) {
+    return fail(409, "Round 2 scoring opens only after the submission deadline.");
+  }
+
   if (round === "round-2" && submission.judgeReviews.length === 0) {
     return fail(403, "This judge is not assigned to this Round 2 submission.");
   }
 
+  if (round === "round-2") {
+    const latestSubmission = await prisma.teamSubmission.findFirst({
+      where: {
+        teamId: submission.teamId,
+        round: SubmissionRound.ROUND_2,
+      },
+      orderBy: [{ version: "desc" }, { submittedAt: "desc" }],
+      select: { id: true },
+    });
+
+    if (!latestSubmission || latestSubmission.id !== submission.id) {
+      return fail(409, "Round 2 judges can only score the latest locked report version.");
+    }
+  }
+
   const review = submission.judgeReviews[0];
+  const decodedReview = decodeTeamReviewNote(review?.note);
+  const rubric = round === "round-2" ? ROUND2_REPORT_RUBRIC : undefined;
 
   return ok({
     round,
@@ -483,10 +597,12 @@ export async function getJudgeTeamSubmissionDetail(
     resourceSizeBytes: submission.resourceSizeBytes ?? undefined,
     review: {
       score: review?.score ?? null,
-      note: review?.note ?? "",
+      note: decodedReview.note,
       scoredAt: review?.scoredAt?.toISOString(),
+      rubricScores: decodedReview.rubricScores,
     },
-    maxScore: 100,
+    maxScore: rubric ? getRubricMaxScore(rubric) : 100,
+    rubric,
   });
 }
 
@@ -494,7 +610,8 @@ export async function saveJudgeTeamSubmissionReview(
   userId: string,
   submissionId: string,
   payload: {
-    score: number;
+    score?: number;
+    rubricScores?: Record<string, number>;
     note?: string;
   },
 ): Promise<ServiceResult<{ reviewSaved: true }>> {
@@ -503,7 +620,30 @@ export async function saveJudgeTeamSubmissionReview(
     return detail;
   }
 
-  if (!Number.isFinite(payload.score) || payload.score < 0 || payload.score > detail.data.maxScore) {
+  let score = payload.score;
+  let note = payload.note?.trim() ?? "";
+
+  if (detail.data.round === "round-2") {
+    const rubricScores: Record<string, number> = {};
+    for (const criterion of ROUND2_REPORT_RUBRIC) {
+      const criterionScore = payload.rubricScores?.[criterion.id];
+      if (
+        typeof criterionScore !== "number" ||
+        !Number.isFinite(criterionScore) ||
+        criterionScore < 0 ||
+        criterionScore > criterion.maxScore
+      ) {
+        return fail(400, `Each Round 2 rubric score must be between 0 and its criterion maximum.`);
+      }
+
+      rubricScores[criterion.id] = criterionScore;
+    }
+
+    score = Object.values(rubricScores).reduce((total, criterionScore) => total + criterionScore, 0);
+    note = encodeTeamReviewNote(note, rubricScores);
+  }
+
+  if (typeof score !== "number" || !Number.isFinite(score) || score < 0 || score > detail.data.maxScore) {
     return fail(400, `Submission score must be between 0 and ${detail.data.maxScore}.`);
   }
 
@@ -515,15 +655,15 @@ export async function saveJudgeTeamSubmissionReview(
       },
     },
     update: {
-      score: payload.score,
-      note: payload.note?.trim() ?? "",
+      score,
+      note,
       scoredAt: new Date(),
     },
     create: {
       judgeUserId: userId,
       submissionId,
-      score: payload.score,
-      note: payload.note?.trim() ?? "",
+      score,
+      note,
       scoredAt: new Date(),
     },
   });
@@ -556,6 +696,12 @@ export async function canJudgeAccessTeamSubmissionFile(
   }
 
   if (normalizeRoundFromSubmission(submission.round) === "round-2") {
+    if (!(await isRound2SubmissionClosed())) {
+      return false;
+    }
+
+    await ensureRound2JudgeAssignments(prisma);
+
     const review = await prisma.teamSubmissionJudgeReview.findUnique({
       where: {
         judgeUserId_submissionId: {

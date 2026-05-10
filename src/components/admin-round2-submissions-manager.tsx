@@ -110,47 +110,6 @@ function createAssignmentMeta(locale: "en" | "vi", status: AdminRound2Assignment
   }
 }
 
-function AssignmentButton({
-  locale,
-  row,
-  onOpen,
-}: {
-  locale: "en" | "vi";
-  row: AdminRound2SubmissionRow;
-  onOpen: (row: AdminRound2SubmissionRow) => void;
-}) {
-  let tooltip = locale === "en" ? "Assign two Round 2 judges" : "Phân hai giám khảo Vòng 2";
-
-  if (row.isLatest !== "valid latest") {
-    tooltip = locale === "en" ? "Only the latest version can receive judge assignments." : "Chỉ phiên bản mới nhất mới được phân giám khảo.";
-  } else if (!row.canAssign) {
-    tooltip = locale === "en" ? "Judge assignment opens only after the Round 2 deadline." : "Chức năng phân giám khảo chỉ mở sau khi hết hạn nộp Vòng 2.";
-  } else if (row.assignmentLocked) {
-    tooltip = locale === "en" ? "Some assigned judges have already scored. Assignment is now locked." : "Một số giám khảo đã chấm điểm. Việc phân công hiện đã khóa.";
-  }
-
-  const disabled = row.isLatest !== "valid latest" || !row.canAssign || row.assignmentLocked;
-
-  return (
-    <div className="flex justify-center">
-      <div className="group relative inline-flex">
-        <button
-          type="button"
-          onClick={() => onOpen(row)}
-          disabled={disabled}
-          aria-label={tooltip}
-          className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full border disabled:opacity-45"
-        >
-          <UsersRound className="h-4 w-4" />
-        </button>
-        <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-30 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-          {tooltip}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 function DownloadCell({
   locale,
   row,
@@ -197,11 +156,9 @@ function DownloadCell({
 function AssignedJudgeCell({
   locale,
   row,
-  onOpen,
 }: {
   locale: "en" | "vi";
   row: AdminRound2SubmissionRow;
-  onOpen: (row: AdminRound2SubmissionRow) => void;
 }) {
   const meta = createAssignmentMeta(locale, row.assignmentStatus);
   const Icon = meta.icon;
@@ -209,7 +166,7 @@ function AssignedJudgeCell({
   if (row.assignedJudges.length === 0) {
     return (
       <div className="min-w-[16rem] space-y-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <div className="group relative inline-flex">
               <span className={cn("inline-flex h-9 w-9 items-center justify-center rounded-full border", meta.iconClass)}>
@@ -226,7 +183,6 @@ function AssignedJudgeCell({
               <p className="text-sm font-medium theme-text-body">{meta.label}</p>
             </div>
           </div>
-          <AssignmentButton locale={locale} row={row} onOpen={onOpen} />
         </div>
         <p className="text-sm font-medium theme-text-soft">
           {locale === "en" ? "Waiting for assignment" : "Đang chờ phân công"}
@@ -237,7 +193,7 @@ function AssignedJudgeCell({
 
   return (
     <div className="min-w-[16rem] space-y-3">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <div className="group relative inline-flex">
             <span className={cn("inline-flex h-9 w-9 items-center justify-center rounded-full border", meta.iconClass)}>
@@ -254,7 +210,6 @@ function AssignedJudgeCell({
             <p className="text-sm font-medium theme-text-body">{meta.label}</p>
           </div>
         </div>
-        <AssignmentButton locale={locale} row={row} onOpen={onOpen} />
       </div>
       {row.assignedJudges.map((judge, index) => (
         <div key={judge.judgeUserId} className="min-w-0 rounded-[1rem] border theme-border bg-white/78 px-3 py-2 dark:bg-white/[0.04]">
@@ -664,19 +619,19 @@ export function AdminRound2SubmissionsManager() {
           </p>
           <p className="mt-3 text-sm leading-7 theme-text-muted">
             {locale === "en"
-              ? "Review Round 2 report versions, download the file directly, and assign two judges to the latest submission after the deadline closes."
-              : "Rà soát các phiên bản báo cáo Vòng 2, tải trực tiếp tệp bài nộp và phân hai giám khảo cho phiên bản mới nhất sau khi hết hạn nộp."}
+              ? "Review Round 2 report versions, download the file directly, and track the two judges assigned automatically after the deadline closes."
+              : "Rà soát các phiên bản báo cáo Vòng 2, tải trực tiếp tệp bài nộp và theo dõi hai giám khảo được tự động phân cho phiên bản mới nhất sau hạn nộp."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <StatusPill tone={round2Closed ? "success" : "warning"}>
             {round2Closed
               ? locale === "en"
-                ? "Assignment open"
-                : "Đang mở phân công"
+                ? "Auto assignment active"
+                : "Đang tự động phân công"
               : locale === "en"
-                ? "Assignment opens after deadline"
-                : "Mở phân công sau hạn nộp"}
+                ? "Auto assignment after deadline"
+                : "Tự động phân công sau hạn nộp"}
           </StatusPill>
           <button
             type="button"
@@ -827,7 +782,7 @@ export function AdminRound2SubmissionsManager() {
                     </StatusPill>
                   </td>
                   <td className="px-4 py-4">
-                    <AssignedJudgeCell locale={locale} row={row} onOpen={setActiveRow} />
+                    <AssignedJudgeCell locale={locale} row={row} />
                   </td>
                   <td className="px-4 py-4">
                     <DownloadCell locale={locale} row={row} />

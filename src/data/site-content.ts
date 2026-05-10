@@ -664,7 +664,7 @@ export const defaultPageContent: SitePageContent = {
         },
         deliverables: [
           { en: "36 objective questions across 6 topics", vi: "36 câu trắc nghiệm trên 6 chủ đề" },
-          { en: "2 essay responses with 200-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 200 từ" },
+          { en: "2 essay responses with 500-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 500 từ" },
           { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
         ],
       },
@@ -918,7 +918,7 @@ export const defaultPageContent: SitePageContent = {
         },
         deliverables: [
           { en: "36 objective questions across 6 topics", vi: "36 câu trắc nghiệm trên 6 chủ đề" },
-          { en: "2 essay responses with 200-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 200 từ" },
+          { en: "2 essay responses with 500-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 500 từ" },
           { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
         ],
         focus: {
@@ -2024,8 +2024,8 @@ export const roundItems: RoundItem[] = [
         vi: "36 câu trắc nghiệm trên 6 chủ đề",
       },
       {
-        en: "2 essay responses with 200-word limit each",
-        vi: "2 bài tự luận, mỗi bài tối đa 200 từ",
+        en: "2 essay responses with 500-word limit each",
+        vi: "2 bài tự luận, mỗi bài tối đa 500 từ",
       },
       {
         en: "Team average score ranking for Top 50",
@@ -3954,8 +3954,8 @@ const round1EssayQuestionTemplates: Round1Question[] = [
     id: "r1e-01",
     topic: "Fintech fundamentals",
     prompt: createText(
-      "In no more than 200 words, explain how a student-focused fintech product could create trust from the first week of use.",
-      "Trong tối đa 200 từ, hãy giải thích một sản phẩm fintech dành cho sinh viên có thể tạo niềm tin ngay từ tuần sử dụng đầu tiên như thế nào.",
+      "In no more than 500 words, explain how a student-focused fintech product could create trust from the first week of use.",
+      "Trong tối đa 500 từ, hãy giải thích một sản phẩm fintech dành cho sinh viên có thể tạo niềm tin ngay từ tuần sử dụng đầu tiên như thế nào.",
     ),
     placeholder: createText(
       "Outline the trust problem, the product choice, and the user signal you would watch...",
@@ -3970,8 +3970,8 @@ const round1EssayQuestionTemplates: Round1Question[] = [
     id: "r1e-02",
     topic: "Payments",
     prompt: createText(
-      "In no more than 200 words, propose one product idea that reduces payment anxiety for students and explain why it matters.",
-      "Trong tối đa 200 từ, hãy đề xuất một ý tưởng sản phẩm giúp giảm lo lắng khi thanh toán của sinh viên và giải thích vì sao nó quan trọng.",
+      "In no more than 500 words, propose one product idea that reduces payment anxiety for students and explain why it matters.",
+      "Trong tối đa 500 từ, hãy đề xuất một ý tưởng sản phẩm giúp giảm lo lắng khi thanh toán của sinh viên và giải thích vì sao nó quan trọng.",
     ),
     placeholder: createText(
       "Describe the user moment, the feature, and the expected impact...",
@@ -3986,8 +3986,8 @@ const round1EssayQuestionTemplates: Round1Question[] = [
     id: "r1e-03",
     topic: "Customer problem framing",
     prompt: createText(
-      "In no more than 200 words, explain how you would verify that a finance pain point is strong enough to build for students.",
-      "Trong tối đa 200 từ, hãy giải thích bạn sẽ kiểm chứng thế nào để biết một pain point tài chính đủ mạnh để xây cho sinh viên.",
+      "In no more than 500 words, explain how you would verify that a finance pain point is strong enough to build for students.",
+      "Trong tối đa 500 từ, hãy giải thích bạn sẽ kiểm chứng thế nào để biết một pain point tài chính đủ mạnh để xây cho sinh viên.",
     ),
     placeholder: createText(
       "State the hypothesis, target student segment, and validation method...",
@@ -4002,8 +4002,8 @@ const round1EssayQuestionTemplates: Round1Question[] = [
     id: "r1e-04",
     topic: "Data thinking",
     prompt: createText(
-      "In no more than 200 words, describe the minimum data you would collect to evaluate a new student budgeting feature responsibly.",
-      "Trong tối đa 200 từ, hãy mô tả bộ dữ liệu tối thiểu bạn sẽ thu thập để đánh giá một tính năng quản lý chi tiêu mới cho sinh viên một cách có trách nhiệm.",
+      "In no more than 500 words, describe the minimum data you would collect to evaluate a new student budgeting feature responsibly.",
+      "Trong tối đa 500 từ, hãy mô tả bộ dữ liệu tối thiểu bạn sẽ thu thập để đánh giá một tính năng quản lý chi tiêu mới cho sinh viên một cách có trách nhiệm.",
     ),
     placeholder: createText(
       "List the core signals, why they matter, and how you would avoid over-collection...",
@@ -4018,8 +4018,8 @@ const round1EssayQuestionTemplates: Round1Question[] = [
     id: "r1e-05",
     topic: "Risk and compliance",
     prompt: createText(
-      "In no more than 200 words, explain how a student fintech team can balance friction and safety in an early product flow.",
-      "Trong tối đa 200 từ, hãy giải thích một đội fintech sinh viên có thể cân bằng giữa ma sát và an toàn trong luồng sản phẩm ban đầu như thế nào.",
+      "In no more than 500 words, explain how a student fintech team can balance friction and safety in an early product flow.",
+      "Trong tối đa 500 từ, hãy giải thích một đội fintech sinh viên có thể cân bằng giữa ma sát và an toàn trong luồng sản phẩm ban đầu như thế nào.",
     ),
     placeholder: createText(
       "Describe the risk, the control, and why the tradeoff is acceptable...",
@@ -4034,8 +4034,8 @@ const round1EssayQuestionTemplates: Round1Question[] = [
     id: "r1e-06",
     topic: "Growth strategy",
     prompt: createText(
-      "In no more than 200 words, explain how you would prioritize one student segment for the first growth cycle of a fintech product.",
-      "Trong tối đa 200 từ, hãy giải thích bạn sẽ ưu tiên một phân khúc sinh viên như thế nào cho chu kỳ tăng trưởng đầu tiên của một sản phẩm fintech.",
+      "In no more than 500 words, explain how you would prioritize one student segment for the first growth cycle of a fintech product.",
+      "Trong tối đa 500 từ, hãy giải thích bạn sẽ ưu tiên một phân khúc sinh viên như thế nào cho chu kỳ tăng trưởng đầu tiên của một sản phẩm fintech.",
     ),
     placeholder: createText(
       "Mention the segment, the reason for choosing it, and the metric you would track...",
@@ -4140,8 +4140,8 @@ export const round1TestBanks: Round1TestBank[] = [
       vi: "Ngân hàng đề tự luận",
     },
     description: {
-      en: "Separate essay bank used for the last 2 questions in each paper. The system randomizes 2 essay prompts from a 30-question pool, with a 200-word limit for each response.",
-      vi: "Ngân hàng tự luận tách riêng dùng cho 2 câu cuối của mỗi đề. Hệ thống rút ngẫu nhiên 2 câu tự luận từ một kho 30 câu, với giới hạn 200 từ cho mỗi câu trả lời.",
+      en: "Separate essay bank used for the last 2 questions in each paper. The system randomizes 2 essay prompts from a 30-question pool, with a 500-word limit for each response.",
+      vi: "Ngân hàng tự luận tách riêng dùng cho 2 câu cuối của mỗi đề. Hệ thống rút ngẫu nhiên 2 câu tự luận từ một kho 30 câu, với giới hạn 500 từ cho mỗi câu trả lời.",
     },
     status: "active",
     questionPoolSize: round1EssayPreviewQuestions.length,
@@ -4149,7 +4149,7 @@ export const round1TestBanks: Round1TestBank[] = [
     shuffleQuestions: true,
     shuffleOptions: false,
     durationMinutes: 60,
-    wordLimit: 200,
+    wordLimit: 500,
     publishedAt: "2026-05-02",
     questions: round1EssayPreviewQuestions,
   },

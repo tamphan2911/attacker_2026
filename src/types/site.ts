@@ -355,6 +355,7 @@ export interface JudgeRound1EssayAnswer {
   rubricNote?: LocalizedText;
   answerText: string;
   wordCount: number;
+  score?: number | null;
 }
 
 export interface JudgeRound1Detail {
@@ -376,7 +377,15 @@ export interface JudgeRound1Detail {
     score: number | null;
     note: string;
     scoredAt?: string;
+    questionScores?: Record<string, number>;
   };
+  maxScore: number;
+}
+
+export interface JudgeRubricCriterion {
+  id: string;
+  label: LocalizedText;
+  description: LocalizedText;
   maxScore: number;
 }
 
@@ -399,8 +408,10 @@ export interface JudgeTeamSubmissionDetail {
     score: number | null;
     note: string;
     scoredAt?: string;
+    rubricScores?: Record<string, number>;
   };
   maxScore: number;
+  rubric?: JudgeRubricCriterion[];
 }
 
 export interface EditableSectionCopy {

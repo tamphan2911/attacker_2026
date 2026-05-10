@@ -3,6 +3,7 @@ import { Round1BankStatus, Round1TestBankType, type Round1Submission as DbRound1
 import {
   ROUND1_ESSAY_MAX_SCORE,
   ROUND1_ESSAY_TOTAL,
+  ROUND1_ESSAY_WORD_LIMIT,
   ROUND1_OBJECTIVE_TOTAL,
   createRound1ExamPaper,
   scoreRound1Question,
@@ -127,7 +128,7 @@ export function mapStoredBankToAppBank(bank: DbRound1TestBank, bankType: AppRoun
     shuffleQuestions: bank.shuffleQuestions,
     shuffleOptions: bank.shuffleOptions,
     durationMinutes: bank.durationMinutes,
-    wordLimit: bank.wordLimit ?? undefined,
+    wordLimit: bankType === "essay" ? ROUND1_ESSAY_WORD_LIMIT : bank.wordLimit ?? undefined,
     publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
     questions: parseStoredBankQuestions(bank.questions),
   };

@@ -3,6 +3,7 @@ import { SubmissionRound, TeamSubmissionResourceSource, UserRole } from "@prisma
 import { prisma } from "@/lib/db";
 import { getTimelineItemById } from "@/lib/competition";
 import { readAdminRound2JudgeOptions } from "@/server/admin-round2-submissions";
+import { ensureRound2JudgeAssignments } from "@/server/round2-judge-assignment";
 import { readTimelineItems } from "@/server/timeline-items";
 import type { AdminRound2JudgeOption } from "@/types/admin-round2-submissions";
 import type {
@@ -39,6 +40,8 @@ async function isRound2SubmissionClosed(now = new Date()) {
 }
 
 export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]> {
+  await ensureRound2JudgeAssignments(prisma);
+
   const submissions = await prisma.teamSubmission.findMany({
     where: {
       round: SubmissionRound.ROUND_2,
@@ -162,119 +165,12 @@ export async function saveAdminRound2ScoreRow(
     }>;
   },
 ) {
-  const round2Closed = await isRound2SubmissionClosed();
-  if (!round2Closed) {
-    return {
-      ok: false as const,
-      status: 409,
-      error: "Round 2 score entry opens only after the Round 2 submission deadline.",
-    };
-  }
-
-  const normalizedJudges = payload.judges
-    .map((judge) => ({
-      judgeUserId: judge.judgeUserId.trim(),
-      score:
-        typeof judge.score === "number" && Number.isFinite(judge.score)
-          ? Math.max(0, Math.min(100, judge.score))
-          : null,
-    }))
-    .filter((judge) => judge.judgeUserId);
-
-  const uniqueJudgeIds = Array.from(new Set(normalizedJudges.map((judge) => judge.judgeUserId)));
-  if (normalizedJudges.length !== 2 || uniqueJudgeIds.length !== 2) {
-    return {
-      ok: false as const,
-      status: 400,
-      error: "Exactly two distinct Round 2 judges must be selected.",
-    };
-  }
-
-  const assignableJudges = await readAdminRound2JudgeOptions();
-  const validJudgeIds = new Set(assignableJudges.map((judge) => judge.judgeUserId));
-  if (!uniqueJudgeIds.every((judgeUserId) => validJudgeIds.has(judgeUserId))) {
-    return {
-      ok: false as const,
-      status: 400,
-      error: "Both selected judges must belong to the Round 2 judging panel.",
-    };
-  }
-
-  const submission = await prisma.teamSubmission.findUnique({
-    where: { id: submissionId },
-    include: {
-      judgeReviews: true,
-    },
-  });
-
-  if (!submission || submission.round !== SubmissionRound.ROUND_2) {
-    return {
-      ok: false as const,
-      status: 404,
-      error: "Round 2 submission not found.",
-    };
-  }
-
-  const latestSubmission = await prisma.teamSubmission.findFirst({
-    where: {
-      teamId: submission.teamId,
-      round: SubmissionRound.ROUND_2,
-    },
-    orderBy: [{ version: "desc" }, { submittedAt: "desc" }],
-    select: { id: true },
-  });
-
-  if (!latestSubmission || latestSubmission.id !== submission.id) {
-    return {
-      ok: false as const,
-      status: 409,
-      error: "Only the latest Round 2 submission version can be edited here.",
-    };
-  }
-
-  const incomingJudgeIds = new Set(uniqueJudgeIds);
-  const removableJudgeIds = submission.judgeReviews
-    .filter((review) => !incomingJudgeIds.has(review.judgeUserId))
-    .map((review) => review.judgeUserId);
-
-  await prisma.$transaction(async (tx) => {
-    if (removableJudgeIds.length > 0) {
-      await tx.teamSubmissionJudgeReview.deleteMany({
-        where: {
-          submissionId,
-          judgeUserId: {
-            in: removableJudgeIds,
-          },
-        },
-      });
-    }
-
-    for (const judge of normalizedJudges) {
-      const hasScore = typeof judge.score === "number";
-      await tx.teamSubmissionJudgeReview.upsert({
-        where: {
-          judgeUserId_submissionId: {
-            judgeUserId: judge.judgeUserId,
-            submissionId,
-          },
-        },
-        update: {
-          score: judge.score,
-          scoredAt: hasScore ? new Date() : null,
-        },
-        create: {
-          judgeUserId: judge.judgeUserId,
-          submissionId,
-          score: judge.score,
-          scoredAt: hasScore ? new Date() : null,
-        },
-      });
-    }
-  });
+  void submissionId;
+  void payload;
 
   return {
-    ok: true as const,
-    status: 200,
-    data: { saved: true },
+    ok: false as const,
+    status: 403,
+    error: "Round 2 judge assignment and score entry are now handled from judge accounts.",
   };
 }
