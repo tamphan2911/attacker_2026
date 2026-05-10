@@ -2,347 +2,77 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  Award,
-  BarChart3,
+  Banknote,
+  BookOpenText,
   Camera,
   CalendarRange,
+  ChevronLeft,
+  ChevronRight,
   GraduationCap,
+  Lightbulb,
+  Medal,
   Trophy,
+  UserRound,
+  Users2,
 } from "lucide-react";
 
 import { getOrganizerSeasonHref } from "@/components/organizer-page";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { pickText } from "@/lib/site";
+import type { EditableOrganizerSeasonArchive, EditableOrganizerSeasonStory, Locale } from "@/types/site";
 
-type SeasonLocalizedText = { en: string; vi: string };
-
-interface SeasonArchiveStat {
-  value: string;
-  label: SeasonLocalizedText;
-  note: SeasonLocalizedText;
+function createFallbackSeasonArchive(story: EditableOrganizerSeasonStory): EditableOrganizerSeasonArchive {
+  return {
+    year: story.year,
+    overviewTitle: story.title,
+    overview: [story.body],
+    stats: [
+      ...story.stats.slice(0, 3).map((label, index) => ({
+        value: index === 0 ? story.year : "TBD",
+        label,
+      })),
+      { value: "TBD", label: { en: "cash reward", vi: "Hiện kim" } },
+    ],
+    topTeams: [],
+    photoSlides: [{ image: story.image, alt: story.title }],
+  };
 }
 
-interface SeasonArchiveTeam {
-  rank: SeasonLocalizedText;
-  title: SeasonLocalizedText;
-  university: SeasonLocalizedText;
-  project: SeasonLocalizedText;
-  note: SeasonLocalizedText;
-}
-
-interface SeasonArchive {
-  stats: SeasonArchiveStat[];
-  overviewTitle: SeasonLocalizedText;
-  overview: SeasonLocalizedText[];
-  topTeams: SeasonArchiveTeam[];
-}
-
-const seasonArchiveByYear: Record<string, SeasonArchive> = {
-  "2023": {
-    stats: [
-      {
-        value: "300+",
-        label: { en: "participants", vi: "thí sinh" },
-        note: { en: "early national reach", vi: "quy mô tiếp cận ban đầu" },
-      },
-      {
-        value: "20+",
-        label: { en: "campuses", vi: "trường/đơn vị" },
-        note: { en: "student communities started forming", vi: "cộng đồng thí sinh bắt đầu hình thành" },
-      },
-      {
-        value: "05",
-        label: { en: "finalist teams", vi: "đội chung kết" },
-        note: { en: "used for the final showcase archive", vi: "khung lưu trữ cho top 5 chung kết" },
-      },
-    ],
-    overviewTitle: {
-      en: "The foundation season built the first serious student fintech arena.",
-      vi: "Mùa nền tảng đặt viên gạch đầu tiên cho một sân chơi fintech sinh viên nghiêm túc.",
-    },
-    overview: [
-      {
-        en: "The season focused on proving that students could work across finance, product reasoning, and practical delivery rather than stopping at theory.",
-        vi: "Mùa thi tập trung chứng minh sinh viên có thể làm việc giao thoa giữa tài chính, tư duy sản phẩm và năng lực triển khai thực tế thay vì chỉ dừng ở lý thuyết.",
-      },
-      {
-        en: "The finalist group became the first archive of teams that helped shape Attacker's later format.",
-        vi: "Nhóm đội vào chung kết trở thành lớp dữ liệu đầu tiên giúp định hình format Attacker cho các mùa sau.",
-      },
-    ],
-    topTeams: createGenericTopTeams("2023"),
+const statisticStyles = [
+  {
+    Icon: Users2,
+    className: "border-sky-300/35 bg-sky-500/12 text-sky-600 dark:text-sky-200",
   },
-  "2024": {
-    stats: [
-      {
-        value: "800+",
-        label: { en: "participants", vi: "thí sinh" },
-        note: { en: "students joined from across Vietnam", vi: "sinh viên tham gia trên toàn quốc" },
-      },
-      {
-        value: "50",
-        label: { en: "universities", vi: "trường đại học" },
-        note: { en: "national university representation", vi: "độ phủ trường đại học toàn quốc" },
-      },
-      {
-        value: "05",
-        label: { en: "finalist teams", vi: "đội chung kết" },
-        note: { en: "selected for the final trading showcase", vi: "được chọn vào showcase chung kết" },
-      },
-      {
-        value: "50M",
-        label: { en: "VND/team", vi: "VNĐ/đội" },
-        note: { en: "live trading capital for finalists", vi: "vốn giao dịch thực chiến cho mỗi đội chung kết" },
-      },
-    ],
-    overviewTitle: {
-      en: "Algorithmic Trading made the season more concrete, measurable, and market-facing.",
-      vi: "Algorithmic Trading giúp mùa thi trở nên cụ thể, đo lường được và gần thị trường hơn.",
-    },
-    overview: [
-      {
-        en: "Attacker 2024 centered on algorithmic trading, moving students from online qualifiers into a practical trading journey and a final presentation format.",
-        vi: "Attacker 2024 xoay quanh chủ đề giao dịch thuật toán, đưa thí sinh từ vòng loại trực tuyến vào hành trình giao dịch thực chiến và phần trình bày chung kết.",
-      },
-      {
-        en: "The season gave finalist teams a clearer test of data thinking, portfolio discipline, market explanation, and the ability to defend decisions in front of judges.",
-        vi: "Mùa thi tạo cho các đội chung kết một bài kiểm tra rõ hơn về tư duy dữ liệu, kỷ luật danh mục, khả năng giải thích thị trường và bảo vệ quyết định trước hội đồng.",
-      },
-    ],
-    topTeams: [
-      {
-        rank: { en: "1st place", vi: "Hạng 1" },
-        title: { en: "Champion team", vi: "Đội quán quân" },
-        university: {
-          en: "University of Economics and Law, VNU-HCM",
-          vi: "Trường Đại học Kinh tế - Luật, ĐHQG-HCM",
-        },
-        project: {
-          en: "Algorithmic trading strategy and final market defense.",
-          vi: "Chiến lược giao dịch thuật toán và phần bảo vệ thị trường ở chung kết.",
-        },
-        note: {
-          en: "The champion profile should be updated with the official team name when the organizer archive is available.",
-          vi: "Có thể cập nhật thêm tên đội chính thức khi BTC bổ sung hồ sơ lưu trữ.",
-        },
-      },
-      {
-        rank: { en: "2nd place", vi: "Hạng 2" },
-        title: { en: "Runner-up team", vi: "Đội á quân" },
-        university: { en: "University of Economics Ho Chi Minh City", vi: "Đại học Kinh tế TP. Hồ Chí Minh" },
-        project: {
-          en: "Trading analytics, portfolio logic, and market signal interpretation.",
-          vi: "Phân tích giao dịch, logic danh mục và diễn giải tín hiệu thị trường.",
-        },
-        note: {
-          en: "Structured as a finalist profile for the official result archive.",
-          vi: "Được trình bày như hồ sơ đội chung kết để cập nhật kết quả chính thức.",
-        },
-      },
-      {
-        rank: { en: "3rd place", vi: "Hạng 3" },
-        title: { en: "Third-place team", vi: "Đội quý quân" },
-        university: { en: "Nha Trang University", vi: "Trường Đại học Nha Trang" },
-        project: {
-          en: "Data-backed trading model and final-round presentation.",
-          vi: "Mô hình giao dịch dựa trên dữ liệu và phần trình bày chung kết.",
-        },
-        note: {
-          en: "Represents the season's stronger cross-campus finalist presence.",
-          vi: "Thể hiện độ phủ đội thi chung kết đến từ nhiều trường hơn.",
-        },
-      },
-      {
-        rank: { en: "Finalist", vi: "Đồng hạng 4" },
-        title: { en: "Top 5 finalist", vi: "Đội top 5" },
-        university: { en: "Banking University of Ho Chi Minh City", vi: "Trường Đại học Ngân hàng TP. Hồ Chí Minh" },
-        project: {
-          en: "Market monitoring, signal review, and trading performance discussion.",
-          vi: "Theo dõi thị trường, đánh giá tín hiệu và thảo luận hiệu quả giao dịch.",
-        },
-        note: {
-          en: "Prepared for the official finalist-team archive.",
-          vi: "Sẵn sàng để thay bằng tên đội và đề tài chính thức.",
-        },
-      },
-      {
-        rank: { en: "Finalist", vi: "Đồng hạng 4" },
-        title: { en: "Top 5 finalist", vi: "Đội top 5" },
-        university: { en: "University of Economics and Law / partner campus", vi: "Trường Đại học Kinh tế - Luật / trường đối tác" },
-        project: {
-          en: "Decision-support dashboard for algorithmic trading review.",
-          vi: "Dashboard hỗ trợ ra quyết định và rà soát giao dịch thuật toán.",
-        },
-        note: {
-          en: "Use this card for the remaining finalist once the organizer confirms the archive.",
-          vi: "Dùng thẻ này cho đội còn lại khi BTC xác nhận hồ sơ lưu trữ.",
-        },
-      },
-    ],
+  {
+    Icon: GraduationCap,
+    className: "border-emerald-300/35 bg-emerald-500/12 text-emerald-600 dark:text-emerald-200",
   },
-  "2025": {
-    stats: [
-      {
-        value: "2,000+",
-        label: { en: "candidates", vi: "thí sinh" },
-        note: { en: "from the public season recap", vi: "theo tổng kết công khai của mùa thi" },
-      },
-      {
-        value: "250",
-        label: { en: "projects", vi: "dự án" },
-        note: { en: "student solutions submitted", vi: "giải pháp sinh viên được ghi nhận" },
-      },
-      {
-        value: "05",
-        label: { en: "finalist teams", vi: "đội chung kết" },
-        note: { en: "used for the final result band", vi: "nhóm đội ở dải kết quả chung kết" },
-      },
-    ],
-    overviewTitle: {
-      en: "The season expanded from competition mechanics into stronger product and impact stories.",
-      vi: "Mùa thi mở rộng từ kỹ thuật thi đấu sang câu chuyện sản phẩm và tác động rõ hơn.",
-    },
-    overview: [
-      {
-        en: "The archive for 2025 should emphasize product maturity, market relevance, and why each finalist project mattered to finance users.",
-        vi: "Hồ sơ mùa 2025 nên nhấn mạnh độ chín sản phẩm, mức độ liên quan với thị trường và lý do mỗi dự án chung kết có ý nghĩa với người dùng tài chính.",
-      },
-      {
-        en: "URA-xLaw from HCMUT is the first public champion reference currently captured in the archive; the remaining finalist cards are ready for official team updates.",
-        vi: "URA-xLaw từ HCMUT là dữ liệu quán quân công khai đầu tiên đang được ghi nhận; các thẻ còn lại đã sẵn sàng để cập nhật tên đội chính thức.",
-      },
-    ],
-    topTeams: [
-      {
-        rank: { en: "1st place", vi: "Hạng 1" },
-        title: { en: "URA-xLaw", vi: "URA-xLaw" },
-        university: {
-          en: "Ho Chi Minh City University of Technology, VNU-HCM",
-          vi: "Trường Đại học Bách khoa, ĐHQG-HCM",
-        },
-        project: {
-          en: "AI-powered legal Q&A platform for banking and financial institutions.",
-          vi: "Nền tảng hỏi đáp pháp lý ứng dụng AI cho ngân hàng và tổ chức tài chính.",
-        },
-        note: {
-          en: "Publicly reported champion project for Attacker 2025.",
-          vi: "Dự án quán quân Attacker 2025 đã được ghi nhận công khai.",
-        },
-      },
-      ...createGenericTopTeams("2025").slice(1),
-    ],
+  {
+    Icon: Trophy,
+    className: "border-amber-300/40 bg-amber-500/14 text-amber-600 dark:text-amber-200",
   },
-  "2026": {
-    stats: [
-      {
-        value: "03",
-        label: { en: "rounds", vi: "vòng thi" },
-        note: { en: "qualifier, report, and final defense", vi: "vòng loại, báo cáo và bảo vệ chung kết" },
-      },
-      {
-        value: "50",
-        label: { en: "teams to Round 2", vi: "đội vào Vòng 2" },
-        note: { en: "selected by team-average score", vi: "chọn theo điểm trung bình đội" },
-      },
-      {
-        value: "05",
-        label: { en: "finalist teams", vi: "đội chung kết" },
-        note: { en: "planned top finalist band", vi: "nhóm đội chung kết dự kiến" },
-      },
-    ],
-    overviewTitle: {
-      en: "The new season page is ready to become the live archive once 2026 results are confirmed.",
-      vi: "Trang mùa 2026 đã sẵn sàng trở thành hồ sơ lưu trữ khi kết quả chính thức được xác nhận.",
-    },
-    overview: [
-      {
-        en: "This archive currently describes the planned competition path and leaves the finalist cards ready for official team, university, and project details.",
-        vi: "Hồ sơ hiện mô tả lộ trình cuộc thi dự kiến và chuẩn bị sẵn các thẻ để cập nhật đội, trường và dự án chính thức.",
-      },
-    ],
-    topTeams: createGenericTopTeams("2026"),
+  {
+    Icon: Banknote,
+    className: "border-fuchsia-300/35 bg-fuchsia-500/12 text-fuchsia-600 dark:text-fuchsia-200",
   },
-};
-
-const seasonPhotoImages = [
-  "/theme-hero-1.jpg",
-  "/theme-hero-2.jpg",
-  "/theme-feature-1.jpg",
-  "/theme-feature-2.jpg",
 ];
 
-function createGenericTopTeams(year: string): SeasonArchiveTeam[] {
-  return [
-    {
-      rank: { en: "1st place", vi: "Hạng 1" },
-      title: { en: "Champion archive", vi: "Hồ sơ quán quân" },
-      university: { en: "Organizer archive", vi: "Hồ sơ BTC" },
-      project: { en: `Top project profile for Attacker ${year}.`, vi: `Hồ sơ dự án dẫn đầu Attacker ${year}.` },
-      note: { en: "Ready for official team name, university, and project detail.", vi: "Sẵn sàng cập nhật tên đội, trường và dự án chính thức." },
-    },
-    {
-      rank: { en: "2nd place", vi: "Hạng 2" },
-      title: { en: "Runner-up archive", vi: "Hồ sơ á quân" },
-      university: { en: "Organizer archive", vi: "Hồ sơ BTC" },
-      project: { en: `Runner-up project profile for Attacker ${year}.`, vi: `Hồ sơ dự án á quân Attacker ${year}.` },
-      note: { en: "Use this card for the official second-place team.", vi: "Dùng thẻ này cho đội hạng 2 chính thức." },
-    },
-    {
-      rank: { en: "3rd place", vi: "Hạng 3" },
-      title: { en: "Third-place archive", vi: "Hồ sơ quý quân" },
-      university: { en: "Organizer archive", vi: "Hồ sơ BTC" },
-      project: { en: `Third-place project profile for Attacker ${year}.`, vi: `Hồ sơ dự án quý quân Attacker ${year}.` },
-      note: { en: "Use this card for the official third-place team.", vi: "Dùng thẻ này cho đội hạng 3 chính thức." },
-    },
-    {
-      rank: { en: "Finalist", vi: "Đồng hạng 4" },
-      title: { en: "Top 5 finalist", vi: "Đội top 5" },
-      university: { en: "Organizer archive", vi: "Hồ sơ BTC" },
-      project: { en: `Finalist project profile for Attacker ${year}.`, vi: `Hồ sơ dự án chung kết Attacker ${year}.` },
-      note: { en: "Prepared for the official fourth-place finalist record.", vi: "Sẵn sàng cho hồ sơ đội chung kết đồng hạng 4." },
-    },
-    {
-      rank: { en: "Finalist", vi: "Đồng hạng 4" },
-      title: { en: "Top 5 finalist", vi: "Đội top 5" },
-      university: { en: "Organizer archive", vi: "Hồ sơ BTC" },
-      project: { en: `Finalist project profile for Attacker ${year}.`, vi: `Hồ sơ dự án chung kết Attacker ${year}.` },
-      note: { en: "Prepared for the official fourth-place finalist record.", vi: "Sẵn sàng cho hồ sơ đội chung kết đồng hạng 4." },
-    },
-  ];
-}
-
-function getSeasonArchive(year: string): SeasonArchive {
-  return seasonArchiveByYear[year] ?? seasonArchiveByYear["2026"];
-}
-
-function getSeasonPhotoSlides(year: string, heroImage: string) {
-  return Array.from({ length: 10 }, (_, index) => {
-    const image = index === 0 ? heroImage : seasonPhotoImages[(index + year.length) % seasonPhotoImages.length];
-    const frame = String(index + 1).padStart(2, "0");
-
-    return {
-      image,
-      label: { en: `Frame ${frame}`, vi: `Khung ${frame}` },
-      title: {
-        en: `Attacker ${year} archive moment`,
-        vi: `Khoảnh khắc lưu trữ Attacker ${year}`,
-      },
-      description: {
-        en: "Replace this image with the official event photo when the season archive is ready.",
-        vi: "Có thể thay ảnh này bằng ảnh sự kiện chính thức khi hồ sơ mùa thi hoàn thiện.",
-      },
-    };
-  });
+function shouldUseUnoptimizedImage(src: string) {
+  return src.startsWith("/api/hero-slide-images/") || src.startsWith("data:");
 }
 
 export function OrganizerSeasonRoute({ year }: { year: string }) {
   const { hasHydrated, locale, pageContent } = useSiteState();
   const decodedYear = decodeURIComponent(year);
-  const seasonStories = pageContent.organizer.seasonStories;
+  const organizerContent = pageContent.organizer as typeof pageContent.organizer & {
+    seasonArchives?: EditableOrganizerSeasonArchive[];
+  };
+  const seasonStories = organizerContent.seasonStories ?? [];
   const story = seasonStories.find((item) => item.year === decodedYear);
   const relatedStories = seasonStories.filter((item) => item.year !== decodedYear).slice(0, 3);
 
@@ -381,8 +111,50 @@ export function OrganizerSeasonRoute({ year }: { year: string }) {
     );
   }
 
-  const seasonArchive = getSeasonArchive(story.year);
-  const photoSlides = getSeasonPhotoSlides(story.year, story.image);
+  const seasonArchive =
+    organizerContent.seasonArchives?.find((item) => item.year === story.year) ?? createFallbackSeasonArchive(story);
+
+  return (
+    <SeasonDetailContent
+      key={story.year}
+      locale={locale}
+      story={story}
+      seasonArchive={seasonArchive}
+      seasonBadgeLabel={pageContent.organizer.seasonBadgeLabel}
+      relatedStories={relatedStories}
+    />
+  );
+}
+
+function SeasonDetailContent({
+  locale,
+  story,
+  seasonArchive,
+  seasonBadgeLabel,
+  relatedStories,
+}: {
+  locale: Locale;
+  story: EditableOrganizerSeasonStory;
+  seasonArchive: EditableOrganizerSeasonArchive;
+  seasonBadgeLabel: { en: string; vi: string };
+  relatedStories: EditableOrganizerSeasonStory[];
+}) {
+  const photoSlides = useMemo(() => {
+    const slides = (seasonArchive.photoSlides ?? [])
+      .filter((slide) => slide.image.trim())
+      .map((slide) => ({
+        image: slide.image,
+        alt: slide.alt,
+      }));
+
+    return slides.length ? slides : [{ image: story.image, alt: story.title }];
+  }, [seasonArchive.photoSlides, story.image, story.title]);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const safeActivePhotoIndex = activePhotoIndex % photoSlides.length;
+  const activePhoto = photoSlides[safeActivePhotoIndex] ?? photoSlides[0];
+  const shiftPhoto = (direction: number) => {
+    setActivePhotoIndex((current) => (current + direction + photoSlides.length) % photoSlides.length);
+  };
 
   return (
     <div className="space-y-14">
@@ -394,6 +166,7 @@ export function OrganizerSeasonRoute({ year }: { year: string }) {
           alt={pickText(locale, story.title)}
           fill
           sizes="100vw"
+          unoptimized={shouldUseUnoptimizedImage(story.image)}
           className="object-cover"
           priority
         />
@@ -403,7 +176,7 @@ export function OrganizerSeasonRoute({ year }: { year: string }) {
           <div className="max-w-3xl space-y-5 text-white">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-white/16 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-white/78 backdrop-blur-md">
-                {pickText(locale, pageContent.organizer.seasonBadgeLabel)} {story.year}
+                {pickText(locale, seasonBadgeLabel)} {story.year}
               </span>
               <span className="rounded-full border border-white/16 bg-slate-950/44 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-white/88 backdrop-blur-md">
                 {pickText(locale, story.label)}
@@ -482,19 +255,27 @@ export function OrganizerSeasonRoute({ year }: { year: string }) {
             </div>
 
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              {seasonArchive.stats.map((item) => (
-                <div
-                  key={`${item.value}-${item.label.en}`}
-                  className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4"
-                >
-                  <BarChart3 className="mb-3 h-4 w-4 text-sky-500 dark:text-cyan-200" />
-                  <p className="theme-heading text-2xl font-semibold theme-text-strong">{item.value}</p>
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
-                    {pickText(locale, item.label)}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 theme-text-muted">{pickText(locale, item.note)}</p>
-                </div>
-              ))}
+              {seasonArchive.stats.map((item, index) => {
+                const style = statisticStyles[index % statisticStyles.length];
+                const Icon = style.Icon;
+
+                return (
+                  <div
+                    key={`${item.value}-${item.label.en}`}
+                    className="rounded-[1.45rem] border theme-border theme-panel-subtle px-4 py-5 text-center shadow-[0_18px_46px_rgba(15,23,42,0.06)]"
+                  >
+                    <span
+                      className={`mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border ${style.className}`}
+                    >
+                      <Icon className="h-6 w-6" />
+                    </span>
+                    <p className="theme-heading mt-4 text-3xl font-semibold theme-text-strong">{item.value}</p>
+                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
+                      {pickText(locale, item.label)}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
 
             <div>
@@ -502,43 +283,77 @@ export function OrganizerSeasonRoute({ year }: { year: string }) {
                 <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-200">
                   <Trophy className="h-5 w-5" />
                 </span>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                    {locale === "en" ? "Top 5 teams" : "Top 5 đội thi"}
-                  </p>
-                  <h2 className="theme-heading mt-1 text-2xl font-semibold theme-text-strong">
-                    {locale === "en" ? "Finalist profiles and project focus" : "Hồ sơ đội chung kết và trọng tâm dự án"}
-                  </h2>
-                </div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                  {locale === "en" ? "Top 5 teams" : "Top 5 đội thi"}
+                </p>
               </div>
 
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
-                {seasonArchive.topTeams.map((team, index) => (
-                  <div
-                    key={`${team.rank.en}-${team.title.en}-${index}`}
-                    className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
-                          {pickText(locale, team.rank)}
-                        </p>
-                        <h3 className="theme-heading mt-2 text-lg font-semibold theme-text-strong">
-                          {pickText(locale, team.title)}
-                        </h3>
+              <div className="mt-5 space-y-4">
+                {seasonArchive.topTeams.length ? (
+                  seasonArchive.topTeams.map((team, index) => (
+                    <div
+                      key={`${team.name.en}-${team.rank.en}-${index}`}
+                      className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 shadow-[0_18px_46px_rgba(15,23,42,0.05)]"
+                    >
+                      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)] lg:items-start">
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/32 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-200">
+                              <Medal className="h-3.5 w-3.5" />
+                              {pickText(locale, team.rank)}
+                            </span>
+                            <span className="inline-flex items-center gap-2 rounded-full border theme-border bg-white/60 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] theme-text-strong dark:bg-white/6">
+                              <Users2 className="h-3.5 w-3.5 text-sky-500 dark:text-cyan-200" />
+                              {pickText(locale, team.name)}
+                            </span>
+                          </div>
+                          <div className="flex gap-3">
+                            <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-cyan-300/26 bg-cyan-500/10 text-cyan-600 dark:text-cyan-200">
+                              <Lightbulb className="h-4 w-4" />
+                            </span>
+                            <div>
+                              <p className="theme-heading text-lg font-semibold theme-text-strong">
+                                {pickText(locale, team.projectName)}
+                              </p>
+                              <p className="mt-2 text-sm leading-7 theme-text-body">
+                                {pickText(locale, team.projectDescription)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="rounded-[1.25rem] border theme-border bg-white/58 px-3 py-3 dark:bg-white/5">
+                          <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                            <BookOpenText className="h-4 w-4" />
+                            {locale === "en" ? "Members" : "Thành viên"}
+                          </div>
+                          <div className="space-y-2">
+                            {(team.members ?? []).map((member) => (
+                              <div
+                                key={`${member.name}-${member.major}`}
+                                className="grid gap-2 rounded-2xl border theme-border bg-white/72 px-3 py-2 text-sm dark:bg-slate-950/20"
+                              >
+                                <p className="inline-flex items-center gap-2 font-semibold theme-text-strong">
+                                  <UserRound className="h-4 w-4 text-sky-500 dark:text-cyan-200" />
+                                  {member.name}
+                                </p>
+                                <p className="pl-6 text-xs leading-5 theme-text-muted">
+                                  {member.university} · {member.major}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                      <Award className="h-5 w-5 shrink-0 text-amber-500 dark:text-amber-200" />
                     </div>
-                    <div className="mt-4 space-y-3 text-sm leading-7">
-                      <p className="flex gap-2 theme-text-body">
-                        <GraduationCap className="mt-1 h-4 w-4 shrink-0 text-sky-500 dark:text-cyan-200" />
-                        <span>{pickText(locale, team.university)}</span>
-                      </p>
-                      <p className="theme-text-strong">{pickText(locale, team.project)}</p>
-                      <p className="theme-text-muted">{pickText(locale, team.note)}</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-5 py-5 text-sm theme-text-muted">
+                    {locale === "en"
+                      ? "Top team records are ready to be added from the admin season editor."
+                      : "Hồ sơ đội top đầu đã sẵn sàng để cập nhật trong trang quản trị mùa thi."}
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -547,44 +362,59 @@ export function OrganizerSeasonRoute({ year }: { year: string }) {
                 <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-600 dark:text-cyan-200">
                   <Camera className="h-5 w-5" />
                 </span>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                    {locale === "en" ? "Photo slider" : "Slider hình ảnh"}
-                  </p>
-                  <h2 className="theme-heading mt-1 text-2xl font-semibold theme-text-strong">
-                    {locale === "en" ? "Season archive frames" : "Khoảnh khắc lưu trữ mùa thi"}
-                  </h2>
-                </div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                  {locale === "en" ? "Photo slider" : "Slider hình ảnh"}
+                </p>
               </div>
 
-              <div className="mt-5 flex snap-x gap-4 overflow-x-auto pb-3">
-                {photoSlides.map((slide, index) => (
-                  <div
-                    key={`${slide.title.en}-${index}`}
-                    className="min-w-[260px] snap-start overflow-hidden rounded-[1.5rem] border theme-border theme-panel-subtle md:min-w-[330px]"
-                  >
-                    <div className="relative aspect-[4/3]">
-                      <Image
-                        src={slide.image}
-                        alt={pickText(locale, slide.title)}
-                        fill
-                        sizes="330px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="px-4 py-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
-                        {pickText(locale, slide.label)}
-                      </p>
-                      <h3 className="theme-heading mt-2 text-base font-semibold theme-text-strong">
-                        {pickText(locale, slide.title)}
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 theme-text-muted">
-                        {pickText(locale, slide.description)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              <div className="mt-5 overflow-hidden rounded-[1.7rem] border theme-border theme-panel-subtle">
+                <div className="relative aspect-[16/9] min-h-[260px]">
+                  <Image
+                    key={`${activePhoto.image}-${safeActivePhotoIndex}`}
+                    src={activePhoto.image}
+                    alt={pickText(locale, activePhoto.alt)}
+                    fill
+                    sizes="(min-width: 1024px) 880px, 100vw"
+                    unoptimized={shouldUseUnoptimizedImage(activePhoto.image)}
+                    className="object-cover transition duration-500 ease-out"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/44 to-transparent" />
+                  {photoSlides.length > 1 ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => shiftPhoto(-1)}
+                        className="absolute left-4 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/28 bg-slate-950/46 text-white shadow-[0_18px_34px_rgba(2,6,23,0.26)] backdrop-blur-md transition hover:bg-slate-950/64"
+                        aria-label={locale === "en" ? "Previous photo" : "Ảnh trước"}
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => shiftPhoto(1)}
+                        className="absolute right-4 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/28 bg-slate-950/46 text-white shadow-[0_18px_34px_rgba(2,6,23,0.26)] backdrop-blur-md transition hover:bg-slate-950/64"
+                        aria-label={locale === "en" ? "Next photo" : "Ảnh tiếp theo"}
+                      >
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+                        {photoSlides.map((slide, index) => (
+                          <button
+                            key={`${slide.image}-${index}`}
+                            type="button"
+                            onClick={() => setActivePhotoIndex(index)}
+                            className={`h-2.5 rounded-full transition-all ${
+                              index === safeActivePhotoIndex ? "w-8 bg-white" : "w-2.5 bg-white/52 hover:bg-white/78"
+                            }`}
+                            aria-label={
+                              locale === "en" ? `Open photo ${index + 1}` : `Mở ảnh ${index + 1}`
+                            }
+                          />
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
@@ -616,7 +446,7 @@ export function OrganizerSeasonRoute({ year }: { year: string }) {
   );
 }
 
-function BackToOrganizerLink({ locale }: { locale: "en" | "vi" }) {
+function BackToOrganizerLink({ locale }: { locale: Locale }) {
   return (
     <Link href="/organizer" className="inline-flex items-center gap-2 text-sm font-semibold text-sky-600 dark:text-sky-200">
       <ArrowLeft className="h-4 w-4" />

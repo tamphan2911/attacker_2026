@@ -6,12 +6,14 @@ import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import {
   ArrowLeft,
   BriefcaseBusiness,
+  CalendarRange,
   ChevronDown,
   CheckCircle2,
   CircleHelp,
   Clock3,
   FileText,
   ImageIcon,
+  Images,
   LayoutDashboard,
   Mail,
   Medal,
@@ -37,9 +39,17 @@ import {
 } from "@/data/admin-content";
 import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
+import { SeasonArchiveContentEditor, SeasonLinksContentEditor } from "@/components/admin-season-content-editor";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
-import type { FAQItem, FAQTopic, Locale, LocalizedText, SitePageContent, TestimonialItem } from "@/types/site";
+import type {
+  FAQItem,
+  FAQTopic,
+  Locale,
+  LocalizedText,
+  SitePageContent,
+  TestimonialItem,
+} from "@/types/site";
 import type { SponsorProfile } from "@/types/site";
 
 function cn(...values: Array<string | undefined | false>) {
@@ -173,6 +183,8 @@ function createOrganizerGallerySlideDraft(index: number) {
     description: createBlankLocalizedText(),
   };
 }
+
+const seasonContentYears = ["2023", "2024", "2025", "2026"] as const;
 
 function LocalizedFieldEditor({
   label,
@@ -368,6 +380,13 @@ function iconForPage(pageId: ContentPageId) {
       return Users2;
     case "organizer":
       return LayoutDashboard;
+    case "seasons":
+      return CalendarRange;
+    case "season-2023":
+    case "season-2024":
+    case "season-2025":
+    case "season-2026":
+      return Images;
     case "contact":
       return Mail;
   }
@@ -432,6 +451,10 @@ const contentPageTree: Array<{
     children: [{ kind: "type", id: "workspace-states" }],
   },
   { id: "organizer" },
+  {
+    id: "seasons",
+    children: seasonContentYears.map((year) => ({ kind: "page", id: `season-${year}` as ContentPageId })),
+  },
   { id: "contact" },
 ];
 
@@ -821,6 +844,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   );
 
   const config = contentPageConfigs.find((item) => item.id === pageId)!;
+  const seasonYear = pageId.startsWith("season-") ? pageId.replace("season-", "") : null;
   const faqTopics = draft.rules.faqTopics;
   const firstFaqTopicId = faqTopics[0]?.id ?? "";
   const pickFaqTopicTitle = (topicId: string) => {
@@ -3045,6 +3069,12 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
               </div>
             </Surface>
           </>
+        ) : null}
+
+        {pageId === "seasons" ? <SeasonLinksContentEditor locale={locale} /> : null}
+
+        {seasonYear ? (
+          <SeasonArchiveContentEditor locale={locale} draft={draft} setDraft={setDraft} year={seasonYear} />
         ) : null}
 
         {pageId === "contact" ? (

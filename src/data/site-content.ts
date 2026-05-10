@@ -1,5 +1,6 @@
 import type {
   CompetitionRoundWindow,
+  EditableOrganizerSeasonArchive,
   FAQItem,
   JudgeProfile,
   LeadershipTransferRequest,
@@ -36,6 +37,451 @@ export const TEAM_MIN_MEMBERS = 3;
 export const TEAM_MAX_MEMBERS = 5;
 export const DEMO_ADMIN_LOGIN_ID = "admin";
 export const DEMO_ADMIN_PASSWORD = "Aa@291189";
+
+const seasonArchiveImagePool = [
+  "/theme-hero-1.jpg",
+  "/theme-hero-2.jpg",
+  "/theme-feature-1.jpg",
+  "/theme-feature-2.jpg",
+];
+
+function createSeasonMembers(university: string, offset: number) {
+  const names = [
+    "Nguyen Minh An",
+    "Tran Gia Bao",
+    "Le Khanh Linh",
+    "Pham Hoang Nam",
+    "Dang Thu Ha",
+    "Vo Minh Quan",
+    "Bui Ngoc Anh",
+    "Hoang Phuong Nhi",
+    "Do Quang Huy",
+    "Phan Thao Vy",
+  ];
+  const majors = [
+    "Finance",
+    "Data Analytics",
+    "Software Engineering",
+    "Business Administration",
+    "Banking",
+    "Marketing",
+  ];
+
+  return [0, 1, 2].map((item) => ({
+    name: names[(offset + item) % names.length],
+    university,
+    major: majors[(offset + item) % majors.length],
+  }));
+}
+
+function createSeasonArchiveTeam({
+  rankEn,
+  rankVi,
+  name,
+  projectNameEn,
+  projectNameVi,
+  projectDescriptionEn,
+  projectDescriptionVi,
+  university,
+  memberOffset,
+}: {
+  rankEn: string;
+  rankVi: string;
+  name: string;
+  projectNameEn: string;
+  projectNameVi: string;
+  projectDescriptionEn: string;
+  projectDescriptionVi: string;
+  university: string;
+  memberOffset: number;
+}) {
+  return {
+    rank: { en: rankEn, vi: rankVi },
+    name: { en: name, vi: name },
+    projectName: { en: projectNameEn, vi: projectNameVi },
+    projectDescription: { en: projectDescriptionEn, vi: projectDescriptionVi },
+    members: createSeasonMembers(university, memberOffset),
+  };
+}
+
+function createSeasonArchiveSlides(year: string, heroImage: string) {
+  return Array.from({ length: 10 }, (_, index) => ({
+    image: index === 0 ? heroImage : seasonArchiveImagePool[(index + year.length) % seasonArchiveImagePool.length],
+    alt: {
+      en: `Attacker ${year} season photo ${index + 1}`,
+      vi: `Ảnh mùa Attacker ${year} số ${index + 1}`,
+    },
+  }));
+}
+
+function createOrganizerSeasonArchives(): EditableOrganizerSeasonArchive[] {
+  return [
+    {
+      year: "2023",
+      overviewTitle: {
+        en: "The foundation season built Attacker's first serious student fintech arena.",
+        vi: "Mùa nền tảng xây dựng sân chơi fintech sinh viên nghiêm túc đầu tiên của Attacker.",
+      },
+      overview: [
+        {
+          en: "The season focused on turning finance ideas into working team projects, with students learning how to explain product logic, market need, and execution plans in one clear pitch.",
+          vi: "Mùa thi tập trung biến ý tưởng tài chính thành dự án nhóm có thể trình bày rõ logic sản phẩm, nhu cầu thị trường và kế hoạch triển khai.",
+        },
+        {
+          en: "The top teams created the first finalist archive for Attacker and gave later seasons a stronger model for team formation, mentoring, and final presentation.",
+          vi: "Nhóm top đầu tạo nên lớp hồ sơ chung kết đầu tiên cho Attacker và giúp các mùa sau có mô hình tốt hơn về lập đội, cố vấn và trình bày chung kết.",
+        },
+      ],
+      stats: [
+        { value: "300+", label: { en: "participants", vi: "Thí sinh" } },
+        { value: "20+", label: { en: "campuses", vi: "Trường/đơn vị" } },
+        { value: "05", label: { en: "top teams", vi: "Đội top 5" } },
+        { value: "50M", label: { en: "cash reward", vi: "Hiện kim" } },
+      ],
+      topTeams: [
+        createSeasonArchiveTeam({
+          rankEn: "1st place",
+          rankVi: "Hạng 1",
+          name: "MarketPulse",
+          projectNameEn: "SME cashflow assistant",
+          projectNameVi: "Trợ lý dòng tiền cho SME",
+          projectDescriptionEn:
+            "A lightweight cashflow planning tool that helps small businesses forecast short-term liquidity pressure.",
+          projectDescriptionVi:
+            "Công cụ lập kế hoạch dòng tiền giúp doanh nghiệp nhỏ dự báo áp lực thanh khoản ngắn hạn.",
+          university: "University of Economics and Law, VNU-HCM",
+          memberOffset: 0,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "2nd place",
+          rankVi: "Hạng 2",
+          name: "PayWise",
+          projectNameEn: "Student payment planning wallet",
+          projectNameVi: "Ví lập kế hoạch chi tiêu sinh viên",
+          projectDescriptionEn:
+            "A wallet concept that categorizes student expenses and nudges safer budgeting behavior before deadlines.",
+          projectDescriptionVi:
+            "Ý tưởng ví phân loại chi tiêu sinh viên và nhắc hành vi ngân sách an toàn trước các mốc thanh toán.",
+          university: "University of Economics Ho Chi Minh City",
+          memberOffset: 2,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "3rd place",
+          rankVi: "Hạng 3",
+          name: "CreditFlow",
+          projectNameEn: "Micro-credit screening model",
+          projectNameVi: "Mô hình sàng lọc tín dụng nhỏ",
+          projectDescriptionEn:
+            "A scoring approach for early borrower screening using behavior signals and simplified financial profiles.",
+          projectDescriptionVi:
+            "Cách tiếp cận chấm điểm để sàng lọc người vay sớm bằng tín hiệu hành vi và hồ sơ tài chính đơn giản.",
+          university: "Banking University of Ho Chi Minh City",
+          memberOffset: 4,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "Finalist",
+          rankVi: "Đồng hạng 4",
+          name: "BudgetBee",
+          projectNameEn: "Household saving habit tracker",
+          projectNameVi: "Theo dõi thói quen tiết kiệm hộ gia đình",
+          projectDescriptionEn:
+            "A habit-based savings assistant that turns monthly financial goals into smaller daily actions.",
+          projectDescriptionVi:
+            "Trợ lý tiết kiệm theo thói quen, chia mục tiêu tài chính hằng tháng thành hành động nhỏ mỗi ngày.",
+          university: "Foreign Trade University",
+          memberOffset: 6,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "Finalist",
+          rankVi: "Đồng hạng 4",
+          name: "FinLens",
+          projectNameEn: "Personal finance insight dashboard",
+          projectNameVi: "Bảng phân tích tài chính cá nhân",
+          projectDescriptionEn:
+            "A dashboard that helps young users read spending trends and identify avoidable financial leakage.",
+          projectDescriptionVi:
+            "Dashboard giúp người dùng trẻ đọc xu hướng chi tiêu và nhận diện các khoản thất thoát có thể tránh.",
+          university: "RMIT Vietnam",
+          memberOffset: 8,
+        }),
+      ],
+      photoSlides: createSeasonArchiveSlides("2023", "/theme-feature-1.jpg"),
+    },
+    {
+      year: "2024",
+      overviewTitle: {
+        en: "Algorithmic Trading made the season more concrete, measurable, and market-facing.",
+        vi: "Algorithmic Trading giúp mùa thi cụ thể hơn, đo lường tốt hơn và gần thị trường hơn.",
+      },
+      overview: [
+        {
+          en: "Attacker 2024 moved students from online qualifiers into a practical trading journey, where each decision had to be linked to data, risk discipline, and market explanation.",
+          vi: "Attacker 2024 đưa thí sinh từ vòng loại trực tuyến vào hành trình giao dịch thực chiến, nơi mỗi quyết định phải gắn với dữ liệu, kỷ luật rủi ro và diễn giải thị trường.",
+        },
+        {
+          en: "The finalist teams were evaluated not only by trading output, but also by their ability to defend assumptions, explain signals, and communicate portfolio logic.",
+          vi: "Các đội chung kết được đánh giá không chỉ bằng kết quả giao dịch mà còn bằng khả năng bảo vệ giả định, giải thích tín hiệu và truyền đạt logic danh mục.",
+        },
+      ],
+      stats: [
+        { value: "800+", label: { en: "participants", vi: "Thí sinh" } },
+        { value: "50", label: { en: "universities", vi: "Trường đại học" } },
+        { value: "05", label: { en: "top teams", vi: "Đội top 5" } },
+        { value: "250M", label: { en: "cash reward", vi: "Hiện kim" } },
+      ],
+      topTeams: [
+        createSeasonArchiveTeam({
+          rankEn: "1st place",
+          rankVi: "Hạng 1",
+          name: "AlphaQuant",
+          projectNameEn: "Momentum trading strategy",
+          projectNameVi: "Chiến lược giao dịch theo động lượng",
+          projectDescriptionEn:
+            "A rule-based trading framework combining signal filters, position sizing, and final market defense.",
+          projectDescriptionVi:
+            "Khung giao dịch theo luật kết hợp bộ lọc tín hiệu, quản trị vị thế và phần bảo vệ thị trường chung kết.",
+          university: "University of Economics and Law, VNU-HCM",
+          memberOffset: 1,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "2nd place",
+          rankVi: "Hạng 2",
+          name: "SignalCraft",
+          projectNameEn: "Signal review and portfolio discipline",
+          projectNameVi: "Rà soát tín hiệu và kỷ luật danh mục",
+          projectDescriptionEn:
+            "A trading analytics setup that explains entry logic, risk controls, and performance attribution.",
+          projectDescriptionVi:
+            "Bộ phân tích giao dịch giải thích logic vào lệnh, kiểm soát rủi ro và phân rã hiệu quả danh mục.",
+          university: "University of Economics Ho Chi Minh City",
+          memberOffset: 3,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "3rd place",
+          rankVi: "Hạng 3",
+          name: "Delta Edge",
+          projectNameEn: "Data-backed trading model",
+          projectNameVi: "Mô hình giao dịch dựa trên dữ liệu",
+          projectDescriptionEn:
+            "A model-focused project that tested market indicators and translated findings into final-round decisions.",
+          projectDescriptionVi:
+            "Dự án tập trung vào mô hình, kiểm tra chỉ báo thị trường và chuyển kết quả thành quyết định ở vòng chung kết.",
+          university: "Nha Trang University",
+          memberOffset: 5,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "Finalist",
+          rankVi: "Đồng hạng 4",
+          name: "MarketMakers",
+          projectNameEn: "Market monitoring toolkit",
+          projectNameVi: "Bộ công cụ theo dõi thị trường",
+          projectDescriptionEn:
+            "A monitoring toolkit for tracking volatility, portfolio exposure, and signal reliability during live trading.",
+          projectDescriptionVi:
+            "Bộ công cụ theo dõi biến động, mức độ phơi nhiễm danh mục và độ tin cậy tín hiệu trong giao dịch thực chiến.",
+          university: "Banking University of Ho Chi Minh City",
+          memberOffset: 7,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "Finalist",
+          rankVi: "Đồng hạng 4",
+          name: "QuantVista",
+          projectNameEn: "Trading decision dashboard",
+          projectNameVi: "Dashboard hỗ trợ quyết định giao dịch",
+          projectDescriptionEn:
+            "A dashboard concept that helps teams compare strategy performance and explain market choices to judges.",
+          projectDescriptionVi:
+            "Ý tưởng dashboard giúp đội so sánh hiệu quả chiến lược và giải thích lựa chọn thị trường trước giám khảo.",
+          university: "University of Information Technology, VNU-HCM",
+          memberOffset: 9,
+        }),
+      ],
+      photoSlides: createSeasonArchiveSlides("2024", "/theme-hero-2.jpg"),
+    },
+    {
+      year: "2025",
+      overviewTitle: {
+        en: "The season expanded into stronger product, legal-tech, and user impact stories.",
+        vi: "Mùa thi mở rộng sang các câu chuyện sản phẩm, legal-tech và tác động người dùng rõ hơn.",
+      },
+      overview: [
+        {
+          en: "Attacker 2025 put more weight on product maturity, market relevance, and the ability to connect fintech ideas with real users and institutional needs.",
+          vi: "Attacker 2025 nhấn mạnh hơn vào độ chín sản phẩm, mức độ liên quan thị trường và khả năng nối ý tưởng fintech với người dùng thật và nhu cầu tổ chức.",
+        },
+        {
+          en: "The top teams brought a broader range of solutions, from AI legal support for finance to risk, payment, and consumer finance workflows.",
+          vi: "Các đội top đầu mang đến dải giải pháp rộng hơn, từ hỗ trợ pháp lý bằng AI cho tài chính đến rủi ro, thanh toán và luồng tài chính tiêu dùng.",
+        },
+      ],
+      stats: [
+        { value: "2,000+", label: { en: "candidates", vi: "Thí sinh" } },
+        { value: "250", label: { en: "projects", vi: "Dự án" } },
+        { value: "05", label: { en: "top teams", vi: "Đội top 5" } },
+        { value: "65M", label: { en: "cash reward", vi: "Hiện kim" } },
+      ],
+      topTeams: [
+        createSeasonArchiveTeam({
+          rankEn: "1st place",
+          rankVi: "Hạng 1",
+          name: "URA-xLaw",
+          projectNameEn: "AI legal Q&A for finance",
+          projectNameVi: "Hỏi đáp pháp lý AI cho tài chính",
+          projectDescriptionEn:
+            "An AI-powered legal support platform for banking and financial institutions that need faster compliance guidance.",
+          projectDescriptionVi:
+            "Nền tảng hỗ trợ pháp lý bằng AI cho ngân hàng và tổ chức tài chính cần hướng dẫn tuân thủ nhanh hơn.",
+          university: "Ho Chi Minh City University of Technology, VNU-HCM",
+          memberOffset: 0,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "2nd place",
+          rankVi: "Hạng 2",
+          name: "RiskLens",
+          projectNameEn: "Retail risk early-warning system",
+          projectNameVi: "Cảnh báo sớm rủi ro bán lẻ",
+          projectDescriptionEn:
+            "A risk monitoring concept that detects early stress signals from customer behavior and repayment patterns.",
+          projectDescriptionVi:
+            "Ý tưởng giám sát rủi ro phát hiện tín hiệu căng thẳng sớm từ hành vi khách hàng và mẫu trả nợ.",
+          university: "Banking University of Ho Chi Minh City",
+          memberOffset: 2,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "3rd place",
+          rankVi: "Hạng 3",
+          name: "CashGuard",
+          projectNameEn: "Fraud-aware payment flow",
+          projectNameVi: "Luồng thanh toán nhận diện gian lận",
+          projectDescriptionEn:
+            "A payment workflow that flags suspicious behavior while keeping the user journey light and explainable.",
+          projectDescriptionVi:
+            "Luồng thanh toán gắn cờ hành vi đáng ngờ nhưng vẫn giữ trải nghiệm người dùng gọn và dễ giải thích.",
+          university: "Foreign Trade University",
+          memberOffset: 4,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "Finalist",
+          rankVi: "Đồng hạng 4",
+          name: "FinBloom",
+          projectNameEn: "Youth investment education app",
+          projectNameVi: "Ứng dụng giáo dục đầu tư cho người trẻ",
+          projectDescriptionEn:
+            "A guided learning app that connects investment basics with simulated portfolio decisions for students.",
+          projectDescriptionVi:
+            "Ứng dụng học có hướng dẫn, nối kiến thức đầu tư cơ bản với quyết định danh mục mô phỏng cho sinh viên.",
+          university: "National Economics University",
+          memberOffset: 6,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "Finalist",
+          rankVi: "Đồng hạng 4",
+          name: "CreditBridge",
+          projectNameEn: "Alternative student credit profile",
+          projectNameVi: "Hồ sơ tín dụng thay thế cho sinh viên",
+          projectDescriptionEn:
+            "A credit-profile concept that uses learning, work, and payment behavior to support responsible access to finance.",
+          projectDescriptionVi:
+            "Ý tưởng hồ sơ tín dụng dùng hành vi học tập, làm việc và thanh toán để hỗ trợ tiếp cận tài chính có trách nhiệm.",
+          university: "RMIT Vietnam",
+          memberOffset: 8,
+        }),
+      ],
+      photoSlides: createSeasonArchiveSlides("2025", "/theme-hero-1.jpg"),
+    },
+    {
+      year: "2026",
+      overviewTitle: {
+        en: "The new season page is ready to become the live archive once 2026 results are confirmed.",
+        vi: "Trang mùa 2026 đã sẵn sàng trở thành hồ sơ lưu trữ khi kết quả chính thức được xác nhận.",
+      },
+      overview: [
+        {
+          en: "The 2026 season is structured around an individual qualifier, a team report round, and a final presentation stage designed for stronger judge feedback.",
+          vi: "Mùa 2026 được cấu trúc quanh bài thi cá nhân, vòng báo cáo nhóm và phần trình bày chung kết nhằm tạo phản biện mạnh hơn từ giám khảo.",
+        },
+        {
+          en: "The finalist records below can be updated from the admin season editor when official team names, universities, projects, and photos are confirmed.",
+          vi: "Các hồ sơ chung kết bên dưới có thể được cập nhật trong trang quản trị mùa thi khi BTC xác nhận tên đội, trường, dự án và hình ảnh chính thức.",
+        },
+      ],
+      stats: [
+        { value: "03", label: { en: "rounds", vi: "Vòng thi" } },
+        { value: "50", label: { en: "teams to Round 2", vi: "Đội vào Vòng 2" } },
+        { value: "05", label: { en: "top teams", vi: "Đội top 5" } },
+        { value: "65M", label: { en: "cash reward", vi: "Hiện kim" } },
+      ],
+      topTeams: [
+        createSeasonArchiveTeam({
+          rankEn: "1st place",
+          rankVi: "Hạng 1",
+          name: "Champion profile",
+          projectNameEn: "Official champion project",
+          projectNameVi: "Dự án quán quân chính thức",
+          projectDescriptionEn:
+            "This card is prepared for the winning team profile after the final presentation event.",
+          projectDescriptionVi:
+            "Thẻ này được chuẩn bị cho hồ sơ đội chiến thắng sau sự kiện trình bày chung kết.",
+          university: "Organizer archive",
+          memberOffset: 0,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "2nd place",
+          rankVi: "Hạng 2",
+          name: "Runner-up profile",
+          projectNameEn: "Official runner-up project",
+          projectNameVi: "Dự án á quân chính thức",
+          projectDescriptionEn:
+            "This finalist profile can be replaced with the official second-place team data.",
+          projectDescriptionVi:
+            "Hồ sơ chung kết này có thể được thay bằng dữ liệu chính thức của đội hạng 2.",
+          university: "Organizer archive",
+          memberOffset: 2,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "3rd place",
+          rankVi: "Hạng 3",
+          name: "Third-place profile",
+          projectNameEn: "Official third-place project",
+          projectNameVi: "Dự án quý quân chính thức",
+          projectDescriptionEn:
+            "This finalist profile can be updated after final scoring is confirmed.",
+          projectDescriptionVi:
+            "Hồ sơ chung kết này có thể được cập nhật sau khi điểm chung kết được xác nhận.",
+          university: "Organizer archive",
+          memberOffset: 4,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "Finalist",
+          rankVi: "Đồng hạng 4",
+          name: "Finalist profile",
+          projectNameEn: "Official finalist project",
+          projectNameVi: "Dự án chung kết chính thức",
+          projectDescriptionEn:
+            "Prepared for one of the two remaining finalist teams in the top 5.",
+          projectDescriptionVi:
+            "Chuẩn bị cho một trong hai đội chung kết còn lại trong top 5.",
+          university: "Organizer archive",
+          memberOffset: 6,
+        }),
+        createSeasonArchiveTeam({
+          rankEn: "Finalist",
+          rankVi: "Đồng hạng 4",
+          name: "Finalist profile",
+          projectNameEn: "Official finalist project",
+          projectNameVi: "Dự án chung kết chính thức",
+          projectDescriptionEn:
+            "Prepared for the other remaining finalist team in the top 5.",
+          projectDescriptionVi:
+            "Chuẩn bị cho đội chung kết còn lại trong top 5.",
+          university: "Organizer archive",
+          memberOffset: 8,
+        }),
+      ],
+      photoSlides: createSeasonArchiveSlides("2026", "/theme-feature-2.jpg"),
+    },
+  ];
+}
 
 const homepageTestimonialsSeed: TestimonialItem[] = [
   {
@@ -1497,6 +1943,7 @@ export const defaultPageContent: SitePageContent = {
         ],
       },
     ],
+    seasonArchives: createOrganizerSeasonArchives(),
     flags: {
       eyebrow: { en: "Photo slider", vi: "Photo slider" },
       title: {

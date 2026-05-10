@@ -485,6 +485,39 @@ export interface EditableOrganizerSeasonStory {
   stats: LocalizedText[];
 }
 
+export interface EditableOrganizerSeasonStat {
+  value: string;
+  label: LocalizedText;
+}
+
+export interface EditableOrganizerSeasonTeamMember {
+  name: string;
+  university: string;
+  major: string;
+}
+
+export interface EditableOrganizerSeasonTeam {
+  rank: LocalizedText;
+  name: LocalizedText;
+  projectName: LocalizedText;
+  projectDescription: LocalizedText;
+  members: EditableOrganizerSeasonTeamMember[];
+}
+
+export interface EditableOrganizerSeasonSlide {
+  image: string;
+  alt: LocalizedText;
+}
+
+export interface EditableOrganizerSeasonArchive {
+  year: string;
+  overviewTitle: LocalizedText;
+  overview: LocalizedText[];
+  stats: EditableOrganizerSeasonStat[];
+  topTeams: EditableOrganizerSeasonTeam[];
+  photoSlides: EditableOrganizerSeasonSlide[];
+}
+
 export interface EditableOrganizerGallerySlide {
   year: string;
   image: string;
@@ -625,6 +658,7 @@ export interface SitePageContent {
     competitionLinkLabel: LocalizedText;
     seasonBadgeLabel: LocalizedText;
     seasonStories: EditableOrganizerSeasonStory[];
+    seasonArchives: EditableOrganizerSeasonArchive[];
     flags: EditableSectionCopy;
     gallerySlides: EditableOrganizerGallerySlide[];
     galleryCurrentFrame: EditableSectionCopy;
