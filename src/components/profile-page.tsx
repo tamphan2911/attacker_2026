@@ -4,11 +4,17 @@ import Link from "next/link";
 import {
   ArrowRight,
   Camera,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  KeyRound,
+  LoaderCircle,
   PencilLine,
   Upload,
   Users2,
+  X,
 } from "lucide-react";
-import { useEffect, useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, Surface } from "@/components/site-ui";
@@ -337,9 +343,242 @@ function ProfileEditor({
   );
 }
 
+function ChangePasswordDialog({
+  locale,
+  isOpen,
+  onClose,
+  onSaved,
+}: {
+  locale: ReturnType<typeof useSiteState>["locale"];
+  isOpen: boolean;
+  onClose: () => void;
+  onSaved: (message: string) => void;
+}) {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const resetForm = () => {
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setError("");
+    setIsSaving(false);
+  };
+
+  const handleClose = () => {
+    if (isSaving) {
+      return;
+    }
+
+    resetForm();
+    onClose();
+  };
+
+  if (!isOpen) {
+    return null;
+  }
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!newPassword || !confirmPassword) {
+      setError(locale === "en" ? "Both password fields are required." : "Vui lòng nhập đầy đủ hai trường mật khẩu.");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError(locale === "en" ? "Password must be at least 8 characters." : "Mật khẩu cần có ít nhất 8 ký tự.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError(locale === "en" ? "Password confirmation does not match." : "Mật khẩu xác nhận chưa khớp.");
+      return;
+    }
+
+    setIsSaving(true);
+    setError("");
+
+    const response = await fetch("/api/me/password", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({
+        password: newPassword,
+        confirmPassword,
+      }),
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      setError(payload?.error || (locale === "en" ? "Could not change password." : "Không thể đổi mật khẩu."));
+      setIsSaving(false);
+      return;
+    }
+
+    setIsSaving(false);
+    resetForm();
+    onClose();
+    onSaved(locale === "en" ? "Password changed successfully." : "Mật khẩu đã được thay đổi thành công.");
+  };
+
+  const renderPasswordInput = ({
+    label,
+    value,
+    onChange,
+    isVisible,
+    onToggle,
+    autoComplete,
+  }: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    isVisible: boolean;
+    onToggle: () => void;
+    autoComplete: string;
+  }) => (
+    <label className="block space-y-2">
+      <span className="text-xs font-semibold uppercase tracking-[0.2em] theme-text-soft">{label}</span>
+      <span className="relative block">
+        <input
+          type={isVisible ? "text" : "password"}
+          required
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          autoComplete={autoComplete}
+          className="theme-placeholder h-12 w-full rounded-2xl border theme-border theme-panel px-4 pr-12 text-sm font-semibold theme-text-strong outline-none transition focus:border-sky-400/60"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border theme-border theme-panel-subtle theme-text-soft transition hover:scale-105"
+          aria-label={isVisible ? (locale === "en" ? "Hide password" : "Ẩn mật khẩu") : locale === "en" ? "Show password" : "Hiện mật khẩu"}
+        >
+          {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+      </span>
+    </label>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+      <button
+        type="button"
+        className="absolute inset-0 bg-slate-950/45 backdrop-blur-sm"
+        onClick={handleClose}
+        aria-label={locale === "en" ? "Close change password window" : "Đóng cửa sổ đổi mật khẩu"}
+        disabled={isSaving}
+      />
+      <form
+        onSubmit={(event) => void handleSubmit(event)}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="change-password-title"
+        className="relative w-full max-w-md overflow-hidden rounded-[2rem] border theme-border theme-panel px-5 py-5 shadow-[0_28px_90px_rgba(15,23,42,0.28)] transition duration-200"
+      >
+        <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(135deg,rgba(14,165,233,0.18),rgba(23,114,208,0.08),transparent)]" />
+        <div className="relative">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="theme-button-primary inline-flex h-11 w-11 items-center justify-center rounded-2xl p-0">
+                <KeyRound className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                  {locale === "en" ? "Account security" : "Bảo mật tài khoản"}
+                </p>
+                <h2 id="change-password-title" className="mt-1 text-2xl font-semibold theme-text-strong">
+                  {locale === "en" ? "Change password" : "Đổi mật khẩu"}
+                </h2>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isSaving}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border theme-border theme-panel-subtle theme-text-soft transition hover:-translate-y-0.5"
+              aria-label={locale === "en" ? "Close" : "Đóng"}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {renderPasswordInput({
+              label: locale === "en" ? "New password (*)" : "Mật khẩu mới (*)",
+              value: newPassword,
+              onChange: setNewPassword,
+              isVisible: showNewPassword,
+              onToggle: () => setShowNewPassword((current) => !current),
+              autoComplete: "new-password",
+            })}
+            {renderPasswordInput({
+              label: locale === "en" ? "Confirm new password (*)" : "Xác nhận mật khẩu mới (*)",
+              value: confirmPassword,
+              onChange: setConfirmPassword,
+              isVisible: showConfirmPassword,
+              onToggle: () => setShowConfirmPassword((current) => !current),
+              autoComplete: "new-password",
+            })}
+          </div>
+
+          {error ? (
+            <p className="mt-4 rounded-2xl border border-rose-400/24 bg-rose-500/10 px-4 py-3 text-sm leading-6 text-rose-700 dark:text-rose-100">
+              {error}
+            </p>
+          ) : null}
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isSaving}
+              className="inline-flex items-center justify-center rounded-[1.35rem] border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+            >
+              {locale === "en" ? "Cancel" : "Hủy"}
+            </button>
+            <button
+              type="submit"
+              disabled={isSaving}
+              className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-[1.35rem] px-5 py-3 text-sm font-semibold disabled:opacity-60"
+            >
+              {isSaving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+              {isSaving
+                ? locale === "en"
+                  ? "Saving..."
+                  : "Đang lưu..."
+                : locale === "en"
+                  ? "Save password"
+                  : "Lưu mật khẩu"}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export function ProfilePage() {
   const { authStatus, isAuthenticated, locale, currentUser, currentTeam, updateActiveUserProfile } = useSiteState();
   const [avatarError, setAvatarError] = useState("");
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [passwordSuccessMessage, setPasswordSuccessMessage] = useState("");
+
+  useEffect(() => {
+    if (!passwordSuccessMessage) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setPasswordSuccessMessage(""), 5200);
+    return () => window.clearTimeout(timeout);
+  }, [passwordSuccessMessage]);
 
   const handleProfileAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -426,7 +665,8 @@ export function ProfilePage() {
     currentUser.phoneNumber || (locale === "en" ? "No phone number yet" : "Chưa có số điện thoại");
 
   return (
-    <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+    <>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
       <Surface className="relative overflow-hidden px-6 py-7 md:px-8 md:py-9">
         <div className="absolute inset-x-0 top-0 h-40 bg-[linear-gradient(135deg,rgba(23,114,208,0.2),rgba(14,165,233,0.08),transparent)]" />
         <div className="relative flex flex-col gap-7 md:flex-row md:items-start">
@@ -462,6 +702,13 @@ export function ProfilePage() {
               <p className="mt-5 rounded-2xl border border-rose-400/24 bg-rose-500/10 px-4 py-3 text-sm leading-6 text-rose-700 dark:text-rose-100">
                 {avatarError}
               </p>
+            ) : null}
+
+            {passwordSuccessMessage ? (
+              <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-500/24 bg-emerald-500/10 px-4 py-3 text-sm font-semibold leading-6 text-emerald-700 dark:text-emerald-100">
+                <CheckCircle2 className="h-5 w-5 shrink-0" />
+                <span>{passwordSuccessMessage}</span>
+              </div>
             ) : null}
 
             {currentTeam ? (
@@ -518,6 +765,14 @@ export function ProfilePage() {
                 <PencilLine className="h-4 w-4" />
                 {locale === "en" ? "Edit profile" : "Chỉnh sửa hồ sơ"}
               </Link>
+              <button
+                type="button"
+                onClick={() => setIsPasswordDialogOpen(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-[1.5rem] border theme-border theme-panel px-5 py-3.5 text-sm font-semibold theme-text-strong transition hover:-translate-y-0.5"
+              >
+                <KeyRound className="h-4 w-4" />
+                {locale === "en" ? "Change password" : "Đổi mật khẩu"}
+              </button>
               <Link
                 href={primaryActionHref}
                 className="inline-flex items-center justify-center gap-2 rounded-[1.5rem] border theme-border theme-panel px-5 py-3.5 text-sm font-semibold theme-text-strong"
@@ -561,7 +816,14 @@ export function ProfilePage() {
           </div>
         </div>
       </Surface>
-    </section>
+      </section>
+      <ChangePasswordDialog
+        locale={locale}
+        isOpen={isPasswordDialogOpen}
+        onClose={() => setIsPasswordDialogOpen(false)}
+        onSaved={setPasswordSuccessMessage}
+      />
+    </>
   );
 }
 

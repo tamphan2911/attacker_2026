@@ -21,6 +21,7 @@ import { prisma } from "@/lib/db";
 import { getCompetitionRoundWindow, getTimelineItemById } from "@/lib/competition";
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
+import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
   createRound1ExamPaper,
@@ -1480,8 +1481,9 @@ export async function createTeamSubmission(
     resourceMimeType?: string;
     resourceSizeBytes?: number;
   },
-): Promise<ServiceResult<{ submissionId: string; teamId: string; version: number }>> {
-  return prisma.$transaction(async (tx) => {
+): Promise<ServiceResult<{ submissionId: string; teamId: string; teamName: string; version: number }>> {
+  const staleRound2StorageKeys: string[] = [];
+  const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: actorId } });
     if (!user) {
       return fail(404, "User not found.");
@@ -1538,7 +1540,7 @@ export async function createTeamSubmission(
       return fail(400, "Add a submission title before uploading.");
     }
 
-    const latestSubmission = await tx.teamSubmission.findFirst({
+    const existingSubmissions = await tx.teamSubmission.findMany({
       where: {
         teamId: membership.teamId,
         round: payload.round,
@@ -1547,11 +1549,13 @@ export async function createTeamSubmission(
         version: "desc",
       },
       select: {
+        id: true,
         version: true,
+        resourceStorageKey: true,
       },
     });
 
-    const version = (latestSubmission?.version ?? 0) + 1;
+    const version = (existingSubmissions[0]?.version ?? 0) + 1;
     const submission = await tx.teamSubmission.create({
       data: {
         teamId: membership.teamId,
@@ -1568,13 +1572,46 @@ export async function createTeamSubmission(
       },
     });
 
+    if (payload.round === SubmissionRound.ROUND_2 && existingSubmissions.length > 0) {
+      await tx.teamSubmission.deleteMany({
+        where: {
+          id: {
+            in: existingSubmissions.map((existingSubmission) => existingSubmission.id),
+          },
+        },
+      });
+      staleRound2StorageKeys.push(
+        ...existingSubmissions
+          .map((existingSubmission) => existingSubmission.resourceStorageKey)
+          .filter((storageKey): storageKey is string => Boolean(storageKey)),
+      );
+    }
+
     return ok(
       {
         submissionId: submission.id,
         teamId: membership.teamId,
+        teamName: membership.team.name,
         version,
       },
       201,
     );
   });
+
+  if (result.ok && staleRound2StorageKeys.length > 0) {
+    await Promise.all(
+      staleRound2StorageKeys.map(async (storageKey) => {
+        try {
+          await deleteTeamSubmissionFile(storageKey);
+        } catch (error) {
+          console.warn("[team-submission] Could not delete stale Round 2 report file.", {
+            storageKey,
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }),
+    );
+  }
+
+  return result;
 }

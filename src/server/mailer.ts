@@ -2,9 +2,11 @@ import nodemailer from "nodemailer";
 
 type MailPayload = {
   to: string;
+  from?: string;
   subject: string;
   html: string;
   text: string;
+  attachments?: nodemailer.SendMailOptions["attachments"];
 };
 
 type MailSendResult = {
@@ -135,11 +137,12 @@ export async function sendMail(payload: MailPayload): Promise<MailSendResult> {
 
   try {
     await transporter.sendMail({
-      from: getMailFrom(),
+      from: payload.from ?? getMailFrom(),
       to: payload.to,
       subject: payload.subject,
       html: payload.html,
       text: payload.text,
+      attachments: payload.attachments,
     });
 
     return { mode: "smtp" };

@@ -6,6 +6,7 @@ import { getSubmissionValidationError } from "@/lib/submission-files";
 import { getCurrentDbUser } from "@/server/auth-helpers";
 import { unauthorizedResponse, serviceResultToResponse } from "@/server/route-utils";
 import { buildTeamSubmissionStorageKey, deleteTeamSubmissionFile, storeTeamSubmissionFile } from "@/server/team-submission-storage";
+import { sendRound2SubmissionUploadConfirmation } from "@/server/team-submission-email";
 import { createTeamSubmission } from "@/server/team-service";
 
 export const runtime = "nodejs";
@@ -92,6 +93,16 @@ export async function POST(request: Request) {
 
   if (!result.ok) {
     await deleteTeamSubmissionFile(storageKey).catch(() => {});
+  } else if (round === SubmissionRound.ROUND_2) {
+    await sendRound2SubmissionUploadConfirmation({
+      teamLeadEmail: user.email,
+      teamLeadName: user.name,
+      teamName: result.data.teamName,
+      version: result.data.version,
+      fileName: resourceFile.name,
+      fileBuffer,
+      mimeType: resourceFile.type || undefined,
+    });
   }
 
   return serviceResultToResponse(result);

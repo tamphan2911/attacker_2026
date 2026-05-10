@@ -16,6 +16,7 @@ import {
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface, StatusPill } from "@/components/site-ui";
+import { estimateEssayAiLikelihood } from "@/lib/essay-ai-guard";
 import { pickRound1QuestionText } from "@/lib/round1";
 import { formatDateLabel } from "@/lib/site";
 import type { JudgeRound1Detail, JudgeTeamSubmissionDetail, Locale } from "@/types/site";
@@ -38,6 +39,57 @@ function formatScoreNumber(value: number) {
 
 function pickLocalizedText(value: { en: string; vi: string }, locale: Locale) {
   return value[locale]?.trim() || value.en.trim() || value.vi.trim();
+}
+
+function EssayAiEstimatePanel({
+  answerText,
+  locale,
+}: {
+  answerText: string;
+  locale: Locale;
+}) {
+  const estimate = estimateEssayAiLikelihood(answerText, locale);
+  const hasSignal = estimate.score > 0 || estimate.reasons.length > 0;
+
+  return (
+    <div
+      className={`mt-4 rounded-[1.35rem] border px-4 py-4 ${
+        estimate.shouldWarn
+          ? "border-amber-400/35 bg-amber-400/10"
+          : "theme-border theme-panel-subtle"
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+            {locale === "en" ? "AI-like content estimate" : "Ước tính nội dung giống AI"}
+          </p>
+          <p className="mt-2 text-sm leading-6 theme-text-muted">
+            {hasSignal
+              ? locale === "en"
+                ? "This is a heuristic signal for judge review, not an automatic decision."
+                : "Đây là tín hiệu tham khảo cho giám khảo, không phải kết luận tự động."
+              : locale === "en"
+                ? "No strong AI-like writing signal was detected."
+                : "Chưa phát hiện tín hiệu rõ ràng về cách viết giống AI."}
+          </p>
+        </div>
+        <StatusPill tone={estimate.shouldWarn ? "warning" : "info"}>{`${estimate.score}%`}</StatusPill>
+      </div>
+      {estimate.reasons.length ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {estimate.reasons.map((reason) => (
+            <span
+              key={reason}
+              className="inline-flex rounded-full border theme-border bg-white/60 px-3 py-1 text-xs font-medium theme-text-soft dark:bg-white/[0.04]"
+            >
+              {reason}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function ReviewPanel({
@@ -293,6 +345,7 @@ export function JudgeRound1ScorePage({
                         <p className="mt-3 text-sm leading-7 theme-text-muted">{pickRound1QuestionText(essay.rubricNote)}</p>
                       </div>
                     ) : null}
+                    <EssayAiEstimatePanel answerText={essay.answerText} locale={locale} />
                     <div className="mt-4 rounded-[1.5rem] border theme-border bg-white/78 px-4 py-4 dark:bg-white/[0.04]">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
                         {locale === "en" ? "Candidate answer" : "Câu trả lời của thí sinh"}
@@ -342,6 +395,9 @@ export function JudgeRound1ScorePage({
                     </span>
                     <span className="mt-1 block truncate text-sm font-semibold theme-text-strong">
                       {pickRound1QuestionText(essay.prompt)}
+                    </span>
+                    <span className="mt-1 block text-xs font-medium theme-text-soft">
+                      {locale === "en" ? "Maximum 14 points" : "Tối đa 14 điểm"}
                     </span>
                   </span>
                   <input
@@ -622,7 +678,7 @@ export function JudgeTeamSubmissionScorePage({
                   className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
                 >
                   <Download className="h-4 w-4" />
-                  {locale === "en" ? "Download report" : "Tải hồ sơ"}
+                  {locale === "en" ? "Download latest report" : "Tải báo cáo mới nhất"}
                 </a>
               ) : null}
             </div>
