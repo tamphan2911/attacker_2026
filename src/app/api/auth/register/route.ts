@@ -60,11 +60,30 @@ export async function POST(request: Request) {
         { studentId },
       ],
     },
+    select: {
+      email: true,
+      loginId: true,
+      studentId: true,
+    },
   });
 
   if (existingUser) {
+    if (existingUser.email === payload.data.email) {
+      return NextResponse.json(
+        { error: "EMAIL_ALREADY_REGISTERED" },
+        { status: 409 },
+      );
+    }
+
+    if (existingUser.studentId === studentId || existingUser.loginId === studentId) {
+      return NextResponse.json(
+        { error: "STUDENT_ID_ALREADY_REGISTERED" },
+        { status: 409 },
+      );
+    }
+
     return NextResponse.json(
-      { error: "An account already exists with this email or student ID." },
+      { error: "ACCOUNT_ALREADY_EXISTS" },
       { status: 409 },
     );
   }

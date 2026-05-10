@@ -20,7 +20,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { pickText } from "@/lib/site";
-import type { LocalizedText } from "@/types/site";
+import type { Locale, LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
 
@@ -80,6 +80,175 @@ function requiredFieldLabel(label: string) {
   return `${label} (*)`;
 }
 
+type RegistrationFormState = {
+  name: string;
+  email: string;
+  studentId: string;
+  university: string;
+  major: string;
+  classYear: string;
+  bio: string;
+  password: string;
+  confirmPassword: string;
+};
+
+type RegisterErrorPayload = {
+  error?: string;
+  issues?: {
+    fieldErrors?: Record<string, string[] | undefined>;
+  };
+};
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function getRegistrationFieldGuidance(locale: Locale, field: keyof RegistrationFormState | "turnstileToken") {
+  const messages: Record<string, LocalizedText> = {
+    name: {
+      en: "Enter your full name so organizers and team leaders can identify your profile.",
+      vi: "Nhập họ tên đầy đủ để ban tổ chức và đội trưởng nhận diện hồ sơ của bạn.",
+    },
+    email: {
+      en: "Enter a valid email address. The activation link will be sent to this inbox.",
+      vi: "Nhập email hợp lệ. Liên kết kích hoạt tài khoản sẽ được gửi đến hộp thư này.",
+    },
+    studentId: {
+      en: "Enter your student ID exactly as used by your university. It will also be your account ID.",
+      vi: "Nhập mã số sinh viên đúng theo thông tin của trường. Mã này cũng sẽ là ID tài khoản của bạn.",
+    },
+    university: {
+      en: "Choose or type your university name before creating the account.",
+      vi: "Chọn hoặc nhập tên trường trước khi tạo tài khoản.",
+    },
+    major: {
+      en: "Enter your major or program so your profile has enough academic context.",
+      vi: "Nhập ngành học hoặc chương trình học để hồ sơ có đủ thông tin học thuật.",
+    },
+    classYear: {
+      en: "Enter your current class year, for example Year 2, Year 3, or K24.",
+      vi: "Nhập năm học hoặc khóa hiện tại, ví dụ Năm 2, Năm 3 hoặc K24.",
+    },
+    bio: {
+      en: "Keep the bio to 600 characters or fewer. You can add more detail after registration.",
+      vi: "Giữ phần giới thiệu trong tối đa 600 ký tự. Bạn có thể bổ sung chi tiết sau khi đăng ký.",
+    },
+    password: {
+      en: "Create a password with at least 8 characters.",
+      vi: "Tạo mật khẩu có ít nhất 8 ký tự.",
+    },
+    confirmPassword: {
+      en: "Re-enter the same password so we can confirm it was typed correctly.",
+      vi: "Nhập lại đúng mật khẩu để hệ thống xác nhận bạn đã gõ chính xác.",
+    },
+    turnstileToken: {
+      en: "Complete the security check before creating the account.",
+      vi: "Hoàn tất bước xác minh bảo mật trước khi tạo tài khoản.",
+    },
+  };
+
+  return pickText(locale, messages[field]);
+}
+
+function getRegistrationInputMessage(form: RegistrationFormState, locale: Locale) {
+  const trimmedForm = {
+    name: form.name.trim(),
+    email: form.email.trim(),
+    studentId: form.studentId.trim(),
+    university: form.university.trim(),
+    major: form.major.trim(),
+    classYear: form.classYear.trim(),
+    bio: form.bio.trim(),
+  };
+
+  if (!trimmedForm.name) {
+    return getRegistrationFieldGuidance(locale, "name");
+  }
+
+  if (!trimmedForm.email || !emailPattern.test(trimmedForm.email)) {
+    return getRegistrationFieldGuidance(locale, "email");
+  }
+
+  if (!trimmedForm.university) {
+    return getRegistrationFieldGuidance(locale, "university");
+  }
+
+  if (!trimmedForm.major) {
+    return getRegistrationFieldGuidance(locale, "major");
+  }
+
+  if (!trimmedForm.studentId) {
+    return getRegistrationFieldGuidance(locale, "studentId");
+  }
+
+  if (!trimmedForm.classYear) {
+    return getRegistrationFieldGuidance(locale, "classYear");
+  }
+
+  if (trimmedForm.bio.length > 600) {
+    return getRegistrationFieldGuidance(locale, "bio");
+  }
+
+  if (!form.password || form.password.length < 8) {
+    return getRegistrationFieldGuidance(locale, "password");
+  }
+
+  if (!form.confirmPassword) {
+    return getRegistrationFieldGuidance(locale, "confirmPassword");
+  }
+
+  if (form.password !== form.confirmPassword) {
+    return locale === "en"
+      ? "The confirmation password must match the password exactly. Please check both fields."
+      : "Mật khẩu xác nhận phải trùng hoàn toàn với mật khẩu đã nhập. Vui lòng kiểm tra lại cả hai trường.";
+  }
+
+  return null;
+}
+
+function getRegistrationServerMessage(payload: RegisterErrorPayload, locale: Locale) {
+  const fieldOrder: Array<keyof RegistrationFormState | "turnstileToken"> = [
+    "name",
+    "email",
+    "university",
+    "major",
+    "studentId",
+    "classYear",
+    "bio",
+    "password",
+    "turnstileToken",
+  ];
+  const fieldWithError = fieldOrder.find((field) => payload.issues?.fieldErrors?.[field]?.length);
+
+  if (fieldWithError) {
+    return getRegistrationFieldGuidance(locale, fieldWithError);
+  }
+
+  if (payload.error === "EMAIL_ALREADY_REGISTERED") {
+    return locale === "en"
+      ? "This email is already registered. Sign in with this email or use a different email address."
+      : "Email này đã được đăng ký. Hãy đăng nhập bằng email này hoặc dùng một email khác.";
+  }
+
+  if (payload.error === "STUDENT_ID_ALREADY_REGISTERED") {
+    return locale === "en"
+      ? "This student ID is already linked to an account. Check the student ID or sign in with the existing account."
+      : "Mã số sinh viên này đã gắn với một tài khoản. Hãy kiểm tra lại mã số hoặc đăng nhập bằng tài khoản đã có.";
+  }
+
+  if (payload.error === "ACCOUNT_ALREADY_EXISTS") {
+    return locale === "en"
+      ? "An account already exists with the email or student ID you entered. Please review those two fields."
+      : "Đã có tài khoản dùng email hoặc mã số sinh viên bạn vừa nhập. Vui lòng kiểm tra lại hai trường này.";
+  }
+
+  if (payload.error === "Invalid registration payload.") {
+    return locale === "en"
+      ? "Some registration information is incomplete or invalid. Please review the highlighted required fields."
+      : "Một số thông tin đăng ký còn thiếu hoặc chưa hợp lệ. Vui lòng kiểm tra lại các trường bắt buộc.";
+  }
+
+  return payload.error || (locale === "en" ? "Could not create the account. Please review the form and try again." : "Không thể tạo tài khoản. Vui lòng kiểm tra lại biểu mẫu và thử lại.");
+}
+
 function PasswordVisibilityButton({
   visible,
   label,
@@ -120,7 +289,7 @@ export function AuthPage() {
   const [isSigninPasswordVisible, setIsSigninPasswordVisible] = useState(false);
   const [isRegisterPasswordVisible, setIsRegisterPasswordVisible] = useState(false);
   const [isRegisterConfirmPasswordVisible, setIsRegisterConfirmPasswordVisible] = useState(false);
-  const [registerForm, setRegisterForm] = useState({
+  const [registerForm, setRegisterForm] = useState<RegistrationFormState>({
     name: "",
     email: "",
     studentId: "",
@@ -374,23 +543,26 @@ export function AuthPage() {
   };
 
   const handleRegister = async () => {
-    if (!turnstileToken) {
+    const registrationInputMessage = getRegistrationInputMessage(registerForm, locale);
+    if (registrationInputMessage) {
+      setSigninMessageTone("warning");
+      setSigninMessage(registrationInputMessage);
+      return;
+    }
+
+    if (!HAS_TURNSTILE_SITE_KEY) {
       setSigninMessageTone("warning");
       setSigninMessage(
         locale === "en"
-          ? "Please complete the security check before creating the account."
-          : "Vui lòng hoàn tất bước xác minh bảo mật trước khi tạo tài khoản.",
+          ? "The registration security check is not available yet. Please contact the organizer before creating an account."
+          : "Bước xác minh bảo mật cho đăng ký chưa sẵn sàng. Vui lòng liên hệ ban tổ chức trước khi tạo tài khoản.",
       );
       return;
     }
 
-    if (registerForm.password !== registerForm.confirmPassword) {
-      setSigninMessageTone("error");
-      setSigninMessage(
-        locale === "en"
-          ? "Password confirmation does not match."
-          : "Xác nhận mật khẩu không khớp.",
-      );
+    if (!turnstileToken) {
+      setSigninMessageTone("warning");
+      setSigninMessage(getRegistrationFieldGuidance(locale, "turnstileToken"));
       return;
     }
 
@@ -414,7 +586,7 @@ export function AuthPage() {
 
     if (!response.ok) {
       try {
-        const payload = (await response.json()) as { error?: string };
+        const payload = (await response.json()) as RegisterErrorPayload;
         if (payload.error === "CAPTCHA_FAILED") {
           resetTurnstileWidget();
           setSigninMessageTone("error");
@@ -432,11 +604,11 @@ export function AuthPage() {
           );
         } else {
           setSigninMessageTone("error");
-          setSigninMessage(payload.error || (locale === "en" ? "Could not create the account." : "Không thể tạo tài khoản."));
+          setSigninMessage(getRegistrationServerMessage(payload, locale));
         }
       } catch {
         setSigninMessageTone("error");
-        setSigninMessage(locale === "en" ? "Could not create the account." : "Không thể tạo tài khoản.");
+        setSigninMessage(locale === "en" ? "Could not create the account. Please review the form and try again." : "Không thể tạo tài khoản. Vui lòng kiểm tra lại biểu mẫu và thử lại.");
       }
       setIsBusy(false);
       return;
@@ -644,7 +816,7 @@ export function AuthPage() {
                 </button>
               </form>
             ) : (
-              <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <form onSubmit={handleRegisterSubmit} className="space-y-4" noValidate>
                 <div className="grid gap-4 xl:grid-cols-2">
                   <label className="space-y-2 xl:col-span-2">
 	                    <span className="text-sm theme-text-muted">{requiredFieldLabel(locale === "en" ? "Full name" : "Họ tên")}</span>
@@ -886,7 +1058,7 @@ export function AuthPage() {
 
                 <button
                   type="submit"
-                  disabled={isBusy || authStatus === "loading" || !turnstileToken}
+                  disabled={isBusy || authStatus === "loading"}
                   className="w-full rounded-[1.4rem] bg-[linear-gradient(135deg,#58c4ff,#418bca,#2d75c5)] px-5 py-3.5 text-sm font-semibold text-white"
                 >
                   {isBusy

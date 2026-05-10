@@ -285,7 +285,7 @@ export const defaultPageContent: SitePageContent = {
           label: { en: "Competition overview", vi: "Tổng quan cuộc thi" },
         },
         secondaryCta: {
-          href: "/organizer",
+          href: "/competition#competition-journey",
           label: { en: "About Attacker", vi: "Giới thiệu Attacker" },
         },
         cards: [

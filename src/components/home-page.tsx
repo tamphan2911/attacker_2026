@@ -109,7 +109,17 @@ export function HomePage() {
     pageContent.home.heroSlides.length > 0
       ? pageContent.home.heroSlides
       : defaultPageContent.home.heroSlides;
-  const heroDeck = heroSlides;
+  const heroDeck = heroSlides.map((slide, index) =>
+    index === 0
+      ? {
+          ...slide,
+          secondaryCta: {
+            ...slide.secondaryCta,
+            href: "/competition#competition-journey",
+          },
+        }
+      : slide,
+  );
   const metricItems =
     pageContent.home.metrics.length > 0 ? pageContent.home.metrics : defaultPageContent.home.metrics;
   const visibleMetricItems = metricItems.filter((item) => {

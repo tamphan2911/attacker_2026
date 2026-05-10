@@ -18,6 +18,7 @@ function FacebookIcon({ className }: { className?: string }) {
 
 export function SiteFooter() {
   const { locale } = useSiteState();
+  const footerNavItems = navItems.filter((item) => item.href !== "/organizer");
 
   return (
     <footer className="theme-footer mt-24 border-t">
@@ -40,7 +41,7 @@ export function SiteFooter() {
               {locale === "en" ? "Navigate" : "Điều hướng"}
             </p>
             <div className="space-y-3">
-              {navItems.map((item) => (
+              {footerNavItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}

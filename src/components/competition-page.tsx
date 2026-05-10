@@ -105,6 +105,10 @@ export function CompetitionPage() {
     locale,
     pickText(locale, pageContent.competition.intro.title),
   );
+  const competitionIntroDescription =
+    locale === "en"
+      ? "Attacker 2026 challenges student teams to turn fintech ideas into clear, testable solutions through individual assessment, team reports, and live judging."
+      : "Attacker 2026 thử thách các đội sinh viên biến ý tưởng fintech thành giải pháp rõ ràng, có thể kiểm chứng qua bài thi cá nhân, báo cáo đội và phần chấm trực tiếp.";
   const rewardSectionTitle = locale === "vi" ? "Cơ cấu giải thưởng" : "Prize structure";
   const emergingReward = pageContent.competition.emergingReward;
   const emergingRewardEyebrow = locale === "vi" ? "Danh hiệu bổ sung" : "Side recognition";
@@ -123,6 +127,7 @@ export function CompetitionPage() {
       <PageIntro
         eyebrow={pickText(locale, pageContent.competition.intro.eyebrow)}
         title={competitionIntroTitle}
+        description={competitionIntroDescription}
         aside={
           <Surface className="px-5 py-5">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
