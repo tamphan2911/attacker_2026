@@ -2652,7 +2652,6 @@ export const timelineItems: TimelineItem[] = [
     },
     supportLinks: [
       { href: "/news", label: { en: "Check announcements", vi: "Xem thông báo" } },
-      { href: "/competition", label: { en: "Review Round 2", vi: "Xem Vòng 2" } },
     ],
   },
   {

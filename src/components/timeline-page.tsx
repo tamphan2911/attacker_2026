@@ -168,6 +168,10 @@ function buildTimelineActionLinks({
       continue;
     }
 
+    if (item.id === "round-1-top-50-announcement" && supportLink.href === "/competition") {
+      continue;
+    }
+
     if (item.id === "round-1-individual-qualifier" && supportLink.href === "/round-1") {
       if (currentUserRole === "student" && currentTeam && canTeamTakeRound1(currentTeam, now, timelineItems)) {
         actionLinks.push({
@@ -708,7 +712,7 @@ export function TimelinePage() {
                                 key={actionLink.key}
                                 type="button"
                                 onClick={openEligibilityNotice}
-                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition active:scale-[0.98]"
+                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium leading-5 [font-family:inherit] transition active:scale-[0.98]"
                               >
                                 <actionLink.icon className="h-3.5 w-3.5" />
                                 {pickText(locale, actionLink.label)}
@@ -720,7 +724,7 @@ export function TimelinePage() {
                                 type="button"
                                 disabled
                                 title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
-                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium opacity-75"
+                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium leading-5 [font-family:inherit] opacity-75"
                               >
                                 <actionLink.icon className="h-3.5 w-3.5" />
                                 {pickText(locale, actionLink.label)}
@@ -730,7 +734,7 @@ export function TimelinePage() {
                                 key={actionLink.key}
                                 href={actionLink.href ?? "#"}
                                 title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
-                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition active:scale-[0.98]"
+                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium leading-5 [font-family:inherit] transition active:scale-[0.98]"
                               >
                                 <actionLink.icon className="h-3.5 w-3.5" />
                                 {pickText(locale, actionLink.label)}
