@@ -2849,10 +2849,31 @@ function mergeJsonShape<T>(defaults: T, input: unknown): T {
   return input as T;
 }
 
+function isLegacyOrganizerAddress(value: string) {
+  const normalizedValue = value.trim().toLocaleLowerCase("vi-VN");
+  return (
+    normalizedValue.includes("quốc lộ 1a") ||
+    normalizedValue.includes("quoc lo 1a") ||
+    normalizedValue.includes("khu phố 3") ||
+    normalizedValue.includes("khu pho 3") ||
+    normalizedValue.includes("tp. thủ đức") ||
+    normalizedValue.includes("tp. thu duc")
+  );
+}
+
 export function mergePageContentWithDefaults(
   content?: Partial<SitePageContent> | null,
 ): SitePageContent {
-  return mergeJsonShape(cloneDefaultPageContent(), content);
+  const nextContent = mergeJsonShape(cloneDefaultPageContent(), content);
+
+  if (
+    isLegacyOrganizerAddress(nextContent.contact.organizerAddress.en) ||
+    isLegacyOrganizerAddress(nextContent.contact.organizerAddress.vi)
+  ) {
+    nextContent.contact.organizerAddress = contactLocation.address;
+  }
+
+  return nextContent;
 }
 
 export const featurePages = [
