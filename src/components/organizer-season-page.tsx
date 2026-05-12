@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -18,6 +18,7 @@ import {
   Trophy,
   UserRound,
   Users2,
+  X,
 } from "lucide-react";
 
 import { getOrganizerSeasonHref } from "@/components/organizer-page";
@@ -150,11 +151,43 @@ function SeasonDetailContent({
     return slides.length ? slides : [{ image: story.image, alt: story.title }];
   }, [seasonArchive.photoSlides, story.image, story.title]);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
+  const [isPhotoLightboxOpen, setIsPhotoLightboxOpen] = useState(false);
   const safeActivePhotoIndex = activePhotoIndex % photoSlides.length;
   const activePhoto = photoSlides[safeActivePhotoIndex] ?? photoSlides[0];
   const shiftPhoto = (direction: number) => {
     setActivePhotoIndex((current) => (current + direction + photoSlides.length) % photoSlides.length);
   };
+
+  useEffect(() => {
+    if (!isPhotoLightboxOpen) {
+      return;
+    }
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsPhotoLightboxOpen(false);
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        setActivePhotoIndex((current) => (current - 1 + photoSlides.length) % photoSlides.length);
+      }
+
+      if (event.key === "ArrowRight") {
+        setActivePhotoIndex((current) => (current + 1) % photoSlides.length);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPhotoLightboxOpen, photoSlides.length]);
 
   return (
     <div className="space-y-14">
@@ -363,7 +396,7 @@ function SeasonDetailContent({
                   <Camera className="h-5 w-5" />
                 </span>
                 <p className="text-sm font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-                  {locale === "en" ? "Photo slider" : "Slider hình ảnh"}
+                  {locale === "en" ? "Featured images" : "Hình ảnh nổi bật"}
                 </p>
               </div>
 
@@ -376,15 +409,25 @@ function SeasonDetailContent({
                     fill
                     sizes="(min-width: 1024px) 880px, 100vw"
                     unoptimized={shouldUseUnoptimizedImage(activePhoto.image)}
-                    className="object-cover transition duration-500 ease-out"
+                    className="season-gallery-image object-cover"
                   />
                   <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/44 to-transparent" />
+                  <button
+                    type="button"
+                    onClick={() => setIsPhotoLightboxOpen(true)}
+                    className="absolute inset-0 z-10 cursor-zoom-in"
+                    aria-label={locale === "en" ? "Open featured image viewer" : "Mở trình xem hình ảnh nổi bật"}
+                  >
+                    <span className="sr-only">
+                      {locale === "en" ? "Open featured image viewer" : "Mở trình xem hình ảnh nổi bật"}
+                    </span>
+                  </button>
                   {photoSlides.length > 1 ? (
                     <>
                       <button
                         type="button"
                         onClick={() => shiftPhoto(-1)}
-                        className="absolute left-4 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/28 bg-slate-950/46 text-white shadow-[0_18px_34px_rgba(2,6,23,0.26)] backdrop-blur-md transition hover:bg-slate-950/64"
+                        className="absolute left-4 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/28 bg-slate-950/46 text-white shadow-[0_18px_34px_rgba(2,6,23,0.26)] backdrop-blur-md transition duration-300 hover:-translate-x-0.5 hover:bg-slate-950/64"
                         aria-label={locale === "en" ? "Previous photo" : "Ảnh trước"}
                       >
                         <ChevronLeft className="h-5 w-5" />
@@ -392,12 +435,12 @@ function SeasonDetailContent({
                       <button
                         type="button"
                         onClick={() => shiftPhoto(1)}
-                        className="absolute right-4 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/28 bg-slate-950/46 text-white shadow-[0_18px_34px_rgba(2,6,23,0.26)] backdrop-blur-md transition hover:bg-slate-950/64"
+                        className="absolute right-4 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/28 bg-slate-950/46 text-white shadow-[0_18px_34px_rgba(2,6,23,0.26)] backdrop-blur-md transition duration-300 hover:translate-x-0.5 hover:bg-slate-950/64"
                         aria-label={locale === "en" ? "Next photo" : "Ảnh tiếp theo"}
                       >
                         <ChevronRight className="h-5 w-5" />
                       </button>
-                      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2">
+                      <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2">
                         {photoSlides.map((slide, index) => (
                           <button
                             key={`${slide.image}-${index}`}
@@ -442,6 +485,73 @@ function SeasonDetailContent({
           </div>
         </Surface>
       </section>
+
+      {isPhotoLightboxOpen ? (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={locale === "en" ? "Featured images viewer" : "Trình xem hình ảnh nổi bật"}
+          className="season-gallery-lightbox fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/92 px-4 py-5 text-white backdrop-blur-xl sm:px-6"
+          onClick={() => setIsPhotoLightboxOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setIsPhotoLightboxOpen(false);
+            }}
+            className="absolute right-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-white/10 text-white shadow-[0_18px_40px_rgba(2,6,23,0.36)] backdrop-blur-md transition duration-300 hover:bg-white/18 sm:right-6 sm:top-6"
+            aria-label={locale === "en" ? "Close image viewer" : "Đóng trình xem ảnh"}
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <div
+            className="relative flex h-full w-full max-w-7xl items-center justify-center"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="relative h-[78vh] max-h-[820px] w-full overflow-hidden rounded-[1.7rem] border border-white/14 bg-black/28 shadow-[0_30px_90px_rgba(0,0,0,0.42)]">
+              <Image
+                key={`lightbox-${activePhoto.image}-${safeActivePhotoIndex}`}
+                src={activePhoto.image}
+                alt={pickText(locale, activePhoto.alt)}
+                fill
+                sizes="100vw"
+                unoptimized={shouldUseUnoptimizedImage(activePhoto.image)}
+                className="season-gallery-image object-contain"
+                priority
+              />
+            </div>
+
+            {photoSlides.length > 1 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => shiftPhoto(-1)}
+                  className="absolute left-0 top-1/2 z-20 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-[0_20px_44px_rgba(0,0,0,0.34)] backdrop-blur-md transition duration-300 hover:-translate-x-0.5 hover:bg-white/18 sm:left-4"
+                  aria-label={locale === "en" ? "Previous photo" : "Ảnh trước"}
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => shiftPhoto(1)}
+                  className="absolute right-0 top-1/2 z-20 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-[0_20px_44px_rgba(0,0,0,0.34)] backdrop-blur-md transition duration-300 hover:translate-x-0.5 hover:bg-white/18 sm:right-4"
+                  aria-label={locale === "en" ? "Next photo" : "Ảnh tiếp theo"}
+                >
+                  <ChevronRight className="h-6 w-6" />
+                </button>
+              </>
+            ) : null}
+
+            <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-full border border-white/14 bg-slate-950/46 px-4 py-2 text-xs font-semibold text-white/86 shadow-[0_18px_42px_rgba(0,0,0,0.32)] backdrop-blur-md">
+              <span>{safeActivePhotoIndex + 1}</span>
+              <span className="h-1 w-1 rounded-full bg-white/42" />
+              <span>{photoSlides.length}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
