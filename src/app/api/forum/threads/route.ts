@@ -23,19 +23,15 @@ export async function POST(request: Request) {
 
   const payload = (await request.json()) as {
     title?: string;
-    summary?: string;
     body?: string;
     category?: string;
-    preferredRoles?: string[];
     contactNote?: string;
   };
 
   const result = await createForumThreadForUser(user.id, {
     title: payload.title ?? "",
-    summary: payload.summary ?? "",
     body: payload.body ?? "",
     category: payload.category ?? "",
-    preferredRoles: payload.preferredRoles ?? [],
     contactNote: payload.contactNote ?? "",
   });
 

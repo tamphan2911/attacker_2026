@@ -12,6 +12,7 @@ import {
   LoaderCircle,
   MessageSquare,
   Pencil,
+  PencilLine,
   Search,
   Save,
   Sparkles,
@@ -294,7 +295,7 @@ export function ForumPage() {
   const [isLoadingThreadDetail, setIsLoadingThreadDetail] = useState(false);
   const [isCreatingThread, setIsCreatingThread] = useState(false);
   const [isPostingReply, setIsPostingReply] = useState(false);
-  const [isSavingThreadBody, setIsSavingThreadBody] = useState(false);
+  const [isSavingThreadEdit, setIsSavingThreadEdit] = useState(false);
   const [isSavingReplyId, setIsSavingReplyId] = useState("");
   const [isDeletingReplyId, setIsDeletingReplyId] = useState("");
   const [isClosingThread, setIsClosingThread] = useState(false);
@@ -303,17 +304,20 @@ export function ForumPage() {
   const [categoryFilter, setCategoryFilter] = useState<ForumThreadCategory | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [replyDraft, setReplyDraft] = useState("");
-  const [threadBodyDraft, setThreadBodyDraft] = useState("");
   const [editingReplyId, setEditingReplyId] = useState("");
   const [replyEditDraft, setReplyEditDraft] = useState("");
-  const [isEditingThreadBody, setIsEditingThreadBody] = useState(false);
+  const [isThreadEditOpen, setIsThreadEditOpen] = useState(false);
   const [pendingDeleteReply, setPendingDeleteReply] = useState<ForumReply | null>(null);
   const [pendingCloseThread, setPendingCloseThread] = useState<ForumThread | null>(null);
   const [threadDraft, setThreadDraft] = useState({
     title: "",
     category: "looking-for-team" as ForumThreadCategory,
-    preferredRoles: "",
-    summary: "",
+    body: "",
+    contactNote: "",
+  });
+  const [threadEditDraft, setThreadEditDraft] = useState({
+    title: "",
+    category: "looking-for-team" as ForumThreadCategory,
     body: "",
     contactNote: "",
   });
@@ -409,7 +413,7 @@ export function ForumPage() {
   }, [activeThreadSlug, loadThreadDetail]);
 
   useEffect(() => {
-    setIsEditingThreadBody(false);
+    setIsThreadEditOpen(false);
     setEditingReplyId("");
     setThreadActionError("");
     setReplyActionError("");
@@ -424,7 +428,7 @@ export function ForumPage() {
   }, [categoryFilter, deferredSearchValue]);
 
   useEffect(() => {
-    if (!isComposerOpen) {
+    if (!isComposerOpen && !isThreadEditOpen) {
       return;
     }
 
@@ -438,7 +442,31 @@ export function ForumPage() {
       document.body.style.overflow = bodyOverflow;
       document.documentElement.style.overflow = htmlOverflow;
     };
-  }, [isComposerOpen]);
+  }, [isComposerOpen, isThreadEditOpen]);
+
+  useEffect(() => {
+    if (!isComposerOpen && !isThreadEditOpen) {
+      return;
+    }
+
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      setIsComposerOpen(false);
+      setIsThreadEditOpen(false);
+      setComposerError("");
+      setThreadActionError("");
+      setComposerModerationIssues([]);
+      setThreadEditModerationIssues([]);
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isComposerOpen, isThreadEditOpen]);
 
   useEffect(() => {
     if (composerModerationIssues.length === 0) {
@@ -471,10 +499,10 @@ export function ForumPage() {
 
       return [
         thread.title,
-        thread.summary,
+        thread.body,
+        thread.contactNote,
         thread.author.name,
         thread.university,
-        ...thread.preferredRoles,
       ]
         .join(" ")
         .toLowerCase()
@@ -515,8 +543,6 @@ export function ForumPage() {
     setThreadDraft({
       title: "",
       category: "looking-for-team",
-      preferredRoles: "",
-      summary: "",
       body: "",
       contactNote: "",
     });
@@ -536,11 +562,6 @@ export function ForumPage() {
         body: JSON.stringify({
           title: threadDraft.title,
           category: threadDraft.category,
-          preferredRoles: threadDraft.preferredRoles
-            .split(",")
-            .map((role) => role.trim())
-            .filter(Boolean),
-          summary: threadDraft.summary,
           body: threadDraft.body,
           contactNote: threadDraft.contactNote,
         }),
@@ -625,7 +646,33 @@ export function ForumPage() {
     await Promise.all([loadThreads(), loadThreadDetail(activeThreadSlug)]);
   };
 
-  const handleSaveThreadBody = async () => {
+  const openThreadEditModal = () => {
+    if (!activeThread) {
+      return;
+    }
+
+    setThreadEditDraft({
+      title: activeThread.title,
+      category: activeThread.category,
+      body: activeThread.body,
+      contactNote: activeThread.contactNote,
+    });
+    setThreadActionError("");
+    setThreadEditModerationIssues([]);
+    setIsThreadEditOpen(true);
+  };
+
+  const closeThreadEditModal = () => {
+    if (isSavingThreadEdit) {
+      return;
+    }
+
+    setIsThreadEditOpen(false);
+    setThreadActionError("");
+    setThreadEditModerationIssues([]);
+  };
+
+  const handleSaveThreadEdit = async () => {
     if (!activeThread) {
       return;
     }
@@ -633,14 +680,19 @@ export function ForumPage() {
     setThreadActionError("");
     setThreadEditModerationIssues([]);
     setStatusMessage("");
-    setIsSavingThreadBody(true);
+    setIsSavingThreadEdit(true);
 
     try {
       const response = await fetch(`/api/forum/threads/${activeThread.slug}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ body: threadBodyDraft }),
+        body: JSON.stringify({
+          title: threadEditDraft.title,
+          category: threadEditDraft.category,
+          body: threadEditDraft.body,
+          contactNote: threadEditDraft.contactNote,
+        }),
       });
 
       const payload = (await response.json()) as ForumMutationPayload;
@@ -653,17 +705,17 @@ export function ForumPage() {
         throw new Error(payload.error ?? "Unable to update this thread.");
       }
 
-      setIsEditingThreadBody(false);
+      setIsThreadEditOpen(false);
       await reloadActiveThread();
       setStatusMessage(
         locale === "en"
-          ? "Thread content updated."
-          : "Nội dung chủ đề đã được cập nhật.",
+          ? "Thread post updated successfully."
+          : "Bài đăng đã được cập nhật thành công.",
       );
     } catch (error) {
       setThreadActionError(error instanceof Error ? error.message : "Unable to update this thread.");
     } finally {
-      setIsSavingThreadBody(false);
+      setIsSavingThreadEdit(false);
     }
   };
 
@@ -836,9 +888,9 @@ export function ForumPage() {
         <Surface className="px-0 py-0">
           {selectedThreadFromList ? (
             <div className="min-h-[720px]">
-              <div className="border-b theme-border px-6 py-6 md:px-7">
+              <div className="border-b theme-border px-5 py-5 md:px-6">
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -848,7 +900,7 @@ export function ForumPage() {
 	                        setReplyError("");
 	                        setThreadActionError("");
 	                        setReplyActionError("");
-	                        setIsEditingThreadBody(false);
+	                        setIsThreadEditOpen(false);
 	                        setEditingReplyId("");
 	                      }}
                       className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold"
@@ -856,7 +908,7 @@ export function ForumPage() {
                       <ChevronLeft className="h-4 w-4" />
                       {pickText(locale, pageContent.forum.backToThreadListLabel)}
                     </button>
-                    <h2 className="theme-heading min-w-0 text-2xl font-semibold leading-[1.15] theme-text-strong md:text-[2.3rem]">
+                    <h2 className="theme-heading min-w-0 flex-1 text-xl font-semibold leading-[1.2] theme-text-strong md:text-2xl">
                       {selectedThreadFromList.title}
                     </h2>
                     <span className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
@@ -874,10 +926,9 @@ export function ForumPage() {
                       </span>
                     ) : null}
                   </div>
-                  <p className="mt-4 text-sm leading-7 theme-text-muted">{selectedThreadFromList.summary}</p>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-center gap-4">
+                <div className="mt-4 flex flex-wrap items-center gap-3">
                   <Link
                     href={getForumAuthorHref(selectedThreadFromList.author.id)}
                     className="group flex items-center gap-3 rounded-[1rem] transition hover:opacity-90"
@@ -907,7 +958,7 @@ export function ForumPage() {
                 </div>
               </div>
 
-              <div className="space-y-6 px-6 py-6 md:px-7">
+              <div className="space-y-4 px-5 py-5 md:px-6">
                 {isLoadingThreadDetail ? (
                   <div className="flex items-center gap-3 rounded-[1.4rem] border theme-border px-4 py-4 theme-panel-subtle">
                     <LoaderCircle className="h-4 w-4 animate-spin theme-accent" />
@@ -921,10 +972,10 @@ export function ForumPage() {
                   </div>
                 ) : activeThread ? (
                   <>
-	                    <div className="rounded-[1.6rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(241,247,253,0.88))] px-5 py-5 shadow-[0_18px_36px_rgba(13,37,66,0.06)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] dark:shadow-none">
+	                    <div className="rounded-[1.4rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(241,247,253,0.88))] px-4 py-4 shadow-[0_14px_30px_rgba(13,37,66,0.05)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.04))] dark:shadow-none">
 	                      <div className="flex flex-wrap items-center justify-between gap-3">
 	                        <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-	                          {locale === "en" ? "Main thread post" : "Bài đăng chính"}
+	                          {locale === "en" ? "Main thread post" : "Nội dung"}
 	                        </p>
 	                        <div className="flex flex-wrap items-center gap-2">
 	                          <span className="theme-chip rounded-full px-3 py-1 text-[0.68rem]">
@@ -940,92 +991,29 @@ export function ForumPage() {
 	                            </ForumIconButton>
 	                          ) : null}
 	                          {canEditActiveThread ? (
-	                            isEditingThreadBody ? (
-	                              <>
-	                                <ForumIconButton
-	                                  label={locale === "en" ? "Save main post" : "Lưu bài đăng chính"}
-	                                  tone="success"
-	                                  disabled={isSavingThreadBody || !threadBodyDraft.trim()}
-	                                  onClick={() => void handleSaveThreadBody()}
-	                                >
-	                                  {isSavingThreadBody ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-	                                </ForumIconButton>
-	                                <ForumIconButton
-	                                  label={locale === "en" ? "Cancel edit" : "Hủy chỉnh sửa"}
-	                                  onClick={() => {
-	                                    setIsEditingThreadBody(false);
-	                                    setThreadActionError("");
-	                                    setThreadEditModerationIssues([]);
-	                                  }}
-	                                >
-	                                  <X className="h-4 w-4" />
-	                                </ForumIconButton>
-	                              </>
-	                            ) : (
-	                              <ForumIconButton
-	                                label={locale === "en" ? "Edit main post" : "Sửa bài đăng chính"}
-	                                onClick={() => {
-	                                  setThreadBodyDraft(activeThread.body);
-	                                  setThreadActionError("");
-	                                  setThreadEditModerationIssues([]);
-	                                  setIsEditingThreadBody(true);
-	                                }}
-	                              >
-	                                <Pencil className="h-4 w-4" />
-	                              </ForumIconButton>
-	                            )
+	                            <ForumIconButton
+	                              label={locale === "en" ? "Update thread post" : "Cập nhập bài đăng"}
+	                              onClick={openThreadEditModal}
+	                            >
+	                              <PencilLine className="h-4 w-4" />
+	                            </ForumIconButton>
 	                          ) : null}
 	                        </div>
 	                      </div>
-	                      {isEditingThreadBody ? (
-	                        <div className="mt-4">
-	                          <textarea
-	                            value={threadBodyDraft}
-	                            onChange={(event) => {
-	                              setThreadBodyDraft(event.target.value);
-	                              setThreadEditModerationIssues([]);
-	                            }}
-	                            className="theme-field min-h-[180px] w-full rounded-[1.35rem] border px-4 py-3 text-sm leading-7 outline-none"
-	                          />
-	                          <ForumModerationWarning
-	                            locale={locale}
-	                            issues={threadEditModerationIssues}
-	                            className="mt-3"
-	                          />
-	                          {threadActionError ? (
-	                            <p className="mt-3 text-sm text-rose-700 dark:text-rose-200">{threadActionError}</p>
-	                          ) : null}
-	                        </div>
-	                      ) : (
-	                        <>
-	                          <p className="mt-4 text-sm leading-8 theme-text-body whitespace-pre-line">{activeThread.body}</p>
-	                          {activeThread.editedAt ? (
-	                            <p className="mt-3 text-xs font-medium theme-text-soft">
-	                              {locale === "en" ? "Edited by" : "Đã chỉnh sửa bởi"}{" "}
-	                              {activeThread.editedByName ?? activeThread.author.name} ·{" "}
-	                              {formatForumDateTime(locale, activeThread.editedAt)}
-	                            </p>
-	                          ) : null}
-	                        </>
-	                      )}
+	                      <p className="mt-4 whitespace-pre-line text-sm leading-7 theme-text-body">{activeThread.body}</p>
+	                      {activeThread.editedAt ? (
+	                        <p className="mt-3 text-xs font-medium theme-text-soft">
+	                          {locale === "en" ? "Edited by" : "Đã chỉnh sửa bởi"}{" "}
+	                          {activeThread.editedByName ?? activeThread.author.name} ·{" "}
+	                          {formatForumDateTime(locale, activeThread.editedAt)}
+	                        </p>
+	                      ) : null}
 	                      {activeThread.contactNote ? (
-                        <div className="mt-5 rounded-[1.25rem] border theme-border bg-white/76 px-4 py-4 dark:bg-white/[0.05]">
+                        <div className="mt-4 rounded-[1.15rem] border theme-border bg-white/76 px-4 py-3 dark:bg-white/[0.05]">
                           <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                             {locale === "en" ? "Preferred contact note" : "Ghi chú liên hệ"}
                           </p>
-                          <p className="mt-2 text-sm leading-7 theme-text-body">{activeThread.contactNote}</p>
-                        </div>
-                      ) : null}
-                      {activeThread.preferredRoles.length > 0 ? (
-                        <div className="mt-5 flex flex-wrap gap-2">
-                          {activeThread.preferredRoles.map((role) => (
-                            <span
-                              key={role}
-                              className="rounded-full border border-sky-500/22 bg-[linear-gradient(135deg,rgba(37,99,235,0.12),rgba(14,165,233,0.08))] px-3 py-1 text-[0.72rem] font-medium text-sky-800 shadow-[0_10px_24px_rgba(37,99,235,0.06)] dark:border-sky-300/22 dark:bg-sky-300/[0.12] dark:text-sky-100 dark:shadow-none"
-                            >
-                              {role}
-                            </span>
-                          ))}
+                          <p className="mt-2 text-sm leading-6 theme-text-body">{activeThread.contactNote}</p>
                         </div>
                       ) : null}
                     </div>
@@ -1309,7 +1297,7 @@ export function ForumPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="grid gap-4">
+                    <div className="grid gap-3">
                       {paginatedThreads.map((thread) => {
                         const isClosedThread = thread.status === "closed";
 
@@ -1317,42 +1305,32 @@ export function ForumPage() {
                         <button
                           key={thread.id}
                           type="button"
-                          onClick={() => {
-                            if (!isClosedThread) {
-                              setActiveThreadSlug(thread.slug);
-                            }
-                          }}
-                          aria-disabled={isClosedThread}
-                          className={`group relative w-full overflow-hidden rounded-[1.45rem] border px-4 py-4 text-left transition ${
+                          onClick={() => setActiveThreadSlug(thread.slug)}
+                          className={`group relative w-full overflow-hidden rounded-[1.25rem] border px-4 py-3 text-left transition ${
                             isClosedThread
-                              ? "border-amber-600/24 bg-amber-50/82 shadow-[0_14px_30px_rgba(245,158,11,0.08)] cursor-not-allowed dark:border-amber-300/18 dark:bg-amber-300/[0.07] dark:shadow-none"
+                              ? "border-amber-600/24 bg-amber-50/82 shadow-[0_12px_26px_rgba(245,158,11,0.06)] dark:border-amber-300/18 dark:bg-amber-300/[0.07] dark:shadow-none"
                               : "theme-border theme-panel-subtle hover:-translate-y-0.5 hover:bg-[var(--panel)]"
                           }`}
                         >
-                          <div className="flex items-start gap-4">
+                          <div className="flex items-start gap-3">
                             <GradientAvatar
                               label={thread.author.name}
                               tone={thread.author.avatarTone}
                               imageSrc={thread.author.avatarImageSrc}
-                              className="h-12 w-12 rounded-full"
+                              className="h-10 w-10 rounded-full"
                             />
                             <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <p className="truncate text-sm font-semibold theme-text-strong">
-                                    {thread.author.name}
-                                  </p>
-                                  <p className="truncate text-xs theme-text-soft">
-                                    {thread.author.university || thread.university || getForumRoleLabel(locale, thread.author.role)}
-                                  </p>
-                                </div>
-                                <span className="text-[0.72rem] theme-text-soft">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <p className="min-w-0 truncate text-base font-semibold leading-6 theme-text-strong">
+                                  {thread.title}
+                                </p>
+                                <span className="shrink-0 text-[0.72rem] theme-text-soft">
                                   {pickText(locale, pageContent.forum.lastActivityLabel)} ·{" "}
                                   {formatForumTimestamp(locale, thread.lastActivityAt)}
                                 </span>
                               </div>
 
-                              <div className="mt-3 flex flex-wrap items-center gap-2">
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
                                 <span className="theme-kicker rounded-full px-3 py-1 text-[0.66rem] tracking-[0.2em]">
                                   {getForumCategoryLabel(locale, pageContent.forum, thread.category)}
                                 </span>
@@ -1379,41 +1357,16 @@ export function ForumPage() {
                                 </span>
                               </div>
 
-                              <p className="mt-3 truncate text-base font-semibold leading-6 theme-text-strong">
-                                {thread.title}
-                              </p>
-                              <p className="mt-1 truncate text-sm leading-6 theme-text-muted">
-                                {thread.summary}
-                              </p>
-
-                              <div className="mt-3 rounded-[1.1rem] border theme-border bg-white/72 px-3.5 py-3 dark:bg-white/[0.05]">
-                                <p className="truncate text-sm leading-6 theme-text-body">
-                                  {trimForumPreview(thread.lastMessagePreview || thread.summary, 88)}
+                              <div className="mt-3 grid gap-2 rounded-[1rem] border theme-border bg-white/72 px-3.5 py-2.5 dark:bg-white/[0.05]">
+                                <p className="line-clamp-2 text-sm leading-6 theme-text-body">
+                                  {trimForumPreview(thread.lastMessagePreview || thread.body, 140)}
                                 </p>
-                                <p className="mt-1 truncate text-xs theme-text-soft">
-                                  {(thread.lastMessageAuthorName || thread.author.name)} ·{" "}
-                                  {formatForumTimestamp(locale, thread.lastMessageAt || thread.lastActivityAt)}
+                                <p className="truncate text-xs theme-text-soft">
+                                  {thread.author.name} · {thread.author.university || thread.university || getForumRoleLabel(locale, thread.author.role)}
                                 </p>
                               </div>
-
-                              {thread.preferredRoles.length > 0 ? (
-                                <div className="mt-3 flex flex-wrap items-center gap-2">
-                                  {thread.preferredRoles.slice(0, 3).map((role) => (
-                                    <span key={role} className="theme-chip rounded-full px-3 py-1 text-[0.66rem]">
-                                      {role}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : null}
                             </div>
                           </div>
-                          {isClosedThread ? (
-                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-slate-950/72 px-6 text-center opacity-0 transition duration-200 group-hover:opacity-100">
-                              <span className="rounded-full border border-white/20 bg-white/12 px-4 py-2 text-sm font-semibold text-white shadow-[0_18px_34px_rgba(2,8,20,0.24)]">
-                                {pickText(locale, pageContent.forum.closedByOwnerLabel)}
-                              </span>
-                            </div>
-                          ) : null}
                         </button>
                         );
                       })}
@@ -1534,6 +1487,133 @@ export function ForumPage() {
 	        </div>
 	      ) : null}
 
+	      {isThreadEditOpen && activeThread ? (
+        <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-[rgba(7,18,35,0.58)] p-4 backdrop-blur-sm md:p-8">
+          <div className="mx-auto max-w-3xl py-2 md:py-4">
+            <Surface className="flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden px-0 py-0 md:max-h-[calc(100vh-4rem)]">
+              <div className="flex items-center justify-between border-b theme-border px-6 py-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                    {locale === "en" ? "Edit existing thread" : "Chỉnh sửa bài đăng hiện có"}
+                  </p>
+                  <p className="mt-2 text-lg font-semibold theme-text-strong">
+                    {locale === "en" ? "Update thread post" : "Cập nhập bài đăng"}
+                  </p>
+                  <p className="mt-1 text-sm theme-text-muted">
+                    {locale === "en"
+                      ? "This updates the thread information already published in the forum."
+                      : "Cửa sổ này cập nhật thông tin bài đăng đã hiển thị trên forum."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeThreadEditModal}
+                  className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full border"
+                  aria-label={locale === "en" ? "Close edit thread dialog" : "Đóng cửa sổ chỉnh sửa"}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto overscroll-contain px-6 py-6">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {pickText(locale, pageContent.forum.threadTitleFieldLabel)}
+                    </span>
+                    <input
+                      value={threadEditDraft.title}
+                      onChange={(event) => {
+                        setThreadEditDraft((current) => ({ ...current, title: event.target.value }));
+                        setThreadEditModerationIssues([]);
+                      }}
+                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                    />
+                  </label>
+
+                  <label className="space-y-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {pickText(locale, pageContent.forum.categoryFieldLabel)}
+                    </span>
+                    <select
+                      value={threadEditDraft.category}
+                      onChange={(event) => {
+                        setThreadEditDraft((current) => ({
+                          ...current,
+                          category: event.target.value as ForumThreadCategory,
+                        }));
+                        setThreadEditModerationIssues([]);
+                      }}
+                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                    >
+                      {forumCategoryOrder.map((category) => (
+                        <option key={category} value={category}>
+                          {getForumCategoryLabel(locale, pageContent.forum, category)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {pickText(locale, pageContent.forum.mainPostFieldLabel)}
+                    </span>
+                    <textarea
+                      value={threadEditDraft.body}
+                      onChange={(event) => {
+                        setThreadEditDraft((current) => ({ ...current, body: event.target.value }));
+                        setThreadEditModerationIssues([]);
+                      }}
+                      className="theme-field min-h-[180px] w-full rounded-[1rem] border px-4 py-3 text-sm leading-7 outline-none"
+                    />
+                  </label>
+
+                  <label className="space-y-2 md:col-span-2">
+                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                      {pickText(locale, pageContent.forum.contactNoteFieldLabel)}
+                    </span>
+                    <input
+                      value={threadEditDraft.contactNote}
+                      onChange={(event) => {
+                        setThreadEditDraft((current) => ({ ...current, contactNote: event.target.value }));
+                        setThreadEditModerationIssues([]);
+                      }}
+                      placeholder={pickText(locale, pageContent.forum.contactNotePlaceholder)}
+                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="border-t theme-border px-6 py-5">
+                <ForumModerationWarning locale={locale} issues={threadEditModerationIssues} className="mb-3" />
+                {threadActionError ? (
+                  <p className="mb-3 text-sm text-rose-700 dark:text-rose-200">{threadActionError}</p>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void handleSaveThreadEdit()}
+                    disabled={isSavingThreadEdit || !threadEditDraft.title.trim() || !threadEditDraft.body.trim()}
+                    className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-60"
+                  >
+                    {isSavingThreadEdit ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    {locale === "en" ? "Save changes" : "Lưu thay đổi"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeThreadEditModal}
+                    className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
+                  >
+                    {pickText(locale, pageContent.forum.cancelLabel)}
+                  </button>
+                </div>
+              </div>
+            </Surface>
+          </div>
+        </div>
+      ) : null}
+
 	      {isComposerOpen ? (
         <div className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-[rgba(7,18,35,0.58)] p-4 backdrop-blur-sm md:p-8">
           <div className="mx-auto max-w-3xl py-2 md:py-4">
@@ -1593,31 +1673,6 @@ export function ForumPage() {
                         </option>
                       ))}
                     </select>
-                  </label>
-
-                  <label className="space-y-2 md:col-span-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {pickText(locale, pageContent.forum.rolesSkillsFieldLabel)}
-                    </span>
-                    <input
-                      value={threadDraft.preferredRoles}
-                      onChange={(event) =>
-                        setThreadDraft((current) => ({ ...current, preferredRoles: event.target.value }))
-                      }
-                      placeholder={pickText(locale, pageContent.forum.rolesSkillsPlaceholder)}
-                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
-                    />
-                  </label>
-
-                  <label className="space-y-2 md:col-span-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {pickText(locale, pageContent.forum.shortSummaryFieldLabel)}
-                    </span>
-                    <textarea
-                      value={threadDraft.summary}
-                      onChange={(event) => setThreadDraft((current) => ({ ...current, summary: event.target.value }))}
-                      className="theme-field min-h-[96px] w-full rounded-[1rem] border px-4 py-3 text-sm leading-7 outline-none"
-                    />
                   </label>
 
                   <label className="space-y-2 md:col-span-2">

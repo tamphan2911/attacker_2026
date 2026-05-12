@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentDbUser } from "@/server/auth-helpers";
-import { editForumThreadBodyForUser, getForumThreadBySlug } from "@/server/forum-service";
+import { editForumThreadForUser, getForumThreadBySlug } from "@/server/forum-service";
 import { serializeForumThread } from "@/server/site-serializers";
 
 export async function GET(
@@ -34,11 +34,17 @@ export async function PATCH(
 
   const { slug } = await context.params;
   const payload = (await request.json()) as {
+    title?: string;
+    category?: string;
     body?: string;
+    contactNote?: string;
   };
 
-  const result = await editForumThreadBodyForUser(user.id, slug, {
+  const result = await editForumThreadForUser(user.id, slug, {
+    title: payload.title ?? "",
+    category: payload.category ?? "",
     body: payload.body ?? "",
+    contactNote: payload.contactNote ?? "",
   });
 
   if (!result.ok) {

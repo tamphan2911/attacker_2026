@@ -60,14 +60,13 @@ function mapCategory(value: string): ForumThreadCategory | null {
   }
 }
 
-function uniqueRoles(roles: string[]) {
-  return Array.from(
-    new Set(
-      roles
-        .map((role) => trimInput(role))
-        .filter(Boolean),
-    ),
-  ).slice(0, 6);
+function buildThreadSummary(body: string) {
+  const normalized = body.replace(/\s+/g, " ").trim();
+  if (normalized.length <= 220) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, 220).trimEnd()}...`;
 }
 
 async function createUniqueThreadSlug(title: string) {
@@ -215,10 +214,8 @@ export async function createForumThreadForUser(
   userId: string,
   payload: {
     title: string;
-    summary: string;
     body: string;
     category: string;
-    preferredRoles?: string[];
     contactNote?: string;
   },
 ): Promise<ServiceResult<{ slug: string }>> {
@@ -228,14 +225,13 @@ export async function createForumThreadForUser(
   }
 
   const title = trimInput(payload.title);
-  const summary = trimInput(payload.summary);
   const body = trimInput(payload.body);
   const contactNote = trimInput(payload.contactNote ?? "");
   const category = mapCategory(payload.category);
-  const preferredRoles = uniqueRoles(payload.preferredRoles ?? []);
+  const summary = buildThreadSummary(body);
 
-  if (!title || !summary || !body) {
-    return fail(400, "Title, summary, and thread body are required.");
+  if (!title || !body) {
+    return fail(400, "Title and thread body are required.");
   }
 
   if (!category) {
@@ -246,16 +242,10 @@ export async function createForumThreadForUser(
     return fail(400, "Title is too long.");
   }
 
-  if (summary.length > 240) {
-    return fail(400, "Summary is too long.");
-  }
-
   const moderationIssues = detectForumModerationIssues([
     { field: "title", value: title },
-    { field: "summary", value: summary },
     { field: "body", value: body },
     { field: "contactNote", value: contactNote },
-    { field: "preferredRoles", value: preferredRoles.join(", ") },
   ]);
 
   if (moderationIssues.length > 0) {
@@ -280,7 +270,7 @@ export async function createForumThreadForUser(
       university:
         userResult.data.university ||
         (userResult.data.role === UserRole.ADMIN || userResult.data.role === UserRole.MODERATOR ? "Organizer team" : ""),
-      preferredRoles: JSON.stringify(preferredRoles),
+      preferredRoles: JSON.stringify([]),
       contactNote,
       lastActivityAt: new Date(),
     },
@@ -290,11 +280,14 @@ export async function createForumThreadForUser(
   return ok({ slug: thread.slug }, 201);
 }
 
-export async function editForumThreadBodyForUser(
+export async function editForumThreadForUser(
   userId: string,
   slug: string,
   payload: {
+    title: string;
+    category: string;
     body: string;
+    contactNote?: string;
   },
 ): Promise<ServiceResult<{ slug: string }>> {
   const userResult = await requireExistingForumActionUser(userId);
@@ -302,13 +295,28 @@ export async function editForumThreadBodyForUser(
     return userResult;
   }
 
+  const title = trimInput(payload.title);
   const body = trimInput(payload.body);
-  if (!body) {
-    return fail(400, "Thread body is required.");
+  const contactNote = trimInput(payload.contactNote ?? "");
+  const category = mapCategory(payload.category);
+  const summary = buildThreadSummary(body);
+
+  if (!title || !body) {
+    return fail(400, "Title and thread body are required.");
+  }
+
+  if (!category) {
+    return fail(400, "Invalid forum category.");
+  }
+
+  if (title.length > 120) {
+    return fail(400, "Title is too long.");
   }
 
   const moderationIssues = detectForumModerationIssues([
+    { field: "title", value: title },
     { field: "body", value: body },
+    { field: "contactNote", value: contactNote },
   ]);
 
   if (moderationIssues.length > 0) {
@@ -336,7 +344,12 @@ export async function editForumThreadBodyForUser(
   await prisma.forumThread.update({
     where: { id: thread.id },
     data: {
+      title,
+      summary,
       body,
+      category,
+      contactNote,
+      preferredRoles: JSON.stringify([]),
       editedAt,
       editedByName: userResult.data.name,
       lastActivityAt: editedAt,
