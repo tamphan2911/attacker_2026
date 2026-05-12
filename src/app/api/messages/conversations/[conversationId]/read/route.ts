@@ -12,6 +12,6 @@ export async function POST(
   }
 
   const { conversationId } = await params;
-  const result = await markConversationRead(user.id, conversationId);
+  const result = await markConversationRead(user, conversationId);
   return serviceResultToResponse(result);
 }

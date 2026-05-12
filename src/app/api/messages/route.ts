@@ -11,6 +11,8 @@ import { serviceResultToResponse, unauthorizedResponse } from "@/server/route-ut
 const sendMessageSchema = z.object({
   conversationId: z.string().trim().min(1).optional(),
   recipientId: z.string().trim().min(1).optional(),
+  recipientSource: z.enum(["email-search", "profile"]).optional(),
+  organizer: z.boolean().optional(),
   body: z.string().trim().min(1).max(2000),
 });
 
@@ -20,7 +22,7 @@ export async function GET() {
     return unauthorizedResponse();
   }
 
-  return Response.json(await listMessageConversations(user.id), { status: 200 });
+  return Response.json(await listMessageConversations(user), { status: 200 });
 }
 
 export async function POST(request: Request) {
@@ -37,12 +39,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const result = await sendDirectMessage(user.id, payload.data);
+  const result = await sendDirectMessage(user, payload.data);
   if (!result.ok) {
     return serviceResultToResponse(result);
   }
 
-  const conversation = await getConversationAfterSend(user.id, result.data.conversationId);
+  const conversation = await getConversationAfterSend(user, result.data.conversationId);
   return Response.json(
     {
       conversationId: result.data.conversationId,

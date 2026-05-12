@@ -8,5 +8,5 @@ export async function GET() {
     return unauthorizedResponse();
   }
 
-  return Response.json(await listUnreadNotifications(user.id), { status: 200 });
+  return Response.json(await listUnreadNotifications(user), { status: 200 });
 }

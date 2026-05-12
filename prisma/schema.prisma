@@ -14,6 +14,11 @@ enum UserRole {
   ADMIN
 }
 
+enum MessageConversationKind {
+  DIRECT
+  ORGANIZER
+}
+
 enum CompetitionStage {
   ROUND_1
   ROUND_2
@@ -224,6 +229,9 @@ model TeamInvitation {
 
 model MessageConversation {
   id            String               @id @default(cuid())
+  kind          MessageConversationKind @default(DIRECT)
+  requesterId   String?
+  organizerReadAt DateTime?
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
   lastMessageAt DateTime             @default(now())
@@ -231,6 +239,7 @@ model MessageConversation {
   messages      DirectMessage[]
 
   @@index([lastMessageAt])
+  @@index([kind, requesterId])
 }
 
 model MessageParticipant {
@@ -239,6 +248,7 @@ model MessageParticipant {
   userId         String
   readAt         DateTime?
   hiddenAt       DateTime?
+  showOtherEmail Boolean             @default(false)
   createdAt      DateTime            @default(now())
   conversation   MessageConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)

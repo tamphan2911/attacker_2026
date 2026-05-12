@@ -36,17 +36,24 @@ type DirectMessage = {
   senderId: string;
   body: string;
   createdAt: string;
+  sender: MessageUser;
 };
 
 type MessageConversation = {
   id: string;
+  kind: "direct" | "organizer";
+  isOrganizer: boolean;
+  isPinned: boolean;
+  canDelete: boolean;
   participant: MessageUser | null;
+  showParticipantEmail: boolean;
   createdAt: string;
   updatedAt: string;
   lastMessageAt: string;
   readAt?: string;
   unreadCount: number;
   requestPending: boolean;
+  isMessageRequest: boolean;
   canSendMessage: boolean;
   latestMessage: DirectMessage | null;
   messages: DirectMessage[];
@@ -65,6 +72,29 @@ function formatMessageTime(locale: Locale, value: string) {
   }).format(new Date(value));
 }
 
+function formatCompactMessageTime(locale: Locale, value: string) {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function formatMessageSenderRole(locale: Locale, role: string) {
+  if (role === "admin") {
+    return locale === "en" ? "Admin" : "Quản trị viên";
+  }
+
+  if (role === "moderator") {
+    return locale === "en" ? "Moderator" : "Điều phối viên";
+  }
+
+  if (role === "organizer") {
+    return locale === "en" ? "Organizer" : "Ban tổ chức";
+  }
+
+  return locale === "en" ? "Participant" : "Thí sinh";
+}
+
 function conversationUrl(conversationId: string) {
   return `/messages?conversation=${encodeURIComponent(conversationId)}`;
 }
@@ -75,6 +105,7 @@ export function MessageCenterPage() {
   const [conversations, setConversations] = useState<MessageConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [draftRecipient, setDraftRecipient] = useState<MessageUser | null>(null);
+  const [draftRecipientSource, setDraftRecipientSource] = useState<"email-search" | "profile">("email-search");
   const [searchEmail, setSearchEmail] = useState("");
   const [searchResult, setSearchResult] = useState<MessageUser | null>(null);
   const [hasSearchedExactEmail, setHasSearchedExactEmail] = useState(false);
@@ -117,6 +148,7 @@ export function MessageCenterPage() {
     const params = new URLSearchParams(window.location.search);
     const requestedConversationId = params.get("conversation") ?? "";
     const requestedRecipientId = params.get("recipient") ?? "";
+    const requestedRecipientSource = params.get("source") === "profile" ? "profile" : "email-search";
     const requestedRecipientConversation = requestedRecipientId
       ? payload.conversations.find((conversation) => conversation.participant?.id === requestedRecipientId)
       : null;
@@ -138,6 +170,7 @@ export function MessageCenterPage() {
 
       if (userPayload.user) {
         setDraftRecipient(userPayload.user);
+        setDraftRecipientSource(requestedRecipientSource);
         setActiveConversationId("");
         window.history.replaceState(null, "", "/messages");
       } else if (!options?.silent) {
@@ -205,11 +238,16 @@ export function MessageCenterPage() {
   const activeParticipant = activeConversation?.participant ?? draftRecipient;
   const activeMessages = activeConversation?.messages ?? [];
   const canSendMessage = Boolean(draftRecipient || activeConversation?.canSendMessage);
-  const showFirstMessageNotice = Boolean(draftRecipient || (activeConversation && activeMessages.length === 0));
+  const showFirstMessageNotice = Boolean(
+    draftRecipient || (activeConversation && !activeConversation.isOrganizer && activeMessages.length === 0),
+  );
   const showReceiverFirstMessageNotice = Boolean(
     activeConversation && activeMessages.length === 1 && activeMessages[0]?.senderId !== currentUser.id,
   );
   const requestPending = Boolean(activeConversation?.requestPending);
+  const shouldShowParticipantEmail = Boolean(
+    activeConversation?.showParticipantEmail || (draftRecipient && draftRecipientSource === "email-search"),
+  );
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
@@ -290,8 +328,25 @@ export function MessageCenterPage() {
     setSearchResult(null);
     setHasSearchedExactEmail(false);
     setStatusMessage("");
+    setDraftRecipientSource("email-search");
 
     if (existingConversation) {
+      void fetch(`/api/messages/conversations/${existingConversation.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ showOtherEmail: true }),
+      }).then(() => {
+        setConversations((current) =>
+          current.map((conversation) =>
+            conversation.id === existingConversation.id
+              ? { ...conversation, showParticipantEmail: true }
+              : conversation,
+          ),
+        );
+      });
       openConversation(existingConversation.id);
       return;
     }
@@ -319,6 +374,8 @@ export function MessageCenterPage() {
       body: JSON.stringify({
         conversationId: activeConversation?.id,
         recipientId: draftRecipient?.id,
+        recipientSource: draftRecipient ? draftRecipientSource : undefined,
+        organizer: activeConversation?.isOrganizer,
         body,
       }),
     });
@@ -466,15 +523,15 @@ export function MessageCenterPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex h-[calc(100vh-9rem)] min-h-[640px] flex-col gap-4 overflow-hidden">
       {pageNotice ? (
         <div className="rounded-[1.35rem] border border-emerald-300/40 bg-emerald-400/12 px-5 py-4 text-sm font-semibold text-emerald-800 shadow-[0_18px_42px_rgba(16,185,129,0.12)] dark:text-emerald-100">
           {pageNotice}
         </div>
       ) : null}
-      <section className="theme-card-shadow-soft overflow-hidden rounded-[2rem] border theme-border-strong theme-panel">
-        <div className="grid min-h-[720px] lg:grid-cols-[360px_minmax(0,1fr)]">
-          <aside className="border-b theme-border bg-white/42 p-4 dark:bg-white/4 lg:border-b-0 lg:border-r">
+      <section className="theme-card-shadow-soft min-h-0 flex-1 overflow-hidden rounded-[2rem] border theme-border-strong theme-panel">
+        <div className="grid h-full min-h-0 lg:grid-cols-[360px_minmax(0,1fr)]">
+          <aside className="flex min-h-0 flex-col border-b theme-border bg-white/42 p-4 dark:bg-white/4 lg:border-b-0 lg:border-r">
             <div className="flex items-center gap-3 px-1 py-2">
               <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-400/24 bg-sky-500/12 text-sky-600 dark:text-sky-200">
                 <MessageCircle className="h-5 w-5" />
@@ -529,7 +586,7 @@ export function MessageCenterPage() {
               ) : null}
             </div>
 
-            <div className="mt-5 space-y-2">
+            <div className="mt-5 min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
               {isLoading ? (
                 <p className="rounded-[1.25rem] border theme-border theme-panel-subtle px-4 py-4 text-sm theme-text-muted">
                   {locale === "en" ? "Loading conversations..." : "Đang tải cuộc trò chuyện..."}
@@ -546,7 +603,11 @@ export function MessageCenterPage() {
                         "group flex items-center gap-2 rounded-[1.35rem] border px-3 py-3 transition",
                         isActive
                           ? "border-sky-300/38 bg-sky-500/12 shadow-[0_16px_38px_rgba(14,165,233,0.12)]"
-                          : "theme-border theme-panel-subtle hover:border-sky-300/26 hover:bg-[rgba(23,114,208,0.06)]",
+                          : conversation.unreadCount > 0
+                            ? "border-orange-300/45 bg-orange-400/10 shadow-[0_16px_34px_rgba(249,115,22,0.12)]"
+                            : conversation.isOrganizer
+                              ? "border-cyan-300/35 bg-cyan-400/10 hover:border-cyan-300/50"
+                              : "theme-border theme-panel-subtle hover:border-sky-300/26 hover:bg-[rgba(23,114,208,0.06)]",
                       )}
                     >
                       <button
@@ -572,18 +633,27 @@ export function MessageCenterPage() {
                             ) : null}
                           </span>
                           <span className="mt-1 block truncate text-xs theme-text-muted">
-                            {conversation.latestMessage?.body ?? (locale === "en" ? "No messages yet" : "Chưa có tin nhắn")}
+                            {conversation.latestMessage?.body ??
+                              (conversation.isOrganizer
+                                ? locale === "en"
+                                  ? "Competition support channel"
+                                  : "Kênh hỗ trợ từ ban tổ chức"
+                                : locale === "en"
+                                  ? "No messages yet"
+                                  : "Chưa có tin nhắn")}
                           </span>
                         </span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setConversationToDelete(conversation)}
-                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent text-slate-400 opacity-0 transition hover:border-rose-200/70 hover:bg-rose-500/10 hover:text-rose-500 group-hover:opacity-100 focus:opacity-100 dark:hover:border-rose-300/20 dark:hover:text-rose-200"
-                        aria-label={locale === "en" ? "Delete conversation" : "Xóa cuộc trò chuyện"}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {conversation.canDelete ? (
+                        <button
+                          type="button"
+                          onClick={() => setConversationToDelete(conversation)}
+                          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent text-slate-400 opacity-0 transition hover:border-rose-200/70 hover:bg-rose-500/10 hover:text-rose-500 group-hover:opacity-100 focus:opacity-100 dark:hover:border-rose-300/20 dark:hover:text-rose-200"
+                          aria-label={locale === "en" ? "Delete conversation" : "Xóa cuộc trò chuyện"}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      ) : null}
                     </div>
                   );
                 })
@@ -598,7 +668,7 @@ export function MessageCenterPage() {
             </div>
           </aside>
 
-          <section className="flex min-h-[620px] flex-col">
+          <section className="flex min-h-0 flex-col">
             {activeParticipant ? (
               <>
                 <div className="flex items-center gap-4 border-b theme-border px-5 py-5 md:px-6">
@@ -610,14 +680,16 @@ export function MessageCenterPage() {
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-lg font-semibold theme-text-strong">{activeParticipant.name}</p>
-                    <p className="mt-1 truncate text-sm theme-text-muted">{activeParticipant.email}</p>
+                    {shouldShowParticipantEmail ? (
+                      <p className="mt-1 truncate text-sm theme-text-muted">{activeParticipant.email}</p>
+                    ) : null}
                   </div>
                   <span className="hidden rounded-full border theme-border theme-panel-subtle px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] theme-text-soft sm:inline-flex">
                     {activeParticipant.role}
                   </span>
                 </div>
 
-                <div className="flex-1 space-y-4 overflow-y-auto px-5 py-6 md:px-6">
+                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-5 md:px-6">
                   {showFirstMessageNotice ? (
                     <div className="rounded-[1.5rem] border border-amber-300/34 bg-amber-400/12 px-4 py-4">
                       <div className="flex gap-3">
@@ -628,8 +700,8 @@ export function MessageCenterPage() {
                           </p>
                           <p className="mt-2 text-sm leading-7 theme-text-muted">
                             {locale === "en"
-                              ? "Your first message is treated as a message request. You can send only one first message until the receiver replies. After they reply, both users can continue without this limit."
-                              : "Tin nhắn đầu tiên được xem như một lời đề nghị trò chuyện. Bạn chỉ được gửi một tin nhắn đầu tiên cho đến khi người nhận phản hồi. Sau khi họ trả lời, hai bên có thể nhắn tiếp không giới hạn."}
+                              ? "Your first message is treated as a message request. You can send only one first message until the receiver replies, and the receiver will be able to see your email address. After they reply, both users can continue without this limit."
+                              : "Tin nhắn đầu tiên được xem như một lời đề nghị trò chuyện. Bạn chỉ được gửi một tin nhắn đầu tiên cho đến khi người nhận phản hồi, và người nhận sẽ thấy địa chỉ email của bạn. Sau khi họ trả lời, hai bên có thể nhắn tiếp không giới hạn."}
                           </p>
                         </div>
                       </div>
@@ -654,6 +726,24 @@ export function MessageCenterPage() {
                     </div>
                   ) : null}
 
+                  {activeConversation?.isOrganizer && activeMessages.length === 0 ? (
+                    <div className="rounded-[1.5rem] border border-cyan-300/34 bg-cyan-400/12 px-4 py-4">
+                      <div className="flex gap-3">
+                        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-cyan-600 dark:text-cyan-200" />
+                        <div>
+                          <p className="text-sm font-semibold theme-text-strong">
+                            {locale === "en" ? "Competition organizer support" : "Hỗ trợ từ ban tổ chức"}
+                          </p>
+                          <p className="mt-2 text-sm leading-7 theme-text-muted">
+                            {locale === "en"
+                              ? "This fixed conversation connects you with the competition organizer for account, team, submission, eligibility, or general support questions."
+                              : "Cuộc trò chuyện cố định này kết nối bạn với ban tổ chức để được hỗ trợ về tài khoản, đội thi, bài nộp, điều kiện tham gia hoặc các câu hỏi chung."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
                   {requestPending ? (
                     <div className="mx-auto max-w-xl rounded-full border theme-border theme-panel-subtle px-4 py-2 text-center text-xs font-semibold theme-text-soft">
                       {locale === "en"
@@ -672,20 +762,33 @@ export function MessageCenterPage() {
                         >
                           <div
                             className={cn(
-                              "max-w-[78%] rounded-[1.35rem] px-4 py-3 shadow-[0_14px_34px_rgba(15,23,42,0.08)]",
+                              "max-w-[78%] rounded-[1.15rem] px-3.5 py-2.5 shadow-[0_12px_28px_rgba(15,23,42,0.08)]",
                               isOwnMessage
                                 ? "bg-[linear-gradient(135deg,#38bdf8,#2563eb)] text-white"
                                 : "border theme-border theme-panel-subtle theme-text-strong",
                             )}
                           >
-                            <p className="whitespace-pre-wrap text-sm leading-7">{message.body}</p>
-                            <p
-                              className={cn(
-                                "mt-2 text-[0.68rem] font-medium",
-                                isOwnMessage ? "text-white/72" : "theme-text-faint",
-                              )}
-                            >
-                              {formatMessageTime(locale, message.createdAt)}
+                            {activeConversation?.isOrganizer ? (
+                              <p
+                                className={cn(
+                                  "mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em]",
+                                  isOwnMessage ? "text-white/72" : "theme-text-faint",
+                                )}
+                              >
+                                {message.sender.name} · {formatMessageSenderRole(locale, message.sender.role)}
+                              </p>
+                            ) : null}
+                            <p className="whitespace-pre-wrap text-sm leading-6">
+                              {message.body}
+                              <span
+                                title={formatMessageTime(locale, message.createdAt)}
+                                className={cn(
+                                  "ml-2 inline-block align-baseline text-[0.65rem] font-medium",
+                                  isOwnMessage ? "text-white/68" : "theme-text-faint",
+                                )}
+                              >
+                                {formatCompactMessageTime(locale, message.createdAt)}
+                              </span>
                             </p>
                           </div>
                         </div>

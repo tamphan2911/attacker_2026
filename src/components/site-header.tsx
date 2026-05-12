@@ -88,6 +88,8 @@ type HeaderNotificationItem = {
   meta?: {
     senderName?: string;
     teamTag?: string;
+    isMessageRequest?: boolean;
+    isOrganizer?: boolean;
   };
 };
 
@@ -201,6 +203,10 @@ function NotificationMenu({
 
   const getItemBadgeLabel = (item: HeaderNotificationItem) => {
     if (item.type === "message") {
+      if (item.meta?.isMessageRequest) {
+        return locale === "en" ? "Message request" : "Lời nhắn mới";
+      }
+
       return locale === "en" ? `${item.count} unread` : `${item.count} chưa đọc`;
     }
 
@@ -246,7 +252,14 @@ function NotificationMenu({
               >
                 <span className="flex items-center justify-between gap-3">
                   <span className="truncate text-sm font-semibold theme-text-strong">{item.title}</span>
-                  <span className="shrink-0 rounded-full border theme-border bg-white/50 px-2 py-0.5 text-[0.65rem] font-semibold theme-text-soft dark:bg-white/6">
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold",
+                      item.meta?.isMessageRequest
+                        ? "border-amber-300/40 bg-amber-400/18 text-amber-700 dark:text-amber-100"
+                        : "theme-border bg-white/50 theme-text-soft dark:bg-white/6",
+                    )}
+                  >
                     {getItemBadgeLabel(item)}
                   </span>
                 </span>

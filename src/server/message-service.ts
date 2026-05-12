@@ -1,10 +1,16 @@
-import { TeamInvitationStatus, UserRole, type Prisma } from "@prisma/client";
+import { MessageConversationKind, TeamInvitationStatus, UserRole, type Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { moderateMessageText } from "@/lib/message-moderation";
 import type { ServiceResult } from "@/server/team-service";
 
 const MESSAGE_MAX_LENGTH = 2000;
+const ORGANIZER_USER_ID = "competition-organizer";
+
+type MessageActor = {
+  id: string;
+  role: UserRole;
+};
 
 const messageUserSelect = {
   id: true,
@@ -18,20 +24,32 @@ const messageUserSelect = {
   avatarImageSrc: true,
 } satisfies Prisma.UserSelect;
 
-type MessageUserRecord = Prisma.UserGetPayload<{ select: typeof messageUserSelect }>;
+const conversationInclude = {
+  participants: {
+    include: {
+      user: {
+        select: messageUserSelect,
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  },
+  messages: {
+    include: {
+      sender: {
+        select: messageUserSelect,
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+    take: 200,
+  },
+} satisfies Prisma.MessageConversationInclude;
 
-type ConversationRecord = Prisma.MessageConversationGetPayload<{
-  include: {
-    participants: {
-      include: {
-        user: {
-          select: typeof messageUserSelect;
-        };
-      };
-    };
-    messages: true;
-  };
-}>;
+type MessageUserRecord = Prisma.UserGetPayload<{ select: typeof messageUserSelect }>;
+type ConversationRecord = Prisma.MessageConversationGetPayload<{ include: typeof conversationInclude }>;
 
 function ok<T>(data: T, status = 200): ServiceResult<T> {
   return { ok: true, status, data };
@@ -39,6 +57,10 @@ function ok<T>(data: T, status = 200): ServiceResult<T> {
 
 function fail<T = never>(status: number, error: string): ServiceResult<T> {
   return { ok: false, status, error };
+}
+
+function isElevatedRole(role: UserRole) {
+  return role === UserRole.ADMIN || role === UserRole.MODERATOR;
 }
 
 function mapRole(role: UserRole) {
@@ -69,44 +91,101 @@ function serializeMessageUser(user: MessageUserRecord) {
   };
 }
 
-function getOtherParticipant(conversation: ConversationRecord, actorId: string) {
+function serializeOrganizerUser() {
+  return {
+    id: ORGANIZER_USER_ID,
+    name: "Competition Organizer",
+    email: "attacker@uel.edu.vn",
+    role: "organizer",
+    university: "",
+    major: "",
+    classYear: "",
+    avatarTone: "from-cyan-500 via-sky-500 to-indigo-500",
+    avatarImageSrc: undefined,
+  };
+}
+
+function getActorParticipant(conversation: ConversationRecord, actorId: string) {
+  return conversation.participants.find((participant) => participant.userId === actorId);
+}
+
+function getDirectOtherParticipant(conversation: ConversationRecord, actorId: string) {
   return conversation.participants.find((participant) => participant.userId !== actorId);
 }
 
-function serializeConversation(conversation: ConversationRecord, actorId: string) {
-  const currentParticipant = conversation.participants.find((participant) => participant.userId === actorId);
-  const otherParticipant = getOtherParticipant(conversation, actorId);
+function getRequesterParticipant(conversation: ConversationRecord) {
+  return conversation.participants.find((participant) => participant.userId === conversation.requesterId);
+}
+
+function canAccessConversation(conversation: ConversationRecord, actor: MessageActor) {
+  if (conversation.kind === MessageConversationKind.ORGANIZER) {
+    return isElevatedRole(actor.role) || conversation.requesterId === actor.id;
+  }
+
+  return conversation.participants.some((participant) => participant.userId === actor.id);
+}
+
+function serializeConversation(conversation: ConversationRecord, actor: MessageActor) {
+  const actorIsElevated = isElevatedRole(actor.role);
+  const isOrganizer = conversation.kind === MessageConversationKind.ORGANIZER;
+  const currentParticipant = getActorParticipant(conversation, actor.id);
   const messages = conversation.messages
     .slice()
     .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
-  const hiddenAt = currentParticipant?.hiddenAt ?? null;
+  const hiddenAt = isOrganizer ? null : currentParticipant?.hiddenAt ?? null;
   const visibleMessages = hiddenAt
     ? messages.filter((message) => message.createdAt.getTime() > hiddenAt.getTime())
     : messages;
-  const readAt = currentParticipant?.readAt ?? null;
-  const unreadCount = visibleMessages.filter(
-    (message) => message.senderId !== actorId && (!readAt || message.createdAt.getTime() > readAt.getTime()),
-  ).length;
+  const readAt = isOrganizer && actorIsElevated
+    ? conversation.organizerReadAt
+    : currentParticipant?.readAt ?? null;
+  const unreadCount = visibleMessages.filter((message) => {
+    const isUnreadSender = isOrganizer && actorIsElevated
+      ? message.senderId === conversation.requesterId
+      : message.senderId !== actor.id;
+
+    return isUnreadSender && (!readAt || message.createdAt.getTime() > readAt.getTime());
+  }).length;
   const firstMessage = visibleMessages[0];
-  const requestPending = visibleMessages.length === 1 && firstMessage?.senderId === actorId;
   const latestMessage = visibleMessages[visibleMessages.length - 1];
+  const requestPending = !isOrganizer && visibleMessages.length === 1 && firstMessage?.senderId === actor.id;
+  const isMessageRequest = !isOrganizer && visibleMessages.length === 1 && firstMessage?.senderId !== actor.id;
+  const directOtherParticipant = getDirectOtherParticipant(conversation, actor.id);
+  const requesterParticipant = getRequesterParticipant(conversation);
+  const participant = isOrganizer
+    ? actorIsElevated
+      ? requesterParticipant
+        ? serializeMessageUser(requesterParticipant.user)
+        : null
+      : serializeOrganizerUser()
+    : directOtherParticipant
+      ? serializeMessageUser(directOtherParticipant.user)
+      : null;
 
   return {
     id: conversation.id,
-    participant: otherParticipant ? serializeMessageUser(otherParticipant.user) : null,
+    kind: conversation.kind === MessageConversationKind.ORGANIZER ? "organizer" : "direct",
+    isOrganizer,
+    isPinned: false,
+    canDelete: !isOrganizer,
+    participant,
+    showParticipantEmail: isOrganizer ? actorIsElevated : Boolean(currentParticipant?.showOtherEmail),
     createdAt: conversation.createdAt.toISOString(),
     updatedAt: conversation.updatedAt.toISOString(),
     lastMessageAt: conversation.lastMessageAt.toISOString(),
     readAt: readAt?.toISOString(),
     unreadCount,
     requestPending,
-    canSendMessage: !requestPending,
+    isMessageRequest,
+    canSendMessage: isOrganizer || !requestPending,
     latestMessage: latestMessage
       ? {
           id: latestMessage.id,
+          conversationId: latestMessage.conversationId,
           senderId: latestMessage.senderId,
           body: latestMessage.body,
           createdAt: latestMessage.createdAt.toISOString(),
+          sender: serializeMessageUser(latestMessage.sender),
         }
       : null,
     messages: visibleMessages.map((message) => ({
@@ -115,8 +194,38 @@ function serializeConversation(conversation: ConversationRecord, actorId: string
       senderId: message.senderId,
       body: message.body,
       createdAt: message.createdAt.toISOString(),
+      sender: serializeMessageUser(message.sender),
     })),
   };
+}
+
+async function ensureOrganizerConversationForUser(
+  client: Prisma.TransactionClient | typeof prisma,
+  userId: string,
+) {
+  const existingConversation = await client.messageConversation.findFirst({
+    where: {
+      kind: MessageConversationKind.ORGANIZER,
+      requesterId: userId,
+    },
+  });
+
+  if (existingConversation) {
+    return existingConversation;
+  }
+
+  return client.messageConversation.create({
+    data: {
+      kind: MessageConversationKind.ORGANIZER,
+      requesterId: userId,
+      participants: {
+        create: {
+          userId,
+          showOtherEmail: false,
+        },
+      },
+    },
+  });
 }
 
 async function findDirectConversation(
@@ -126,6 +235,7 @@ async function findDirectConversation(
 ) {
   const conversations = await tx.messageConversation.findMany({
     where: {
+      kind: MessageConversationKind.DIRECT,
       participants: {
         some: {
           userId: firstUserId,
@@ -150,54 +260,42 @@ async function findDirectConversation(
 async function loadConversation(conversationId: string) {
   return prisma.messageConversation.findUnique({
     where: { id: conversationId },
-    include: {
-      participants: {
-        include: {
-          user: {
-            select: messageUserSelect,
-          },
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      },
-      messages: {
-        orderBy: {
-          createdAt: "asc",
-        },
-        take: 200,
-      },
-    },
+    include: conversationInclude,
   });
 }
 
-export async function listMessageConversations(actorId: string) {
+export async function listMessageConversations(actor: MessageActor) {
+  if (!isElevatedRole(actor.role)) {
+    await ensureOrganizerConversationForUser(prisma, actor.id);
+  }
+
   const conversations = await prisma.messageConversation.findMany({
-    where: {
-      participants: {
-        some: {
-          userId: actorId,
-        },
-      },
-    },
-    include: {
-      participants: {
-        include: {
-          user: {
-            select: messageUserSelect,
+    where: isElevatedRole(actor.role)
+      ? {
+          OR: [
+            {
+              participants: {
+                some: {
+                  userId: actor.id,
+                },
+              },
+            },
+            {
+              kind: MessageConversationKind.ORGANIZER,
+              messages: {
+                some: {},
+              },
+            },
+          ],
+        }
+      : {
+          participants: {
+            some: {
+              userId: actor.id,
+            },
           },
         },
-        orderBy: {
-          createdAt: "asc",
-        },
-      },
-      messages: {
-        orderBy: {
-          createdAt: "asc",
-        },
-        take: 200,
-      },
-    },
+    include: conversationInclude,
     orderBy: [
       {
         lastMessageAt: "desc",
@@ -208,10 +306,17 @@ export async function listMessageConversations(actorId: string) {
     ],
   });
 
+  const serializedConversations = conversations
+    .filter((conversation) => canAccessConversation(conversation, actor))
+    .map((conversation) => serializeConversation(conversation, actor))
+    .filter((conversation) => conversation.isOrganizer || conversation.messages.length > 0);
+
+  serializedConversations.sort(
+    (left, right) => new Date(right.lastMessageAt).getTime() - new Date(left.lastMessageAt).getTime(),
+  );
+
   return {
-    conversations: conversations
-      .map((conversation) => serializeConversation(conversation, actorId))
-      .filter((conversation) => conversation.messages.length > 0),
+    conversations: serializedConversations,
   };
 }
 
@@ -254,11 +359,41 @@ export async function getMessageUserById(actorId: string, userId: string) {
   };
 }
 
+export async function revealConversationEmail(
+  actor: MessageActor,
+  conversationId: string,
+): Promise<ServiceResult<{ conversationId: string }>> {
+  const conversation = await prisma.messageConversation.findUnique({
+    where: { id: conversationId },
+    include: conversationInclude,
+  });
+
+  if (!conversation || conversation.kind !== MessageConversationKind.DIRECT || !canAccessConversation(conversation, actor)) {
+    return fail(404, "Conversation not found.");
+  }
+
+  await prisma.messageParticipant.update({
+    where: {
+      conversationId_userId: {
+        conversationId,
+        userId: actor.id,
+      },
+    },
+    data: {
+      showOtherEmail: true,
+    },
+  });
+
+  return ok({ conversationId });
+}
+
 export async function sendDirectMessage(
-  actorId: string,
+  actor: MessageActor,
   payload: {
     conversationId?: string;
     recipientId?: string;
+    recipientSource?: "email-search" | "profile";
+    organizer?: boolean;
     body: string;
   },
 ): Promise<ServiceResult<{ conversationId: string }>> {
@@ -277,6 +412,13 @@ export async function sendDirectMessage(
   const result = await prisma.$transaction(async (tx) => {
     let conversationId = payload.conversationId?.trim() || "";
     let recipientId = payload.recipientId?.trim() || "";
+    let conversationKind: MessageConversationKind = MessageConversationKind.DIRECT;
+    let actorParticipantHiddenAt: Date | null = null;
+
+    if (!conversationId && payload.organizer) {
+      const organizerConversation = await ensureOrganizerConversationForUser(tx, actor.id);
+      conversationId = organizerConversation.id;
+    }
 
     if (conversationId) {
       const conversation = await tx.messageConversation.findUnique({
@@ -291,21 +433,34 @@ export async function sendDirectMessage(
         },
       });
 
-      const actorParticipant = conversation?.participants.find((participant) => participant.userId === actorId);
-      if (!conversation || !actorParticipant) {
+      if (!conversation) {
         return fail(404, "Conversation not found.");
       }
 
-      recipientId = conversation.participants.find((participant) => participant.userId !== actorId)?.userId ?? "";
-      const visibleMessages = actorParticipant.hiddenAt
-        ? conversation.messages.filter((message) => message.createdAt.getTime() > actorParticipant.hiddenAt!.getTime())
-        : conversation.messages;
-      const firstMessage = visibleMessages[0];
-      if (visibleMessages.length === 1 && firstMessage?.senderId === actorId) {
-        return fail(409, "Wait for the receiver to reply before sending another message.");
+      conversationKind = conversation.kind;
+      const actorParticipant = conversation.participants.find((participant) => participant.userId === actor.id);
+      const actorCanAccess = conversation.kind === MessageConversationKind.ORGANIZER
+        ? isElevatedRole(actor.role) || conversation.requesterId === actor.id
+        : Boolean(actorParticipant);
+
+      if (!actorCanAccess) {
+        return fail(404, "Conversation not found.");
+      }
+
+      actorParticipantHiddenAt = actorParticipant?.hiddenAt ?? null;
+
+      if (conversation.kind === MessageConversationKind.DIRECT) {
+        recipientId = conversation.participants.find((participant) => participant.userId !== actor.id)?.userId ?? "";
+        const visibleMessages = actorParticipantHiddenAt
+          ? conversation.messages.filter((message) => message.createdAt.getTime() > actorParticipantHiddenAt!.getTime())
+          : conversation.messages;
+        const firstMessage = visibleMessages[0];
+        if (visibleMessages.length === 1 && firstMessage?.senderId === actor.id) {
+          return fail(409, "Wait for the receiver to reply before sending another message.");
+        }
       }
     } else {
-      if (!recipientId || recipientId === actorId) {
+      if (!recipientId || recipientId === actor.id) {
         return fail(400, "Choose another user before sending a message.");
       }
 
@@ -317,27 +472,53 @@ export async function sendDirectMessage(
         return fail(404, "Recipient not found.");
       }
 
-      const existingConversation = await findDirectConversation(tx, actorId, recipientId);
+      const existingConversation = await findDirectConversation(tx, actor.id, recipientId);
       if (existingConversation) {
         conversationId = existingConversation.id;
-        const actorParticipant = existingConversation.participants.find((participant) => participant.userId === actorId);
+        const actorParticipant = existingConversation.participants.find((participant) => participant.userId === actor.id);
+        actorParticipantHiddenAt = actorParticipant?.hiddenAt ?? null;
+        if (payload.recipientSource === "email-search") {
+          await tx.messageParticipant.update({
+            where: {
+              conversationId_userId: {
+                conversationId,
+                userId: actor.id,
+              },
+            },
+            data: {
+              showOtherEmail: true,
+            },
+          });
+        }
+
         const messages = await tx.directMessage.findMany({
           where: { conversationId },
           orderBy: { createdAt: "asc" },
         });
-        const visibleMessages = actorParticipant?.hiddenAt
-          ? messages.filter((message) => message.createdAt.getTime() > actorParticipant.hiddenAt!.getTime())
+        const visibleMessages = actorParticipantHiddenAt
+          ? messages.filter((message) => message.createdAt.getTime() > actorParticipantHiddenAt!.getTime())
           : messages;
         const firstMessage = visibleMessages[0];
-        if (visibleMessages.length === 1 && firstMessage?.senderId === actorId) {
+        if (visibleMessages.length === 1 && firstMessage?.senderId === actor.id) {
           return fail(409, "Wait for the receiver to reply before sending another message.");
         }
       } else {
         const conversation = await tx.messageConversation.create({
           data: {
+            kind: MessageConversationKind.DIRECT,
             lastMessageAt: now,
             participants: {
-              create: [{ userId: actorId, readAt: now }, { userId: recipientId }],
+              create: [
+                {
+                  userId: actor.id,
+                  readAt: now,
+                  showOtherEmail: payload.recipientSource === "email-search",
+                },
+                {
+                  userId: recipientId,
+                  showOtherEmail: true,
+                },
+              ],
             },
           },
         });
@@ -348,7 +529,7 @@ export async function sendDirectMessage(
     await tx.directMessage.create({
       data: {
         conversationId,
-        senderId: actorId,
+        senderId: actor.id,
         body,
         createdAt: now,
       },
@@ -358,15 +539,16 @@ export async function sendDirectMessage(
       where: { id: conversationId },
       data: {
         lastMessageAt: now,
+        ...(conversationKind === MessageConversationKind.ORGANIZER && isElevatedRole(actor.role)
+          ? { organizerReadAt: now }
+          : {}),
       },
     });
 
-    await tx.messageParticipant.update({
+    await tx.messageParticipant.updateMany({
       where: {
-        conversationId_userId: {
-          conversationId,
-          userId: actorId,
-        },
+        conversationId,
+        userId: actor.id,
       },
       data: {
         readAt: now,
@@ -380,18 +562,25 @@ export async function sendDirectMessage(
 }
 
 export async function markConversationRead(
-  actorId: string,
+  actor: MessageActor,
   conversationId: string,
 ): Promise<ServiceResult<{ conversationId: string }>> {
-  const participant = await prisma.messageParticipant.findUnique({
-    where: {
-      conversationId_userId: {
-        conversationId,
-        userId: actorId,
-      },
-    },
-  });
+  const conversation = await loadConversation(conversationId);
+  if (!conversation || !canAccessConversation(conversation, actor)) {
+    return fail(404, "Conversation not found.");
+  }
 
+  if (conversation.kind === MessageConversationKind.ORGANIZER && isElevatedRole(actor.role)) {
+    await prisma.messageConversation.update({
+      where: { id: conversationId },
+      data: {
+        organizerReadAt: new Date(),
+      },
+    });
+    return ok({ conversationId });
+  }
+
+  const participant = getActorParticipant(conversation, actor.id);
   if (!participant) {
     return fail(404, "Conversation not found.");
   }
@@ -400,7 +589,7 @@ export async function markConversationRead(
     where: {
       conversationId_userId: {
         conversationId,
-        userId: actorId,
+        userId: actor.id,
       },
     },
     data: {
@@ -412,19 +601,11 @@ export async function markConversationRead(
 }
 
 export async function hideMessageConversation(
-  actorId: string,
+  actor: MessageActor,
   conversationId: string,
 ): Promise<ServiceResult<{ conversationId: string }>> {
-  const participant = await prisma.messageParticipant.findUnique({
-    where: {
-      conversationId_userId: {
-        conversationId,
-        userId: actorId,
-      },
-    },
-  });
-
-  if (!participant) {
+  const conversation = await loadConversation(conversationId);
+  if (!conversation || conversation.kind !== MessageConversationKind.DIRECT || !canAccessConversation(conversation, actor)) {
     return fail(404, "Conversation not found.");
   }
 
@@ -433,7 +614,7 @@ export async function hideMessageConversation(
     where: {
       conversationId_userId: {
         conversationId,
-        userId: actorId,
+        userId: actor.id,
       },
     },
     data: {
@@ -445,21 +626,21 @@ export async function hideMessageConversation(
   return ok({ conversationId });
 }
 
-export async function getConversationAfterSend(actorId: string, conversationId: string) {
+export async function getConversationAfterSend(actor: MessageActor, conversationId: string) {
   const conversation = await loadConversation(conversationId);
-  if (!conversation || !conversation.participants.some((participant) => participant.userId === actorId)) {
+  if (!conversation || !canAccessConversation(conversation, actor)) {
     return null;
   }
 
-  return serializeConversation(conversation, actorId);
+  return serializeConversation(conversation, actor);
 }
 
-export async function listUnreadNotifications(actorId: string) {
+export async function listUnreadNotifications(actor: MessageActor) {
   const [conversationPayload, invitations] = await Promise.all([
-    listMessageConversations(actorId),
+    listMessageConversations(actor),
     prisma.teamInvitation.findMany({
       where: {
-        toUserId: actorId,
+        toUserId: actor.id,
         status: TeamInvitationStatus.PENDING,
       },
       include: {
@@ -493,6 +674,8 @@ export async function listUnreadNotifications(actorId: string) {
       count: conversation.unreadCount,
       meta: {
         senderName: conversation.participant?.name ?? "New message",
+        isMessageRequest: conversation.isMessageRequest,
+        isOrganizer: conversation.isOrganizer,
       },
     }));
 

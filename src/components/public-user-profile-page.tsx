@@ -28,7 +28,7 @@ export function PublicUserProfilePage({ profile }: { profile: PublicUserProfile 
           {canMessageProfile ? (
             <div className="group absolute right-5 top-5 z-10 inline-flex">
               <Link
-                href={`/messages?recipient=${encodeURIComponent(profile.id)}`}
+                href={`/messages?recipient=${encodeURIComponent(profile.id)}&source=profile`}
                 aria-label={locale === "en" ? "Send private message" : "Gửi tin nhắn riêng"}
                 className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-sky-300/30 bg-white/82 text-sky-600 shadow-[0_16px_34px_rgba(14,165,233,0.18)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white dark:border-sky-200/18 dark:bg-white/10 dark:text-sky-200 dark:hover:bg-white/16"
               >
