@@ -725,7 +725,7 @@ export function DashboardPage() {
   return (
     <div className="space-y-8">
       {hasActionInbox ? (
-        <section className="space-y-4">
+        <section id="team-actions" className="scroll-mt-28 space-y-4">
           <div className="rounded-[2rem] border border-sky-400/28 bg-[linear-gradient(135deg,rgba(24,92,188,0.18),rgba(14,165,233,0.08))] px-6 py-6 shadow-[0_24px_70px_rgba(15,23,42,0.18)] backdrop-blur-xl md:px-8">
             <p className="text-xs font-semibold uppercase tracking-[0.32em] text-sky-200/85">
               {locale === "en" ? "Action inbox" : "Hộp thư hành động"}

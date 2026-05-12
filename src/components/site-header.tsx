@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
+  ArrowRight,
+  Bell,
   ChevronDown,
   Globe2,
   LogOut,
@@ -14,10 +16,10 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { pickText } from "@/lib/site";
-import type { LocalizedText } from "@/types/site";
+import type { Locale, LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { BrandMarkInner, GradientAvatar } from "@/components/site-ui";
 
@@ -74,6 +76,201 @@ const primaryNavItems: Array<{
   { href: "/dashboard", label: { en: "Team Workspace", vi: "Đội thi" } },
   { href: "/contact", label: { en: "Contact", vi: "Liên hệ" } },
 ];
+
+type HeaderNotificationItem = {
+  id: string;
+  type: "message" | "team-invitation";
+  title: string;
+  description: string;
+  href: string;
+  createdAt: string;
+  count: number;
+  meta?: {
+    senderName?: string;
+    teamTag?: string;
+  };
+};
+
+function formatNotificationTime(locale: Locale, value: string) {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "vi-VN", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function NotificationMenu({
+  isLoggedIn,
+  locale,
+}: {
+  isLoggedIn: boolean;
+  locale: Locale;
+}) {
+  const router = useRouter();
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [items, setItems] = useState<HeaderNotificationItem[]>([]);
+
+  const refreshNotifications = useCallback(async () => {
+    if (!isLoggedIn) {
+      setUnreadCount(0);
+      setItems([]);
+      return;
+    }
+
+    const response = await fetch("/api/notifications", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const payload = (await response.json()) as {
+      unreadCount: number;
+      items: HeaderNotificationItem[];
+    };
+    setUnreadCount(payload.unreadCount);
+    setItems(payload.items);
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      void refreshNotifications();
+    });
+  }, [refreshNotifications]);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void refreshNotifications();
+    }, 30000);
+    const handleRefresh = () => void refreshNotifications();
+
+    window.addEventListener("focus", handleRefresh);
+    window.addEventListener("attacker-notifications-refresh", handleRefresh);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", handleRefresh);
+      window.removeEventListener("attacker-notifications-refresh", handleRefresh);
+    };
+  }, [isLoggedIn, refreshNotifications]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
+
+  if (!isLoggedIn) {
+    return null;
+  }
+
+  const handleButtonClick = () => {
+    if (unreadCount <= 0) {
+      router.push("/messages");
+      return;
+    }
+
+    setIsOpen((current) => !current);
+  };
+
+  const getItemDescription = (item: HeaderNotificationItem) => {
+    if (item.type === "team-invitation") {
+      return locale === "en"
+        ? `${item.meta?.senderName ?? "A team leader"} invited you to join ${item.title}.`
+        : `${item.meta?.senderName ?? "Một đội trưởng"} đã mời bạn vào đội ${item.title}.`;
+    }
+
+    return item.description;
+  };
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        type="button"
+        onClick={handleButtonClick}
+        className="theme-panel-strong theme-text-strong relative inline-flex h-10 w-10 items-center justify-center rounded-full border transition hover:-translate-y-0.5"
+        aria-label={locale === "en" ? "Open notifications" : "Mở thông báo"}
+        aria-haspopup={unreadCount > 0 ? "menu" : undefined}
+        aria-expanded={unreadCount > 0 ? isOpen : undefined}
+      >
+        <Bell className="h-4 w-4 theme-accent" />
+        {unreadCount > 0 ? (
+          <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-white bg-sky-500 px-1 text-[0.65rem] font-bold leading-none text-white shadow-[0_10px_22px_rgba(14,165,233,0.28)]">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        ) : null}
+      </button>
+
+      {isOpen && unreadCount > 0 ? (
+        <div
+          role="menu"
+          className="theme-card-shadow-soft theme-profile-menu absolute right-0 top-full z-50 mt-3 w-[23rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-[1.6rem] border p-2 backdrop-blur-2xl"
+        >
+          <div className="px-3 py-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+              {locale === "en" ? "Notifications" : "Thông báo"}
+            </p>
+            <p className="mt-1 text-sm theme-text-muted">
+              {locale === "en" ? "Unread items that need your attention." : "Các mục chưa đọc cần bạn chú ý."}
+            </p>
+          </div>
+          <div className="max-h-[22rem] overflow-y-auto">
+            {items.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                role="menuitem"
+                onClick={() => setIsOpen(false)}
+                className="grid gap-1 rounded-[1.1rem] px-3 py-3 transition hover:bg-[rgba(23,114,208,0.08)] dark:hover:bg-[rgba(88,196,255,0.12)]"
+              >
+                <span className="flex items-center justify-between gap-3">
+                  <span className="truncate text-sm font-semibold theme-text-strong">{item.title}</span>
+                  <span className="shrink-0 rounded-full border theme-border bg-white/50 px-2 py-0.5 text-[0.65rem] font-semibold theme-text-soft dark:bg-white/6">
+                    {item.type === "message"
+                      ? locale === "en"
+                        ? "Message"
+                        : "Tin nhắn"
+                      : locale === "en"
+                        ? "Invite"
+                        : "Lời mời"}
+                  </span>
+                </span>
+                <span className="line-clamp-2 text-xs leading-5 theme-text-muted">{getItemDescription(item)}</span>
+                <span className="text-[0.68rem] font-medium theme-text-faint">
+                  {formatNotificationTime(locale, item.createdAt)}
+                </span>
+              </Link>
+            ))}
+          </div>
+          <Link
+            href="/messages"
+            onClick={() => setIsOpen(false)}
+            className="mt-2 flex items-center justify-center gap-2 rounded-[1.1rem] border theme-border theme-panel-subtle px-3 py-3 text-sm font-semibold theme-text-strong transition hover:border-sky-300/28"
+          >
+            {locale === "en" ? "Open message center" : "Mở trung tâm tin nhắn"}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -292,6 +489,7 @@ export function SiteHeader() {
           </nav>
 
           <div className="hidden items-center gap-3 lg:flex">
+            <NotificationMenu isLoggedIn={isLoggedIn} locale={locale} />
             <HeaderTooltip
               label={
                 theme === "dark"

@@ -1,0 +1,42 @@
+const blockedPatterns = [
+  /\bfuck(?:ing|er|ed)?\b/gi,
+  /\bshit(?:ty)?\b/gi,
+  /\bbitch(?:es)?\b/gi,
+  /\basshole(?:s)?\b/gi,
+  /\bcunt(?:s)?\b/gi,
+  /\bdick(?:s)?\b/gi,
+  /\bpussy\b/gi,
+  /\bsex(?:ual)?\b/gi,
+  /\bporn(?:ography)?\b/gi,
+  /\bnude(?:s)?\b/gi,
+  /\brape(?:d|s|ist)?\b/gi,
+  /\bkill(?:ing|ed|s)?\b/gi,
+  /\bmurder(?:ing|ed|s)?\b/gi,
+  /\bsuicide\b/gi,
+  /\bterror(?:ist|ism)?\b/gi,
+  /\bharass(?:ment|ing|ed)?\b/gi,
+  /\bidiot(?:s)?\b/gi,
+  /\bstupid\b/gi,
+  /\bđịt\b/gi,
+  /\bđụ\b/gi,
+  /\blồn\b/gi,
+  /\bcặc\b/gi,
+  /\bbuồi\b/gi,
+  /\bđĩ\b/gi,
+  /\bchó\b/gi,
+  /\bngu\b/gi,
+  /\bcút\b/gi,
+  /\bgiết\b/gi,
+  /\bhiếp\b/gi,
+  /\btự sát\b/gi,
+  /\bkhủng bố\b/gi,
+  /\bquấy rối\b/gi,
+  /\bkhiêu dâm\b/gi,
+];
+
+export function moderateMessageText(input: string) {
+  return blockedPatterns.reduce(
+    (message, pattern) => message.replace(pattern, "***"),
+    input,
+  );
+}
