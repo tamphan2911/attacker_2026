@@ -79,13 +79,17 @@ function serializeConversation(conversation: ConversationRecord, actorId: string
   const messages = conversation.messages
     .slice()
     .sort((left, right) => left.createdAt.getTime() - right.createdAt.getTime());
+  const hiddenAt = currentParticipant?.hiddenAt ?? null;
+  const visibleMessages = hiddenAt
+    ? messages.filter((message) => message.createdAt.getTime() > hiddenAt.getTime())
+    : messages;
   const readAt = currentParticipant?.readAt ?? null;
-  const unreadCount = messages.filter(
+  const unreadCount = visibleMessages.filter(
     (message) => message.senderId !== actorId && (!readAt || message.createdAt.getTime() > readAt.getTime()),
   ).length;
-  const firstMessage = messages[0];
-  const requestPending = messages.length === 1 && firstMessage?.senderId === actorId;
-  const latestMessage = messages[messages.length - 1];
+  const firstMessage = visibleMessages[0];
+  const requestPending = visibleMessages.length === 1 && firstMessage?.senderId === actorId;
+  const latestMessage = visibleMessages[visibleMessages.length - 1];
 
   return {
     id: conversation.id,
@@ -105,7 +109,7 @@ function serializeConversation(conversation: ConversationRecord, actorId: string
           createdAt: latestMessage.createdAt.toISOString(),
         }
       : null,
-    messages: messages.map((message) => ({
+    messages: visibleMessages.map((message) => ({
       id: message.id,
       conversationId: message.conversationId,
       senderId: message.senderId,
@@ -205,7 +209,9 @@ export async function listMessageConversations(actorId: string) {
   });
 
   return {
-    conversations: conversations.map((conversation) => serializeConversation(conversation, actorId)),
+    conversations: conversations
+      .map((conversation) => serializeConversation(conversation, actorId))
+      .filter((conversation) => conversation.messages.length > 0),
   };
 }
 
@@ -221,6 +227,24 @@ export async function searchMessageUserByExactEmail(actorId: string, email: stri
       id: {
         not: actorId,
       },
+    },
+    select: messageUserSelect,
+  });
+
+  return {
+    user: user ? serializeMessageUser(user) : null,
+  };
+}
+
+export async function getMessageUserById(actorId: string, userId: string) {
+  const normalizedUserId = userId.trim();
+  if (!normalizedUserId || normalizedUserId === actorId) {
+    return { user: null };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: normalizedUserId,
     },
     select: messageUserSelect,
   });
@@ -267,13 +291,17 @@ export async function sendDirectMessage(
         },
       });
 
-      if (!conversation || !conversation.participants.some((participant) => participant.userId === actorId)) {
+      const actorParticipant = conversation?.participants.find((participant) => participant.userId === actorId);
+      if (!conversation || !actorParticipant) {
         return fail(404, "Conversation not found.");
       }
 
       recipientId = conversation.participants.find((participant) => participant.userId !== actorId)?.userId ?? "";
-      const firstMessage = conversation.messages[0];
-      if (conversation.messages.length === 1 && firstMessage?.senderId === actorId) {
+      const visibleMessages = actorParticipant.hiddenAt
+        ? conversation.messages.filter((message) => message.createdAt.getTime() > actorParticipant.hiddenAt!.getTime())
+        : conversation.messages;
+      const firstMessage = visibleMessages[0];
+      if (visibleMessages.length === 1 && firstMessage?.senderId === actorId) {
         return fail(409, "Wait for the receiver to reply before sending another message.");
       }
     } else {
@@ -292,12 +320,16 @@ export async function sendDirectMessage(
       const existingConversation = await findDirectConversation(tx, actorId, recipientId);
       if (existingConversation) {
         conversationId = existingConversation.id;
+        const actorParticipant = existingConversation.participants.find((participant) => participant.userId === actorId);
         const messages = await tx.directMessage.findMany({
           where: { conversationId },
           orderBy: { createdAt: "asc" },
         });
-        const firstMessage = messages[0];
-        if (messages.length === 1 && firstMessage?.senderId === actorId) {
+        const visibleMessages = actorParticipant?.hiddenAt
+          ? messages.filter((message) => message.createdAt.getTime() > actorParticipant.hiddenAt!.getTime())
+          : messages;
+        const firstMessage = visibleMessages[0];
+        if (visibleMessages.length === 1 && firstMessage?.senderId === actorId) {
           return fail(409, "Wait for the receiver to reply before sending another message.");
         }
       } else {
@@ -373,6 +405,40 @@ export async function markConversationRead(
     },
     data: {
       readAt: new Date(),
+    },
+  });
+
+  return ok({ conversationId });
+}
+
+export async function hideMessageConversation(
+  actorId: string,
+  conversationId: string,
+): Promise<ServiceResult<{ conversationId: string }>> {
+  const participant = await prisma.messageParticipant.findUnique({
+    where: {
+      conversationId_userId: {
+        conversationId,
+        userId: actorId,
+      },
+    },
+  });
+
+  if (!participant) {
+    return fail(404, "Conversation not found.");
+  }
+
+  const now = new Date();
+  await prisma.messageParticipant.update({
+    where: {
+      conversationId_userId: {
+        conversationId,
+        userId: actorId,
+      },
+    },
+    data: {
+      hiddenAt: now,
+      readAt: now,
     },
   });
 

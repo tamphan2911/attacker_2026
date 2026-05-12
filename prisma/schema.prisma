@@ -238,6 +238,7 @@ model MessageParticipant {
   conversationId String
   userId         String
   readAt         DateTime?
+  hiddenAt       DateTime?
   createdAt      DateTime            @default(now())
   conversation   MessageConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)

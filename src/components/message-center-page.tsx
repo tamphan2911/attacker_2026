@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import {
   ArrowRight,
   Inbox,
@@ -10,6 +10,8 @@ import {
   Search,
   SendHorizontal,
   ShieldCheck,
+  Trash2,
+  X,
 } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -69,6 +71,7 @@ function conversationUrl(conversationId: string) {
 
 export function MessageCenterPage() {
   const { authStatus, currentUser, isAuthenticated, locale } = useSiteState();
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const [conversations, setConversations] = useState<MessageConversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState("");
   const [draftRecipient, setDraftRecipient] = useState<MessageUser | null>(null);
@@ -78,56 +81,121 @@ export function MessageCenterPage() {
   const [isSearchBusy, setIsSearchBusy] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
+  const [pageNotice, setPageNotice] = useState("");
+  const [conversationToDelete, setConversationToDelete] = useState<MessageConversation | null>(null);
+  const [isDeletingConversation, setIsDeletingConversation] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadMessages = useCallback(async () => {
+  const loadMessages = useCallback(async (options?: { silent?: boolean }) => {
     if (!isAuthenticated) {
       return;
     }
 
-    setIsLoading(true);
+    if (!options?.silent) {
+      setIsLoading(true);
+    }
+
     const response = await fetch("/api/messages", {
       cache: "no-store",
       credentials: "same-origin",
     });
 
     if (!response.ok) {
-      setStatusMessage(
-        locale === "en"
-          ? "Could not load message conversations."
-          : "Không thể tải các cuộc trò chuyện.",
-      );
-      setIsLoading(false);
+      if (!options?.silent) {
+        setStatusMessage(
+          locale === "en"
+            ? "Could not load message conversations."
+            : "Không thể tải các cuộc trò chuyện.",
+        );
+        setIsLoading(false);
+      }
       return;
     }
 
     const payload = (await response.json()) as { conversations: MessageConversation[] };
+    const params = new URLSearchParams(window.location.search);
+    const requestedConversationId = params.get("conversation") ?? "";
+    const requestedRecipientId = params.get("recipient") ?? "";
+    const requestedRecipientConversation = requestedRecipientId
+      ? payload.conversations.find((conversation) => conversation.participant?.id === requestedRecipientId)
+      : null;
+
     setConversations(payload.conversations);
-    setActiveConversationId((current) => {
-      if (current && payload.conversations.some((conversation) => conversation.id === current)) {
-        return current;
-      }
 
-      const params = new URLSearchParams(window.location.search);
-      const requestedConversationId = params.get("conversation") ?? "";
-      if (
-        requestedConversationId &&
-        payload.conversations.some((conversation) => conversation.id === requestedConversationId)
-      ) {
-        return requestedConversationId;
-      }
+    if (requestedRecipientConversation) {
+      setDraftRecipient(null);
+      setActiveConversationId(requestedRecipientConversation.id);
+      window.history.replaceState(null, "", conversationUrl(requestedRecipientConversation.id));
+    } else if (requestedRecipientId) {
+      const userResponse = await fetch(`/api/messages/users?userId=${encodeURIComponent(requestedRecipientId)}`, {
+        cache: "no-store",
+        credentials: "same-origin",
+      });
+      const userPayload = userResponse.ok
+        ? ((await userResponse.json()) as { user: MessageUser | null })
+        : { user: null };
 
-      return payload.conversations[0]?.id ?? "";
-    });
-    setIsLoading(false);
-  }, [isAuthenticated, locale]);
+      if (userPayload.user) {
+        setDraftRecipient(userPayload.user);
+        setActiveConversationId("");
+        window.history.replaceState(null, "", "/messages");
+      } else if (!options?.silent) {
+        setStatusMessage(
+          locale === "en"
+            ? "Could not open a private message with this user."
+            : "Không thể mở tin nhắn riêng với người dùng này.",
+        );
+      }
+    } else {
+      setActiveConversationId((current) => {
+        if (options?.silent && draftRecipient) {
+          return current;
+        }
+
+        if (current && payload.conversations.some((conversation) => conversation.id === current)) {
+          return current;
+        }
+
+        if (
+          requestedConversationId &&
+          payload.conversations.some((conversation) => conversation.id === requestedConversationId)
+        ) {
+          return requestedConversationId;
+        }
+
+        return payload.conversations[0]?.id ?? "";
+      });
+    }
+
+    if (!options?.silent) {
+      setIsLoading(false);
+    }
+  }, [draftRecipient, isAuthenticated, locale]);
 
   useEffect(() => {
     queueMicrotask(() => {
       void loadMessages();
     });
   }, [loadMessages]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    const refresh = () => void loadMessages({ silent: true });
+    const intervalId = window.setInterval(refresh, 4000);
+
+    window.addEventListener("focus", refresh);
+    window.addEventListener("attacker-messages-refresh", refresh);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("attacker-messages-refresh", refresh);
+    };
+  }, [isAuthenticated, loadMessages]);
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === activeConversationId),
@@ -138,7 +206,14 @@ export function MessageCenterPage() {
   const activeMessages = activeConversation?.messages ?? [];
   const canSendMessage = Boolean(draftRecipient || activeConversation?.canSendMessage);
   const showFirstMessageNotice = Boolean(draftRecipient || (activeConversation && activeMessages.length === 0));
+  const showReceiverFirstMessageNotice = Boolean(
+    activeConversation && activeMessages.length === 1 && activeMessages[0]?.senderId !== currentUser.id,
+  );
   const requestPending = Boolean(activeConversation?.requestPending);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [activeConversationId, activeMessages.length]);
 
   useEffect(() => {
     if (!activeConversation || activeConversation.unreadCount <= 0) {
@@ -278,9 +353,87 @@ export function MessageCenterPage() {
     setDraftRecipient(null);
     setActiveConversationId(payload.conversationId);
     window.history.replaceState(null, "", conversationUrl(payload.conversationId));
+    window.dispatchEvent(new Event("attacker-messages-refresh"));
     window.dispatchEvent(new Event("attacker-notifications-refresh"));
     setIsSending(false);
   };
+
+  const handleComposerKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key !== "Enter" || event.shiftKey) {
+      return;
+    }
+
+    event.preventDefault();
+    void handleSendMessage();
+  };
+
+  const closeDeleteDialog = useCallback(() => {
+    if (isDeletingConversation) {
+      return;
+    }
+
+    setConversationToDelete(null);
+  }, [isDeletingConversation]);
+
+  const confirmDeleteConversation = async () => {
+    if (!conversationToDelete) {
+      return;
+    }
+
+    setIsDeletingConversation(true);
+    const deletedConversationId = conversationToDelete.id;
+    const response = await fetch(`/api/messages/conversations/${deletedConversationId}`, {
+      method: "DELETE",
+      credentials: "same-origin",
+    });
+
+    setIsDeletingConversation(false);
+    setConversationToDelete(null);
+
+    if (!response.ok) {
+      setStatusMessage(
+        locale === "en"
+          ? "Could not delete this conversation."
+          : "Không thể xóa cuộc trò chuyện này.",
+      );
+      return;
+    }
+
+    const nextConversations = conversations.filter((conversation) => conversation.id !== deletedConversationId);
+    setConversations(nextConversations);
+    if (activeConversationId === deletedConversationId) {
+      setActiveConversationId(nextConversations[0]?.id ?? "");
+      setDraftRecipient(null);
+      window.history.replaceState(
+        null,
+        "",
+        nextConversations[0] ? conversationUrl(nextConversations[0].id) : "/messages",
+      );
+    }
+    setPageNotice(
+      locale === "en"
+        ? "Conversation deleted from your message center."
+        : "Đã xóa cuộc trò chuyện khỏi trung tâm tin nhắn của bạn.",
+    );
+    window.dispatchEvent(new Event("attacker-notifications-refresh"));
+  };
+
+  useEffect(() => {
+    if (!conversationToDelete) {
+      return;
+    }
+
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeDeleteDialog();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [closeDeleteDialog, conversationToDelete]);
 
   if (authStatus === "loading") {
     return (
@@ -314,20 +467,22 @@ export function MessageCenterPage() {
 
   return (
     <div className="space-y-6">
+      {pageNotice ? (
+        <div className="rounded-[1.35rem] border border-emerald-300/40 bg-emerald-400/12 px-5 py-4 text-sm font-semibold text-emerald-800 shadow-[0_18px_42px_rgba(16,185,129,0.12)] dark:text-emerald-100">
+          {pageNotice}
+        </div>
+      ) : null}
       <section className="theme-card-shadow-soft overflow-hidden rounded-[2rem] border theme-border-strong theme-panel">
         <div className="grid min-h-[720px] lg:grid-cols-[360px_minmax(0,1fr)]">
           <aside className="border-b theme-border bg-white/42 p-4 dark:bg-white/4 lg:border-b-0 lg:border-r">
-            <div className="flex items-start gap-3 px-1 py-2">
+            <div className="flex items-center gap-3 px-1 py-2">
               <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-400/24 bg-sky-500/12 text-sky-600 dark:text-sky-200">
                 <MessageCircle className="h-5 w-5" />
               </span>
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] theme-eyebrow">
                   {locale === "en" ? "Message center" : "Trung tâm tin nhắn"}
                 </p>
-                <h1 className="theme-heading mt-1 text-2xl font-semibold theme-text-strong">
-                  {locale === "en" ? "Conversations" : "Cuộc trò chuyện"}
-                </h1>
               </div>
             </div>
 
@@ -385,39 +540,51 @@ export function MessageCenterPage() {
                   const isActive = conversation.id === activeConversationId;
 
                   return (
-                    <button
-                      type="button"
+                    <div
                       key={conversation.id}
-                      onClick={() => openConversation(conversation.id)}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-[1.35rem] border px-3 py-3 text-left transition",
+                        "group flex items-center gap-2 rounded-[1.35rem] border px-3 py-3 transition",
                         isActive
                           ? "border-sky-300/38 bg-sky-500/12 shadow-[0_16px_38px_rgba(14,165,233,0.12)]"
                           : "theme-border theme-panel-subtle hover:border-sky-300/26 hover:bg-[rgba(23,114,208,0.06)]",
                       )}
                     >
-                      <GradientAvatar
-                        label={participant?.name ?? "User"}
-                        tone={participant?.avatarTone ?? "from-sky-500 via-cyan-400 to-emerald-400"}
-                        imageSrc={participant?.avatarImageSrc}
-                        className="h-11 w-11 shrink-0 rounded-full text-xs"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="flex items-center justify-between gap-2">
-                          <span className="truncate text-sm font-semibold theme-text-strong">
-                            {participant?.name ?? (locale === "en" ? "User" : "Người dùng")}
-                          </span>
-                          {conversation.unreadCount > 0 ? (
-                            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-sky-500 px-1.5 text-[0.68rem] font-bold text-white">
-                              {conversation.unreadCount}
+                      <button
+                        type="button"
+                        onClick={() => openConversation(conversation.id)}
+                        className="flex min-w-0 flex-1 items-center gap-3 text-left"
+                      >
+                        <GradientAvatar
+                          label={participant?.name ?? "User"}
+                          tone={participant?.avatarTone ?? "from-sky-500 via-cyan-400 to-emerald-400"}
+                          imageSrc={participant?.avatarImageSrc}
+                          className="h-11 w-11 shrink-0 rounded-full text-xs"
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center justify-between gap-2">
+                            <span className="truncate text-sm font-semibold theme-text-strong">
+                              {participant?.name ?? (locale === "en" ? "User" : "Người dùng")}
                             </span>
-                          ) : null}
+                            {conversation.unreadCount > 0 ? (
+                              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fb7185,#f97316)] px-1.5 text-[0.68rem] font-bold text-white shadow-[0_10px_22px_rgba(249,115,22,0.24)]">
+                                {conversation.unreadCount}
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="mt-1 block truncate text-xs theme-text-muted">
+                            {conversation.latestMessage?.body ?? (locale === "en" ? "No messages yet" : "Chưa có tin nhắn")}
+                          </span>
                         </span>
-                        <span className="mt-1 block truncate text-xs theme-text-muted">
-                          {conversation.latestMessage?.body ?? (locale === "en" ? "No messages yet" : "Chưa có tin nhắn")}
-                        </span>
-                      </span>
-                    </button>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConversationToDelete(conversation)}
+                        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-transparent text-slate-400 opacity-0 transition hover:border-rose-200/70 hover:bg-rose-500/10 hover:text-rose-500 group-hover:opacity-100 focus:opacity-100 dark:hover:border-rose-300/20 dark:hover:text-rose-200"
+                        aria-label={locale === "en" ? "Delete conversation" : "Xóa cuộc trò chuyện"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   );
                 })
               ) : (
@@ -463,6 +630,24 @@ export function MessageCenterPage() {
                             {locale === "en"
                               ? "Your first message is treated as a message request. You can send only one first message until the receiver replies. After they reply, both users can continue without this limit."
                               : "Tin nhắn đầu tiên được xem như một lời đề nghị trò chuyện. Bạn chỉ được gửi một tin nhắn đầu tiên cho đến khi người nhận phản hồi. Sau khi họ trả lời, hai bên có thể nhắn tiếp không giới hạn."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {showReceiverFirstMessageNotice ? (
+                    <div className="rounded-[1.5rem] border border-sky-300/34 bg-sky-400/12 px-4 py-4">
+                      <div className="flex gap-3">
+                        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-sky-600 dark:text-sky-200" />
+                        <div>
+                          <p className="text-sm font-semibold theme-text-strong">
+                            {locale === "en" ? "New message request" : "Lời nhắn đầu tiên"}
+                          </p>
+                          <p className="mt-2 text-sm leading-7 theme-text-muted">
+                            {locale === "en"
+                              ? "This is the first message from this sender. If you reply, both of you can continue messaging without limits. If you do not want more messages from this user, simply do not answer."
+                              : "Đây là tin nhắn đầu tiên từ người gửi này. Nếu bạn trả lời, hai bên có thể tiếp tục nhắn tin không giới hạn. Nếu bạn không muốn nhận thêm tin nhắn từ người này, bạn chỉ cần không phản hồi."}
                           </p>
                         </div>
                       </div>
@@ -516,6 +701,7 @@ export function MessageCenterPage() {
                       </div>
                     </div>
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 <div className="border-t theme-border px-5 py-5 md:px-6">
@@ -528,6 +714,7 @@ export function MessageCenterPage() {
                     <textarea
                       value={messageText}
                       onChange={(event) => setMessageText(event.target.value)}
+                      onKeyDown={handleComposerKeyDown}
                       disabled={!canSendMessage || isSending}
                       rows={2}
                       maxLength={2000}
@@ -572,6 +759,67 @@ export function MessageCenterPage() {
           </section>
         </div>
       </section>
+      {conversationToDelete ? (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-conversation-title"
+            className="theme-card-shadow-soft w-full max-w-lg rounded-[1.8rem] border theme-border-strong theme-panel p-5"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                  {locale === "en" ? "Delete conversation" : "Xóa cuộc trò chuyện"}
+                </p>
+                <h2 id="delete-conversation-title" className="theme-heading mt-3 text-2xl font-semibold theme-text-strong">
+                  {locale === "en" ? "Delete this conversation?" : "Xóa cuộc trò chuyện này?"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={closeDeleteDialog}
+                disabled={isDeletingConversation}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border theme-border theme-panel-subtle theme-text-soft transition hover:border-sky-300/30 hover:text-[var(--text-strong)] disabled:opacity-50"
+                aria-label={locale === "en" ? "Close delete confirmation" : "Đóng xác nhận xóa"}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-5 rounded-[1.3rem] border border-rose-200/60 bg-rose-500/8 px-4 py-4 text-sm leading-7 text-rose-800 dark:border-rose-300/20 dark:bg-rose-400/10 dark:text-rose-100">
+              {locale === "en"
+                ? "This action cannot be reversed. The conversation will be removed only from your message center; the other person will still keep their copy."
+                : "Thao tác này không thể khôi phục. Cuộc trò chuyện chỉ bị xóa khỏi trung tâm tin nhắn của bạn; người còn lại vẫn giữ cuộc trò chuyện của họ."}
+            </div>
+
+            <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeDeleteDialog}
+                disabled={isDeletingConversation}
+                className="inline-flex items-center justify-center rounded-full border theme-border theme-panel-subtle px-5 py-3 text-sm font-semibold theme-text-strong transition hover:border-sky-300/30 disabled:opacity-50"
+              >
+                {locale === "en" ? "Close" : "Đóng"}
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteConversation}
+                disabled={isDeletingConversation}
+                className="inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#fb7185,#ef4444)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(239,68,68,0.22)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeletingConversation
+                  ? locale === "en"
+                    ? "Deleting..."
+                    : "Đang xóa..."
+                  : locale === "en"
+                    ? "Confirm delete"
+                    : "Xác nhận xóa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

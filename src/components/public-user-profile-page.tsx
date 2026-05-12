@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, BookOpen, MessageSquareText, School, UserRound } from "lucide-react";
+import { ArrowLeft, BookOpen, MessageCircle, MessageSquareText, School, UserRound } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, StatusPill, Surface } from "@/components/site-ui";
@@ -9,8 +9,9 @@ import { pickAdminUserRoleLabel } from "@/lib/admin-users";
 import type { PublicUserProfile } from "@/types/site";
 
 export function PublicUserProfilePage({ profile }: { profile: PublicUserProfile }) {
-  const { locale } = useSiteState();
+  const { currentUser, locale } = useSiteState();
   const academicLine = [profile.major, profile.classYear].filter(Boolean).join(" · ");
+  const canMessageProfile = currentUser?.id !== profile.id;
 
   return (
     <div className="space-y-8">
@@ -24,6 +25,20 @@ export function PublicUserProfilePage({ profile }: { profile: PublicUserProfile 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1.12fr)_340px]">
         <Surface className="relative overflow-hidden px-6 py-6 md:px-8 md:py-8">
           <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(135deg,rgba(23,114,208,0.18),rgba(14,165,233,0.08),transparent)]" />
+          {canMessageProfile ? (
+            <div className="group absolute right-5 top-5 z-10 inline-flex">
+              <Link
+                href={`/messages?recipient=${encodeURIComponent(profile.id)}`}
+                aria-label={locale === "en" ? "Send private message" : "Gửi tin nhắn riêng"}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-sky-300/30 bg-white/82 text-sky-600 shadow-[0_16px_34px_rgba(14,165,233,0.18)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white dark:border-sky-200/18 dark:bg-white/10 dark:text-sky-200 dark:hover:bg-white/16"
+              >
+                <MessageCircle className="h-5 w-5" />
+              </Link>
+              <span className="pointer-events-none absolute right-0 top-full mt-3 whitespace-nowrap rounded-full bg-slate-950 px-3 py-1.5 text-[0.68rem] font-semibold text-white opacity-0 shadow-[0_14px_30px_rgba(15,23,42,0.2)] transition group-hover:translate-y-0.5 group-hover:opacity-100 group-focus-within:translate-y-0.5 group-focus-within:opacity-100 dark:bg-white dark:text-slate-950">
+                {locale === "en" ? "Send private message" : "Gửi tin nhắn riêng"}
+              </span>
+            </div>
+          ) : null}
           <div className="relative flex flex-col gap-6 md:flex-row md:items-start">
             <GradientAvatar
               label={profile.name}

@@ -150,7 +150,7 @@ function NotificationMenu({
 
     const intervalId = window.setInterval(() => {
       void refreshNotifications();
-    }, 30000);
+    }, 10000);
     const handleRefresh = () => void refreshNotifications();
 
     window.addEventListener("focus", handleRefresh);
@@ -199,6 +199,14 @@ function NotificationMenu({
     return item.description;
   };
 
+  const getItemBadgeLabel = (item: HeaderNotificationItem) => {
+    if (item.type === "message") {
+      return locale === "en" ? `${item.count} unread` : `${item.count} chưa đọc`;
+    }
+
+    return locale === "en" ? "Invite" : "Lời mời";
+  };
+
   return (
     <div ref={menuRef} className="relative">
       <button
@@ -211,7 +219,7 @@ function NotificationMenu({
       >
         <Bell className="h-4 w-4 theme-accent" />
         {unreadCount > 0 ? (
-          <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-white bg-sky-500 px-1 text-[0.65rem] font-bold leading-none text-white shadow-[0_10px_22px_rgba(14,165,233,0.28)]">
+          <span className="absolute -right-1.5 -top-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full border border-white bg-[linear-gradient(135deg,#fb7185,#f97316)] px-1 text-[0.65rem] font-bold leading-none text-white shadow-[0_12px_24px_rgba(249,115,22,0.34)]">
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         ) : null}
@@ -226,9 +234,6 @@ function NotificationMenu({
             <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
               {locale === "en" ? "Notifications" : "Thông báo"}
             </p>
-            <p className="mt-1 text-sm theme-text-muted">
-              {locale === "en" ? "Unread items that need your attention." : "Các mục chưa đọc cần bạn chú ý."}
-            </p>
           </div>
           <div className="max-h-[22rem] overflow-y-auto">
             {items.map((item) => (
@@ -242,13 +247,7 @@ function NotificationMenu({
                 <span className="flex items-center justify-between gap-3">
                   <span className="truncate text-sm font-semibold theme-text-strong">{item.title}</span>
                   <span className="shrink-0 rounded-full border theme-border bg-white/50 px-2 py-0.5 text-[0.65rem] font-semibold theme-text-soft dark:bg-white/6">
-                    {item.type === "message"
-                      ? locale === "en"
-                        ? "Message"
-                        : "Tin nhắn"
-                      : locale === "en"
-                        ? "Invite"
-                        : "Lời mời"}
+                    {getItemBadgeLabel(item)}
                   </span>
                 </span>
                 <span className="line-clamp-2 text-xs leading-5 theme-text-muted">{getItemDescription(item)}</span>
