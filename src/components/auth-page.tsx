@@ -20,7 +20,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { pickText } from "@/lib/site";
-import type { Locale, LocalizedText } from "@/types/site";
+import type { LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
 
@@ -80,6 +80,10 @@ function requiredFieldLabel(label: string) {
   return `${label} (*)`;
 }
 
+function createAuthMessage(en: string, vi: string): LocalizedText {
+  return { en, vi };
+}
+
 type RegistrationFormState = {
   name: string;
   email: string;
@@ -101,7 +105,7 @@ type RegisterErrorPayload = {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function getRegistrationFieldGuidance(locale: Locale, field: keyof RegistrationFormState | "turnstileToken") {
+function getRegistrationFieldGuidance(field: keyof RegistrationFormState | "turnstileToken") {
   const messages: Record<string, LocalizedText> = {
     name: {
       en: "Enter your full name so organizers and team leaders can identify your profile.",
@@ -145,10 +149,10 @@ function getRegistrationFieldGuidance(locale: Locale, field: keyof RegistrationF
     },
   };
 
-  return pickText(locale, messages[field]);
+  return messages[field];
 }
 
-function getRegistrationInputMessage(form: RegistrationFormState, locale: Locale) {
+function getRegistrationInputMessage(form: RegistrationFormState) {
   const trimmedForm = {
     name: form.name.trim(),
     email: form.email.trim(),
@@ -160,51 +164,52 @@ function getRegistrationInputMessage(form: RegistrationFormState, locale: Locale
   };
 
   if (!trimmedForm.name) {
-    return getRegistrationFieldGuidance(locale, "name");
+    return getRegistrationFieldGuidance("name");
   }
 
   if (!trimmedForm.email || !emailPattern.test(trimmedForm.email)) {
-    return getRegistrationFieldGuidance(locale, "email");
+    return getRegistrationFieldGuidance("email");
   }
 
   if (!trimmedForm.university) {
-    return getRegistrationFieldGuidance(locale, "university");
+    return getRegistrationFieldGuidance("university");
   }
 
   if (!trimmedForm.major) {
-    return getRegistrationFieldGuidance(locale, "major");
+    return getRegistrationFieldGuidance("major");
   }
 
   if (!trimmedForm.studentId) {
-    return getRegistrationFieldGuidance(locale, "studentId");
+    return getRegistrationFieldGuidance("studentId");
   }
 
   if (!trimmedForm.classYear) {
-    return getRegistrationFieldGuidance(locale, "classYear");
+    return getRegistrationFieldGuidance("classYear");
   }
 
   if (trimmedForm.bio.length > 600) {
-    return getRegistrationFieldGuidance(locale, "bio");
+    return getRegistrationFieldGuidance("bio");
   }
 
   if (!form.password || form.password.length < 8) {
-    return getRegistrationFieldGuidance(locale, "password");
+    return getRegistrationFieldGuidance("password");
   }
 
   if (!form.confirmPassword) {
-    return getRegistrationFieldGuidance(locale, "confirmPassword");
+    return getRegistrationFieldGuidance("confirmPassword");
   }
 
   if (form.password !== form.confirmPassword) {
-    return locale === "en"
-      ? "The confirmation password must match the password exactly. Please check both fields."
-      : "Mật khẩu xác nhận phải trùng hoàn toàn với mật khẩu đã nhập. Vui lòng kiểm tra lại cả hai trường.";
+    return createAuthMessage(
+      "The confirmation password must match the password exactly. Please check both fields.",
+      "Mật khẩu xác nhận phải trùng hoàn toàn với mật khẩu đã nhập. Vui lòng kiểm tra lại cả hai trường.",
+    );
   }
 
   return null;
 }
 
-function getRegistrationServerMessage(payload: RegisterErrorPayload, locale: Locale) {
+function getRegistrationServerMessage(payload: RegisterErrorPayload) {
   const fieldOrder: Array<keyof RegistrationFormState | "turnstileToken"> = [
     "name",
     "email",
@@ -219,34 +224,43 @@ function getRegistrationServerMessage(payload: RegisterErrorPayload, locale: Loc
   const fieldWithError = fieldOrder.find((field) => payload.issues?.fieldErrors?.[field]?.length);
 
   if (fieldWithError) {
-    return getRegistrationFieldGuidance(locale, fieldWithError);
+    return getRegistrationFieldGuidance(fieldWithError);
   }
 
   if (payload.error === "EMAIL_ALREADY_REGISTERED") {
-    return locale === "en"
-      ? "This email is already registered. Sign in with this email or use a different email address."
-      : "Email này đã được đăng ký. Hãy đăng nhập bằng email này hoặc dùng một email khác.";
+    return createAuthMessage(
+      "This email is already registered. Sign in with this email or use a different email address.",
+      "Email này đã được đăng ký. Hãy đăng nhập bằng email này hoặc dùng một email khác.",
+    );
   }
 
   if (payload.error === "STUDENT_ID_ALREADY_REGISTERED") {
-    return locale === "en"
-      ? "This student ID is already linked to an account. Check the student ID or sign in with the existing account."
-      : "Mã số sinh viên này đã gắn với một tài khoản. Hãy kiểm tra lại mã số hoặc đăng nhập bằng tài khoản đã có.";
+    return createAuthMessage(
+      "This student ID is already linked to an account. Check the student ID or sign in with the existing account.",
+      "Mã số sinh viên này đã gắn với một tài khoản. Hãy kiểm tra lại mã số hoặc đăng nhập bằng tài khoản đã có.",
+    );
   }
 
   if (payload.error === "ACCOUNT_ALREADY_EXISTS") {
-    return locale === "en"
-      ? "An account already exists with the email or student ID you entered. Please review those two fields."
-      : "Đã có tài khoản dùng email hoặc mã số sinh viên bạn vừa nhập. Vui lòng kiểm tra lại hai trường này.";
+    return createAuthMessage(
+      "An account already exists with the email or student ID you entered. Please review those two fields.",
+      "Đã có tài khoản dùng email hoặc mã số sinh viên bạn vừa nhập. Vui lòng kiểm tra lại hai trường này.",
+    );
   }
 
   if (payload.error === "Invalid registration payload.") {
-    return locale === "en"
-      ? "Some registration information is incomplete or invalid. Please review the highlighted required fields."
-      : "Một số thông tin đăng ký còn thiếu hoặc chưa hợp lệ. Vui lòng kiểm tra lại các trường bắt buộc.";
+    return createAuthMessage(
+      "Some registration information is incomplete or invalid. Please review the required fields.",
+      "Một số thông tin đăng ký còn thiếu hoặc chưa hợp lệ. Vui lòng kiểm tra lại các trường bắt buộc.",
+    );
   }
 
-  return payload.error || (locale === "en" ? "Could not create the account. Please review the form and try again." : "Không thể tạo tài khoản. Vui lòng kiểm tra lại biểu mẫu và thử lại.");
+  return payload.error
+    ? createAuthMessage(payload.error, payload.error)
+    : createAuthMessage(
+        "Could not create the account. Please review the form and try again.",
+        "Không thể tạo tài khoản. Vui lòng kiểm tra lại biểu mẫu và thử lại.",
+      );
 }
 
 function PasswordVisibilityButton({
@@ -281,10 +295,10 @@ export function AuthPage() {
   const [password, setPassword] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
   const [isTurnstileReady, setIsTurnstileReady] = useState(false);
-  const [signinMessage, setSigninMessage] = useState<string | null>(null);
+  const [signinMessage, setSigninMessage] = useState<string | LocalizedText | null>(null);
   const [signinMessageTone, setSigninMessageTone] = useState<"info" | "success" | "warning" | "error">("info");
   const [signinActionHref, setSigninActionHref] = useState<string | null>(null);
-  const [signinActionLabel, setSigninActionLabel] = useState<string | null>(null);
+  const [signinActionLabel, setSigninActionLabel] = useState<string | LocalizedText | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [isSigninPasswordVisible, setIsSigninPasswordVisible] = useState(false);
   const [isRegisterPasswordVisible, setIsRegisterPasswordVisible] = useState(false);
@@ -374,10 +388,14 @@ export function AuthPage() {
         setSigninActionHref(null);
         setSigninActionLabel(null);
         setSigninMessageTone("warning");
+        const nextAction = mode === "register"
+          ? createAuthMessage("creating the account", "tạo tài khoản")
+          : createAuthMessage("signing in", "đăng nhập");
         setSigninMessage(
-          locale === "en"
-            ? `The security check expired. Please confirm it again before ${mode === "register" ? "creating the account" : "signing in"}.`
-            : `Mã xác minh bảo mật đã hết hạn. Vui lòng xác nhận lại trước khi ${mode === "register" ? "tạo tài khoản" : "đăng nhập"}.`,
+          createAuthMessage(
+            `The security check expired. Please confirm it again before ${nextAction.en}.`,
+            `Mã xác minh bảo mật đã hết hạn. Vui lòng xác nhận lại trước khi ${nextAction.vi}.`,
+          ),
         );
       },
       "error-callback": () => {
@@ -386,13 +404,14 @@ export function AuthPage() {
         setSigninActionLabel(null);
         setSigninMessageTone("error");
         setSigninMessage(
-          locale === "en"
-            ? "The security check could not load. Please refresh and try again."
-            : "Khối xác minh bảo mật không tải được. Vui lòng tải lại trang và thử lại.",
+          createAuthMessage(
+            "The security check could not load. Please refresh and try again.",
+            "Khối xác minh bảo mật không tải được. Vui lòng tải lại trang và thử lại.",
+          ),
         );
       },
     });
-  }, [isTurnstileReady, locale, mode, theme]);
+  }, [isTurnstileReady, mode, theme]);
 
   const handleRegisterFieldChange =
     (field: keyof typeof registerForm) =>
@@ -470,9 +489,10 @@ export function AuthPage() {
     if (!turnstileToken) {
       setSigninMessageTone("warning");
       setSigninMessage(
-        locale === "en"
-          ? "Please complete the security check before signing in."
-          : "Vui lòng hoàn tất bước xác minh bảo mật trước khi đăng nhập.",
+        createAuthMessage(
+          "Please complete the security check before signing in.",
+          "Vui lòng hoàn tất bước xác minh bảo mật trước khi đăng nhập.",
+        ),
       );
       return;
     }
@@ -495,9 +515,10 @@ export function AuthPage() {
       if (result.error === "CAPTCHA_FAILED") {
         setSigninMessageTone("error");
         setSigninMessage(
-          locale === "en"
-            ? "Security verification failed. Please try the CAPTCHA again."
-            : "Xác minh bảo mật không thành công. Vui lòng thử lại CAPTCHA.",
+          createAuthMessage(
+            "Security verification failed. Please try the CAPTCHA again.",
+            "Xác minh bảo mật không thành công. Vui lòng thử lại CAPTCHA.",
+          ),
         );
         setIsBusy(false);
         return;
@@ -510,13 +531,14 @@ export function AuthPage() {
           }`,
         );
         setSigninActionLabel(
-          locale === "en" ? "Open activation help" : "Mở hướng dẫn kích hoạt",
+          createAuthMessage("Open activation help", "Mở hướng dẫn kích hoạt"),
         );
         setSigninMessageTone("warning");
         setSigninMessage(
-          locale === "en"
-            ? "This account is not active yet. Please open the activation email first."
-            : "Tài khoản này chưa được kích hoạt. Vui lòng mở email kích hoạt trước.",
+          createAuthMessage(
+            "This account is not active yet. Please open the activation email first.",
+            "Tài khoản này chưa được kích hoạt. Vui lòng mở email kích hoạt trước.",
+          ),
         );
         setIsBusy(false);
         return;
@@ -524,9 +546,10 @@ export function AuthPage() {
 
       setSigninMessageTone("error");
       setSigninMessage(
-        locale === "en"
-          ? "Invalid credentials. Please check your account ID or password."
-          : "Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại ID tài khoản hoặc mật khẩu.",
+        createAuthMessage(
+          "Invalid credentials. Please check your account ID or password.",
+          "Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại ID tài khoản hoặc mật khẩu.",
+        ),
       );
       setIsBusy(false);
       return;
@@ -543,7 +566,7 @@ export function AuthPage() {
   };
 
   const handleRegister = async () => {
-    const registrationInputMessage = getRegistrationInputMessage(registerForm, locale);
+    const registrationInputMessage = getRegistrationInputMessage(registerForm);
     if (registrationInputMessage) {
       setSigninMessageTone("warning");
       setSigninMessage(registrationInputMessage);
@@ -553,16 +576,17 @@ export function AuthPage() {
     if (!HAS_TURNSTILE_SITE_KEY) {
       setSigninMessageTone("warning");
       setSigninMessage(
-        locale === "en"
-          ? "The registration security check is not available yet. Please contact the organizer before creating an account."
-          : "Bước xác minh bảo mật cho đăng ký chưa sẵn sàng. Vui lòng liên hệ ban tổ chức trước khi tạo tài khoản.",
+        createAuthMessage(
+          "The registration security check is not available yet. Please contact the organizer before creating an account.",
+          "Bước xác minh bảo mật cho đăng ký chưa sẵn sàng. Vui lòng liên hệ ban tổ chức trước khi tạo tài khoản.",
+        ),
       );
       return;
     }
 
     if (!turnstileToken) {
       setSigninMessageTone("warning");
-      setSigninMessage(getRegistrationFieldGuidance(locale, "turnstileToken"));
+      setSigninMessage(getRegistrationFieldGuidance("turnstileToken"));
       return;
     }
 
@@ -591,24 +615,31 @@ export function AuthPage() {
           resetTurnstileWidget();
           setSigninMessageTone("error");
           setSigninMessage(
-            locale === "en"
-              ? "Security verification failed. Please try the CAPTCHA again."
-              : "Xác minh bảo mật không thành công. Vui lòng thử lại CAPTCHA.",
+            createAuthMessage(
+              "Security verification failed. Please try the CAPTCHA again.",
+              "Xác minh bảo mật không thành công. Vui lòng thử lại CAPTCHA.",
+            ),
           );
         } else if (payload.error === "CAPTCHA_NOT_CONFIGURED") {
           setSigninMessageTone("warning");
           setSigninMessage(
-            locale === "en"
-              ? "Security verification is not configured yet. Please ask the organizer to configure Cloudflare Turnstile."
-              : "Xác minh bảo mật chưa được cấu hình. Vui lòng yêu cầu ban tổ chức cấu hình Cloudflare Turnstile.",
+            createAuthMessage(
+              "Security verification is not configured yet. Please ask the organizer to configure Cloudflare Turnstile.",
+              "Xác minh bảo mật chưa được cấu hình. Vui lòng yêu cầu ban tổ chức cấu hình Cloudflare Turnstile.",
+            ),
           );
         } else {
           setSigninMessageTone("error");
-          setSigninMessage(getRegistrationServerMessage(payload, locale));
+          setSigninMessage(getRegistrationServerMessage(payload));
         }
       } catch {
         setSigninMessageTone("error");
-        setSigninMessage(locale === "en" ? "Could not create the account. Please review the form and try again." : "Không thể tạo tài khoản. Vui lòng kiểm tra lại biểu mẫu và thử lại.");
+        setSigninMessage(
+          createAuthMessage(
+            "Could not create the account. Please review the form and try again.",
+            "Không thể tạo tài khoản. Vui lòng kiểm tra lại biểu mẫu và thử lại.",
+          ),
+        );
       }
       setIsBusy(false);
       return;
@@ -1120,7 +1151,9 @@ export function AuthPage() {
                               ? "Notice"
                               : "Thông báo"}
                     </p>
-                    <p className="mt-2 text-sm font-medium leading-7 theme-text-strong">{signinMessage}</p>
+                    <p className="mt-2 text-sm font-medium leading-7 theme-text-strong">
+                      {typeof signinMessage === "string" ? signinMessage : pickText(locale, signinMessage)}
+                    </p>
                   </div>
                 </div>
                 {signinActionHref && signinActionLabel ? (
@@ -1128,7 +1161,7 @@ export function AuthPage() {
                     href={signinActionHref}
                     className="inline-flex items-center gap-2 rounded-full border border-slate-900/10 bg-white/72 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:border-sky-500/28 hover:bg-white/92 active:scale-[0.98] dark:border-white/10 dark:bg-white/6 dark:text-white dark:hover:bg-white/10"
                   >
-                    {signinActionLabel}
+                    {typeof signinActionLabel === "string" ? signinActionLabel : pickText(locale, signinActionLabel)}
                   </Link>
                 ) : null}
               </div>

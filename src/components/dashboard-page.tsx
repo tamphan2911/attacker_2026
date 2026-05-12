@@ -274,16 +274,13 @@ export function DashboardPage() {
         <h1 className="theme-heading mt-4 text-3xl font-semibold theme-text-strong">
           {locale === "en" ? "Sign in to open the team workspace." : "Đăng nhập để mở Đội thi."}
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-sm leading-7 theme-text-soft">
-          {locale === "en"
-            ? "Team management is now connected to backend sessions and APIs."
-            : "Phần quản lý đội hiện đã được kết nối với session và API backend."}
-        </p>
         <Link
           href="/auth"
-          className="theme-button-primary mt-6 inline-flex rounded-[1.4rem] px-5 py-3 text-sm font-semibold"
+          className="mt-7 inline-flex items-center justify-center gap-2 rounded-full border border-sky-300/45 bg-[linear-gradient(135deg,rgba(56,189,248,0.95),rgba(37,99,235,0.95))] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(37,99,235,0.22)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_48px_rgba(37,99,235,0.28)] active:translate-y-0 dark:border-white/12"
         >
+          <LockKeyhole className="h-4 w-4" />
           {locale === "en" ? "Open sign in" : "Mở đăng nhập"}
+          <ArrowRight className="h-4 w-4" />
         </Link>
       </Surface>
     );
