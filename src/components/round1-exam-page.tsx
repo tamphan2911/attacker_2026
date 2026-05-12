@@ -31,6 +31,7 @@ import {
 import {
   ROUND1_ESSAY_TOTAL,
   ROUND1_ESSAY_MAX_SCORE,
+  ROUND1_ESSAY_MIN_WORDS,
   ROUND1_ESSAY_WORD_LIMIT,
   ROUND1_OBJECTIVE_MAX_SCORE,
   ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC,
@@ -41,6 +42,7 @@ import {
   countWords,
   getActiveRound1Bank,
   isRound1QuestionAnswered,
+  limitEssayToWordCount,
   pickRound1QuestionText,
   pickRound1TypeLabel,
   type Round1PaperQuestion,
@@ -218,8 +220,8 @@ function Round1ConfirmDialog({
           {essayWarning ? (
             <div className="rounded-[1.4rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
               {locale === "en"
-                ? "One of the essay responses is over the 500-word limit. Consider shortening it before submitting."
-                : "Có câu tự luận đang vượt quá giới hạn 500 từ. Hãy cân nhắc rút gọn trước khi nộp."}
+                ? `Each essay answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words and no more than ${ROUND1_ESSAY_WORD_LIMIT} words before manual submission.`
+                : `Mỗi câu tự luận cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ và không vượt quá ${ROUND1_ESSAY_WORD_LIMIT} từ trước khi nộp thủ công.`}
             </div>
           ) : null}
 
@@ -289,12 +291,14 @@ export function Round1ExamPage() {
   const [pageError, setPageError] = useState<string | null>(null);
   const [captureWarning, setCaptureWarning] = useState<string | null>(null);
   const [essayPasteWarning, setEssayPasteWarning] = useState<string | null>(null);
+  const [essayWordLimitWarning, setEssayWordLimitWarning] = useState<string | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const sessionRef = useRef<Round1ExamSession | null>(null);
   const submissionRef = useRef<Round1Submission | null>(null);
   const submitInFlightRef = useRef(false);
   const captureWarningTimeoutRef = useRef<number | null>(null);
   const essayPasteWarningTimeoutRef = useRef<number | null>(null);
+  const essayWordLimitWarningTimeoutRef = useRef<number | null>(null);
 
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
@@ -335,10 +339,30 @@ export function Round1ExamPage() {
     }, 4200);
   }, [locale]);
 
+  const showEssayWordLimitWarning = useCallback(() => {
+    if (essayWordLimitWarningTimeoutRef.current) {
+      window.clearTimeout(essayWordLimitWarningTimeoutRef.current);
+    }
+
+    setEssayWordLimitWarning(
+      locale === "en"
+        ? `Essay answers are limited to ${round1WordLimit} words. Extra words cannot be added.`
+        : `Câu trả lời tự luận giới hạn ${round1WordLimit} từ. Bạn không thể nhập thêm vượt quá giới hạn này.`,
+    );
+
+    essayWordLimitWarningTimeoutRef.current = window.setTimeout(() => {
+      setEssayWordLimitWarning(null);
+      essayWordLimitWarningTimeoutRef.current = null;
+    }, 4200);
+  }, [locale, round1WordLimit]);
+
   useEffect(
     () => () => {
       if (essayPasteWarningTimeoutRef.current) {
         window.clearTimeout(essayPasteWarningTimeoutRef.current);
+      }
+      if (essayWordLimitWarningTimeoutRef.current) {
+        window.clearTimeout(essayWordLimitWarningTimeoutRef.current);
       }
     },
     [],
@@ -698,6 +722,32 @@ export function Round1ExamPage() {
     [locale],
   );
 
+  const getEssayWordRequirementError = useCallback(
+    (targetSession: Round1ExamSession) => {
+      const essayQuestions = targetSession.questions.slice(ROUND1_OBJECTIVE_TOTAL);
+
+      for (const question of essayQuestions) {
+        const wordCount = countWords(targetSession.answers[question.id]?.essayText ?? "");
+        const questionNumber = question.paperOrder;
+
+        if (wordCount < ROUND1_ESSAY_MIN_WORDS) {
+          return locale === "en"
+            ? `Essay question ${questionNumber} needs more than ${ROUND1_ESSAY_MIN_WORDS - 1} words before submission. It currently has ${wordCount} words.`
+            : `Câu tự luận ${questionNumber} cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ trước khi nộp. Hiện câu này có ${wordCount} từ.`;
+        }
+
+        if (wordCount > round1WordLimit) {
+          return locale === "en"
+            ? `Essay question ${questionNumber} is above the ${round1WordLimit}-word maximum. Please shorten it before submitting.`
+            : `Câu tự luận ${questionNumber} đang vượt quá giới hạn ${round1WordLimit} từ. Vui lòng rút gọn trước khi nộp.`;
+        }
+      }
+
+      return null;
+    },
+    [locale, round1WordLimit],
+  );
+
   const remainingSeconds = session
     ? Math.max(0, Math.ceil((new Date(session.deadlineAt).getTime() - nowMs) / 1000))
     : 0;
@@ -781,6 +831,14 @@ export function Round1ExamPage() {
   const handleConfirmSubmit = async () => {
     if (!session) {
       return;
+    }
+
+    if (remainingSeconds > 0) {
+      const essayRequirementError = getEssayWordRequirementError(session);
+      if (essayRequirementError) {
+        setDialogError(essayRequirementError);
+        return;
+      }
     }
 
     await submitExamAttempt(session);
@@ -908,6 +966,9 @@ export function Round1ExamPage() {
     currentQuestion?.type === "essay"
       ? countWords(currentResponse?.essayText ?? "")
       : 0;
+  const currentEssayRemainingWords = Math.max(0, round1WordLimit - currentEssayWordCount);
+  const currentEssayMeetsMinimum =
+    currentQuestion?.type === "essay" && currentEssayWordCount >= ROUND1_ESSAY_MIN_WORDS;
   const currentEssayExceedsLimit = currentQuestion?.type === "essay" && currentEssayWordCount > round1WordLimit;
   const watermarkLabel =
     session && currentTeam
@@ -1223,8 +1284,8 @@ export function Round1ExamPage() {
                         : "Khối tự luận",
                     body:
                       locale === "en"
-                        ? `${ROUND1_ESSAY_TOTAL} essay questions stay at the end of the paper. Each answer is limited to ${round1WordLimit} words and reviewed manually later.`
-                        : `${ROUND1_ESSAY_TOTAL} câu tự luận luôn nằm ở cuối đề. Mỗi câu trả lời giới hạn ${round1WordLimit} từ và sẽ được chấm thủ công sau đó.`,
+                        ? `${ROUND1_ESSAY_TOTAL} essay questions stay at the end of the paper. Each answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words, cannot exceed ${round1WordLimit} words, and is reviewed manually later.`
+                        : `${ROUND1_ESSAY_TOTAL} câu tự luận luôn nằm ở cuối đề. Mỗi câu trả lời cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ, không vượt quá ${round1WordLimit} từ và sẽ được chấm thủ công sau đó.`,
                   },
                   {
                     icon: <ShieldCheck className="h-5 w-5 text-amber-300" />,
@@ -1713,7 +1774,17 @@ export function Round1ExamPage() {
                     <p className="mt-3 text-sm leading-7 theme-text-muted">
                       {pickRound1QuestionText(currentQuestion.rubricNote ?? { en: "", vi: "" })}
                     </p>
+                    <p className="mt-3 rounded-[1.15rem] border border-sky-500/18 bg-sky-500/10 px-4 py-3 text-sm leading-7 text-slate-800 dark:border-sky-300/18 dark:bg-sky-300/10 dark:text-sky-100">
+                      {locale === "en"
+                        ? `This essay answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words and no more than ${round1WordLimit} words. The counter below updates while you type.`
+                        : `Câu trả lời tự luận này cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ và không vượt quá ${round1WordLimit} từ. Bộ đếm bên dưới sẽ cập nhật khi bạn nhập.`}
+                    </p>
                     <div className="mt-4 flex flex-wrap items-center gap-3">
+                      <StatusPill tone={currentEssayMeetsMinimum ? "success" : "warning"}>
+                        {locale === "en"
+                          ? `More than ${ROUND1_ESSAY_MIN_WORDS - 1} words required`
+                          : `Cần hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ`}
+                      </StatusPill>
                       <StatusPill tone="warning">
                         {locale === "en"
                           ? `${round1WordLimit} words maximum`
@@ -1733,7 +1804,17 @@ export function Round1ExamPage() {
                     placeholder={pickRound1QuestionText(
                       currentQuestion.placeholder ?? { en: "", vi: "" },
                     )}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const typedValue = event.target.value;
+                      const limitedValue =
+                        countWords(typedValue) > round1WordLimit
+                          ? limitEssayToWordCount(typedValue, round1WordLimit)
+                          : typedValue;
+
+                      if (limitedValue !== typedValue) {
+                        showEssayWordLimitWarning();
+                      }
+
                       setSession((current) =>
                         current
                           ? {
@@ -1741,14 +1822,18 @@ export function Round1ExamPage() {
                               answers: {
                                 ...current.answers,
                                 [currentQuestion.id]: {
-                                  essayText: event.target.value,
+                                  essayText: limitedValue,
                                 },
                               },
                             }
                           : current,
-                      )
-                    }
+                      );
+                    }}
                     onPaste={(event) => {
+                      event.preventDefault();
+                      showEssayPasteWarning();
+                    }}
+                    onDrop={(event) => {
                       event.preventDefault();
                       showEssayPasteWarning();
                     }}
@@ -1762,21 +1847,46 @@ export function Round1ExamPage() {
                       </div>
                     </div>
                   ) : null}
-                  <div className="flex flex-col gap-2 text-sm leading-7 sm:flex-row sm:items-center sm:justify-between">
-                    <p className={currentEssayExceedsLimit ? "font-medium text-amber-800 dark:text-amber-100" : "theme-text-soft"}>
-                      {locale === "en"
-                        ? `${currentEssayWordCount}/${round1WordLimit} words`
-                        : `${currentEssayWordCount}/${round1WordLimit} từ`}
-                    </p>
-                    <p className={currentEssayExceedsLimit ? "text-amber-800 dark:text-amber-100" : "theme-text-soft"}>
-                      {currentEssayExceedsLimit
+                  {essayWordLimitWarning ? (
+                    <div className="rounded-[1.35rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                        <p className="font-medium">{essayWordLimitWarning}</p>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="flex flex-col gap-3 text-sm leading-7 sm:flex-row sm:items-center sm:justify-between">
+                    <p
+                      className={
+                        currentEssayMeetsMinimum
+                          ? "theme-text-soft"
+                          : "font-medium text-amber-800 dark:text-amber-100"
+                      }
+                    >
+                      {currentEssayMeetsMinimum
                         ? locale === "en"
-                          ? "You have exceeded the 500-word limit. Shorten the response before submitting."
-                          : "Bạn đã vượt quá giới hạn 500 từ. Hãy rút gọn câu trả lời trước khi nộp."
+                          ? "Minimum length met for this essay answer."
+                          : "Câu trả lời đã đạt yêu cầu độ dài tối thiểu."
                         : locale === "en"
-                          ? "Stay within the 500-word limit for this essay answer."
-                          : "Hãy giữ câu trả lời trong giới hạn 500 từ cho câu tự luận này."}
+                          ? `Write more than ${ROUND1_ESSAY_MIN_WORDS - 1} words before submitting.`
+                          : `Hãy viết dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ trước khi nộp.`}
                     </p>
+                    <div
+                      className={`inline-flex items-center justify-end gap-2 self-end rounded-full border px-3.5 py-2 text-xs font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.06)] ${
+                        currentEssayRemainingWords === 0 || currentEssayExceedsLimit
+                          ? "border-amber-500/28 bg-amber-500/12 text-amber-900 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100"
+                          : "border-sky-500/20 bg-white/76 text-slate-800 dark:border-sky-300/18 dark:bg-white/8 dark:text-sky-100"
+                      }`}
+                    >
+                      <span>
+                        {locale === "en"
+                          ? `${currentEssayRemainingWords} words remaining`
+                          : `Còn ${currentEssayRemainingWords} từ`}
+                      </span>
+                      <span className="opacity-70">
+                        {`${Math.min(currentEssayWordCount, round1WordLimit)}/${round1WordLimit}`}
+                      </span>
+                    </div>
                   </div>
                   {currentEssayAiGuard.shouldWarn ? (
                     <div className="rounded-[1.35rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
@@ -1987,7 +2097,10 @@ export function Round1ExamPage() {
         essayWarning={Boolean(
           session.questions
             .slice(ROUND1_OBJECTIVE_TOTAL)
-            .some((question) => countWords(session.answers[question.id]?.essayText ?? "") > round1WordLimit),
+            .some((question) => {
+              const wordCount = countWords(session.answers[question.id]?.essayText ?? "");
+              return wordCount < ROUND1_ESSAY_MIN_WORDS || wordCount > round1WordLimit;
+            }),
         )}
         onClose={() => {
           if (!dialogPending) {

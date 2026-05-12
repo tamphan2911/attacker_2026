@@ -26,6 +26,7 @@ import { readTimelineItems } from "@/server/timeline-items";
 import {
   createRound1ExamPaper,
   getRound1ObjectiveScore,
+  limitEssayToWordCount,
   ROUND1_ESSAY_WORD_LIMIT,
   scoreRound1Question,
   type Round1PaperQuestion,
@@ -206,6 +207,26 @@ function extractSubmittedRound1Answers(payload: unknown) {
   return record as Record<string, Round1QuestionResponse>;
 }
 
+function sanitizeRound1EssayAnswers(
+  answers: Record<string, Round1QuestionResponse> | undefined,
+) {
+  if (!answers) {
+    return answers;
+  }
+
+  return Object.fromEntries(
+    Object.entries(answers).map(([questionId, response]) => [
+      questionId,
+      typeof response?.essayText === "string"
+        ? {
+            ...response,
+            essayText: limitEssayToWordCount(response.essayText, ROUND1_ESSAY_WORD_LIMIT),
+          }
+        : response,
+    ]),
+  ) as Record<string, Round1QuestionResponse>;
+}
+
 function serializeRound1AttemptRecord(attempt: Round1ExamAttempt): PersistedRound1Attempt {
   return {
     id: attempt.id,
@@ -216,7 +237,7 @@ function serializeRound1AttemptRecord(attempt: Round1ExamAttempt): PersistedRoun
     deadlineAt: attempt.deadlineAt.toISOString(),
     currentQuestionIndex: attempt.currentQuestionIndex,
     questions: parseRound1AttemptQuestions(attempt.questions),
-    answers: parseRound1AttemptAnswers(attempt.answers),
+    answers: sanitizeRound1EssayAnswers(parseRound1AttemptAnswers(attempt.answers)) ?? {},
   };
 }
 
@@ -304,7 +325,7 @@ async function finalizeRound1AttemptRecord(
   }
 
   const questions = parseRound1AttemptQuestions(attempt.questions);
-  const answers = override?.answers ?? parseRound1AttemptAnswers(attempt.answers);
+  const answers = sanitizeRound1EssayAnswers(override?.answers ?? parseRound1AttemptAnswers(attempt.answers)) ?? {};
 
   const scoreSummary = questions.reduce(
     (result, question) => {
@@ -1335,7 +1356,7 @@ export async function saveRound1AttemptProgress(
       where: { id: attempt.id },
       data: {
         currentQuestionIndex: nextIndex,
-        answers: JSON.stringify(payload.answers),
+        answers: JSON.stringify(sanitizeRound1EssayAnswers(payload.answers) ?? {}),
       },
     });
 
@@ -1446,6 +1467,8 @@ export async function submitRound1Attempt(
       return fail(404, "Round 1 test bank not found.");
     }
 
+    const submittedAnswers = extractSubmittedRound1Answers(payload.answers);
+
     const submission = await tx.round1Submission.create({
       data: {
         bankId: payload.bankId,
@@ -1456,7 +1479,10 @@ export async function submitRound1Attempt(
         score: payload.objectiveScore,
         objectiveScore: payload.objectiveScore,
         durationMinutes: payload.durationMinutes,
-        answers: payload.answers == null ? undefined : JSON.stringify(payload.answers),
+        answers:
+          payload.answers == null
+            ? undefined
+            : JSON.stringify(sanitizeRound1EssayAnswers(submittedAnswers) ?? payload.answers),
       },
     });
 
