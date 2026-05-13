@@ -1381,10 +1381,10 @@ export function ForumPage() {
                               setActiveThreadSlug(thread.slug);
                             }
                           }}
-                          className={`group relative w-full overflow-hidden rounded-[1.25rem] border px-4 py-3 text-left transition ${
+                          className={`group relative w-full cursor-pointer overflow-hidden rounded-[1.25rem] border px-4 py-3 text-left outline-none transition-all duration-200 focus-visible:ring-4 focus-visible:ring-sky-400/18 ${
                             isClosedThread
-                              ? "border-amber-600/24 bg-amber-50/82 shadow-[0_12px_26px_rgba(245,158,11,0.06)] dark:border-amber-300/18 dark:bg-amber-300/[0.07] dark:shadow-none"
-                              : "theme-border theme-panel-subtle hover:-translate-y-0.5 hover:bg-[var(--panel)]"
+                              ? "border-amber-600/24 bg-amber-50/82 shadow-[0_12px_26px_rgba(245,158,11,0.06)] hover:-translate-y-0.5 hover:border-amber-500/44 hover:shadow-[0_18px_34px_rgba(245,158,11,0.14)] dark:border-amber-300/18 dark:bg-amber-300/[0.07] dark:shadow-none dark:hover:border-amber-200/34 dark:hover:bg-amber-300/[0.1]"
+                              : "theme-border theme-panel-subtle hover:-translate-y-0.5 hover:border-sky-400/36 hover:bg-[var(--panel)] hover:shadow-[0_18px_36px_rgba(14,165,233,0.12)] dark:hover:border-sky-200/24 dark:hover:bg-white/[0.07]"
                           }`}
                         >
                           <div className="flex items-start gap-3">
@@ -1392,11 +1392,11 @@ export function ForumPage() {
                               label={thread.author.name}
                               tone={thread.author.avatarTone}
                               imageSrc={thread.author.avatarImageSrc}
-                              className="h-10 w-10 rounded-full"
+                              className="h-10 w-10 rounded-full transition-transform duration-200 group-hover:scale-105"
                             />
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center justify-between gap-2">
-                                <p className="min-w-0 truncate text-base font-semibold leading-6 theme-text-strong">
+                                <p className="min-w-0 truncate text-base font-semibold leading-6 theme-text-strong transition-colors group-hover:text-sky-700 dark:group-hover:text-sky-200">
                                   {thread.title}
                                 </p>
                                 <span className="shrink-0 text-[0.72rem] theme-text-soft">
@@ -1432,7 +1432,7 @@ export function ForumPage() {
                                 </span>
                               </div>
 
-                              <div className="mt-3 grid gap-2 rounded-[1rem] border theme-border bg-white/72 px-3.5 py-2.5 dark:bg-white/[0.05]">
+                              <div className="mt-3 grid gap-2 rounded-[1rem] border theme-border bg-white/72 px-3.5 py-2.5 transition-colors group-hover:border-sky-400/24 group-hover:bg-sky-50/60 dark:bg-white/[0.05] dark:group-hover:border-sky-200/16 dark:group-hover:bg-sky-300/[0.06]">
                                 <p className="line-clamp-2 text-sm leading-6 theme-text-body">
                                   {trimForumPreview(thread.lastMessagePreview || thread.body, 140)}
                                 </p>
