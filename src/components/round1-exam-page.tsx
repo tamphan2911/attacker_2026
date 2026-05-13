@@ -228,7 +228,7 @@ function Round1ConfirmDialog({
           <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-3.5 text-sm leading-7 theme-text-muted">
             {locale === "en"
               ? `Technical support: ${contactInfo.email} · ${contactInfo.phone}`
-              : `Hỗ trợ kỹ thuật: ${contactInfo.email} · ${contactInfo.phone}`}
+              : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${contactInfo.phone}`}
           </div>
 
           {error ? (
@@ -1405,7 +1405,7 @@ export function Round1ExamPage() {
             <div className="mt-4 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
               {locale === "en"
                 ? `Technical support: ${contactInfo.email} · ${contactInfo.phone}`
-                : `Hỗ trợ kỹ thuật: ${contactInfo.email} · ${contactInfo.phone}`}
+                : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${contactInfo.phone}`}
             </div>
           </Surface>
         </section>
