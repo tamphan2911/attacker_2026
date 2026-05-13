@@ -23,6 +23,7 @@ import {
   Target,
   Trash2,
   Trophy,
+  UserRound,
   UsersRound,
 } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -74,6 +75,7 @@ interface TeamResultGroup {
   team: TeamProfile;
   memberRows: MemberResultRow[];
   completedRows: Array<MemberResultRow & { submission: Round1Submission }>;
+  scoredRows: Array<MemberResultRow & { submission: Round1Submission & { essayScore: number; totalScore: number } }>;
   averageObjectiveScore: number;
   averageEssayScore: number;
   averageTotalScore: number;
@@ -384,8 +386,8 @@ function buildTeamResultGroups(
       (row): row is MemberResultRow & { submission: Round1Submission & { essayScore: number; totalScore: number } } =>
         row.submission.essayScore != null && row.submission.totalScore != null,
     );
-    const averageObjectiveScore = completedRows.length
-      ? completedRows.reduce((total, row) => total + row.submission.objectiveScore, 0) / completedRows.length
+    const averageObjectiveScore = reviewedRows.length
+      ? reviewedRows.reduce((total, row) => total + row.submission.objectiveScore, 0) / reviewedRows.length
       : 0;
     const averageEssayScore = reviewedRows.length
       ? reviewedRows.reduce((total, row) => total + row.submission.essayScore, 0) / reviewedRows.length
@@ -393,11 +395,11 @@ function buildTeamResultGroups(
     const averageTotalScore = reviewedRows.length
       ? reviewedRows.reduce((total, row) => total + row.submission.totalScore, 0) / reviewedRows.length
       : 0;
-    const averageRight = completedRows.length
-      ? completedRows.reduce((total, row) => total + row.submission.rightCount, 0) / completedRows.length
+    const averageRight = reviewedRows.length
+      ? reviewedRows.reduce((total, row) => total + row.submission.rightCount, 0) / reviewedRows.length
       : 0;
-    const averageWrong = completedRows.length
-      ? completedRows.reduce((total, row) => total + row.submission.wrongCount, 0) / completedRows.length
+    const averageWrong = reviewedRows.length
+      ? reviewedRows.reduce((total, row) => total + row.submission.wrongCount, 0) / reviewedRows.length
       : 0;
     const hasPendingEssayReview = completedRows.some((row) => isRound1EssayPending(row.submission));
     const latestSubmittedAt = completedRows
@@ -408,6 +410,7 @@ function buildTeamResultGroups(
       team,
       memberRows,
       completedRows,
+      scoredRows: reviewedRows,
       averageObjectiveScore,
       averageEssayScore,
       averageTotalScore,
@@ -426,8 +429,8 @@ function buildTeamResultGroups(
       return -1;
     }
 
-    const leftReviewed = left.completedRows.length > 0 && !left.hasPendingEssayReview;
-    const rightReviewed = right.completedRows.length > 0 && !right.hasPendingEssayReview;
+    const leftReviewed = left.scoredRows.length > 0;
+    const rightReviewed = right.scoredRows.length > 0;
 
     if (leftReviewed && !rightReviewed) {
       return -1;
@@ -449,7 +452,7 @@ function buildTeamResultGroups(
   let currentRank = 0;
 
   return sorted.map((group) => {
-    if (group.completedRows.length === 0 || group.hasPendingEssayReview) {
+    if (group.scoredRows.length === 0) {
       return group;
     }
 
@@ -624,6 +627,25 @@ function SortableTableHeader({
   );
 }
 
+function WaitingEssayScoreBadge({ locale, label }: { locale: Locale; label?: string }) {
+  const badgeLabel = label ?? (locale === "en" ? "Waiting for essay score" : "Chờ điểm tự luận");
+
+  return (
+    <span className="group relative inline-flex items-center justify-center">
+      <span
+        title={badgeLabel}
+        aria-label={badgeLabel}
+        className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-amber-400/30 bg-amber-400/12 text-amber-700 shadow-[0_14px_30px_rgba(245,158,11,0.14)] dark:text-amber-200"
+      >
+        <UserRound className="h-4 w-4" />
+      </span>
+      <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-30 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-semibold opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+        {badgeLabel}
+      </span>
+    </span>
+  );
+}
+
 function buildIndividualScoreRows(
   submissions: Round1Submission[],
   teams: TeamProfile[],
@@ -692,13 +714,12 @@ function buildTeamScoreExportRows(teamGroups: TeamResultGroup[]) {
     teamTag: group.team.tag,
     members: group.memberRows.length,
     completedMembers: group.completedRows.length,
-    averageObjectiveScore: group.completedRows.length ? Number(group.averageObjectiveScore.toFixed(2)) : "",
-    averageEssayScore:
-      group.completedRows.length === 0 || group.hasPendingEssayReview ? "" : Number(group.averageEssayScore.toFixed(2)),
-    averageTotalScore:
-      group.completedRows.length === 0 || group.hasPendingEssayReview ? "" : Number(group.averageTotalScore.toFixed(2)),
+    scoredMembers: group.scoredRows.length,
+    averageObjectiveScore: group.scoredRows.length ? Number(group.averageObjectiveScore.toFixed(2)) : "",
+    averageEssayScore: group.scoredRows.length ? Number(group.averageEssayScore.toFixed(2)) : "",
+    averageTotalScore: group.scoredRows.length ? Number(group.averageTotalScore.toFixed(2)) : "",
     latestSubmittedAt: group.latestSubmittedAt ?? "",
-    standing: group.completedRows.length === 0 ? "Awaiting attempts" : group.hasPendingEssayReview ? "Essay pending" : "Reviewed",
+    standing: group.scoredRows.length === 0 ? "Waiting for score" : "Reviewed",
   }));
 }
 
@@ -708,7 +729,7 @@ function getStandingTone(group: TeamResultGroup): "info" | "success" | "warning"
   }
 
   if (!group.rank) {
-    if (group.hasPendingEssayReview) {
+    if (group.scoredRows.length === 0) {
       return "warning";
     }
 
@@ -727,12 +748,12 @@ function getStandingLabel(locale: Locale, group: TeamResultGroup) {
     return locale === "en" ? "Awaiting attempts" : "Đang chờ bài làm";
   }
 
-  if (group.completedRows.length < group.memberRows.length) {
-    return locale === "en" ? "In progress" : "Đang diễn ra";
+  if (group.scoredRows.length === 0) {
+    return locale === "en" ? "Waiting for essay score" : "Chờ điểm tự luận";
   }
 
-  if (group.hasPendingEssayReview) {
-    return locale === "en" ? "Essay review pending" : "Đang chờ chấm tự luận";
+  if (group.completedRows.length < group.memberRows.length || group.hasPendingEssayReview) {
+    return locale === "en" ? "Partially scored" : "Đã chấm một phần";
   }
 
   if ((group.rank ?? Number.POSITIVE_INFINITY) <= 50) {
@@ -1395,7 +1416,6 @@ export function AdminRound1ScoresManager() {
                     <Link href={`/admin/teams/${row.teamId}`} className="font-semibold theme-accent">
                       {row.teamName}
                     </Link>
-                    <p className="mt-1 text-xs theme-text-soft">{row.teamTag}</p>
                   </td>
                   <td className="px-4 py-4 text-center">
                     <StatusPill
@@ -1412,14 +1432,14 @@ export function AdminRound1ScoresManager() {
                   </td>
                   <td className="px-4 py-4 text-center">
                     {row.essayScore == null ? (
-                      <StatusPill tone="warning">{locale === "en" ? "Pending" : "Đang chờ"}</StatusPill>
+                      <WaitingEssayScoreBadge locale={locale} />
                     ) : (
                       <StatusPill tone="info">{`${row.essayScore.toFixed(2)} / ${ROUND1_ESSAY_MAX_SCORE}`}</StatusPill>
                     )}
                   </td>
                   <td className="px-4 py-4 text-center">
                     {row.totalScore == null ? (
-                      <StatusPill tone="warning">{locale === "en" ? "Pending" : "Đang chờ"}</StatusPill>
+                      <WaitingEssayScoreBadge locale={locale} />
                     ) : (
                       <StatusPill
                         tone={row.totalScore >= 80 ? "success" : row.totalScore >= 65 ? "info" : "warning"}
@@ -1517,7 +1537,7 @@ export function AdminRound1ScoresManager() {
                   "#",
                   locale === "en" ? "Rank" : "Hạng",
                   locale === "en" ? "Team" : "Đội",
-                  locale === "en" ? "Completed" : "Đã làm",
+                  locale === "en" ? "Scored" : "Đã chấm",
                   locale === "en" ? "Objective avg" : "TB trắc nghiệm",
                   locale === "en" ? "Essay avg" : "TB tự luận",
                   locale === "en" ? "Total avg" : "TB tổng",
@@ -1564,42 +1584,46 @@ export function AdminRound1ScoresManager() {
                     <Link href={`/admin/teams/${group.team.id}`} className="font-semibold theme-accent">
                       {group.team.name}
                     </Link>
-                    <p className="mt-1 text-xs theme-text-soft">
-                      {group.team.tag} · {locale === "en" ? `Keyword: ${group.team.track}` : `Từ khóa: ${group.team.track}`}
-                    </p>
                   </td>
                   <td className="px-4 py-4 theme-text-body">
-                    {group.completedRows.length}/{group.memberRows.length}
+                    {group.scoredRows.length}/{group.memberRows.length}
                   </td>
                   <td className="px-4 py-4 text-center">
-                    <StatusPill
-                      tone={
-                        group.averageObjectiveScore >= ROUND1_OBJECTIVE_MAX_SCORE * 0.8
-                          ? "success"
-                          : group.averageObjectiveScore > 0
-                            ? "info"
-                            : "warning"
-                      }
-                    >
-                      {group.completedRows.length > 0
-                        ? `${group.averageObjectiveScore.toFixed(2)} / ${ROUND1_OBJECTIVE_MAX_SCORE}`
-                        : "--"}
-                    </StatusPill>
+                    {group.scoredRows.length === 0 ? (
+                      <WaitingEssayScoreBadge
+                        locale={locale}
+                        label={locale === "en" ? "Waiting for score" : "Chờ điểm"}
+                      />
+                    ) : (
+                      <StatusPill
+                        tone={
+                          group.averageObjectiveScore >= ROUND1_OBJECTIVE_MAX_SCORE * 0.8
+                            ? "success"
+                            : group.averageObjectiveScore > 0
+                              ? "info"
+                              : "warning"
+                        }
+                      >
+                        {`${group.averageObjectiveScore.toFixed(2)} / ${ROUND1_OBJECTIVE_MAX_SCORE}`}
+                      </StatusPill>
+                    )}
                   </td>
                   <td className="px-4 py-4 text-center">
-                    {group.completedRows.length === 0 ? (
-                      "--"
-                    ) : group.hasPendingEssayReview ? (
-                      <StatusPill tone="warning">{locale === "en" ? "Pending" : "Đang chờ"}</StatusPill>
+                    {group.scoredRows.length === 0 ? (
+                      <WaitingEssayScoreBadge
+                        locale={locale}
+                        label={locale === "en" ? "Waiting for score" : "Chờ điểm"}
+                      />
                     ) : (
                       <StatusPill tone="info">{`${group.averageEssayScore.toFixed(2)} / ${ROUND1_ESSAY_MAX_SCORE}`}</StatusPill>
                     )}
                   </td>
                   <td className="px-4 py-4 text-center">
-                    {group.completedRows.length === 0 ? (
-                      "--"
-                    ) : group.hasPendingEssayReview ? (
-                      <StatusPill tone="warning">{locale === "en" ? "Pending" : "Đang chờ"}</StatusPill>
+                    {group.scoredRows.length === 0 ? (
+                      <WaitingEssayScoreBadge
+                        locale={locale}
+                        label={locale === "en" ? "Waiting for score" : "Chờ điểm"}
+                      />
                     ) : (
                       <StatusPill
                         tone={
@@ -2184,37 +2208,33 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
         />
         <MetricCard
           icon={<UsersRound className="h-5 w-5 text-cyan-300" />}
-          label={locale === "en" ? "Completed members" : "Thành viên đã làm"}
-          value={`${group.completedRows.length}/${group.memberRows.length}`}
+          label={locale === "en" ? "Scored members" : "Thành viên đã chấm"}
+          value={`${group.scoredRows.length}/${group.memberRows.length}`}
           note={
             locale === "en"
-              ? "Only completed attempts count into the current average"
-              : "Chỉ các bài đã nộp mới được tính vào điểm trung bình hiện tại"
+              ? "Only submissions with essay scores count into the current team average"
+              : "Chỉ các bài đã có điểm tự luận mới được tính vào điểm trung bình đội"
           }
         />
         <MetricCard
           icon={<Target className="h-5 w-5 text-emerald-300" />}
           label={locale === "en" ? "Objective average" : "Điểm trung bình trắc nghiệm"}
-          value={group.completedRows.length ? `${group.averageObjectiveScore.toFixed(2)} / ${ROUND1_OBJECTIVE_MAX_SCORE}` : "--"}
+          value={group.scoredRows.length ? `${group.averageObjectiveScore.toFixed(2)} / ${ROUND1_OBJECTIVE_MAX_SCORE}` : "--"}
           note={
-            group.completedRows.length
+            group.scoredRows.length
               ? `${group.averageRight.toFixed(1)} / ${group.averageWrong.toFixed(1)}`
               : locale === "en"
-                ? "No completed attempt yet"
-                : "Chưa có bài làm nào"
+                ? "Waiting for score"
+                : "Chờ điểm"
           }
         />
         <MetricCard
           icon={<Clock3 className="h-5 w-5 text-orange-300" />}
           label={locale === "en" ? "Total average" : "Điểm trung bình tổng"}
           value={
-            group.completedRows.length === 0
+            group.scoredRows.length === 0
               ? "--"
-              : group.hasPendingEssayReview
-                ? locale === "en"
-                  ? "Pending"
-                  : "Đang chờ"
-                : `${group.averageTotalScore.toFixed(2)} / ${ROUND1_TOTAL_MAX_SCORE}`
+              : `${group.averageTotalScore.toFixed(2)} / ${ROUND1_TOTAL_MAX_SCORE}`
           }
           note={
             locale === "en"

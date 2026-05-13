@@ -152,6 +152,7 @@ interface SiteStateValue {
   currentTeam?: TeamProfile;
   canAccessAdminMode: boolean;
   hasHydrated: boolean;
+  refreshWorkspace: () => Promise<void>;
   setLocale: (locale: Locale) => void;
   setTheme: (theme: Theme) => void;
   setActiveUserId: (userId: string) => void;
@@ -2826,6 +2827,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     currentTeam,
     canAccessAdminMode,
     hasHydrated,
+    refreshWorkspace: syncWorkspace,
     setLocale,
     setTheme,
     setActiveUserId,

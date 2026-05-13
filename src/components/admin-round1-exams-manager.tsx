@@ -242,7 +242,7 @@ function ExamListError({ locale, message }: { locale: "en" | "vi"; message: stri
 }
 
 export function AdminRound1ExamList() {
-  const { currentUser, locale } = useSiteState();
+  const { currentUser, locale, refreshWorkspace } = useSiteState();
   const [rows, setRows] = useState<AdminRound1ExamListRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -252,6 +252,8 @@ export function AdminRound1ExamList() {
   const [sortKey, setSortKey] = useState<Round1ExamSortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [deleteCandidate, setDeleteCandidate] = useState<AdminRound1ExamListRow | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   useAdminTitleScroll();
 
   const load = useCallback(async () => {
@@ -303,18 +305,31 @@ export function AdminRound1ExamList() {
 
   const canDeleteAttempt = currentUser.role === "admin";
 
-  const deleteAttempt = async (row: AdminRound1ExamListRow) => {
-    const confirmed = window.confirm(
-      locale === "en"
-        ? `Delete the saved Round 1 attempt/submission for ${row.name}?`
-        : `Xóa lượt thi hoặc bài nộp Vòng 1 đã lưu của ${row.name}?`,
-    );
-
-    if (!confirmed) {
+  useEffect(() => {
+    if (!deleteCandidate || deletingUserId) {
       return;
     }
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setDeleteCandidate(null);
+        setDeleteError("");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [deleteCandidate, deletingUserId]);
+
+  const deleteAttempt = async () => {
+    if (!deleteCandidate) {
+      return;
+    }
+
+    const row = deleteCandidate;
+
     try {
+      setDeleteError("");
       setDeletingUserId(row.userId);
       const response = await fetch(`/api/admin/round-1/exams/${row.userId}`, {
         method: "DELETE",
@@ -332,8 +347,10 @@ export function AdminRound1ExamList() {
       }
 
       await load();
+      await refreshWorkspace();
+      setDeleteCandidate(null);
     } catch (nextError) {
-      window.alert(
+      setDeleteError(
         nextError instanceof Error
           ? nextError.message
           : locale === "en"
@@ -725,7 +742,8 @@ export function AdminRound1ExamList() {
                         <button
                           type="button"
                           onClick={() => {
-                            void deleteAttempt(row);
+                            setDeleteCandidate(row);
+                            setDeleteError("");
                           }}
                           disabled={deletingUserId === row.userId}
                           title={locale === "en" ? "Delete attempt" : "Xóa lượt thi"}
@@ -762,6 +780,111 @@ export function AdminRound1ExamList() {
           onPageChange={setPage}
         />
       </Surface>
+
+      {deleteCandidate ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 py-6">
+          <button
+            type="button"
+            aria-label={locale === "en" ? "Close delete confirmation" : "Đóng xác nhận xóa"}
+            className="absolute inset-0 cursor-default bg-slate-950/55 backdrop-blur-sm"
+            onClick={() => {
+              if (!deletingUserId) {
+                setDeleteCandidate(null);
+                setDeleteError("");
+              }
+            }}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-lg overflow-hidden rounded-[2rem] border border-white/20 bg-[var(--panel)] shadow-[0_32px_90px_rgba(15,23,42,0.34)]"
+          >
+            <div className="border-b theme-border bg-[linear-gradient(135deg,rgba(239,68,68,0.14),rgba(59,130,246,0.08))] px-6 py-5">
+              <div className="flex items-start gap-4">
+                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/12 text-red-500 ring-1 ring-red-500/20">
+                  <AlertTriangle className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="theme-heading text-xl font-semibold theme-text-strong">
+                    {locale === "en" ? "Delete Round 1 record?" : "Xóa dữ liệu Vòng 1?"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 theme-text-muted">
+                    {locale === "en"
+                      ? "This removes the saved attempt, submission answers, essay score, and judge review. The shared Round 1 score tables will refresh after deletion."
+                      : "Thao tác này xóa lượt thi đã lưu, câu trả lời, điểm tự luận và lượt chấm liên quan. Bảng điểm Vòng 1 sẽ được cập nhật lại sau khi xóa."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 px-6 py-5">
+              <div className="grid gap-3 rounded-[1.4rem] border theme-border theme-panel-subtle p-4 text-sm sm:grid-cols-2">
+                <div>
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                    {locale === "en" ? "Participant" : "Thí sinh"}
+                  </p>
+                  <p className="mt-1 font-semibold theme-text-strong">{deleteCandidate.name}</p>
+                </div>
+                <div>
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                    {locale === "en" ? "Team" : "Đội thi"}
+                  </p>
+                  <p className="mt-1 font-semibold theme-text-strong">{deleteCandidate.teamName}</p>
+                </div>
+                <div>
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                    {locale === "en" ? "Status" : "Trạng thái"}
+                  </p>
+                  <p className="mt-1 theme-text-body">{createStatusMeta(locale, deleteCandidate.status).label}</p>
+                </div>
+                <div>
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                    {locale === "en" ? "Total score" : "Tổng điểm"}
+                  </p>
+                  <p className="mt-1 theme-text-body">{formatScoreValue(deleteCandidate.totalScore)}</p>
+                </div>
+              </div>
+
+              {deleteError ? (
+                <div className="rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-500">
+                  {deleteError}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 border-t theme-border bg-[var(--panel-strong)] px-6 py-5 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                disabled={Boolean(deletingUserId)}
+                onClick={() => {
+                  setDeleteCandidate(null);
+                  setDeleteError("");
+                }}
+                className="theme-button-secondary rounded-full border px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {locale === "en" ? "Cancel" : "Hủy"}
+              </button>
+              <button
+                type="button"
+                disabled={Boolean(deletingUserId)}
+                onClick={() => {
+                  void deleteAttempt();
+                }}
+                className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Trash2 className={cn("h-4 w-4", deletingUserId ? "animate-pulse" : "")} />
+                {deletingUserId
+                  ? locale === "en"
+                    ? "Deleting..."
+                    : "Đang xóa..."
+                  : locale === "en"
+                    ? "Delete record"
+                    : "Xóa dữ liệu"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
