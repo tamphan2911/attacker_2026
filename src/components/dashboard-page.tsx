@@ -1769,7 +1769,7 @@ export function DashboardPage() {
                   <p className="theme-heading mt-4 text-3xl font-semibold theme-text-strong">
                     {locale === "en"
                       ? "Freeze the roster before anyone enters the individual exam."
-                      : "Chốt đội hình trước khi bất kỳ ai bước vào bài thi cá nhân."}
+                      : "Hoàn tất, chốt đội hình trước khi bước vào vòng thi cá nhân."}
                   </p>
                   <p className="mt-4 text-sm leading-7 theme-text-muted">
                     {currentTeam.stage !== "round-1"
