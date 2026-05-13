@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
+  AlertTriangle,
   ArrowDown,
   ArrowLeft,
   ArrowUp,
@@ -17,6 +18,7 @@ import {
   Search,
   Text,
   Trash2,
+  X,
 } from "lucide-react";
 
 import {
@@ -252,12 +254,150 @@ function NewsNotFound({ title, description }: { title: string; description: stri
   );
 }
 
+function NewsDeleteConfirmDialog({
+  locale,
+  post,
+  onCancel,
+  onConfirm,
+}: {
+  locale: Locale;
+  post: NewsPost;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const articleTitle = pickText(locale, post.title) || post.slug;
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onCancel();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 py-6">
+      <button
+        type="button"
+        aria-label={locale === "en" ? "Close delete confirmation" : "Đóng xác nhận xóa"}
+        className="absolute inset-0 cursor-default bg-slate-950/55 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="news-delete-confirm-title"
+        className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/20 bg-[var(--panel)] shadow-[0_32px_90px_rgba(15,23,42,0.34)]"
+      >
+        <div className="border-b theme-border bg-[linear-gradient(135deg,rgba(239,68,68,0.15),rgba(14,165,233,0.1))] px-6 py-5">
+          <div className="flex items-start gap-4">
+            <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/12 text-red-500 ring-1 ring-red-500/20">
+              <AlertTriangle className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p
+                id="news-delete-confirm-title"
+                className="theme-heading text-xl font-semibold theme-text-strong"
+              >
+                {locale === "en" ? "Delete news article?" : "Xóa bài viết tin tức?"}
+              </p>
+              <p className="mt-2 text-sm leading-6 theme-text-muted">
+                {locale === "en"
+                  ? "This removes the article from the public newsroom. Review the article details before confirming."
+                  : "Thao tác này sẽ xóa bài viết khỏi newsroom công khai. Hãy kiểm tra thông tin bài viết trước khi xác nhận."}
+              </p>
+            </div>
+            <button
+              type="button"
+              aria-label={locale === "en" ? "Close" : "Đóng"}
+              onClick={onCancel}
+              className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border theme-border bg-white/70 theme-text-soft transition hover:-translate-y-0.5 hover:bg-white dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-4 px-6 py-5">
+          <div className="flex gap-4 rounded-[1.4rem] border theme-border theme-panel-subtle p-4">
+            <div className="h-20 w-28 shrink-0 overflow-hidden rounded-[1rem] border theme-border bg-[var(--panel-strong)]">
+              <img
+                src={post.coverImageSrc}
+                alt={pickText(locale, post.coverImageAlt) || articleTitle}
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                {locale === "en" ? "Article" : "Bài viết"}
+              </p>
+              <p className="mt-1 line-clamp-2 font-semibold theme-text-strong">{articleTitle}</p>
+              <p className="mt-2 break-all text-xs theme-text-soft">{post.slug}</p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.2rem] border theme-border theme-panel-subtle p-4">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                {locale === "en" ? "Published" : "Ngày đăng"}
+              </p>
+              <p className="mt-1 text-sm font-semibold theme-text-strong">{post.publishedAt}</p>
+            </div>
+            <div className="rounded-[1.2rem] border theme-border theme-panel-subtle p-4">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                {locale === "en" ? "Author" : "Tác giả"}
+              </p>
+              <p className="mt-1 truncate text-sm font-semibold theme-text-strong">{post.author || "--"}</p>
+            </div>
+            <div className="rounded-[1.2rem] border theme-border theme-panel-subtle p-4">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                {locale === "en" ? "Category" : "Danh mục"}
+              </p>
+              <p className="mt-1 truncate text-sm font-semibold theme-text-strong">
+                {pickText(locale, post.category) || "--"}
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-[1.2rem] border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-600 dark:text-red-100">
+            {locale === "en"
+              ? "Deleting this article cannot be undone from the admin interface."
+              : "Sau khi xóa, bạn không thể khôi phục bài viết này từ giao diện admin."}
+          </div>
+        </div>
+
+        <div className="flex flex-col-reverse gap-3 border-t theme-border bg-[var(--panel-strong)] px-6 py-5 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="theme-button-secondary rounded-full border px-5 py-3 text-sm font-semibold"
+          >
+            {locale === "en" ? "Cancel" : "Hủy"}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+          >
+            <Trash2 className="h-4 w-4" />
+            {locale === "en" ? "Delete article" : "Xóa bài viết"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminNewsList() {
   const { locale, newsPosts, deleteNewsPostByAdmin } = useSiteState();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [authorFilter, setAuthorFilter] = useState("all");
   const [tagFilter, setTagFilter] = useState("all");
+  const [deleteCandidate, setDeleteCandidate] = useState<NewsPost | null>(null);
   useAdminTitleScroll();
 
   const sortedPosts = useMemo(
@@ -504,17 +644,7 @@ export function AdminNewsList() {
                         <IconToolButton
                           label={locale === "en" ? "Delete article" : "Xóa bài viết"}
                           tone="danger"
-                          onClick={() => {
-                            const confirmed = window.confirm(
-                              locale === "en"
-                                ? `Delete article "${pickText(locale, post.title)}"?`
-                                : `Xóa bài viết "${pickText(locale, post.title)}"?`,
-                            );
-
-                            if (confirmed) {
-                              deleteNewsPostByAdmin(post.slug);
-                            }
-                          }}
+                          onClick={() => setDeleteCandidate(post)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </IconToolButton>
@@ -535,6 +665,18 @@ export function AdminNewsList() {
           onPageChange={setPage}
         />
       </Surface>
+
+      {deleteCandidate ? (
+        <NewsDeleteConfirmDialog
+          locale={locale}
+          post={deleteCandidate}
+          onCancel={() => setDeleteCandidate(null)}
+          onConfirm={() => {
+            deleteNewsPostByAdmin(deleteCandidate.slug);
+            setDeleteCandidate(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -658,6 +800,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
   const [uploadingContentIndex, setUploadingContentIndex] = useState<number | null>(null);
   const contentBlockRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const pendingContentScrollRef = useRef<number | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const generatedSlug = useMemo(() => {
     if (!draft) {
@@ -861,17 +1004,12 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
       return;
     }
 
-    const confirmed = window.confirm(
-      locale === "en"
-        ? `Delete article "${pickText(locale, draft.title)}"?`
-        : `Xóa bài viết "${pickText(locale, draft.title)}"?`,
-    );
+    setIsDeleteDialogOpen(true);
+  };
 
-    if (!confirmed) {
-      return;
-    }
-
+  const confirmDeleteCurrentPost = () => {
     deleteNewsPostByAdmin(slug);
+    setIsDeleteDialogOpen(false);
     router.push("/admin/news");
   };
 
@@ -1532,6 +1670,15 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
             </div>
           </Surface>
       </section>
+
+      {isDeleteDialogOpen ? (
+        <NewsDeleteConfirmDialog
+          locale={locale}
+          post={draft}
+          onCancel={() => setIsDeleteDialogOpen(false)}
+          onConfirm={confirmDeleteCurrentPost}
+        />
+      ) : null}
     </div>
   );
 }
