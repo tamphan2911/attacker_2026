@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
 import {
   ArrowRight,
   Inbox,
@@ -35,6 +35,8 @@ type DirectMessage = {
   conversationId: string;
   senderId: string;
   body: string;
+  deletedAt?: string;
+  deletedByName?: string;
   createdAt: string;
   sender: MessageUser;
 };
@@ -114,7 +116,14 @@ export function MessageCenterPage() {
   const [statusMessage, setStatusMessage] = useState("");
   const [pageNotice, setPageNotice] = useState("");
   const [conversationToDelete, setConversationToDelete] = useState<MessageConversation | null>(null);
+  const [messageActionMenu, setMessageActionMenu] = useState<{
+    message: DirectMessage;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [messageToDelete, setMessageToDelete] = useState<DirectMessage | null>(null);
   const [isDeletingConversation, setIsDeletingConversation] = useState(false);
+  const [isDeletingMessage, setIsDeletingMessage] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const draftRecipientRef = useRef<MessageUser | null>(null);
@@ -450,6 +459,30 @@ export function MessageCenterPage() {
     void handleSendMessage();
   };
 
+  const openMessageActionMenu = (event: MouseEvent, message: DirectMessage) => {
+    const isOwnMessage = message.senderId === currentUser.id;
+    if (!isOwnMessage || message.deletedAt) {
+      return;
+    }
+
+    event.preventDefault();
+    const menuWidth = 190;
+    const menuHeight = 58;
+    setMessageActionMenu({
+      message,
+      x: Math.min(event.clientX, Math.max(16, window.innerWidth - menuWidth - 16)),
+      y: Math.min(event.clientY, Math.max(16, window.innerHeight - menuHeight - 16)),
+    });
+  };
+
+  const closeMessageDeleteDialog = useCallback(() => {
+    if (isDeletingMessage) {
+      return;
+    }
+
+    setMessageToDelete(null);
+  }, [isDeletingMessage]);
+
   const closeDeleteDialog = useCallback(() => {
     if (isDeletingConversation) {
       return;
@@ -501,6 +534,58 @@ export function MessageCenterPage() {
     window.dispatchEvent(new Event("attacker-notifications-refresh"));
   };
 
+  const confirmDeleteMessage = async () => {
+    if (!messageToDelete) {
+      return;
+    }
+
+    setIsDeletingMessage(true);
+    setStatusMessage("");
+
+    const response = await fetch(
+      `/api/messages/conversations/${encodeURIComponent(messageToDelete.conversationId)}/messages/${encodeURIComponent(messageToDelete.id)}`,
+      {
+        method: "DELETE",
+        credentials: "same-origin",
+      },
+    );
+
+    setIsDeletingMessage(false);
+    setMessageToDelete(null);
+
+    if (!response.ok) {
+      setStatusMessage(
+        locale === "en"
+          ? "Could not delete this message."
+          : "Không thể xóa tin nhắn này.",
+      );
+      return;
+    }
+
+    const payload = (await response.json()) as {
+      conversation: MessageConversation | null;
+      conversationId: string;
+    };
+
+    if (payload.conversation) {
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === payload.conversationId ? payload.conversation! : conversation,
+        ),
+      );
+    } else {
+      await loadMessages();
+    }
+
+    setPageNotice(
+      locale === "en"
+        ? "Message deleted."
+        : "Đã xóa tin nhắn.",
+    );
+    window.dispatchEvent(new Event("attacker-messages-refresh"));
+    window.dispatchEvent(new Event("attacker-notifications-refresh"));
+  };
+
   useEffect(() => {
     if (!conversationToDelete) {
       return;
@@ -517,6 +602,46 @@ export function MessageCenterPage() {
       window.removeEventListener("keydown", handleEscape);
     };
   }, [closeDeleteDialog, conversationToDelete]);
+
+  useEffect(() => {
+    if (!messageActionMenu) {
+      return;
+    }
+
+    const closeMenu = () => setMessageActionMenu(null);
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    };
+
+    window.addEventListener("click", closeMenu);
+    window.addEventListener("scroll", closeMenu, true);
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("click", closeMenu);
+      window.removeEventListener("scroll", closeMenu, true);
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [messageActionMenu]);
+
+  useEffect(() => {
+    if (!messageToDelete) {
+      return;
+    }
+
+    const handleEscape = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMessageDeleteDialog();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [closeMessageDeleteDialog, messageToDelete]);
 
   if (authStatus === "loading") {
     return (
@@ -666,7 +791,11 @@ export function MessageCenterPage() {
                             </span>
                           </span>
                           <span className="mt-1 block truncate text-xs theme-text-muted">
-                            {conversation.latestMessage?.body ??
+                            {conversation.latestMessage?.deletedAt
+                              ? locale === "en"
+                                ? `${conversation.latestMessage.deletedByName ?? conversation.latestMessage.sender.name} deleted a message.`
+                                : `${conversation.latestMessage.deletedByName ?? conversation.latestMessage.sender.name} đã xóa một tin nhắn.`
+                              : conversation.latestMessage?.body ??
                               (conversation.isOrganizer
                                 ? locale === "en"
                                   ? "Competition support channel"
@@ -792,15 +921,20 @@ export function MessageCenterPage() {
                   {activeMessages.length ? (
                     activeMessages.map((message) => {
                       const isOwnMessage = message.senderId === currentUser.id;
+                      const isDeletedMessage = Boolean(message.deletedAt);
+                      const deletedByName = message.deletedByName ?? message.sender.name;
                       return (
                         <div
                           key={message.id}
                           className={cn("flex", isOwnMessage ? "justify-end" : "justify-start")}
                         >
                           <div
+                            onContextMenu={(event) => openMessageActionMenu(event, message)}
                             className={cn(
                               "max-w-[72%] rounded-[1.05rem] px-3 py-2 shadow-[0_10px_22px_rgba(15,23,42,0.07)]",
-                              isOwnMessage
+                              isDeletedMessage
+                                ? "border border-dashed theme-border theme-panel-subtle theme-text-muted shadow-none"
+                                : isOwnMessage
                                 ? "bg-[linear-gradient(135deg,#38bdf8,#2563eb)] text-white"
                                 : "border theme-border theme-panel-subtle theme-text-strong",
                             )}
@@ -809,19 +943,23 @@ export function MessageCenterPage() {
                               <p
                                 className={cn(
                                   "mb-1 text-[0.68rem] font-semibold uppercase tracking-[0.14em]",
-                                  isOwnMessage ? "text-white/72" : "theme-text-faint",
+                                  isOwnMessage && !isDeletedMessage ? "text-white/72" : "theme-text-faint",
                                 )}
                               >
                                 {message.sender.name} · {formatMessageSenderRole(locale, message.sender.role)}
                               </p>
                             ) : null}
-                            <p className="whitespace-pre-wrap text-sm leading-6">
-                              {message.body}
+                            <p className={cn("whitespace-pre-wrap text-sm leading-6", isDeletedMessage && "italic")}>
+                              {isDeletedMessage
+                                ? locale === "en"
+                                  ? `${deletedByName} deleted this message.`
+                                  : `${deletedByName} đã xóa tin nhắn này.`
+                                : message.body}
                               <span
                                 title={formatMessageTime(locale, message.createdAt)}
                                 className={cn(
                                   "ml-2 inline-block align-baseline text-[0.65rem] font-medium",
-                                  isOwnMessage ? "text-white/68" : "theme-text-faint",
+                                  isOwnMessage && !isDeletedMessage ? "text-white/68" : "theme-text-faint",
                                 )}
                               >
                                 {formatCompactMessageTime(locale, message.createdAt)}
@@ -899,6 +1037,90 @@ export function MessageCenterPage() {
           </section>
         </div>
       </section>
+      {messageActionMenu ? (
+        <div
+          className="fixed z-[90] rounded-[1rem] border theme-border-strong theme-panel p-1.5 shadow-[0_18px_44px_rgba(15,23,42,0.18)]"
+          style={{ left: messageActionMenu.x, top: messageActionMenu.y }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setMessageToDelete(messageActionMenu.message);
+              setMessageActionMenu(null);
+            }}
+            className="flex w-full min-w-44 items-center gap-2 rounded-[0.75rem] px-3 py-2.5 text-left text-sm font-semibold text-rose-700 transition hover:bg-rose-500/10 dark:text-rose-100"
+          >
+            <Trash2 className="h-4 w-4" />
+            {locale === "en" ? "Delete message" : "Xóa tin nhắn"}
+          </button>
+        </div>
+      ) : null}
+      {messageToDelete ? (
+        <div className="fixed inset-0 z-[85] flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-message-title"
+            className="theme-card-shadow-soft w-full max-w-lg rounded-[1.8rem] border theme-border-strong theme-panel p-5"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                  {locale === "en" ? "Delete message" : "Xóa tin nhắn"}
+                </p>
+                <h2 id="delete-message-title" className="theme-heading mt-3 text-2xl font-semibold theme-text-strong">
+                  {locale === "en" ? "Delete this message?" : "Xóa tin nhắn này?"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={closeMessageDeleteDialog}
+                disabled={isDeletingMessage}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border theme-border theme-panel-subtle theme-text-soft transition hover:border-sky-300/30 hover:text-[var(--text-strong)] disabled:opacity-50"
+                aria-label={locale === "en" ? "Close delete confirmation" : "Đóng xác nhận xóa"}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-5 rounded-[1.3rem] border border-rose-200/60 bg-rose-500/8 px-4 py-4 text-sm leading-7 text-rose-800 dark:border-rose-300/20 dark:bg-rose-400/10 dark:text-rose-100">
+              {locale === "en"
+                ? "This deletes the message for everyone in this conversation and replaces it with a deleted-message notice."
+                : "Tin nhắn sẽ bị xóa với tất cả người trong cuộc trò chuyện này và được thay bằng thông báo tin nhắn đã bị xóa."}
+            </div>
+
+            <div className="mt-4 rounded-[1.2rem] border theme-border theme-panel-subtle px-4 py-3 text-sm leading-6 theme-text-muted">
+              {messageToDelete.body}
+            </div>
+
+            <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeMessageDeleteDialog}
+                disabled={isDeletingMessage}
+                className="inline-flex items-center justify-center rounded-full border theme-border theme-panel-subtle px-5 py-3 text-sm font-semibold theme-text-strong transition hover:border-sky-300/30 disabled:opacity-50"
+              >
+                {locale === "en" ? "Close" : "Đóng"}
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteMessage}
+                disabled={isDeletingMessage}
+                className="inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,#fb7185,#ef4444)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(239,68,68,0.22)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeletingMessage
+                  ? locale === "en"
+                    ? "Deleting..."
+                    : "Đang xóa..."
+                  : locale === "en"
+                    ? "Confirm delete"
+                    : "Xác nhận xóa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {conversationToDelete ? (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-sm">
           <div

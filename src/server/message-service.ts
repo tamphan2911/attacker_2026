@@ -10,6 +10,7 @@ const TEAM_REMOVAL_NOTICE_PREFIX = "Team removal notice";
 
 type MessageActor = {
   id: string;
+  name?: string;
   role: UserRole;
 };
 
@@ -89,6 +90,21 @@ function serializeMessageUser(user: MessageUserRecord) {
     classYear: user.classYear,
     avatarTone: user.avatarTone,
     avatarImageSrc: user.avatarImageSrc ?? undefined,
+  };
+}
+
+function serializeDirectMessage(
+  message: ConversationRecord["messages"][number],
+) {
+  return {
+    id: message.id,
+    conversationId: message.conversationId,
+    senderId: message.senderId,
+    body: message.deletedAt ? "" : message.body,
+    deletedAt: message.deletedAt?.toISOString(),
+    deletedByName: message.deletedByName ?? undefined,
+    createdAt: message.createdAt.toISOString(),
+    sender: serializeMessageUser(message.sender),
   };
 }
 
@@ -180,23 +196,9 @@ function serializeConversation(conversation: ConversationRecord, actor: MessageA
     isMessageRequest,
     canSendMessage: isOrganizer || !requestPending,
     latestMessage: latestMessage
-      ? {
-          id: latestMessage.id,
-          conversationId: latestMessage.conversationId,
-          senderId: latestMessage.senderId,
-          body: latestMessage.body,
-          createdAt: latestMessage.createdAt.toISOString(),
-          sender: serializeMessageUser(latestMessage.sender),
-        }
+      ? serializeDirectMessage(latestMessage)
       : null,
-    messages: visibleMessages.map((message) => ({
-      id: message.id,
-      conversationId: message.conversationId,
-      senderId: message.senderId,
-      body: message.body,
-      createdAt: message.createdAt.toISOString(),
-      sender: serializeMessageUser(message.sender),
-    })),
+    messages: visibleMessages.map((message) => serializeDirectMessage(message)),
   };
 }
 
@@ -627,6 +629,57 @@ export async function hideMessageConversation(
   return ok({ conversationId });
 }
 
+export async function deleteOwnDirectMessage(
+  actor: MessageActor,
+  conversationId: string,
+  messageId: string,
+): Promise<ServiceResult<{ conversationId: string; messageId: string }>> {
+  const message = await prisma.directMessage.findUnique({
+    where: { id: messageId },
+    include: {
+      conversation: {
+        include: {
+          participants: true,
+        },
+      },
+      sender: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (!message || message.conversationId !== conversationId) {
+    return fail(404, "Message not found.");
+  }
+
+  const actorCanAccess = message.conversation.kind === MessageConversationKind.ORGANIZER
+    ? isElevatedRole(actor.role) || message.conversation.requesterId === actor.id
+    : message.conversation.participants.some((participant) => participant.userId === actor.id);
+
+  if (!actorCanAccess) {
+    return fail(404, "Message not found.");
+  }
+
+  if (message.senderId !== actor.id) {
+    return fail(403, "You can delete only your own messages.");
+  }
+
+  if (!message.deletedAt) {
+    await prisma.directMessage.update({
+      where: { id: messageId },
+      data: {
+        body: "",
+        deletedAt: new Date(),
+        deletedByName: actor.name || message.sender.name,
+      },
+    });
+  }
+
+  return ok({ conversationId, messageId });
+}
+
 export async function getConversationAfterSend(actor: MessageActor, conversationId: string) {
   const conversation = await loadConversation(conversationId);
   if (!conversation || !canAccessConversation(conversation, actor)) {
@@ -666,7 +719,10 @@ export async function listUnreadNotifications(actor: MessageActor) {
   const messageNotifications = conversationPayload.conversations
     .filter((conversation) => conversation.unreadCount > 0 && conversation.latestMessage)
     .map((conversation) => {
-      const latestBody = conversation.latestMessage?.body ?? "";
+      const latestMessage = conversation.latestMessage;
+      const latestBody = latestMessage?.deletedAt
+        ? `Message deleted by ${latestMessage.deletedByName ?? latestMessage.sender.name}`
+        : latestMessage?.body ?? "";
       const isTeamRemoval = latestBody.startsWith(TEAM_REMOVAL_NOTICE_PREFIX);
 
       return {
