@@ -866,7 +866,7 @@ export function DashboardPage() {
                             onClick={() => respondToInvitation(invitation.id, "decline")}
                             className="inline-flex items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
                           >
-                            {locale === "en" ? "Decline" : "Tu choi"}
+                            {locale === "en" ? "Decline" : "Từ chối"}
                           </button>
                         </div>
                       </div>
@@ -989,7 +989,7 @@ export function DashboardPage() {
                             onClick={() => respondToLeadershipTransfer(request.id, "decline")}
                             className="inline-flex items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
                           >
-                            {locale === "en" ? "Decline" : "Tu choi"}
+                            {locale === "en" ? "Decline" : "Từ chối"}
                           </button>
                         </div>
                       </div>
@@ -2433,7 +2433,7 @@ export function DashboardPage() {
                           onClick={() => respondToInvitation(invitation.id, "decline")}
                           className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
                         >
-                          {locale === "en" ? "Decline" : "Tu choi"}
+                          {locale === "en" ? "Decline" : "Từ chối"}
                         </button>
                       </div>
                     </div>
