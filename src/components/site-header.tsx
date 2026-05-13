@@ -199,13 +199,41 @@ function NotificationMenu({
         : `${item.meta?.senderName ?? "Một đội trưởng"} đã mời bạn vào đội ${item.title}.`;
     }
 
+    if (item.meta?.isMessageRequest) {
+      return locale === "en"
+        ? `First message request: ${item.description}`
+        : `Yêu cầu nhắn tin đầu tiên: ${item.description}`;
+    }
+
+    if (item.meta?.isOrganizer) {
+      return locale === "en"
+        ? `Organizer support message: ${item.description}`
+        : `Tin nhắn hỗ trợ từ ban tổ chức: ${item.description}`;
+    }
+
     return item.description;
+  };
+
+  const getItemTitle = (item: HeaderNotificationItem) => {
+    if (item.type === "message" && item.meta?.isMessageRequest) {
+      return locale === "en"
+        ? `Message request from ${item.meta?.senderName ?? item.title}`
+        : `Yêu cầu nhắn tin từ ${item.meta?.senderName ?? item.title}`;
+    }
+
+    if (item.type === "message" && item.meta?.isOrganizer) {
+      return locale === "en"
+        ? `Organizer support · ${item.meta?.senderName ?? item.title}`
+        : `Hỗ trợ ban tổ chức · ${item.meta?.senderName ?? item.title}`;
+    }
+
+    return item.title;
   };
 
   const getItemBadgeLabel = (item: HeaderNotificationItem) => {
     if (item.type === "message") {
       if (item.meta?.isMessageRequest) {
-        return locale === "en" ? "Message request" : "Lời nhắn mới";
+        return locale === "en" ? "Message request" : "Yêu cầu nhắn tin";
       }
 
       return locale === "en" ? `${item.count} unread` : `${item.count} chưa đọc`;
@@ -249,16 +277,25 @@ function NotificationMenu({
                 href={item.href}
                 role="menuitem"
                 onClick={() => setIsOpen(false)}
-                className="grid gap-1 rounded-[1.1rem] px-3 py-3 transition hover:bg-[rgba(23,114,208,0.08)] dark:hover:bg-[rgba(88,196,255,0.12)]"
+                className={cn(
+                  "grid gap-1 rounded-[1.1rem] border px-3 py-3 transition hover:bg-[rgba(23,114,208,0.08)] dark:hover:bg-[rgba(88,196,255,0.12)]",
+                  item.meta?.isMessageRequest
+                    ? "border-amber-300/34 bg-amber-400/10"
+                    : item.meta?.isOrganizer
+                      ? "border-cyan-300/28 bg-cyan-400/10"
+                      : "border-transparent",
+                )}
               >
                 <span className="flex items-center justify-between gap-3">
-                  <span className="truncate text-sm font-semibold theme-text-strong">{item.title}</span>
+                  <span className="truncate text-sm font-semibold theme-text-strong">{getItemTitle(item)}</span>
                   <span
                     className={cn(
                       "shrink-0 rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold",
                       item.meta?.isMessageRequest
-                        ? "border-amber-300/40 bg-amber-400/18 text-amber-700 dark:text-amber-100"
-                        : "theme-border bg-white/50 theme-text-soft dark:bg-white/6",
+                        ? "border-amber-400/45 bg-[linear-gradient(135deg,rgba(251,191,36,0.28),rgba(249,115,22,0.18))] text-amber-950 dark:text-amber-100"
+                        : item.meta?.isOrganizer
+                          ? "border-cyan-300/34 bg-cyan-400/14 text-cyan-800 dark:text-cyan-100"
+                          : "theme-border bg-white/50 theme-text-soft dark:bg-white/6",
                     )}
                   >
                     {getItemBadgeLabel(item)}

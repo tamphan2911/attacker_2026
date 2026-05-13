@@ -256,7 +256,10 @@ export function MessageCenterPage() {
     draftRecipient || (activeConversation && !activeConversation.isOrganizer && activeMessages.length === 0),
   );
   const showReceiverFirstMessageNotice = Boolean(
-    activeConversation && activeMessages.length === 1 && activeMessages[0]?.senderId !== currentUser.id,
+    activeConversation &&
+      !activeConversation.isOrganizer &&
+      activeMessages.length === 1 &&
+      activeMessages[0]?.senderId !== currentUser.id,
   );
   const requestPending = Boolean(activeConversation?.requestPending);
   const shouldShowParticipantEmail = Boolean(
@@ -537,7 +540,7 @@ export function MessageCenterPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-9rem)] min-h-[640px] flex-col gap-4 overflow-hidden">
+    <div className="flex h-[calc(100dvh-8.5rem)] min-h-0 flex-col gap-4 overflow-hidden">
       {pageNotice ? (
         <div className="rounded-[1.35rem] border border-emerald-300/40 bg-emerald-400/12 px-5 py-4 text-sm font-semibold text-emerald-800 shadow-[0_18px_42px_rgba(16,185,129,0.12)] dark:text-emerald-100">
           {pageNotice}
@@ -640,11 +643,18 @@ export function MessageCenterPage() {
                             <span className="truncate text-sm font-semibold theme-text-strong">
                               {participant?.name ?? (locale === "en" ? "User" : "Người dùng")}
                             </span>
-                            {conversation.unreadCount > 0 ? (
-                              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fb7185,#f97316)] px-1.5 text-[0.68rem] font-bold text-white shadow-[0_10px_22px_rgba(249,115,22,0.24)]">
-                                {conversation.unreadCount}
-                              </span>
-                            ) : null}
+                            <span className="flex shrink-0 items-center gap-1.5">
+                              {conversation.isOrganizer ? (
+                                <span className="rounded-full border border-cyan-300/34 bg-cyan-400/12 px-2 py-0.5 text-[0.62rem] font-bold uppercase tracking-[0.12em] text-cyan-800 dark:text-cyan-100">
+                                  {locale === "en" ? "Support" : "Hỗ trợ"}
+                                </span>
+                              ) : null}
+                              {conversation.unreadCount > 0 ? (
+                                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fb7185,#f97316)] px-1.5 text-[0.68rem] font-bold text-white shadow-[0_10px_22px_rgba(249,115,22,0.24)]">
+                                  {conversation.unreadCount}
+                                </span>
+                              ) : null}
+                            </span>
                           </span>
                           <span className="mt-1 block truncate text-xs theme-text-muted">
                             {conversation.latestMessage?.body ??
@@ -696,14 +706,18 @@ export function MessageCenterPage() {
                     <p className="text-lg font-semibold theme-text-strong">{activeParticipant.name}</p>
                     {shouldShowParticipantEmail ? (
                       <p className="mt-1 truncate text-sm theme-text-muted">{activeParticipant.email}</p>
+                    ) : activeConversation?.isOrganizer ? (
+                      <p className="mt-1 truncate text-sm theme-text-muted">
+                        {locale === "en" ? "Official competition support channel" : "Kênh hỗ trợ chính thức của cuộc thi"}
+                      </p>
                     ) : null}
                   </div>
                   <span className="hidden rounded-full border theme-border theme-panel-subtle px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] theme-text-soft sm:inline-flex">
-                    {activeParticipant.role}
+                    {formatMessageSenderRole(locale, activeParticipant.role)}
                   </span>
                 </div>
 
-                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-5 md:px-6">
+                <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto px-4 py-4 md:px-5">
                   {showFirstMessageNotice ? (
                     <div className="rounded-[1.5rem] border border-amber-300/34 bg-amber-400/12 px-4 py-4">
                       <div className="flex gap-3">
@@ -776,7 +790,7 @@ export function MessageCenterPage() {
                         >
                           <div
                             className={cn(
-                              "max-w-[78%] rounded-[1.15rem] px-3.5 py-2.5 shadow-[0_12px_28px_rgba(15,23,42,0.08)]",
+                              "max-w-[72%] rounded-[1.05rem] px-3 py-2 shadow-[0_10px_22px_rgba(15,23,42,0.07)]",
                               isOwnMessage
                                 ? "bg-[linear-gradient(135deg,#38bdf8,#2563eb)] text-white"
                                 : "border theme-border theme-panel-subtle theme-text-strong",
