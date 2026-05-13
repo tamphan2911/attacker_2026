@@ -179,12 +179,11 @@ function createRound1PairingItem(
 function createQuestionShapeForType(type: Round1QuestionType, seed?: Partial<Round1Question>): Round1Question {
   const base = {
     id: seed?.id ?? "",
-    name: seed?.name ?? "",
     topic: seed?.topic ?? "",
     difficulty: seed?.difficulty ?? "easy",
     prompt: seed?.prompt ?? createLocalizedEmpty(),
     type,
-  } satisfies Pick<Round1Question, "id" | "name" | "topic" | "difficulty" | "prompt" | "type">;
+  } satisfies Pick<Round1Question, "id" | "topic" | "difficulty" | "prompt" | "type">;
 
   if (type === "true-false") {
     return {
@@ -249,7 +248,6 @@ function createQuestionShapeForType(type: Round1QuestionType, seed?: Partial<Rou
 function convertRound1QuestionType(question: Round1Question, nextType: Round1QuestionType): Round1Question {
   const seed: Partial<Round1Question> = {
     id: question.id,
-    name: question.name ?? "",
     topic: question.topic,
     difficulty: question.difficulty,
     prompt: question.prompt,
@@ -478,7 +476,6 @@ function buildBankExportRows(round1TestBanks: Round1TestBank[]) {
       shuffleOptions: bank.shuffleOptions ? "Yes" : "No",
       previewQuestionOrder: index + 1,
       questionId: question.id,
-      questionName: question.name ?? "",
       topic: question.topic,
       type: pickRound1TypeLabel("en", question.type),
       difficulty: bank.bankType === "essay" ? "" : question.difficulty,
@@ -1699,8 +1696,8 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
     () =>
       questionList.filter((question) => {
         const searchSource = [
+          question.id,
           pickRound1TypeLabel(locale, question.type),
-          question.name ?? "",
           question.topic,
           ...(isEssayBank ? [] : [question.difficulty]),
           pickRound1QuestionText(question.prompt),
@@ -1915,7 +1912,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
               <input
                 value={questionSearch}
                 onChange={(event) => setQuestionSearch(event.target.value)}
-                placeholder={locale === "en" ? "Search by prompt, topic, type..." : "Tìm theo câu hỏi, chủ đề, loại..."}
+                placeholder={locale === "en" ? "Search by Question ID, prompt, topic..." : "Tìm theo mã câu hỏi, nội dung, chủ đề..."}
                 className="theme-field h-12 w-full rounded-[1rem] border pl-10 pr-4 text-sm outline-none"
               />
             </div>
@@ -2077,11 +2074,6 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                     </td>
                   )}
                   <td className="px-4 py-4 theme-text-body">
-                    {question.name?.trim() ? (
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
-                        {question.name}
-                      </p>
-                    ) : null}
                     <p title={pickRound1QuestionText(question.prompt)}>
                       {truncateQuestionPreview(pickRound1QuestionText(question.prompt))}
                     </p>
@@ -2698,14 +2690,18 @@ function AdminRound1QuestionEditorInner({
     );
   }
 
+  const topicDatalistId = `round1-topic-options-${bank.id}`;
+
   const saveDraft = async () => {
+    const draftWithoutName = { ...draft };
+    delete draftWithoutName.name;
     const normalizedDraft =
       draft.type === "essay"
         ? {
-            ...draft,
+            ...draftWithoutName,
             difficulty: "medium" as Round1Question["difficulty"],
           }
-        : draft;
+        : draftWithoutName;
 
     if (mode === "create") {
       setSavePending(true);
@@ -2719,7 +2715,13 @@ function AdminRound1QuestionEditorInner({
     }
 
     if (sourceQuestion) {
-      updateRound1QuestionByAdmin(bank.id, sourceQuestion.id, normalizedDraft);
+      setSavePending(true);
+      const updatedQuestionId = await updateRound1QuestionByAdmin(bank.id, sourceQuestion.id, normalizedDraft);
+      setSavePending(false);
+
+      if (updatedQuestionId && updatedQuestionId !== sourceQuestion.id) {
+        router.replace(`/admin/round-1/banks/${bank.id}/questions/${updatedQuestionId}`);
+      }
     }
   };
 
@@ -2761,15 +2763,15 @@ function AdminRound1QuestionEditorInner({
           description={
             mode === "create"
               ? locale === "en"
-                ? "Create a new question for this test bank. The question ID is generated automatically when you save."
-                : "Tạo câu hỏi mới cho test bank này. Mã câu hỏi sẽ được tạo tự động khi bạn lưu."
+                ? "Create a new question for this test bank. You can keep the suggested Question ID or change it before saving."
+                : "Tạo câu hỏi mới cho test bank này. Bạn có thể giữ mã câu hỏi được gợi ý hoặc đổi trước khi lưu."
               : locale === "en"
                 ? usesDifficulty
-                  ? "Update the question prompt, topic, difficulty, and response structure for this question inside the selected test bank."
-                  : "Update the question prompt, topic, and response structure for this question inside the selected test bank."
+                  ? "Update the Question ID, prompt, topic, difficulty, and response structure for this question inside the selected test bank."
+                  : "Update the Question ID, prompt, topic, and response structure for this question inside the selected test bank."
                 : usesDifficulty
-                  ? "Cập nhật prompt, chủ đề, độ khó và cấu trúc trả lời cho câu hỏi này trong test bank đã chọn."
-                  : "Cập nhật prompt, chủ đề và cấu trúc trả lời cho câu hỏi này trong test bank đã chọn."
+                  ? "Cập nhật mã câu hỏi, prompt, chủ đề, độ khó và cấu trúc trả lời cho câu hỏi này trong test bank đã chọn."
+                  : "Cập nhật mã câu hỏi, prompt, chủ đề và cấu trúc trả lời cho câu hỏi này trong test bank đã chọn."
           }
         />
         <div className="flex gap-3">
@@ -2807,23 +2809,12 @@ function AdminRound1QuestionEditorInner({
               </span>
               <input
                 value={draft.id}
-                readOnly
-                aria-readonly="true"
-                className={`${fieldClassName} cursor-not-allowed opacity-75`}
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Question name" : "Tên câu hỏi"}
-              </span>
-              <input
-                value={draft.name ?? ""}
                 onChange={(event) =>
                   setDraft((current) =>
-                    current ? { ...current, name: event.target.value } : current,
+                    current ? { ...current, id: event.target.value } : current,
                   )
                 }
-                placeholder={locale === "en" ? "Example: Fintech basics 01" : "Ví dụ: Cơ bản fintech 01"}
+                placeholder={isEssayBank ? "r1e-01" : "r1q-01"}
                 className={fieldClassName}
               />
             </label>
@@ -2831,27 +2822,24 @@ function AdminRound1QuestionEditorInner({
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Topic" : "Chủ đề"}
               </span>
-              <select
+              <input
                 value={draft.topic}
                 onChange={(event) =>
                   setDraft((current) =>
                     current ? { ...current, topic: event.target.value } : current,
                   )
                 }
-                disabled={topicOptions.length === 0}
+                list={topicDatalistId}
+                placeholder={locale === "en" ? "Enter topic" : "Nhập chủ đề"}
                 className={fieldClassName}
-              >
-                {topicOptions.length === 0 ? (
-                  <option value="">
-                    {locale === "en" ? "No topic available" : "Chưa có chủ đề"}
-                  </option>
-                ) : null}
+              />
+              <datalist id={topicDatalistId}>
                 {topicOptions.map((topic) => (
                   <option key={topic} value={topic}>
                     {topic}
                   </option>
                 ))}
-              </select>
+              </datalist>
             </label>
             {usesDifficulty ? (
               <label className="space-y-2">

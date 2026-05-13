@@ -794,11 +794,27 @@ function mapQuestionType(type: Round1Question["type"]): Round1QuestionType {
 }
 
 function normalizeQuestionForStorage(question: Round1Question) {
+  const questionWithoutName = { ...question };
+  delete questionWithoutName.name;
+
   return {
-    ...question,
+    ...questionWithoutName,
+    id: question.id.trim(),
     difficulty: mapQuestionDifficulty(question.difficulty),
     type: mapQuestionType(question.type),
   };
+}
+
+function normalizeRound1QuestionId(value: string | undefined) {
+  return value?.trim() ?? "";
+}
+
+function isValidRound1QuestionId(value: string) {
+  return /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(value);
+}
+
+function questionIdEquals(left: string, right: string) {
+  return left.trim().toLowerCase() === right.trim().toLowerCase();
 }
 
 function createNextRound1QuestionId(
@@ -834,18 +850,31 @@ export async function createRound1QuestionByAdmin(
   }
 
   const questions = JSON.parse(bank.questions) as Round1Question[];
-  const questionId = createNextRound1QuestionId(
-    bank.bankType === "ESSAY" ? "essay" : "objective",
-    questions,
-  );
+  const questionId =
+    normalizeRound1QuestionId(payload.id) ||
+    createNextRound1QuestionId(
+      bank.bankType === "ESSAY" ? "essay" : "objective",
+      questions,
+    );
+
+  if (!isValidRound1QuestionId(questionId)) {
+    return fail(400, "Question ID can only contain letters, numbers, dots, underscores, and hyphens.");
+  }
+
+  if (questions.some((question) => questionIdEquals(question.id, questionId))) {
+    return fail(409, "Another question in this bank already uses that Question ID.");
+  }
+
+  const nextQuestions = [
+    ...questions,
+    normalizeQuestionForStorage({ ...payload, id: questionId }),
+  ];
 
   await prisma.round1TestBank.update({
     where: { id: bankId },
     data: {
-      questions: JSON.stringify([
-        ...questions,
-        normalizeQuestionForStorage({ ...payload, id: questionId }),
-      ]),
+      questionPoolSize: nextQuestions.length,
+      questions: JSON.stringify(nextQuestions),
     },
   });
 
@@ -867,25 +896,36 @@ export async function updateRound1QuestionByAdmin(
   }
 
   const questions = JSON.parse(bank.questions) as Round1Question[];
-  const questionExists = questions.some((question) => question.id === questionId);
-  if (!questionExists) {
+  const questionIndex = questions.findIndex((question) => question.id === questionId);
+  if (questionIndex === -1) {
     return fail(404, "Round 1 question not found.");
   }
 
-  const nextQuestions = questions.map((question) =>
-    question.id === questionId
-      ? normalizeQuestionForStorage({ ...payload, id: questionId })
+  const nextQuestionId = normalizeRound1QuestionId(payload.id) || questionId;
+
+  if (!isValidRound1QuestionId(nextQuestionId)) {
+    return fail(400, "Question ID can only contain letters, numbers, dots, underscores, and hyphens.");
+  }
+
+  if (questions.some((question, index) => index !== questionIndex && questionIdEquals(question.id, nextQuestionId))) {
+    return fail(409, "Another question in this bank already uses that Question ID.");
+  }
+
+  const nextQuestions = questions.map((question, index) =>
+    index === questionIndex
+      ? normalizeQuestionForStorage({ ...payload, id: nextQuestionId })
       : question,
   );
 
   await prisma.round1TestBank.update({
     where: { id: bankId },
     data: {
+      questionPoolSize: nextQuestions.length,
       questions: JSON.stringify(nextQuestions),
     },
   });
 
-  return ok({ bankId, questionId });
+  return ok({ bankId, questionId: nextQuestionId });
 }
 
 export async function deleteRound1QuestionByAdmin(
@@ -907,10 +947,13 @@ export async function deleteRound1QuestionByAdmin(
     return fail(404, "Round 1 question not found.");
   }
 
+  const nextQuestions = questions.filter((question) => question.id !== questionId);
+
   await prisma.round1TestBank.update({
     where: { id: bankId },
     data: {
-      questions: JSON.stringify(questions.filter((question) => question.id !== questionId)),
+      questionPoolSize: nextQuestions.length,
+      questions: JSON.stringify(nextQuestions),
     },
   });
 

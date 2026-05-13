@@ -199,7 +199,7 @@ interface SiteStateValue {
   ) => void;
   deleteTeamByAdmin: (teamId: string) => void;
   createRound1QuestionByAdmin: (bankId: string, payload: Round1Question) => Promise<string | null>;
-  updateRound1QuestionByAdmin: (bankId: string, questionId: string, payload: Round1Question) => void;
+  updateRound1QuestionByAdmin: (bankId: string, questionId: string, payload: Round1Question) => Promise<string | null>;
   deleteRound1QuestionByAdmin: (bankId: string, questionId: string) => Promise<boolean>;
   updateRound1EssayScoreByAdmin: (
     submissionId: string,
@@ -1486,6 +1486,21 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
   };
 
   const validateRound1QuestionDraft = (payload: Round1Question) => {
+    const questionId = payload.id.trim();
+    if (!questionId) {
+      return {
+        en: "Question ID is required.",
+        vi: "Mã câu hỏi là bắt buộc.",
+      } satisfies LocalizedText;
+    }
+
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(questionId)) {
+      return {
+        en: "Question ID can only contain letters, numbers, dots, underscores, and hyphens.",
+        vi: "Mã câu hỏi chỉ được dùng chữ, số, dấu chấm, gạch dưới và gạch nối.",
+      } satisfies LocalizedText;
+    }
+
     if (!payload.topic.trim() || !payload.prompt.en.trim() || !payload.prompt.vi.trim()) {
       return {
         en: "Question topic and question content are required.",
@@ -1621,7 +1636,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateRound1QuestionByAdmin = (
+  const updateRound1QuestionByAdmin = async (
     bankId: string,
     questionId: string,
     payload: Round1Question,
@@ -1634,16 +1649,16 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         },
         "warning",
       );
-      return;
+      return null;
     }
 
     const validationError = validateRound1QuestionDraft(payload);
     if (validationError) {
       pushToast(validationError, "warning");
-      return;
+      return null;
     }
 
-    void (async () => {
+    try {
       const response = await fetch(`/api/admin/round-1/banks/${bankId}/questions/${questionId}`, {
         method: "PATCH",
         headers: {
@@ -1656,9 +1671,10 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       if (!response.ok) {
         const error = await extractResponseError(response, "Could not update the Round 1 question.");
         pushToast({ en: error, vi: error }, "warning");
-        return;
+        return null;
       }
 
+      const result = (await response.json().catch(() => null)) as { questionId?: string } | null;
       await syncSiteData();
       pushToast(
         {
@@ -1667,7 +1683,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         },
         "success",
       );
-    })().catch(() => {
+      return result?.questionId ?? payload.id;
+    } catch {
       pushToast(
         {
           en: "Could not update the Round 1 question right now.",
@@ -1675,7 +1692,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         },
         "warning",
       );
-    });
+      return null;
+    }
   };
 
   const deleteRound1QuestionByAdmin = async (bankId: string, questionId: string) => {
