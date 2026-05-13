@@ -903,7 +903,7 @@ export function DashboardPage() {
                         <p className="mt-2 text-sm leading-7 theme-text-muted">
                           {locale === "en"
                             ? `${requester?.name ?? "The team leader"} wants to lock this roster before Round 1. Once everyone accepts, invites, leaving the team, and leadership transfer all stop.`
-                            : `${requester?.name ?? "Đội trưởng"} muốn khóa đội hình này trước Vòng 1. Khi mọi người cùng đồng ý, việc mời thêm người, rời đội và chuyển đội trưởng đều sẽ dừng lại.`}
+                            : `${requester?.name ?? "Đội trưởng"} muốn khoá đội hình này trước vòng 1. Khi tất cả thành viên xác nhận, đội sẽ được khóa chính thức và không thể thay đổi thành viên, chuyển quyền đội trưởng hoặc hủy khóa đội nữa.`}
                         </p>
                         <div className="mt-4 flex flex-wrap gap-3">
                           <button
