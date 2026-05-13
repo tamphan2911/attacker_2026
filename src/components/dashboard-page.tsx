@@ -1828,13 +1828,13 @@ export function DashboardPage() {
                 </div>
                 <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                   <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                    {locale === "en" ? "Leader action" : "Thao tác đội trưởng"}
+                    {locale === "en" ? "Leader action" : "QUYỀN ĐỘI TRƯỞNG"}
                   </p>
                   <p className="mt-3 text-lg font-semibold theme-text-strong">
                     {currentTeam.leaderId === activeUserId
                       ? locale === "en"
                         ? "You control this step"
-                        : "Bạn là người điều phối bước này"
+                        : "Bắt đầu quy trình khóa đội"
                       : locale === "en"
                         ? `${users.find((user) => user.id === currentTeam.leaderId)?.name ?? "Leader"} starts the workflow`
                         : `${users.find((user) => user.id === currentTeam.leaderId)?.name ?? "Đội trưởng"} sẽ khởi động quy trình`}
@@ -1842,7 +1842,7 @@ export function DashboardPage() {
                   <p className="mt-2 text-sm theme-text-soft">
                     {locale === "en"
                       ? "Only the current leader can start or restart the team lock."
-                      : "Chỉ đội trưởng hiện tại mới có thể bắt đầu hoặc khởi động lại bước khóa đội."}
+                      : "Chỉ đội trưởng hiện tại mới có thể gửi hoặc khởi động lại yêu cầu khóa đội."}
                   </p>
                 </div>
                 <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
