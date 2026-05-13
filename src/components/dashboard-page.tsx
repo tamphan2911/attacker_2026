@@ -1876,7 +1876,7 @@ export function DashboardPage() {
                           : "Vòng 1 đã đóng"
                         : locale === "en"
                           ? "Blocked until lock"
-                          : "Chặn cho tới khi khóa đội"}
+                          : "Vòng 1 sẽ mở sau khi khóa đội"}
                   </p>
                   <p className="mt-2 text-sm theme-text-soft">
                     {teamRound1Locked && !round1Finished
