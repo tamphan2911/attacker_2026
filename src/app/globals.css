@@ -155,6 +155,16 @@ body {
   background: var(--header-top);
 }
 
+.theme-topbar .topbar-contact-link,
+.theme-topbar .topbar-contact-link span,
+.theme-topbar .topbar-contact-icon {
+  color: #fff !important;
+}
+
+.theme-topbar .topbar-contact-icon {
+  stroke: currentColor !important;
+}
+
 .theme-navbar {
   border-color: var(--line);
   background: var(--header-bar);

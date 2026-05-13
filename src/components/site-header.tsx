@@ -402,8 +402,8 @@ export function SiteHeader() {
   const topbarContactWrapClass =
     "inline-flex items-center overflow-hidden rounded-full border border-white/18 bg-slate-950/24 shadow-[0_12px_30px_rgba(2,8,20,0.18)] ring-1 ring-white/10 backdrop-blur-md dark:border-white/12 dark:bg-[rgba(255,255,255,0.09)] dark:shadow-[0_12px_30px_rgba(2,8,20,0.16)]";
   const topbarContactLinkClass =
-    "inline-flex h-8 items-center gap-2 bg-white/[0.08] px-3 text-[0.68rem] font-semibold text-white transition hover:bg-white/[0.16] hover:text-white md:text-[0.7rem]";
-  const topbarContactIconClass = "h-3.5 w-3.5 text-white";
+    "topbar-contact-link inline-flex h-8 items-center gap-2 bg-white/[0.08] px-3 text-[0.68rem] font-semibold text-white transition hover:bg-white/[0.16] hover:text-white md:text-[0.7rem]";
+  const topbarContactIconClass = "topbar-contact-icon h-3.5 w-3.5 text-white";
   const topbarContactDividerClass = "h-4 w-px bg-white/20";
 
   return (
