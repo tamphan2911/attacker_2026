@@ -1,6 +1,7 @@
 "use client";
 
-import { CircleHelp, ExternalLink, Mail, ShieldCheck, Tags, UsersRound } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CircleHelp, ExternalLink, Mail, MessageCircle, ShieldCheck, Tags, UsersRound } from "lucide-react";
 
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -106,6 +107,14 @@ export function FaqPage() {
               <Mail className="h-4 w-4 text-sky-500" />
               <span className="truncate">{pageContent.contact.officialEmailValue}</span>
             </span>
+            <Link
+              href="/messages?organizer=1"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-cyan-400/28 bg-cyan-500 px-5 text-sm font-semibold text-white shadow-[0_18px_34px_rgba(14,165,233,0.24)] transition hover:-translate-y-0.5 hover:bg-cyan-600 dark:border-cyan-200/24 dark:bg-cyan-300 dark:text-slate-950 dark:shadow-[0_18px_34px_rgba(103,232,249,0.14)] dark:hover:bg-cyan-200"
+            >
+              <MessageCircle className="h-4 w-4" />
+              {locale === "en" ? "Message organizer" : "Nhắn ban tổ chức"}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
 

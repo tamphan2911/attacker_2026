@@ -174,6 +174,8 @@ export function MessageCenterPage() {
       setActiveConversationId(requestedRecipientConversation.id);
       window.history.replaceState(null, "", conversationUrl(requestedRecipientConversation.id));
     } else if (requestedRecipientId) {
+      setDraftRecipient(null);
+      setActiveConversationId("");
       const userResponse = await fetch(`/api/messages/users?userId=${encodeURIComponent(requestedRecipientId)}`, {
         cache: "no-store",
         credentials: "same-origin",
@@ -186,7 +188,11 @@ export function MessageCenterPage() {
         setDraftRecipient(userPayload.user);
         setDraftRecipientSource(requestedRecipientSource);
         setActiveConversationId("");
-        window.history.replaceState(null, "", "/messages");
+        window.history.replaceState(
+          null,
+          "",
+          `/messages?recipient=${encodeURIComponent(requestedRecipientId)}&source=${requestedRecipientSource}`,
+        );
       } else if (!options?.silent) {
         setStatusMessage(
           locale === "en"

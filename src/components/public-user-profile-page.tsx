@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, BookOpen, MessageCircle, MessageSquareText, School, UserRound } from "lucide-react";
+import { ArrowLeft, BookOpen, MessageCircle, School, UserRound } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, StatusPill, Surface } from "@/components/site-ui";
@@ -142,23 +142,6 @@ export function PublicUserProfilePage({ profile }: { profile: PublicUserProfile 
           </div>
         </Surface>
       </section>
-
-      <Surface className="px-6 py-6 md:px-8 md:py-8">
-        <div className="flex items-start gap-3">
-          <MessageSquareText className="mt-1 h-5 w-5 text-fuchsia-500" />
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-              {locale === "en" ? "About this participant" : "Giới thiệu"}
-            </p>
-            <p className="mt-3 text-sm leading-8 theme-text-body">
-              {profile.bio ||
-                (locale === "en"
-                  ? "This participant has not added a personal introduction yet."
-                  : "Thí sinh này chưa thêm phần giới thiệu cá nhân.")}
-            </p>
-          </div>
-        </div>
-      </Surface>
     </div>
   );
 }

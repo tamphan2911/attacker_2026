@@ -5,6 +5,7 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState, type Keybo
 import {
   AlertTriangle,
   ArrowRight,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CirclePlus,
@@ -103,6 +104,10 @@ function getForumAuthorHref(userId: string) {
   return `/users/${userId}`;
 }
 
+function canLinkForumAuthor(author: ForumThread["author"]) {
+  return author.role === "student";
+}
+
 function trimForumPreview(value: string, maxLength = 168) {
   const normalized = value.replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) {
@@ -151,6 +156,94 @@ function getForumAuthorContext(
       : "thành viên";
 
   return `${team.name} - ${position}`;
+}
+
+function ForumAuthorIdentity({
+  author,
+  teams,
+  locale,
+  subtitle,
+  avatarClassName = "h-10 w-10 rounded-full",
+}: {
+  author: ForumThread["author"];
+  teams: TeamProfile[];
+  locale: "en" | "vi";
+  subtitle?: string;
+  avatarClassName?: string;
+}) {
+  const content = (
+    <>
+      <GradientAvatar
+        label={author.name}
+        tone={author.avatarTone}
+        imageSrc={author.avatarImageSrc}
+        className={avatarClassName}
+      />
+      <div className="min-w-0">
+        <p className="text-sm font-semibold theme-text-strong transition group-hover:text-sky-700 dark:group-hover:text-sky-200">
+          {author.name}{" "}
+          <span className="font-medium theme-text-soft">
+            ({getForumAuthorContext(locale, author, teams)})
+          </span>
+        </p>
+        {subtitle ? <p className="truncate text-xs theme-text-soft">{subtitle}</p> : null}
+      </div>
+    </>
+  );
+
+  const className = "group flex min-w-0 items-center gap-3 rounded-[1rem] transition hover:opacity-90";
+
+  if (canLinkForumAuthor(author)) {
+    return (
+      <Link
+        href={getForumAuthorHref(author.id)}
+        onClick={(event) => event.stopPropagation()}
+        className={className}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className={className}>{content}</div>;
+}
+
+function ForumCategorySelect({
+  value,
+  onChange,
+  label,
+  content,
+  locale,
+}: {
+  value: ForumThreadCategory;
+  onChange: (value: ForumThreadCategory) => void;
+  label: string;
+  content: ForumPageContent;
+  locale: "en" | "vi";
+}) {
+  return (
+    <label className="space-y-2">
+      <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">{label}</span>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(event) => onChange(event.target.value as ForumThreadCategory)}
+          className="theme-field h-12 w-full appearance-none rounded-[1rem] border bg-white/86 px-4 pr-11 text-sm font-semibold theme-text-strong outline-none shadow-[0_14px_28px_rgba(15,23,42,0.05)] transition focus:border-sky-400/60 focus:ring-4 focus:ring-sky-400/12 dark:bg-slate-950/72"
+        >
+          {forumCategoryOrder.map((category) => (
+            <option
+              key={category}
+              value={category}
+              className="bg-white text-slate-950 dark:bg-slate-950 dark:text-slate-50"
+            >
+              {getForumCategoryLabel(locale, content, category)}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
+      </div>
+    </label>
+  );
 }
 
 function getForumModerationFieldLabel(locale: "en" | "vi", field: ForumModerationIssue["field"]) {
@@ -929,28 +1022,13 @@ export function ForumPage() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <Link
-                    href={getForumAuthorHref(selectedThreadFromList.author.id)}
-                    className="group flex items-center gap-3 rounded-[1rem] transition hover:opacity-90"
-                  >
-                    <GradientAvatar
-                      label={selectedThreadFromList.author.name}
-                      tone={selectedThreadFromList.author.avatarTone}
-                      imageSrc={selectedThreadFromList.author.avatarImageSrc}
-                      className="h-11 w-11 rounded-full"
-                    />
-                    <div>
-	                      <p className="text-sm font-semibold theme-text-strong transition group-hover:text-sky-700 dark:group-hover:text-sky-200">
-	                        {selectedThreadFromList.author.name}{" "}
-	                        <span className="font-medium theme-text-soft">
-	                          ({getForumAuthorContext(locale, selectedThreadFromList.author, teams)})
-	                        </span>
-	                      </p>
-                      <p className="text-xs theme-text-soft">
-                        {selectedThreadFromList.university || (locale === "en" ? "Participant" : "Thí sinh")}
-                      </p>
-                    </div>
-                  </Link>
+                  <ForumAuthorIdentity
+                    author={selectedThreadFromList.author}
+                    teams={teams}
+                    locale={locale}
+                    subtitle={selectedThreadFromList.university || getForumRoleLabel(locale, selectedThreadFromList.author.role)}
+                    avatarClassName="h-11 w-11 rounded-full"
+                  />
                   <span className="theme-chip rounded-full px-3 py-1 text-[0.72rem]">
                     <UsersRound className="mr-1 inline h-3.5 w-3.5" />
                     {selectedThreadFromList.replyCount} {pickText(locale, pageContent.forum.repliesSuffix)}
@@ -1056,25 +1134,11 @@ export function ForumPage() {
 	                              >
 	                                <div className="flex items-start justify-between gap-3">
 	                                  <div className="flex min-w-0 items-center gap-3">
-	                                    <Link
-	                                      href={getForumAuthorHref(reply.author.id)}
-	                                      className="group flex min-w-0 items-center gap-3 rounded-[1rem] transition hover:opacity-90"
-	                                    >
-	                                      <GradientAvatar
-	                                        label={reply.author.name}
-	                                        tone={reply.author.avatarTone}
-	                                        imageSrc={reply.author.avatarImageSrc}
-	                                        className="h-10 w-10 rounded-full"
-	                                      />
-	                                      <div className="min-w-0">
-	                                        <p className="text-sm font-semibold theme-text-strong transition group-hover:text-sky-700 dark:group-hover:text-sky-200">
-	                                          {reply.author.name}{" "}
-	                                          <span className="font-medium theme-text-soft">
-	                                            ({getForumAuthorContext(locale, reply.author, teams)})
-	                                          </span>
-	                                        </p>
-	                                      </div>
-	                                    </Link>
+                                      <ForumAuthorIdentity
+                                        author={reply.author}
+                                        teams={teams}
+                                        locale={locale}
+                                      />
 	                                    <div className="min-w-0">
 	                                      <p className="text-xs theme-text-soft">
 	                                        {formatForumTimestamp(locale, reply.createdAt)}
@@ -1302,10 +1366,21 @@ export function ForumPage() {
                         const isClosedThread = thread.status === "closed";
 
                         return (
-                        <button
+                        <div
                           key={thread.id}
-                          type="button"
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setActiveThreadSlug(thread.slug)}
+                          onKeyDown={(event) => {
+                            if (event.target !== event.currentTarget) {
+                              return;
+                            }
+
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              setActiveThreadSlug(thread.slug);
+                            }
+                          }}
                           className={`group relative w-full overflow-hidden rounded-[1.25rem] border px-4 py-3 text-left transition ${
                             isClosedThread
                               ? "border-amber-600/24 bg-amber-50/82 shadow-[0_12px_26px_rgba(245,158,11,0.06)] dark:border-amber-300/18 dark:bg-amber-300/[0.07] dark:shadow-none"
@@ -1362,12 +1437,23 @@ export function ForumPage() {
                                   {trimForumPreview(thread.lastMessagePreview || thread.body, 140)}
                                 </p>
                                 <p className="truncate text-xs theme-text-soft">
-                                  {thread.author.name} · {thread.author.university || thread.university || getForumRoleLabel(locale, thread.author.role)}
+                                  {canLinkForumAuthor(thread.author) ? (
+                                    <Link
+                                      href={getForumAuthorHref(thread.author.id)}
+                                      onClick={(event) => event.stopPropagation()}
+                                      className="font-semibold theme-accent hover:underline"
+                                    >
+                                      {thread.author.name}
+                                    </Link>
+                                  ) : (
+                                    <span className="font-semibold theme-text-strong">{thread.author.name}</span>
+                                  )}{" "}
+                                  · {thread.author.university || thread.university || getForumRoleLabel(locale, thread.author.role)}
                                 </p>
                               </div>
                             </div>
                           </div>
-                        </button>
+                        </div>
                         );
                       })}
                     </div>
@@ -1531,28 +1617,19 @@ export function ForumPage() {
                     />
                   </label>
 
-                  <label className="space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {pickText(locale, pageContent.forum.categoryFieldLabel)}
-                    </span>
-                    <select
-                      value={threadEditDraft.category}
-                      onChange={(event) => {
+                  <ForumCategorySelect
+                    value={threadEditDraft.category}
+                    label={pickText(locale, pageContent.forum.categoryFieldLabel)}
+                    content={pageContent.forum}
+                    locale={locale}
+                    onChange={(value) => {
                         setThreadEditDraft((current) => ({
                           ...current,
-                          category: event.target.value as ForumThreadCategory,
+                          category: value,
                         }));
                         setThreadEditModerationIssues([]);
                       }}
-                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
-                    >
-                      {forumCategoryOrder.map((category) => (
-                        <option key={category} value={category}>
-                          {getForumCategoryLabel(locale, pageContent.forum, category)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  />
 
                   <label className="space-y-2 md:col-span-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
@@ -1653,27 +1730,18 @@ export function ForumPage() {
                     />
                   </label>
 
-                  <label className="space-y-2">
-                    <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {pickText(locale, pageContent.forum.categoryFieldLabel)}
-                    </span>
-                    <select
-                      value={threadDraft.category}
-                      onChange={(event) =>
+                  <ForumCategorySelect
+                    value={threadDraft.category}
+                    label={pickText(locale, pageContent.forum.categoryFieldLabel)}
+                    content={pageContent.forum}
+                    locale={locale}
+                    onChange={(value) =>
                         setThreadDraft((current) => ({
                           ...current,
-                          category: event.target.value as ForumThreadCategory,
+                          category: value,
                         }))
                       }
-                      className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
-                    >
-                      {forumCategoryOrder.map((category) => (
-                        <option key={category} value={category}>
-                          {getForumCategoryLabel(locale, pageContent.forum, category)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  />
 
                   <label className="space-y-2 md:col-span-2">
                     <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
