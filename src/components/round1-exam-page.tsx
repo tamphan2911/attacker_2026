@@ -1694,7 +1694,7 @@ export function Round1ExamPage() {
                             </p>
                             {isSelected ? (
                               <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">
-                                {locale === "en" ? "Selected" : "Da chon"}
+                                {locale === "en" ? "Selected" : "Đã chọn"}
                               </p>
                             ) : null}
                           </div>
