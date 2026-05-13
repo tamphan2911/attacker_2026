@@ -2002,7 +2002,7 @@ export function DashboardPage() {
                 {canStartRound1Exam ? (
                   <Link
                     href="/round-1"
-                    className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-sky-300/60 bg-[linear-gradient(135deg,rgba(224,242,254,0.96),rgba(186,230,253,0.92)_48%,rgba(147,197,253,0.86))] px-5 py-3 text-sm font-semibold text-sky-950 shadow-[0_14px_34px_rgba(56,189,248,0.18)] transition hover:-translate-y-0.5 hover:border-sky-400/70 hover:bg-[linear-gradient(135deg,rgba(240,249,255,0.98),rgba(186,230,253,0.96)_48%,rgba(125,211,252,0.9))] hover:shadow-[0_18px_42px_rgba(56,189,248,0.26)] dark:border-sky-200/24 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.24),rgba(59,130,246,0.18))] dark:text-sky-50 dark:shadow-none"
                   >
                     <ArrowRight className="h-4 w-4" />
                     {locale === "en" ? "Enter Round 1 exam" : "Vào bài thi Vòng 1"}
