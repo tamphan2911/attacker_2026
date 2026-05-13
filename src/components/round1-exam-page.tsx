@@ -975,27 +975,6 @@ export function Round1ExamPage() {
       ? `${currentTeam.leaderId === currentUser.id ? "Team leader" : "Team member"} of ${currentTeam.name}`
       : `${currentTeam.leaderId === currentUser.id ? "Đội trưởng đội" : "Thành viên đội"} ${currentTeam.name}`
     : "";
-  const watermarkLabel =
-    session && currentTeam
-      ? [
-          locale === "en" ? "Round 1 confidential" : "Bai thi Vong 1",
-          currentUser.name,
-          currentUser.id,
-          `#${currentTeam.tag}`,
-          new Date(nowMs).toLocaleString(locale === "en" ? "en-US" : "vi-VN", {
-            hour12: false,
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-          }),
-        ].join(" • ")
-      : "";
-  const watermarkRows = watermarkLabel
-    ? Array.from({ length: 12 }, (_, index) => `${watermarkLabel} • ${index + 1}`)
-    : [];
   const navigateToQuestion = (index: number) => {
     setSession((current) =>
       current
@@ -1494,15 +1473,6 @@ export function Round1ExamPage() {
     <>
       {session && !existingSubmission ? (
         <>
-          <div aria-hidden="true" className="theme-round1-watermark-layer">
-            <div className="theme-round1-watermark-grid">
-              {watermarkRows.map((label) => (
-                <span key={label} className="theme-round1-watermark-chip">
-                  {label}
-                </span>
-              ))}
-            </div>
-          </div>
           {captureWarning ? (
             <div className="pointer-events-none fixed bottom-5 right-5 z-[75] max-w-sm rounded-[1.4rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.98),rgba(255,237,213,0.96))] px-4 py-3.5 text-sm leading-7 text-amber-950 shadow-[0_18px_44px_rgba(122,74,12,0.16)] dark:border-amber-300/22 dark:bg-[linear-gradient(135deg,rgba(120,53,15,0.42),rgba(113,63,18,0.34))] dark:text-amber-100">
               <div className="flex items-start gap-3">
