@@ -6,6 +6,7 @@ import type { ServiceResult } from "@/server/team-service";
 
 const MESSAGE_MAX_LENGTH = 2000;
 const ORGANIZER_USER_ID = "competition-organizer";
+const TEAM_REMOVAL_NOTICE_PREFIX = "Team removal notice";
 
 type MessageActor = {
   id: string;
@@ -664,20 +665,26 @@ export async function listUnreadNotifications(actor: MessageActor) {
 
   const messageNotifications = conversationPayload.conversations
     .filter((conversation) => conversation.unreadCount > 0 && conversation.latestMessage)
-    .map((conversation) => ({
-      id: `message-${conversation.id}`,
-      type: "message" as const,
-      title: conversation.participant?.name ?? "New message",
-      description: conversation.latestMessage?.body ?? "",
-      href: `/messages?conversation=${encodeURIComponent(conversation.id)}`,
-      createdAt: conversation.latestMessage?.createdAt ?? conversation.lastMessageAt,
-      count: conversation.unreadCount,
-      meta: {
-        senderName: conversation.participant?.name ?? "New message",
-        isMessageRequest: conversation.isMessageRequest,
-        isOrganizer: conversation.isOrganizer,
-      },
-    }));
+    .map((conversation) => {
+      const latestBody = conversation.latestMessage?.body ?? "";
+      const isTeamRemoval = latestBody.startsWith(TEAM_REMOVAL_NOTICE_PREFIX);
+
+      return {
+        id: `message-${conversation.id}`,
+        type: "message" as const,
+        title: isTeamRemoval ? "Team removal notice" : conversation.participant?.name ?? "New message",
+        description: latestBody,
+        href: `/messages?conversation=${encodeURIComponent(conversation.id)}`,
+        createdAt: conversation.latestMessage?.createdAt ?? conversation.lastMessageAt,
+        count: conversation.unreadCount,
+        meta: {
+          senderName: conversation.participant?.name ?? "New message",
+          isMessageRequest: conversation.isMessageRequest,
+          isOrganizer: conversation.isOrganizer,
+          isTeamRemoval,
+        },
+      };
+    });
 
   const invitationNotifications = invitations.map((invitation) => ({
     id: `team-invitation-${invitation.id}`,

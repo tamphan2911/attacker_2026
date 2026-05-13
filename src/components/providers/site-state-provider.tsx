@@ -210,6 +210,7 @@ interface SiteStateValue {
   initiateRound1TeamLock: () => void;
   respondToRound1TeamLock: (requestId: string, decision: "accept" | "decline") => void;
   leaveCurrentTeam: () => void;
+  kickTeamMember: (memberId: string, reason: string) => Promise<boolean>;
   transferLeadership: (nextLeaderId: string) => void;
   respondToLeadershipTransfer: (requestId: string, decision: "accept" | "decline") => void;
   submitRound1Attempt: (payload: Pick<Round1Submission, "bankId" | "rightCount" | "wrongCount" | "objectiveScore" | "durationMinutes">) => void;
@@ -2210,6 +2211,82 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const kickTeamMember = async (memberId: string, reason: string) => {
+    const team = getTeamForUser(activeUserId, teams);
+    const targetMember = users.find((user) => user.id === memberId);
+    const trimmedReason = reason.trim();
+
+    if (!team || team.leaderId !== activeUserId) {
+      pushToast(
+        {
+          en: "Only the team leader can remove team members.",
+          vi: "Chỉ đội trưởng mới có thể đưa thành viên ra khỏi đội.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    if (!targetMember || !team.memberIds.includes(memberId) || memberId === team.leaderId) {
+      pushToast(
+        {
+          en: "Choose a current non-leader member to remove.",
+          vi: "Hãy chọn một thành viên hiện tại không phải đội trưởng.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    if (!trimmedReason) {
+      pushToast(
+        {
+          en: "A removal reason is required.",
+          vi: "Vui lòng nhập lý do đưa thành viên ra khỏi đội.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/teams/${team.id}/members/${memberId}/kick`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ reason: trimmedReason }),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not remove this member.");
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncWorkspace();
+      pushToast(
+        {
+          en: `${targetMember.name} has been removed from the team.`,
+          vi: `Đã đưa ${targetMember.name} ra khỏi đội.`,
+        },
+        "success",
+      );
+      window.dispatchEvent(new Event("attacker-notifications-refresh"));
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not remove this member right now.",
+          vi: "Hiện không thể đưa thành viên này ra khỏi đội.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
   const transferLeadership = (nextLeaderId: string) => {
     const team = getTeamForUser(activeUserId, teams);
 
@@ -2783,6 +2860,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     initiateRound1TeamLock,
     respondToRound1TeamLock,
     leaveCurrentTeam,
+    kickTeamMember,
     transferLeadership,
     respondToLeadershipTransfer,
     submitRound1Attempt,

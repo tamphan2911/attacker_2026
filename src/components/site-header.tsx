@@ -91,6 +91,7 @@ type HeaderNotificationItem = {
     teamTag?: string;
     isMessageRequest?: boolean;
     isOrganizer?: boolean;
+    isTeamRemoval?: boolean;
   };
 };
 
@@ -199,6 +200,12 @@ function NotificationMenu({
         : `${item.meta?.senderName ?? "Một đội trưởng"} đã mời bạn vào đội ${item.title}.`;
     }
 
+    if (item.meta?.isTeamRemoval) {
+      const lines = item.description.split("\n").map((line) => line.trim()).filter(Boolean);
+      const localizedLines = locale === "en" ? lines.slice(1, 3) : lines.slice(4, 6);
+      return localizedLines.length > 0 ? localizedLines.join(" ") : item.description;
+    }
+
     if (item.meta?.isMessageRequest) {
       return locale === "en"
         ? `First message request: ${item.description}`
@@ -215,6 +222,10 @@ function NotificationMenu({
   };
 
   const getItemTitle = (item: HeaderNotificationItem) => {
+    if (item.type === "message" && item.meta?.isTeamRemoval) {
+      return locale === "en" ? "Team removal notice" : "Thông báo rời đội";
+    }
+
     if (item.type === "message" && item.meta?.isMessageRequest) {
       return locale === "en"
         ? `Message request from ${item.meta?.senderName ?? item.title}`
@@ -232,6 +243,10 @@ function NotificationMenu({
 
   const getItemBadgeLabel = (item: HeaderNotificationItem) => {
     if (item.type === "message") {
+      if (item.meta?.isTeamRemoval) {
+        return locale === "en" ? "Team update" : "Cập nhật đội";
+      }
+
       if (item.meta?.isMessageRequest) {
         return locale === "en" ? "Message request" : "Yêu cầu nhắn tin";
       }
@@ -279,7 +294,9 @@ function NotificationMenu({
                 onClick={() => setIsOpen(false)}
                 className={cn(
                   "grid gap-1 rounded-[1.1rem] border px-3 py-3 transition hover:bg-[rgba(23,114,208,0.08)] dark:hover:bg-[rgba(88,196,255,0.12)]",
-                  item.meta?.isMessageRequest
+                  item.meta?.isTeamRemoval
+                    ? "border-rose-300/36 bg-rose-400/10"
+                    : item.meta?.isMessageRequest
                     ? "border-amber-300/34 bg-amber-400/10"
                     : item.meta?.isOrganizer
                       ? "border-cyan-300/28 bg-cyan-400/10"
@@ -291,7 +308,9 @@ function NotificationMenu({
                   <span
                     className={cn(
                       "shrink-0 rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold",
-                      item.meta?.isMessageRequest
+                      item.meta?.isTeamRemoval
+                        ? "border-rose-400/42 bg-[linear-gradient(135deg,rgba(251,113,133,0.24),rgba(244,63,94,0.18))] text-rose-900 dark:text-rose-100"
+                        : item.meta?.isMessageRequest
                         ? "border-amber-400/45 bg-[linear-gradient(135deg,rgba(251,191,36,0.28),rgba(249,115,22,0.18))] text-amber-950 dark:text-amber-100"
                         : item.meta?.isOrganizer
                           ? "border-cyan-300/34 bg-cyan-400/14 text-cyan-800 dark:text-cyan-100"

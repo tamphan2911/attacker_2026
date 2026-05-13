@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import {
+  AlertTriangle,
   ArrowRight,
   Camera,
   Check,
@@ -17,6 +18,7 @@ import {
   ShieldCheck,
   Undo2,
   Upload,
+  UserMinus2,
   UserPlus2,
   X,
 } from "lucide-react";
@@ -212,6 +214,7 @@ export function DashboardPage() {
     initiateRound1TeamLock,
     respondToRound1TeamLock,
     leaveCurrentTeam,
+    kickTeamMember,
     transferLeadership,
     respondToLeadershipTransfer,
     submitTeamSubmission,
@@ -224,6 +227,12 @@ export function DashboardPage() {
   const [leadershipTargetId, setLeadershipTargetId] = useState("");
   const [isLeadershipMenuOpen, setIsLeadershipMenuOpen] = useState(false);
   const leadershipMenuRef = useRef<HTMLDivElement | null>(null);
+  const [kickTargetId, setKickTargetId] = useState("");
+  const [isKickMenuOpen, setIsKickMenuOpen] = useState(false);
+  const kickMenuRef = useRef<HTMLDivElement | null>(null);
+  const [pendingKickMemberId, setPendingKickMemberId] = useState<string | null>(null);
+  const [kickReason, setKickReason] = useState("");
+  const [isKickMemberPending, setIsKickMemberPending] = useState(false);
   const [submissionForms, setSubmissionForms] = useState<Record<SubmissionRound, SubmissionFormState>>({
     "round-2": createSubmissionFormState(),
     "round-3": createSubmissionFormState(),
@@ -237,17 +246,25 @@ export function DashboardPage() {
     setTeamAvatarError("");
     setPendingInviteUserId(null);
     setPendingRecallInvitationId(null);
+    setPendingKickMemberId(null);
+    setKickReason("");
   }, [currentTeam?.id]);
 
   useEffect(() => {
     setLeadershipTargetId("");
     setIsLeadershipMenuOpen(false);
+    setKickTargetId("");
+    setIsKickMenuOpen(false);
   }, [currentTeam?.id]);
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
       if (!leadershipMenuRef.current?.contains(event.target as Node)) {
         setIsLeadershipMenuOpen(false);
+      }
+
+      if (!kickMenuRef.current?.contains(event.target as Node)) {
+        setIsKickMenuOpen(false);
       }
     };
 
@@ -256,6 +273,24 @@ export function DashboardPage() {
       window.removeEventListener("mousedown", handlePointerDown);
     };
   }, []);
+
+  useEffect(() => {
+    if (!pendingKickMemberId) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPendingKickMemberId(null);
+        setKickReason("");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [pendingKickMemberId]);
 
   if (authStatus === "loading") {
     return (
@@ -357,6 +392,13 @@ export function DashboardPage() {
     : [];
   const leadershipTransferOptions = currentTeamMembers.filter((member) => member.id !== activeUserId);
   const selectedLeadershipTarget = leadershipTransferOptions.find((member) => member.id === leadershipTargetId);
+  const kickMemberOptions = currentTeam
+    ? currentTeamMembers.filter((member) => member.id !== currentTeam.leaderId)
+    : [];
+  const selectedKickTarget = kickMemberOptions.find((member) => member.id === kickTargetId);
+  const pendingKickMember = pendingKickMemberId
+    ? currentTeamMembers.find((member) => member.id === pendingKickMemberId)
+    : undefined;
 
   const incomingInvitations = invitations.filter(
     (invitation) => invitation.toUserId === activeUserId && invitation.status === "pending",
@@ -712,6 +754,24 @@ export function DashboardPage() {
     const invitationId = pendingRecallInvitation.id;
     setPendingRecallInvitationId(null);
     recallInvitation(invitationId);
+  };
+
+  const handleConfirmKickMember = async () => {
+    if (!pendingKickMember || !kickReason.trim() || isKickMemberPending) {
+      return;
+    }
+
+    setIsKickMemberPending(true);
+    const wasRemoved = await kickTeamMember(pendingKickMember.id, kickReason);
+    setIsKickMemberPending(false);
+
+    if (!wasRemoved) {
+      return;
+    }
+
+    setPendingKickMemberId(null);
+    setKickTargetId("");
+    setKickReason("");
   };
 
   const hasActionInbox =
@@ -1241,6 +1301,129 @@ export function DashboardPage() {
                       ))}
                     </div>
                   </div>
+
+                  {isLeader ? (
+                    <div className="rounded-[1.5rem] border border-rose-400/22 bg-[linear-gradient(135deg,rgba(244,63,94,0.1),rgba(255,255,255,0.72))] px-4 py-4 shadow-[0_18px_44px_rgba(244,63,94,0.08)] dark:bg-[linear-gradient(135deg,rgba(244,63,94,0.14),rgba(15,23,42,0.76))]">
+                      <div className="flex items-start gap-3">
+                        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] border border-rose-400/24 bg-rose-400/12 text-rose-700 dark:text-rose-100">
+                          <UserMinus2 className="h-5 w-5" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold theme-text-strong">
+                            {locale === "en" ? "Remove a team member" : "Đưa thành viên ra khỏi đội"}
+                          </p>
+                          <p className="mt-2 text-sm leading-7 theme-text-muted">
+                            {locale === "en"
+                              ? "Only the team leader can remove a current non-leader member. The removed member receives a notification with the time and reason."
+                              : "Chỉ đội trưởng có thể đưa một thành viên hiện tại ra khỏi đội. Thành viên bị đưa ra sẽ nhận thông báo kèm thời gian và lý do."}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid gap-3">
+                        <div ref={kickMenuRef} className="relative">
+                          <button
+                            type="button"
+                            disabled={kickMemberOptions.length === 0}
+                            onClick={() => setIsKickMenuOpen((current) => !current)}
+                            className="flex w-full items-center justify-between gap-3 rounded-2xl border theme-border theme-panel px-4 py-3.5 text-left text-sm font-semibold theme-text-strong outline-none transition hover:border-rose-400/32 hover:bg-white/78 focus:border-rose-400/44 focus:ring-4 focus:ring-rose-400/12 disabled:cursor-not-allowed disabled:opacity-45 dark:hover:bg-white/8"
+                          >
+                            <span className="min-w-0">
+                              <span className="block truncate">
+                                {selectedKickTarget?.name ??
+                                  (kickMemberOptions.length > 0
+                                    ? locale === "en"
+                                      ? "Select member"
+                                      : "Chọn thành viên"
+                                    : locale === "en"
+                                      ? "No removable member"
+                                      : "Không có thành viên phù hợp")}
+                              </span>
+                              {selectedKickTarget ? (
+                                <span className="mt-1 block truncate text-xs font-medium theme-text-soft">
+                                  {selectedKickTarget.major} · {selectedKickTarget.university}
+                                </span>
+                              ) : null}
+                            </span>
+                            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border theme-border bg-white/65 theme-text-soft dark:bg-white/8">
+                              <ChevronDown className={`h-4 w-4 transition-transform ${isKickMenuOpen ? "rotate-180" : ""}`} />
+                            </span>
+                          </button>
+
+                          {isKickMenuOpen ? (
+                            <div className="theme-auth-university-menu theme-panel-strong absolute left-0 right-0 top-[calc(100%+0.55rem)] z-30 rounded-[1.35rem] border theme-border p-2 shadow-[0_22px_55px_rgba(15,23,42,0.14)]">
+                              <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                                {kickMemberOptions.length > 0 ? (
+                                  kickMemberOptions.map((member) => (
+                                    <button
+                                      key={member.id}
+                                      type="button"
+                                      onMouseDown={(event) => event.preventDefault()}
+                                      onClick={() => {
+                                        setKickTargetId(member.id);
+                                        setIsKickMenuOpen(false);
+                                      }}
+                                      className={`flex w-full items-center justify-between gap-3 rounded-[1rem] px-3 py-3 text-left text-sm transition hover:bg-rose-500/10 ${
+                                        kickTargetId === member.id ? "bg-rose-500/10" : ""
+                                      }`}
+                                    >
+                                      <span className="min-w-0">
+                                        <span className="block truncate font-semibold theme-text-strong">{member.name}</span>
+                                        <span className="mt-1 block truncate text-xs theme-text-soft">
+                                          {member.major} · {member.university}
+                                        </span>
+                                      </span>
+                                      <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.22em] theme-text-faint">
+                                        {locale === "en" ? "Pick" : "Chọn"}
+                                      </span>
+                                    </button>
+                                  ))
+                                ) : (
+                                  <div className="rounded-[1rem] px-3 py-3 text-sm leading-6 theme-text-muted">
+                                    {locale === "en"
+                                      ? "There is no non-leader member available to remove."
+                                      : "Không có thành viên không phải đội trưởng để đưa ra khỏi đội."}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          <select
+                            disabled={kickMemberOptions.length === 0}
+                            value={kickTargetId}
+                            onChange={(event) => setKickTargetId(event.target.value)}
+                            className="sr-only"
+                          >
+                            <option value="" className="bg-slate-950">
+                              {locale === "en" ? "Select member" : "Chọn thành viên"}
+                            </option>
+                            {kickMemberOptions.map((member) => (
+                              <option key={member.id} value={member.id} className="bg-slate-950">
+                                {member.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={!selectedKickTarget || isKickMemberPending}
+                          onClick={() => {
+                            if (!selectedKickTarget) {
+                              return;
+                            }
+                            setPendingKickMemberId(selectedKickTarget.id);
+                            setKickReason("");
+                          }}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500 px-4 py-3 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(244,63,94,0.2)] transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          <UserMinus2 className="h-4 w-4" />
+                          {locale === "en" ? "Kick out member" : "Đưa ra khỏi đội"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
 
                   {sentInvitations.length > 0 ? (
                     <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -2267,6 +2450,148 @@ export function DashboardPage() {
           </Surface>
         </section>
       )}
+      {pendingKickMember ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="kick-member-title"
+        >
+          <div className="theme-panel theme-card-shadow w-full max-w-2xl overflow-hidden rounded-[2rem] border theme-border">
+            <div className="flex items-start justify-between gap-4 border-b theme-border px-5 py-5 md:px-6">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-rose-600 dark:text-rose-200/85">
+                  {locale === "en" ? "Member removal" : "Đưa thành viên ra khỏi đội"}
+                </p>
+                <h2 id="kick-member-title" className="mt-2 theme-heading text-2xl font-semibold theme-text-strong">
+                  {locale === "en" ? "Confirm this member removal" : "Xác nhận đưa thành viên ra khỏi đội"}
+                </h2>
+                <p className="mt-2 max-w-xl text-sm leading-7 theme-text-muted">
+                  {locale === "en"
+                    ? "This member will be removed from the team immediately and will receive a notification with your reason."
+                    : "Thành viên này sẽ được đưa ra khỏi đội ngay lập tức và sẽ nhận thông báo kèm lý do của bạn."}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPendingKickMemberId(null);
+                  setKickReason("");
+                }}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border theme-border theme-panel-subtle theme-text-soft transition hover:bg-white/75 dark:hover:bg-white/8"
+                aria-label={locale === "en" ? "Close member removal confirmation" : "Đóng xác nhận đưa thành viên ra khỏi đội"}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid gap-4 px-5 py-5 md:grid-cols-[minmax(0,1fr)_250px] md:px-6">
+              <div className="rounded-[1.5rem] border theme-border bg-white/60 px-4 py-4 dark:bg-white/4">
+                <div className="flex items-start gap-4">
+                  <GradientAvatar
+                    label={pendingKickMember.name}
+                    tone={pendingKickMember.avatarTone}
+                    imageSrc={pendingKickMember.avatarImageSrc}
+                    className="h-16 w-16 text-base"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-lg font-semibold theme-text-strong">{pendingKickMember.name}</p>
+                    <p className="mt-1 truncate text-sm theme-text-muted">{pendingKickMember.email}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <StatusPill>{pendingKickMember.studentId || (locale === "en" ? "No student ID" : "Chưa có mã sinh viên")}</StatusPill>
+                      <StatusPill>{pendingKickMember.classYear || (locale === "en" ? "No class year" : "Chưa có năm học")}</StatusPill>
+                    </div>
+                  </div>
+                </div>
+
+                <label className="mt-5 block">
+                  <span className="text-sm font-semibold theme-text-strong">
+                    {locale === "en" ? "Removal reason" : "Lý do đưa ra khỏi đội"} <span className="text-rose-500">*</span>
+                  </span>
+                  <textarea
+                    value={kickReason}
+                    onChange={(event) => setKickReason(event.target.value)}
+                    rows={4}
+                    maxLength={1000}
+                    placeholder={
+                      locale === "en"
+                        ? "Explain clearly why this member is being removed."
+                        : "Nhập rõ lý do đưa thành viên này ra khỏi đội."
+                    }
+                    className="theme-placeholder mt-3 w-full resize-none rounded-[1.35rem] border theme-border theme-panel px-4 py-3 text-sm leading-7 theme-text-strong outline-none transition focus:border-rose-400/45 focus:ring-4 focus:ring-rose-400/12"
+                  />
+                  <span className="mt-2 block text-right text-xs theme-text-soft">
+                    {kickReason.trim().length > 0
+                      ? locale === "en"
+                        ? `${Math.max(0, 1000 - kickReason.length)} characters left`
+                        : `Còn ${Math.max(0, 1000 - kickReason.length)} ký tự`
+                      : locale === "en"
+                        ? "Required"
+                        : "Bắt buộc"}
+                  </span>
+                </label>
+              </div>
+
+              <div className="rounded-[1.5rem] border border-rose-400/28 bg-rose-400/10 px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-500 text-white shadow-[0_14px_34px_rgba(244,63,94,0.24)]">
+                    <AlertTriangle className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold theme-text-strong">
+                      {locale === "en" ? "Immediate effect" : "Hiệu lực ngay"}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 theme-text-muted">
+                      {locale === "en"
+                        ? `${pendingKickMember.name} will no longer belong to ${currentTeam?.name ?? "this team"}.`
+                        : `${pendingKickMember.name} sẽ không còn thuộc ${currentTeam?.name ?? "đội này"}.`}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 rounded-[1.15rem] border theme-border bg-white/55 px-3 py-3 text-sm dark:bg-white/5">
+                  <p className="text-xs uppercase tracking-[0.2em] theme-text-soft">
+                    {locale === "en" ? "Notification" : "Thông báo"}
+                  </p>
+                  <p className="mt-2 leading-6 theme-text-muted">
+                    {locale === "en"
+                      ? "The removed member will see an unread notification with the time and reason."
+                      : "Thành viên bị đưa ra sẽ thấy thông báo chưa đọc có thời gian và lý do."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 px-5 py-5 md:flex-row md:justify-end md:px-6">
+              <button
+                type="button"
+                disabled={isKickMemberPending}
+                onClick={() => {
+                  setPendingKickMemberId(null);
+                  setKickReason("");
+                }}
+                className="inline-flex items-center justify-center rounded-2xl border theme-border-strong theme-panel px-5 py-3 text-sm font-semibold theme-text-strong disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                {locale === "en" ? "Cancel" : "Hủy"}
+              </button>
+              <button
+                type="button"
+                disabled={!kickReason.trim() || isKickMemberPending}
+                onClick={() => void handleConfirmKickMember()}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-rose-400/30 bg-rose-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(244,63,94,0.22)] transition hover:bg-rose-600 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <UserMinus2 className="h-4 w-4" />
+                {isKickMemberPending
+                  ? locale === "en"
+                    ? "Removing..."
+                    : "Đang xử lý..."
+                  : locale === "en"
+                    ? "Confirm removal"
+                    : "Xác nhận đưa ra"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {pendingInviteUser ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm"

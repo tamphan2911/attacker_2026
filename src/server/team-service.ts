@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import {
   CompetitionStage,
   LeadershipTransferStatus,
+  MessageConversationKind,
   Round1BankStatus,
   Round1TestBankType,
   SubmissionRound,
@@ -109,6 +110,125 @@ function isTeamRosterLocked(team: { stage: CompetitionStage; round1LockStatus: T
 
 function trimInput(value: string) {
   return value.trim();
+}
+
+const TEAM_REMOVAL_NOTICE_PREFIX = "Team removal notice";
+
+function formatVietnamDateTime(value: Date) {
+  return new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(value);
+}
+
+async function findDirectConversationForUsers(
+  tx: Prisma.TransactionClient,
+  firstUserId: string,
+  secondUserId: string,
+) {
+  const conversations = await tx.messageConversation.findMany({
+    where: {
+      kind: MessageConversationKind.DIRECT,
+      participants: {
+        some: {
+          userId: firstUserId,
+        },
+      },
+    },
+    include: {
+      participants: true,
+    },
+    orderBy: {
+      lastMessageAt: "desc",
+    },
+  });
+
+  return conversations.find(
+    (conversation) =>
+      conversation.participants.length === 2 &&
+      conversation.participants.some((participant) => participant.userId === secondUserId),
+  );
+}
+
+async function createTeamRemovalNotification(
+  tx: Prisma.TransactionClient,
+  payload: {
+    leaderId: string;
+    leaderName: string;
+    targetUserId: string;
+    teamName: string;
+    teamTag: string;
+    reason: string;
+    removedAt: Date;
+  },
+) {
+  const timestamp = formatVietnamDateTime(payload.removedAt);
+  const teamLabel = `${payload.teamName} (${payload.teamTag})`;
+  const body = [
+    TEAM_REMOVAL_NOTICE_PREFIX,
+    `You were removed from ${teamLabel} by ${payload.leaderName} at ${timestamp}.`,
+    `Reason: ${payload.reason}`,
+    "",
+    "Thông báo rời đội",
+    `Bạn đã được đưa ra khỏi đội ${teamLabel} bởi ${payload.leaderName} lúc ${timestamp}.`,
+    `Lý do: ${payload.reason}`,
+  ].join("\n");
+
+  const existingConversation = await findDirectConversationForUsers(
+    tx,
+    payload.leaderId,
+    payload.targetUserId,
+  );
+  let conversationId = existingConversation?.id;
+
+  if (!conversationId) {
+    const conversation = await tx.messageConversation.create({
+      data: {
+        kind: MessageConversationKind.DIRECT,
+        lastMessageAt: payload.removedAt,
+        participants: {
+          create: [
+            {
+              userId: payload.leaderId,
+              readAt: payload.removedAt,
+            },
+            {
+              userId: payload.targetUserId,
+              showOtherEmail: true,
+            },
+          ],
+        },
+      },
+    });
+    conversationId = conversation.id;
+  }
+
+  await tx.directMessage.create({
+    data: {
+      conversationId,
+      senderId: payload.leaderId,
+      body,
+      createdAt: payload.removedAt,
+    },
+  });
+
+  await tx.messageConversation.update({
+    where: { id: conversationId },
+    data: {
+      lastMessageAt: payload.removedAt,
+    },
+  });
+
+  await tx.messageParticipant.updateMany({
+    where: {
+      conversationId,
+      userId: payload.leaderId,
+    },
+    data: {
+      readAt: payload.removedAt,
+    },
+  });
 }
 
 export interface PersistedRound1Attempt {
@@ -797,6 +917,119 @@ export async function leaveCurrentTeam(actorId: string): Promise<ServiceResult<{
     });
 
     return ok({ teamId: membership.teamId });
+  });
+}
+
+export async function kickTeamMember(
+  actorId: string,
+  teamId: string,
+  targetUserId: string,
+  reason: string,
+): Promise<ServiceResult<{ teamId: string; removedUserId: string; removedUserName: string }>> {
+  const trimmedReason = trimInput(reason);
+
+  if (!trimmedReason) {
+    return fail(400, "A removal reason is required.");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    const team = await tx.team.findUnique({
+      where: { id: teamId },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      return fail(404, "Team not found.");
+    }
+
+    if (team.leaderId !== actorId) {
+      return fail(403, "Only the team leader can remove team members.");
+    }
+
+    if (targetUserId === actorId || targetUserId === team.leaderId) {
+      return fail(400, "The team leader cannot be removed from the team.");
+    }
+
+    const targetMembership = team.members.find((member) => member.userId === targetUserId);
+    if (!targetMembership) {
+      return fail(404, "That student is not a current member of this team.");
+    }
+
+    const leader = await tx.user.findUnique({
+      where: { id: actorId },
+      select: {
+        name: true,
+      },
+    });
+    const removedAt = new Date();
+
+    await tx.teamMember.delete({
+      where: { id: targetMembership.id },
+    });
+
+    await tx.leadershipTransferRequest.updateMany({
+      where: {
+        teamId,
+        status: LeadershipTransferStatus.PENDING,
+        OR: [{ fromUserId: targetUserId }, { toUserId: targetUserId }],
+      },
+      data: {
+        status: LeadershipTransferStatus.CANCELLED,
+        respondedAt: removedAt,
+      },
+    });
+
+    if (team.stage === CompetitionStage.ROUND_1) {
+      await tx.round1TeamLockRequest.updateMany({
+        where: {
+          teamId,
+          status: Round1TeamLockRequestStatus.PENDING,
+        },
+        data: {
+          status: Round1TeamLockRequestStatus.CANCELLED,
+          respondedAt: removedAt,
+        },
+      });
+
+      await tx.team.update({
+        where: { id: teamId },
+        data: {
+          round1LockStatus: TeamRound1LockStatus.OPEN,
+          round1LockProtocolId: null,
+          round1LockRequestedAt: null,
+          round1LockedAt: null,
+          round1LockDeclinedAt: null,
+          round1LockDeclinedByUserId: null,
+        },
+      });
+    }
+
+    await createTeamRemovalNotification(tx, {
+      leaderId: actorId,
+      leaderName: leader?.name ?? "Team leader",
+      targetUserId,
+      teamName: team.name,
+      teamTag: team.tag,
+      reason: trimmedReason,
+      removedAt,
+    });
+
+    return ok({
+      teamId,
+      removedUserId: targetUserId,
+      removedUserName: targetMembership.user.name,
+    });
   });
 }
 
