@@ -795,10 +795,10 @@ export function DashboardPage() {
                 ? "Invitations, lock approvals, and leadership actions need your response."
                 : "Các lời mời, yêu cầu khóa đội và yêu cầu đội trưởng đang chờ bạn phản hồi."}
             </p>
-            <p className="mt-3 max-w-3xl text-sm leading-7 theme-text-muted">
+            <p className="mt-3 max-w-5xl text-sm leading-7 theme-text-muted">
               {locale === "en"
                 ? "These requests stay pinned here so the current user can resolve team-critical actions before editing the rest of the workspace."
-                : "Những yêu cầu này được ghim tại đây để người dùng hiện tại xử lý các việc quan trọng của đội trước khi thao tác những phần khác trong workspace."}
+                : "Các yêu cầu được ghim tại đây để bạn xử lý việc quan trọng của đội trước khi tiếp tục."}
             </p>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               {incomingInvitations.map((invitation) => {
