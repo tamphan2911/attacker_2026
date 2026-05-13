@@ -141,7 +141,7 @@ export function NewsPage() {
             ) : null}
           </label>
 
-          <label className="theme-field relative flex h-12 min-w-0 items-center gap-2 rounded-[1.2rem] border px-3.5 text-sm">
+          <label className="theme-news-filter-control group relative flex h-12 min-w-0 items-center gap-2 rounded-[1.2rem] border px-3.5 text-sm">
             <Filter className="h-4 w-4 shrink-0 text-[var(--brand-deep)] dark:text-[var(--brand-soft)]" />
             <span className="sr-only">{locale === "en" ? "Category" : "Chuyên mục"}</span>
             <select
@@ -150,7 +150,7 @@ export function NewsPage() {
                 setCategoryFilter(event.target.value);
                 setPageState(1);
               }}
-              className="min-w-0 flex-1 appearance-none bg-transparent pr-8 text-sm font-medium theme-text-strong outline-none"
+              className="theme-news-filter-select min-w-0 flex-1 appearance-none bg-transparent pr-8 text-sm font-semibold outline-none"
             >
               <option value="all">{locale === "en" ? "All categories" : "Tất cả chuyên mục"}</option>
               {categoryOptions.map(([key, label]) => (
@@ -164,7 +164,7 @@ export function NewsPage() {
             </span>
           </label>
 
-          <label className="theme-field relative flex h-12 min-w-0 items-center gap-2 rounded-[1.2rem] border px-3.5 text-sm">
+          <label className="theme-news-filter-control group relative flex h-12 min-w-0 items-center gap-2 rounded-[1.2rem] border px-3.5 text-sm">
             <Tag className="h-4 w-4 shrink-0 text-[var(--brand-deep)] dark:text-[var(--brand-soft)]" />
             <span className="sr-only">{locale === "en" ? "Tag" : "Thẻ"}</span>
             <select
@@ -173,7 +173,7 @@ export function NewsPage() {
                 setTagFilter(event.target.value);
                 setPageState(1);
               }}
-              className="min-w-0 flex-1 appearance-none bg-transparent pr-8 text-sm font-medium theme-text-strong outline-none"
+              className="theme-news-filter-select min-w-0 flex-1 appearance-none bg-transparent pr-8 text-sm font-semibold outline-none"
             >
               <option value="all">{locale === "en" ? "All tags" : "Tất cả thẻ"}</option>
               {tagOptions.map((tag) => (

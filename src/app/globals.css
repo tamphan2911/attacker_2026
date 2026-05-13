@@ -390,6 +390,47 @@ body {
   color: #0f172a;
 }
 
+.theme-news-filter-control {
+  color: var(--text-strong);
+  border-color: rgba(148, 163, 184, 0.26);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 249, 253, 0.9));
+  box-shadow:
+    0 14px 32px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.theme-news-filter-control:hover {
+  border-color: rgba(23, 114, 208, 0.3);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(240, 248, 255, 0.94));
+}
+
+.theme-news-filter-control:focus-within {
+  border-color: rgba(23, 114, 208, 0.48);
+  box-shadow:
+    0 18px 42px rgba(23, 114, 208, 0.12),
+    0 0 0 4px rgba(23, 114, 208, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.theme-news-filter-select {
+  color: var(--text-strong);
+  cursor: pointer;
+  color-scheme: light;
+}
+
+.theme-news-filter-select option {
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 600;
+}
+
 [data-theme="dark"] .theme-admin-select {
   color: var(--text-strong);
   border-color: rgba(148, 190, 233, 0.18);
@@ -416,6 +457,39 @@ body {
 }
 
 [data-theme="dark"] .theme-admin-select option {
+  background: #071223;
+  color: #e8f2ff;
+}
+
+[data-theme="dark"] .theme-news-filter-control {
+  border-color: rgba(148, 190, 233, 0.18);
+  background:
+    linear-gradient(180deg, rgba(13, 29, 52, 0.96), rgba(8, 18, 35, 0.9));
+  box-shadow:
+    0 18px 42px rgba(2, 8, 20, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .theme-news-filter-control:hover {
+  border-color: rgba(136, 189, 240, 0.3);
+  background:
+    linear-gradient(180deg, rgba(16, 35, 62, 0.98), rgba(9, 20, 39, 0.94));
+}
+
+[data-theme="dark"] .theme-news-filter-control:focus-within {
+  border-color: rgba(96, 165, 250, 0.5);
+  box-shadow:
+    0 18px 42px rgba(2, 8, 20, 0.36),
+    0 0 0 4px rgba(56, 189, 248, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .theme-news-filter-select {
+  color: var(--text-strong);
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .theme-news-filter-select option {
   background: #071223;
   color: #e8f2ff;
 }
