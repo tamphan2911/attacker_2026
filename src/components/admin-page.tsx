@@ -19,6 +19,7 @@ import {
 } from "@/components/admin-table-pagination";
 import { ContentIndexSection } from "@/components/admin-content-editor";
 import { AdminJudgesList } from "@/components/admin-judges-manager";
+import { AdminMessagesManager } from "@/components/admin-messages-manager";
 import { AdminNewsList } from "@/components/admin-news-manager";
 import { AdminOrganizerManager } from "@/components/admin-organizer-manager";
 import { AdminRound1Manager } from "@/components/admin-round1-manager";
@@ -46,6 +47,7 @@ export type AdminSection =
   | "content"
   | "news"
   | "judges"
+  | "messages"
   | "round1"
   | "users"
   | "organizerTeam"
@@ -937,6 +939,7 @@ export function AdminPage({ section }: { section: AdminSection }) {
       {section === "content" ? <ContentIndexSection /> : null}
       {section === "news" ? <AdminNewsList /> : null}
       {section === "judges" ? <AdminJudgesList /> : null}
+      {section === "messages" ? <AdminMessagesManager /> : null}
       {section === "round1" ? <AdminRound1Manager /> : null}
       {section === "users" ? <UsersTableSection /> : null}
       {section === "organizerTeam" ? <AdminOrganizerManager /> : null}

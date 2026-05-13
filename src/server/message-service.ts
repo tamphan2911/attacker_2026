@@ -323,6 +323,112 @@ export async function listMessageConversations(actor: MessageActor) {
   };
 }
 
+export async function listAdminMessageConversations() {
+  const conversations = await prisma.messageConversation.findMany({
+    include: {
+      participants: {
+        include: {
+          user: {
+            select: messageUserSelect,
+          },
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      },
+      messages: {
+        include: {
+          sender: {
+            select: messageUserSelect,
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+      },
+      _count: {
+        select: {
+          messages: true,
+        },
+      },
+    },
+    orderBy: [
+      {
+        lastMessageAt: "desc",
+      },
+      {
+        updatedAt: "desc",
+      },
+    ],
+  });
+
+  return {
+    conversations: conversations.map((conversation) => {
+      const latestMessage = conversation.messages[0];
+      const requesterParticipant = conversation.participants.find(
+        (participant) => participant.userId === conversation.requesterId,
+      );
+
+      return {
+        id: conversation.id,
+        kind: conversation.kind === MessageConversationKind.ORGANIZER ? "organizer" : "direct",
+        createdAt: conversation.createdAt.toISOString(),
+        updatedAt: conversation.updatedAt.toISOString(),
+        lastMessageAt: conversation.lastMessageAt.toISOString(),
+        messageCount: conversation._count.messages,
+        requester: requesterParticipant ? serializeMessageUser(requesterParticipant.user) : null,
+        participants: conversation.participants.map((participant) => ({
+          ...serializeMessageUser(participant.user),
+          readAt: participant.readAt?.toISOString(),
+          hiddenAt: participant.hiddenAt?.toISOString(),
+          showOtherEmail: participant.showOtherEmail,
+        })),
+        latestMessage: latestMessage
+          ? {
+              id: latestMessage.id,
+              body: latestMessage.deletedAt ? "" : latestMessage.body,
+              deletedAt: latestMessage.deletedAt?.toISOString(),
+              deletedByName: latestMessage.deletedByName ?? undefined,
+              createdAt: latestMessage.createdAt.toISOString(),
+              sender: serializeMessageUser(latestMessage.sender),
+            }
+          : null,
+      };
+    }),
+  };
+}
+
+export async function deleteAdminMessageConversation(
+  conversationId: string,
+): Promise<ServiceResult<{ conversationId: string }>> {
+  const normalizedConversationId = conversationId.trim();
+  if (!normalizedConversationId) {
+    return fail(400, "Conversation id is required.");
+  }
+
+  const conversation = await prisma.messageConversation.findUnique({
+    where: {
+      id: normalizedConversationId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!conversation) {
+    return fail(404, "Conversation not found.");
+  }
+
+  await prisma.messageConversation.delete({
+    where: {
+      id: normalizedConversationId,
+    },
+  });
+
+  return ok({ conversationId: normalizedConversationId });
+}
+
 export async function searchMessageUserByExactEmail(actorId: string, email: string) {
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail || !normalizedEmail.includes("@")) {
