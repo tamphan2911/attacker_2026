@@ -1847,7 +1847,7 @@ export function DashboardPage() {
                 </div>
                 <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                   <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
-                    {locale === "en" ? "Approval progress" : "Tiến độ xác nhận"}
+                    {locale === "en" ? "Approval progress" : "Xác nhận khóa đội"}
                   </p>
                   <p className="mt-3 text-3xl font-semibold theme-text-strong">
                     {currentTeam.round1LockStatus === "locked"
@@ -1858,7 +1858,7 @@ export function DashboardPage() {
                   <p className="mt-2 text-sm theme-text-soft">
                     {locale === "en"
                       ? "Leader initiation counts first, then every teammate must approve."
-                      : "Đội trưởng khởi tạo được tính trước, sau đó từng đồng đội còn lại phải xác nhận."}
+                      : "Đội trưởng gửi yêu cầu khóa đội. Tất cả thành viên cần xác nhận để hoàn tất việc khóa đội."}
                   </p>
                 </div>
                 <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
