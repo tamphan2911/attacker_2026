@@ -6,6 +6,7 @@ import {
   ExternalLink,
   Mail,
   MapPin,
+  MessageCircle,
   PhoneCall,
 } from "lucide-react";
 
@@ -94,21 +95,34 @@ export function ContactPage() {
             <div className="mt-5 space-y-3">
               {[
                 {
+                  icon: <MessageCircle className="h-4 w-4 text-cyan-300" />,
+                  label: locale === "en" ? "Support message" : "Tin nhắn hỗ trợ",
+                  value:
+                    locale === "en"
+                      ? "Message the competition organizer for direct support."
+                      : "Nhắn trực tiếp cho ban tổ chức để được hỗ trợ.",
+                  href: "/messages?organizer=1",
+                  internal: true,
+                },
+                {
                   icon: <Mail className="h-4 w-4 text-sky-400" />,
                   label: pickText(locale, pageContent.contact.officialEmailLabel),
                   value: pageContent.contact.officialEmailValue,
                   href: `mailto:${pageContent.contact.officialEmailValue}`,
+                  internal: false,
                 },
                 {
                   icon: <PhoneCall className="h-4 w-4 text-sky-400" />,
                   label: pickText(locale, pageContent.contact.primaryHotlineLabel),
                   value: pageContent.contact.primaryHotlineValue,
                   href: `tel:${pageContent.contact.primaryHotlineValue}`,
+                  internal: false,
                 },
                 {
                   icon: <Clock3 className="h-4 w-4 text-sky-400" />,
                   label: pickText(locale, pageContent.contact.supportWindowLabel),
                   value: pageContent.contact.supportWindowValue,
+                  internal: false,
                 },
               ].map((item) => (
                 <div
@@ -123,12 +137,22 @@ export function ContactPage() {
                       {item.label}
                     </p>
                     {item.href ? (
-                      <a
-                        href={item.href}
-                        className="mt-2 block break-all text-sm font-medium leading-7 theme-text-strong transition hover:text-[var(--brand)]"
-                      >
-                        {item.value}
-                      </a>
+                      item.internal ? (
+                        <Link
+                          href={item.href}
+                          className="mt-2 inline-flex items-center gap-2 text-sm font-semibold leading-7 theme-accent transition hover:text-[var(--brand)]"
+                        >
+                          {item.value}
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Link>
+                      ) : (
+                        <a
+                          href={item.href}
+                          className="mt-2 block break-all text-sm font-medium leading-7 theme-text-strong transition hover:text-[var(--brand)]"
+                        >
+                          {item.value}
+                        </a>
+                      )
                     ) : (
                       <p className="mt-2 text-sm leading-7 theme-text-body">{item.value}</p>
                     )}

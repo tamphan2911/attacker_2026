@@ -148,14 +148,28 @@ export function MessageCenterPage() {
     const params = new URLSearchParams(window.location.search);
     const requestedConversationId = params.get("conversation") ?? "";
     const requestedRecipientId = params.get("recipient") ?? "";
+    const requestedOrganizer = params.get("organizer") === "1" || params.get("organizer") === "true";
     const requestedRecipientSource = params.get("source") === "profile" ? "profile" : "email-search";
     const requestedRecipientConversation = requestedRecipientId
       ? payload.conversations.find((conversation) => conversation.participant?.id === requestedRecipientId)
       : null;
+    const requestedOrganizerConversation = requestedOrganizer
+      ? payload.conversations.find((conversation) => conversation.isOrganizer)
+      : null;
 
     setConversations(payload.conversations);
 
-    if (requestedRecipientConversation) {
+    if (requestedOrganizerConversation) {
+      setDraftRecipient(null);
+      setActiveConversationId(requestedOrganizerConversation.id);
+      window.history.replaceState(null, "", conversationUrl(requestedOrganizerConversation.id));
+    } else if (requestedOrganizer && !options?.silent) {
+      setStatusMessage(
+        locale === "en"
+          ? "Could not open the organizer support conversation."
+          : "Không thể mở cuộc trò chuyện hỗ trợ với ban tổ chức.",
+      );
+    } else if (requestedRecipientConversation) {
       setDraftRecipient(null);
       setActiveConversationId(requestedRecipientConversation.id);
       window.history.replaceState(null, "", conversationUrl(requestedRecipientConversation.id));
