@@ -117,6 +117,11 @@ export function MessageCenterPage() {
   const [isDeletingConversation, setIsDeletingConversation] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const draftRecipientRef = useRef<MessageUser | null>(null);
+
+  useEffect(() => {
+    draftRecipientRef.current = draftRecipient;
+  }, [draftRecipient]);
 
   const loadMessages = useCallback(async (options?: { silent?: boolean }) => {
     if (!isAuthenticated) {
@@ -174,8 +179,6 @@ export function MessageCenterPage() {
       setActiveConversationId(requestedRecipientConversation.id);
       window.history.replaceState(null, "", conversationUrl(requestedRecipientConversation.id));
     } else if (requestedRecipientId) {
-      setDraftRecipient(null);
-      setActiveConversationId("");
       const userResponse = await fetch(`/api/messages/users?userId=${encodeURIComponent(requestedRecipientId)}`, {
         cache: "no-store",
         credentials: "same-origin",
@@ -185,7 +188,7 @@ export function MessageCenterPage() {
         : { user: null };
 
       if (userPayload.user) {
-        setDraftRecipient(userPayload.user);
+        setDraftRecipient((current) => (current?.id === userPayload.user?.id ? current : userPayload.user));
         setDraftRecipientSource(requestedRecipientSource);
         setActiveConversationId("");
         window.history.replaceState(
@@ -202,7 +205,7 @@ export function MessageCenterPage() {
       }
     } else {
       setActiveConversationId((current) => {
-        if (options?.silent && draftRecipient) {
+        if (options?.silent && draftRecipientRef.current) {
           return current;
         }
 
@@ -224,7 +227,7 @@ export function MessageCenterPage() {
     if (!options?.silent) {
       setIsLoading(false);
     }
-  }, [draftRecipient, isAuthenticated, locale]);
+  }, [isAuthenticated, locale]);
 
   useEffect(() => {
     queueMicrotask(() => {
