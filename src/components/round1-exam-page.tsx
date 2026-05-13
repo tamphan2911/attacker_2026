@@ -970,6 +970,11 @@ export function Round1ExamPage() {
   const currentEssayMeetsMinimum =
     currentQuestion?.type === "essay" && currentEssayWordCount >= ROUND1_ESSAY_MIN_WORDS;
   const currentEssayExceedsLimit = currentQuestion?.type === "essay" && currentEssayWordCount > round1WordLimit;
+  const participantTeamRoleLabel = currentTeam
+    ? locale === "en"
+      ? `${currentTeam.leaderId === currentUser.id ? "Team leader" : "Team member"} of ${currentTeam.name}`
+      : `${currentTeam.leaderId === currentUser.id ? "Đội trưởng đội" : "Thành viên đội"} ${currentTeam.name}`
+    : "";
   const watermarkLabel =
     session && currentTeam
       ? [
@@ -1364,7 +1369,7 @@ export function Round1ExamPage() {
             <div className="mt-5 rounded-[1.8rem] border theme-border theme-panel px-5 py-5">
               <p className="text-lg font-semibold theme-text-strong">{currentUser.name}</p>
               <p className="mt-2 text-sm theme-text-soft">
-                {currentTeam!.name} · {currentUser.university}
+                {participantTeamRoleLabel} · {currentUser.university}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
                 <StatusPill>{`#${currentTeam!.tag}`}</StatusPill>
@@ -1982,7 +1987,7 @@ export function Round1ExamPage() {
                   {locale === "en" ? "Candidate" : "Thí sinh"}
                 </p>
                 <p className="mt-3 text-base font-semibold theme-text-strong">{currentUser.name}</p>
-                <p className="mt-2 text-sm theme-text-muted">{currentTeam!.name}</p>
+                <p className="mt-2 text-sm theme-text-muted">{participantTeamRoleLabel}</p>
               </div>
               <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
                 <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
