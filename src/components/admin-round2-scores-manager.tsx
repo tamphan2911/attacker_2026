@@ -287,7 +287,7 @@ function JudgeScoreCell({
           <select
             value={selectedJudgeId}
             onChange={(event) => onJudgeChange?.(event.target.value)}
-            className="theme-field h-10 w-full rounded-[0.95rem] border px-3 text-sm outline-none"
+            className="theme-admin-select theme-field h-10 w-full rounded-[0.95rem] border px-3 text-sm outline-none"
           >
             <option value="">{locale === "en" ? "Select Round 2 judge" : "Chọn giám khảo Vòng 2"}</option>
             {availableJudges.map((option) => (
@@ -651,7 +651,7 @@ export function AdminRound2ScoresManager() {
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as "all" | AdminRound2ScoreStatus)}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All statuses" : "Tất cả trạng thái"}</option>
               <option value="not-scored">{locale === "en" ? "Not scored" : "Chưa chấm"}</option>

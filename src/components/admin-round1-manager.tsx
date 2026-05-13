@@ -1687,6 +1687,8 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
   const [sortKey, setSortKey] = useState<BankPreviewSortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [deletePendingQuestionId, setDeletePendingQuestionId] = useState<string | null>(null);
+  const [pendingDeleteQuestion, setPendingDeleteQuestion] = useState<Round1Question | null>(null);
+  const [deleteQuestionError, setDeleteQuestionError] = useState("");
 
   const bankExportRows = bank ? buildBankExportRows([bank]) : [];
   const topicOptions = useMemo(
@@ -1778,6 +1780,22 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
     setPage(1);
   }, [difficultyFilter, questionSearch, setPage, sortDirection, sortKey, topicFilter, typeFilter]);
 
+  useEffect(() => {
+    if (!pendingDeleteQuestion || deletePendingQuestionId) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setPendingDeleteQuestion(null);
+        setDeleteQuestionError("");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [deletePendingQuestionId, pendingDeleteQuestion]);
+
   const toggleSort = (nextSortKey: BankPreviewSortKey) => {
     if (sortKey === nextSortKey) {
       setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
@@ -1786,6 +1804,35 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
 
     setSortKey(nextSortKey);
     setSortDirection(getDefaultBankPreviewSortDirection(nextSortKey));
+  };
+
+  const handleDeleteQuestion = async () => {
+    if (!bank || !pendingDeleteQuestion) {
+      return;
+    }
+
+    const questionId = pendingDeleteQuestion.id;
+
+    setDeletePendingQuestionId(questionId);
+    setDeleteQuestionError("");
+
+    try {
+      const deleted = await deleteRound1QuestionByAdmin(bank.id, questionId);
+      if (deleted) {
+        setPendingDeleteQuestion(null);
+        return;
+      }
+
+      setDeleteQuestionError(
+        locale === "en"
+          ? "Could not delete this question. Please review the latest admin data and try again."
+          : "Không thể xóa câu hỏi này. Vui lòng kiểm tra dữ liệu admin mới nhất và thử lại.",
+      );
+    } finally {
+      setDeletePendingQuestionId((current) =>
+        current === questionId ? null : current,
+      );
+    }
   };
 
   if (!bank) {
@@ -1882,7 +1929,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
             <select
               value={typeFilter}
               onChange={(event) => setTypeFilter(event.target.value as "all" | Round1QuestionType)}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All types" : "Tất cả loại"}</option>
               {(["single-choice", "multiple-choice", "true-false", "pairing", "essay"] as Round1QuestionType[]).map((value) => (
@@ -1901,7 +1948,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
             <select
               value={topicFilter}
               onChange={(event) => setTopicFilter(event.target.value)}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All topics" : "Tất cả chủ đề"}</option>
               {topicOptions.map((topic) => (
@@ -1921,7 +1968,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
               <select
                 value={difficultyFilter}
                 onChange={(event) => setDifficultyFilter(event.target.value as "all" | Round1Question["difficulty"])}
-                className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
               >
                 <option value="all">{locale === "en" ? "All levels" : "Tất cả mức độ"}</option>
                 <option value="easy">{locale === "en" ? "Easy" : "Dễ"}</option>
@@ -2059,22 +2106,8 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
                         type="button"
                         disabled={deletePendingQuestionId === question.id}
                         onClick={() => {
-                          const confirmed = window.confirm(
-                            locale === "en"
-                              ? `Delete question ${question.id} from this test bank?`
-                              : `Xóa câu hỏi ${question.id} khỏi test bank này?`,
-                          );
-
-                          if (!confirmed) {
-                            return;
-                          }
-
-                          setDeletePendingQuestionId(question.id);
-                          void deleteRound1QuestionByAdmin(bank.id, question.id).finally(() =>
-                            setDeletePendingQuestionId((current) =>
-                              current === question.id ? null : current,
-                            ),
-                          );
+                          setPendingDeleteQuestion(question);
+                          setDeleteQuestionError("");
                         }}
                         title={locale === "en" ? "Delete question" : "Xóa câu hỏi"}
                         aria-label={locale === "en" ? "Delete question" : "Xóa câu hỏi"}
@@ -2099,6 +2132,97 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           onPageChange={setPage}
         />
       </Surface>
+
+      {pendingDeleteQuestion ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 py-6">
+          <button
+            type="button"
+            aria-label={locale === "en" ? "Close delete confirmation" : "Đóng xác nhận xóa"}
+            className="absolute inset-0 cursor-default bg-slate-950/55 backdrop-blur-sm"
+            onClick={() => {
+              if (!deletePendingQuestionId) {
+                setPendingDeleteQuestion(null);
+                setDeleteQuestionError("");
+              }
+            }}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/20 bg-[var(--panel)] shadow-[0_32px_90px_rgba(15,23,42,0.34)]"
+          >
+            <div className="border-b theme-border bg-[linear-gradient(135deg,rgba(239,68,68,0.14),rgba(59,130,246,0.08))] px-6 py-5">
+              <div className="flex items-start gap-4">
+                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/12 text-red-500 ring-1 ring-red-500/20">
+                  <Trash2 className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="theme-heading text-xl font-semibold theme-text-strong">
+                    {locale === "en" ? "Delete Round 1 question?" : "Xóa câu hỏi Vòng 1?"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 theme-text-muted">
+                    {locale === "en"
+                      ? "This removes the question from the selected test bank. Existing archived submissions keep their saved question snapshot."
+                      : "Thao tác này xóa câu hỏi khỏi test bank đã chọn. Các bài nộp đã lưu vẫn giữ bản chụp câu hỏi trong kho lưu trữ."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 px-6 py-5">
+              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusPill tone="info">{pendingDeleteQuestion.id}</StatusPill>
+                  <StatusPill>{pickRound1TypeLabel(locale, pendingDeleteQuestion.type)}</StatusPill>
+                  <span className="theme-chip inline-flex rounded-full px-3 py-1 text-[0.68rem] font-semibold">
+                    {pendingDeleteQuestion.topic}
+                  </span>
+                </div>
+                <p className="mt-4 text-sm leading-7 theme-text-body">
+                  {pickRound1QuestionText(pendingDeleteQuestion.prompt)}
+                </p>
+              </div>
+
+              {deleteQuestionError ? (
+                <div className="rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-500">
+                  {deleteQuestionError}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 border-t theme-border bg-[var(--panel-strong)] px-6 py-5 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                disabled={Boolean(deletePendingQuestionId)}
+                onClick={() => {
+                  setPendingDeleteQuestion(null);
+                  setDeleteQuestionError("");
+                }}
+                className="theme-button-secondary rounded-full border px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {locale === "en" ? "Cancel" : "Hủy"}
+              </button>
+              <button
+                type="button"
+                disabled={Boolean(deletePendingQuestionId)}
+                onClick={() => {
+                  void handleDeleteQuestion();
+                }}
+                className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Trash2 className={cn("h-4 w-4", deletePendingQuestionId ? "animate-pulse" : "")} />
+                {deletePendingQuestionId
+                  ? locale === "en"
+                    ? "Deleting..."
+                    : "Đang xóa..."
+                  : locale === "en"
+                    ? "Delete question"
+                    : "Xóa câu hỏi"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

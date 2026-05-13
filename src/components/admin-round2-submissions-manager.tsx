@@ -335,7 +335,7 @@ function AssignmentDialog({
               <select
                 value={judgeOneId}
                 onChange={(event) => setJudgeOneId(event.target.value)}
-                className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
               >
                 <option value="">{locale === "en" ? "Choose a judge" : "Chọn giám khảo"}</option>
                 {availableJudges.map((judge) => (
@@ -353,7 +353,7 @@ function AssignmentDialog({
               <select
                 value={judgeTwoId}
                 onChange={(event) => setJudgeTwoId(event.target.value)}
-                className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+                className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
               >
                 <option value="">{locale === "en" ? "Choose a judge" : "Chọn giám khảo"}</option>
                 {availableJudges.map((judge) => (
@@ -688,7 +688,7 @@ export function AdminRound2SubmissionsManager() {
             <select
               value={versionFilter}
               onChange={(event) => setVersionFilter(event.target.value as "all" | "latest" | "history")}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All versions" : "Tất cả phiên bản"}</option>
               <option value="latest">{locale === "en" ? "Latest only" : "Chỉ bản mới nhất"}</option>
@@ -704,7 +704,7 @@ export function AdminRound2SubmissionsManager() {
             <select
               value={assignmentFilter}
               onChange={(event) => setAssignmentFilter(event.target.value as "all" | AdminRound2AssignmentStatus)}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All assignments" : "Tất cả phân công"}</option>
               <option value="unassigned">{locale === "en" ? "Not assigned" : "Chưa phân công"}</option>

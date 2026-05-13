@@ -245,7 +245,7 @@ export function AdminForumManager() {
               <select
                 value={categoryFilter}
                 onChange={(event) => setCategoryFilter(event.target.value as ThreadCategoryFilter)}
-                className="w-full bg-transparent text-sm font-medium theme-text-strong outline-none"
+                className="theme-admin-select h-11 w-full rounded-[1rem] border px-3 text-sm font-semibold outline-none"
               >
                 <option value="all">{locale === "en" ? "All categories" : "Tất cả phân loại"}</option>
                 {categoryOptions.map((category) => (
@@ -261,7 +261,7 @@ export function AdminForumManager() {
               <select
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value as ThreadStatusFilter)}
-                className="w-full bg-transparent text-sm font-medium theme-text-strong outline-none"
+                className="theme-admin-select h-11 w-full rounded-[1rem] border px-3 text-sm font-semibold outline-none"
               >
                 <option value="all">{locale === "en" ? "All status" : "Tất cả trạng thái"}</option>
                 <option value="open">{getStatusLabel(locale, "open")}</option>

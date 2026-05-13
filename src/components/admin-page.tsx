@@ -449,7 +449,7 @@ function UsersTableSection() {
                   <select
                     value={filters.role}
                     onChange={(event) => setFilters((current) => ({ ...current, role: event.target.value }))}
-                    className="w-full rounded-xl border theme-border theme-panel-subtle px-3 py-2 text-xs theme-text-body outline-none"
+                    className="theme-admin-select w-full rounded-xl border px-3 py-2 text-xs font-semibold outline-none"
                   >
                     <option value="all">{locale === "en" ? "All roles" : "Tất cả vai trò"}</option>
                     <option value="student">{locale === "en" ? "Participant" : "Thí sinh"}</option>
@@ -459,7 +459,7 @@ function UsersTableSection() {
                   <select
                     value={filters.status}
                     onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))}
-                    className="w-full rounded-xl border theme-border theme-panel-subtle px-3 py-2 text-xs theme-text-body outline-none"
+                    className="theme-admin-select w-full rounded-xl border px-3 py-2 text-xs font-semibold outline-none"
                   >
                     <option value="all">{locale === "en" ? "All statuses" : "Tất cả trạng thái"}</option>
                     <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
@@ -475,7 +475,7 @@ function UsersTableSection() {
                     onChange={(event) =>
                       setFilters((current) => ({ ...current, emailVerification: event.target.value }))
                     }
-                    className="w-full rounded-xl border theme-border theme-panel-subtle px-3 py-2 text-xs theme-text-body outline-none"
+                    className="theme-admin-select w-full rounded-xl border px-3 py-2 text-xs font-semibold outline-none"
                   >
                     <option value="all">{locale === "en" ? "All states" : "Tất cả trạng thái"}</option>
                     <option value="verified">{locale === "en" ? "Verified" : "Đã kích hoạt"}</option>
@@ -802,7 +802,7 @@ function TeamsTableSection() {
             <select
               value={stageFilter}
               onChange={(event) => setStageFilter(event.target.value as typeof stageFilter)}
-              className="theme-field h-11 w-full rounded-xl border px-3 text-sm outline-none"
+              className="theme-admin-select theme-field h-11 w-full rounded-xl border px-3 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All stages" : "Tất cả vòng"}</option>
               <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
