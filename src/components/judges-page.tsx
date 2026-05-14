@@ -10,10 +10,12 @@ import type { EditableJudgeRoundSection, JudgeProfile, Locale } from "@/types/si
 function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
   const { locale } = useSiteState();
   const position = pickText(locale, judge.role);
+  const displayPosition = position || (locale === "en" ? "Position to be updated" : "Chức vụ đang cập nhật");
+  const displayOrganization = judge.organization || (locale === "en" ? "Organization to be updated" : "Đơn vị đang cập nhật");
 
   return (
-    <Surface className="group flex h-full min-h-[24rem] flex-col overflow-hidden rounded-[1.35rem] px-0 py-0 transition duration-300 hover:-translate-y-1 hover:border-sky-300/60 hover:shadow-[0_22px_46px_rgba(30,89,145,0.14)] dark:hover:border-sky-200/30 dark:hover:shadow-[0_22px_46px_rgba(2,8,20,0.34)]">
-      <div className="relative h-32 shrink-0 overflow-hidden">
+    <Surface className="group flex h-full min-h-[21.5rem] flex-col overflow-hidden rounded-[1.35rem] px-0 py-0 transition duration-300 hover:-translate-y-1 hover:border-sky-300/60 hover:shadow-[0_22px_46px_rgba(30,89,145,0.14)] dark:hover:border-sky-200/30 dark:hover:shadow-[0_22px_46px_rgba(2,8,20,0.34)]">
+      <div className="relative h-36 shrink-0 overflow-hidden">
         <div
           role="img"
           aria-label={judge.name}
@@ -26,27 +28,29 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 px-3.5 py-3.5">
-        <p className="theme-heading text-[1rem] font-semibold leading-snug theme-text-strong">
-          {judge.name}
-        </p>
+      <div className="flex flex-1 flex-col px-3.5 py-3.5">
+        <div className="min-h-[3.2rem]">
+          <p className="theme-heading line-clamp-2 text-[1rem] font-semibold leading-snug theme-text-strong">
+            {judge.name}
+          </p>
+        </div>
 
-        <div className="mt-auto space-y-2.5">
-          <div className="flex items-start gap-2 rounded-[1rem] border border-sky-700/12 bg-sky-500/8 px-3 py-2.5 text-[0.72rem] leading-5 theme-text-muted dark:border-sky-200/14 dark:bg-sky-300/10">
-            <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sky-500/12 text-sky-700 dark:bg-sky-300/12 dark:text-sky-100">
+        <div className="mt-3 grid gap-2.5">
+          <div className="grid min-h-[4.25rem] grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-2 rounded-[1rem] border border-sky-700/12 bg-sky-500/8 px-3 py-2.5 text-[0.72rem] leading-5 theme-text-muted dark:border-sky-200/14 dark:bg-sky-300/10">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-sky-500/12 text-sky-700 dark:bg-sky-300/12 dark:text-sky-100">
               <BriefcaseBusiness className="h-3.5 w-3.5" aria-hidden="true" />
             </span>
-            <span className="min-w-0 break-words font-medium theme-text-body">
-              {position || (locale === "en" ? "Position to be updated" : "Chức vụ đang cập nhật")}
+            <span className="line-clamp-2 min-w-0 break-words font-medium theme-text-body">
+              {displayPosition}
             </span>
           </div>
 
-          <div className="flex items-start gap-2 rounded-[1rem] border theme-border bg-white/58 px-3 py-2.5 text-[0.72rem] leading-5 theme-text-muted dark:bg-white/[0.05]">
-            <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-500/12 text-cyan-700 dark:bg-cyan-300/12 dark:text-cyan-100">
+          <div className="grid min-h-[4.25rem] grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-2 rounded-[1rem] border theme-border bg-white/64 px-3 py-2.5 text-[0.72rem] leading-5 theme-text-muted dark:bg-white/[0.05]">
+            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/12 text-cyan-700 dark:bg-cyan-300/12 dark:text-cyan-100">
               <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
             </span>
-            <span className="min-w-0 break-words font-medium theme-text-body">
-              {judge.organization || (locale === "en" ? "Organization to be updated" : "Đơn vị đang cập nhật")}
+            <span className="line-clamp-2 min-w-0 break-words font-medium theme-text-body">
+              {displayOrganization}
             </span>
           </div>
         </div>
