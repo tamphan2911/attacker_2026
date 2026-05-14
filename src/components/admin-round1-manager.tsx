@@ -35,6 +35,7 @@ import {
   AdminTablePagination,
   useAdminTablePagination,
 } from "@/components/admin-table-pagination";
+import { Round1QuestionTopicSelect, Round1TopicsManager } from "@/components/admin-round1-topics-manager";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
@@ -296,12 +297,12 @@ function convertRound1QuestionType(question: Round1Question, nextType: Round1Que
   };
 }
 
-function createRound1QuestionDraftForBank(bank: Round1TestBank) {
+function createRound1QuestionDraftForBank(bank: Round1TestBank, topics: string[] = []) {
   const questionType: Round1QuestionType = bank.bankType === "essay" ? "essay" : "single-choice";
 
   return createQuestionShapeForType(questionType, {
     id: previewNextRound1QuestionId(bank),
-    topic: bank.questions[0]?.topic ?? "",
+    topic: topics[0] ?? bank.questions[0]?.topic ?? "",
     difficulty: bank.bankType === "essay" ? "medium" : "easy",
     prompt: createLocalizedEmpty(),
   });
@@ -1178,6 +1179,8 @@ export function AdminRound1Manager() {
           actionLabel={locale === "en" ? "Back to admin" : "Quay lại admin"}
         />
       )}
+
+      <Round1TopicsManager />
     </div>
   );
 }
@@ -2627,7 +2630,7 @@ function AdminRound1QuestionEditorInner({
   mode: "edit" | "create";
 }) {
   const router = useRouter();
-  const { locale, round1TestBanks, createRound1QuestionByAdmin, updateRound1QuestionByAdmin } = useSiteState();
+  const { locale, round1TestBanks, round1Topics, createRound1QuestionByAdmin, updateRound1QuestionByAdmin } = useSiteState();
   const bank = round1TestBanks.find((item) => item.id === bankId);
   const sourceQuestion = mode === "edit" ? bank?.questions.find((item) => item.id === questionId) : undefined;
   const questionIndex = mode === "edit" ? bank?.questions.findIndex((item) => item.id === questionId) ?? -1 : -1;
@@ -2637,22 +2640,16 @@ function AdminRound1QuestionEditorInner({
     }
 
     if (mode === "create") {
-      return createRound1QuestionDraftForBank(bank);
+      return createRound1QuestionDraftForBank(bank, round1Topics);
     }
 
     return sourceQuestion ? cloneRound1Question(sourceQuestion) : null;
-  }, [bank, mode, sourceQuestion]);
+  }, [bank, mode, round1Topics, sourceQuestion]);
   const [draft, setDraft] = useState<Round1Question | null>(() =>
     pristineQuestion ? cloneRound1Question(pristineQuestion) : null,
   );
   const [savePending, setSavePending] = useState(false);
   const isEssayBank = bank?.bankType === "essay";
-  const topicOptions = [...new Set(
-    [
-      ...(bank?.questions ?? []).map((question) => question.topic.trim()).filter(Boolean),
-      draft?.topic.trim() ?? "",
-    ].filter(Boolean),
-  )].sort(createStringCompare(locale));
   const usesDifficulty = !isEssayBank && draft?.type !== "essay";
 
   const isDirty = useMemo(() => {
@@ -2689,8 +2686,6 @@ function AdminRound1QuestionEditorInner({
       />
     );
   }
-
-  const topicDatalistId = `round1-topic-options-${bank.id}`;
 
   const saveDraft = async () => {
     const draftWithoutName = { ...draft };
@@ -2822,24 +2817,18 @@ function AdminRound1QuestionEditorInner({
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Topic" : "Chủ đề"}
               </span>
-              <input
+              <Round1QuestionTopicSelect
+                locale={locale}
                 value={draft.topic}
-                onChange={(event) =>
+                topics={round1Topics}
+                onChange={(topic) =>
                   setDraft((current) =>
-                    current ? { ...current, topic: event.target.value } : current,
+                    current ? { ...current, topic } : current,
                   )
                 }
-                list={topicDatalistId}
                 placeholder={locale === "en" ? "Enter topic" : "Nhập chủ đề"}
                 className={fieldClassName}
               />
-              <datalist id={topicDatalistId}>
-                {topicOptions.map((topic) => (
-                  <option key={topic} value={topic}>
-                    {topic}
-                  </option>
-                ))}
-              </datalist>
             </label>
             {usesDifficulty ? (
               <label className="space-y-2">

@@ -8,8 +8,16 @@ import {
 } from "@prisma/client";
 import { hash } from "bcryptjs";
 
-import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, sponsorProfiles } from "@/data/site-content";
+import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, round1TestBanks, sponsorProfiles } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import {
+  deriveRound1TopicsFromBanks,
+  isRound1ManagedTopic,
+  normalizeRound1TopicName,
+  normalizeRound1Topics,
+  ROUND1_TOPIC_LIMIT,
+  ROUND1_TOPICS_SCOPE,
+} from "@/lib/round1-topics";
 import { deleteJudgeImageFile, getJudgeImageStorageKeyFromUrl } from "@/server/judge-image-storage";
 import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/news-image-storage";
 import { ensureRound1SubmissionArchive } from "@/server/round1-submission-archive";
@@ -124,6 +132,102 @@ export function getDefaultJudges() {
 
 export function getDefaultSponsors() {
   return sponsorProfiles;
+}
+
+export function getDefaultRound1Topics() {
+  return deriveRound1TopicsFromBanks(round1TestBanks);
+}
+
+async function deriveRound1TopicsFromStoredBanks() {
+  const banks = await prisma.round1TestBank.findMany({
+    select: { questions: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const parsedBanks = banks.map((bank) => {
+    try {
+      return { questions: JSON.parse(bank.questions) as Round1Question[] };
+    } catch {
+      return { questions: [] };
+    }
+  });
+
+  return deriveRound1TopicsFromBanks(parsedBanks);
+}
+
+export async function readRound1Topics() {
+  const cmsEntry = await prisma.cmsEntry.findUnique({
+    where: { scope: ROUND1_TOPICS_SCOPE },
+    select: { payload: true },
+  });
+
+  if (cmsEntry) {
+    try {
+      return normalizeRound1Topics(JSON.parse(cmsEntry.payload) as string[]).slice(0, ROUND1_TOPIC_LIMIT);
+    } catch {
+      return getDefaultRound1Topics();
+    }
+  }
+
+  const storedTopics = await deriveRound1TopicsFromStoredBanks();
+  return storedTopics.length ? storedTopics : getDefaultRound1Topics();
+}
+
+export async function saveRound1TopicsByAdmin(
+  payload: string[],
+  options?: { rename?: { from: string; to: string } },
+): Promise<ServiceResult<{ saved: true; topics: string[] }>> {
+  const topics = normalizeRound1Topics(payload);
+
+  if (topics.length > ROUND1_TOPIC_LIMIT) {
+    return fail(400, `Round 1 can have at most ${ROUND1_TOPIC_LIMIT} topics.`);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const fromTopic = normalizeRound1TopicName(options?.rename?.from ?? "");
+    const toTopic = normalizeRound1TopicName(options?.rename?.to ?? "");
+
+    if (fromTopic && toTopic && fromTopic.toLowerCase() !== toTopic.toLowerCase()) {
+      const banks = await tx.round1TestBank.findMany({
+        select: { id: true, questions: true },
+      });
+
+      for (const bank of banks) {
+        let questions: Round1Question[];
+        try {
+          questions = JSON.parse(bank.questions) as Round1Question[];
+        } catch {
+          continue;
+        }
+
+        const nextQuestions = questions.map((question) =>
+          normalizeRound1TopicName(question.topic).toLowerCase() === fromTopic.toLowerCase()
+            ? { ...question, topic: toTopic }
+            : question,
+        );
+
+        if (JSON.stringify(nextQuestions) === JSON.stringify(questions)) {
+          continue;
+        }
+
+        await tx.round1TestBank.update({
+          where: { id: bank.id },
+          data: { questions: JSON.stringify(nextQuestions) },
+        });
+      }
+    }
+
+    await tx.cmsEntry.upsert({
+      where: { scope: ROUND1_TOPICS_SCOPE },
+      update: { payload: JSON.stringify(topics) },
+      create: {
+        scope: ROUND1_TOPICS_SCOPE,
+        payload: JSON.stringify(topics),
+      },
+    });
+  });
+
+  return ok({ saved: true, topics });
 }
 
 export async function readStoredSponsors() {
@@ -809,6 +913,16 @@ function normalizeRound1QuestionId(value: string | undefined) {
   return value?.trim() ?? "";
 }
 
+async function validateRound1QuestionTopic(topic: string) {
+  const managedTopics = await readRound1Topics();
+
+  if (managedTopics.length > 0 && !isRound1ManagedTopic(topic, managedTopics)) {
+    return fail(400, "Choose a topic from the managed Round 1 topic list.");
+  }
+
+  return null;
+}
+
 function isValidRound1QuestionId(value: string) {
   return /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(value);
 }
@@ -847,6 +961,11 @@ export async function createRound1QuestionByAdmin(
 
   if (!bank) {
     return fail(404, "Round 1 bank not found.");
+  }
+
+  const topicError = await validateRound1QuestionTopic(payload.topic);
+  if (topicError) {
+    return topicError;
   }
 
   const questions = JSON.parse(bank.questions) as Round1Question[];
@@ -893,6 +1012,11 @@ export async function updateRound1QuestionByAdmin(
 
   if (!bank) {
     return fail(404, "Round 1 bank not found.");
+  }
+
+  const topicError = await validateRound1QuestionTopic(payload.topic);
+  if (topicError) {
+    return topicError;
   }
 
   const questions = JSON.parse(bank.questions) as Round1Question[];

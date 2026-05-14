@@ -10,6 +10,7 @@ import type {
   Round1TestBank,
   Round1TestBankType,
 } from "@/types/site";
+import { normalizeRound1Topics, ROUND1_TOPIC_LIMIT } from "@/lib/round1-topics";
 
 export interface Round1PaperOption extends Round1QuestionOption {
   displayLabel: string;
@@ -31,7 +32,7 @@ export interface Round1QuestionResponse {
   essayText?: string;
 }
 
-export const ROUND1_TOPIC_COUNT = 6;
+export const ROUND1_TOPIC_COUNT = ROUND1_TOPIC_LIMIT;
 export const ROUND1_OBJECTIVE_DIFFICULTY_MIX: Record<Round1QuestionDifficulty, number> = {
   easy: 2,
   medium: 2,
@@ -179,8 +180,11 @@ function createPaperQuestion(
   };
 }
 
-function getRound1Topics(bank: Round1TestBank) {
-  const uniqueTopics = [...new Set(bank.questions.map((question) => question.topic.trim()).filter(Boolean))];
+function getRound1Topics(bank: Round1TestBank, configuredTopics: string[] = []) {
+  const uniqueTopics = normalizeRound1Topics(configuredTopics).length
+    ? normalizeRound1Topics(configuredTopics)
+    : normalizeRound1Topics(bank.questions.map((question) => question.topic));
+
   if (!uniqueTopics.length) {
     return [];
   }
@@ -228,14 +232,16 @@ function pickEssayQuestions(bank: Round1TestBank, count: number, random: () => n
 export function createRound1ExamPaper({
   objectiveBank,
   essayBank,
+  topics = [],
   random,
 }: {
   objectiveBank: Round1TestBank;
   essayBank: Round1TestBank;
+  topics?: string[];
   random?: () => number;
 }): Round1PaperQuestion[] {
   const pickRandom = random ?? Math.random;
-  const objectiveQuestions = getRound1Topics(objectiveBank).flatMap((topic) =>
+  const objectiveQuestions = getRound1Topics(objectiveBank, topics).flatMap((topic) =>
     (Object.entries(ROUND1_OBJECTIVE_DIFFICULTY_MIX) as Array<
       [Round1QuestionDifficulty, number]
     >).flatMap(([difficulty, count]) =>

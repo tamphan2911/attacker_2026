@@ -49,6 +49,7 @@ import {
 import {
   getSubmissionValidationError,
 } from "@/lib/submission-files";
+import { deriveRound1TopicsFromBanks, normalizeRound1Topics } from "@/lib/round1-topics";
 import type {
   AppSnapshot,
   CompetitionStage,
@@ -116,6 +117,7 @@ interface SiteDataApiPayload {
   judges: JudgeProfile[];
   newsPosts: NewsPost[];
   round1TestBanks: Round1TestBank[];
+  round1Topics: string[];
   timelineItems: TimelineItem[];
 }
 
@@ -142,6 +144,7 @@ interface SiteStateValue {
   teamLockRequests: Round1TeamLockRequest[];
   submissions: TeamSubmission[];
   round1TestBanks: Round1TestBank[];
+  round1Topics: string[];
   round1Submissions: Round1Submission[];
   newsPosts: NewsPost[];
   sponsors: SponsorProfile[];
@@ -201,6 +204,10 @@ interface SiteStateValue {
   createRound1QuestionByAdmin: (bankId: string, payload: Round1Question) => Promise<string | null>;
   updateRound1QuestionByAdmin: (bankId: string, questionId: string, payload: Round1Question) => Promise<string | null>;
   deleteRound1QuestionByAdmin: (bankId: string, questionId: string) => Promise<boolean>;
+  updateRound1TopicsByAdmin: (
+    topics: string[],
+    options?: { rename?: { from: string; to: string } },
+  ) => Promise<boolean>;
   updateRound1EssayScoreByAdmin: (
     submissionId: string,
     payload: number | { questionScores: Record<string, number> },
@@ -252,6 +259,7 @@ function createInitialSnapshot(): AppSnapshot {
     teamLockRequests: mockRound1TeamLockRequests,
     submissions: mockSubmissions,
     round1TestBanks: seedRound1TestBanks,
+    round1Topics: deriveRound1TopicsFromBanks(seedRound1TestBanks),
     round1Submissions: seedRound1Submissions,
     newsPosts: seedNewsPosts,
     sponsors: seedSponsorProfiles,
@@ -275,6 +283,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     useState<Round1TeamLockRequest[]>(mockRound1TeamLockRequests);
   const [submissions, setSubmissions] = useState<TeamSubmission[]>(mockSubmissions);
   const [round1TestBanks, setRound1TestBanks] = useState<Round1TestBank[]>(seedRound1TestBanks);
+  const [round1Topics, setRound1Topics] = useState<string[]>(() => deriveRound1TopicsFromBanks(seedRound1TestBanks));
   const [round1Submissions, setRound1Submissions] = useState<Round1Submission[]>(seedRound1Submissions);
   const [newsPosts, setNewsPosts] = useState<NewsPost[]>(seedNewsPosts);
   const [sponsors, setSponsors] = useState<SponsorProfile[]>(seedSponsorProfiles);
@@ -306,6 +315,11 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       setTeamLockRequests(snapshot.teamLockRequests ?? mockRound1TeamLockRequests);
       setSubmissions(snapshot.submissions ?? mockSubmissions);
       setRound1TestBanks(snapshot.round1TestBanks ?? seedRound1TestBanks);
+      setRound1Topics(
+        normalizeRound1Topics(
+          snapshot.round1Topics ?? deriveRound1TopicsFromBanks(snapshot.round1TestBanks ?? seedRound1TestBanks),
+        ),
+      );
       setRound1Submissions(snapshot.round1Submissions ?? seedRound1Submissions);
       setNewsPosts(snapshot.newsPosts ?? seedNewsPosts);
       setSponsors(normalizeSponsorProfiles(snapshot.sponsors ?? seedSponsorProfiles));
@@ -339,6 +353,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       teamLockRequests,
       submissions,
       round1TestBanks,
+      round1Topics,
       round1Submissions,
       newsPosts,
       sponsors,
@@ -346,7 +361,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       timelineItems,
       pageContent,
     });
-  }, [activeUserId, hasHydrated, invitations, judges, leadershipTransferRequests, locale, newsPosts, pageContent, round1Submissions, round1TestBanks, sponsors, submissions, teamLockRequests, theme, timelineItems, teams, users]);
+  }, [activeUserId, hasHydrated, invitations, judges, leadershipTransferRequests, locale, newsPosts, pageContent, round1Submissions, round1TestBanks, round1Topics, sponsors, submissions, teamLockRequests, theme, timelineItems, teams, users]);
 
   const pushToast = (message: LocalizedText, tone: ToastTone = "info") => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -381,6 +396,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     setJudges(payload.judges);
     setNewsPosts(payload.newsPosts);
     setRound1TestBanks(payload.round1TestBanks);
+    setRound1Topics(normalizeRound1Topics(payload.round1Topics ?? []));
     setTimelineItems(payload.timelineItems);
   }, []);
 
@@ -498,6 +514,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     setTeamLockRequests(snapshot.teamLockRequests);
     setSubmissions(snapshot.submissions);
     setRound1TestBanks(snapshot.round1TestBanks);
+    setRound1Topics(snapshot.round1Topics);
     setRound1Submissions(snapshot.round1Submissions);
     setNewsPosts(snapshot.newsPosts);
     setSponsors(normalizeSponsorProfiles(snapshot.sponsors));
@@ -1508,6 +1525,16 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       } satisfies LocalizedText;
     }
 
+    if (
+      round1Topics.length > 0 &&
+      !round1Topics.some((topic) => topic.toLowerCase() === payload.topic.trim().toLowerCase())
+    ) {
+      return {
+        en: "Choose the question topic from the managed Round 1 topic list.",
+        vi: "Hãy chọn chủ đề câu hỏi từ danh sách chủ đề Vòng 1 đã quản lý.",
+      } satisfies LocalizedText;
+    }
+
     const options = payload.options ?? [];
     const correctOptionIds = payload.correctOptionIds ?? [];
     const optionIds = new Set(options.map((option) => option.id));
@@ -1734,6 +1761,61 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         {
           en: "Could not delete the Round 1 question right now.",
           vi: "Hiện không thể xóa câu hỏi Vòng 1.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
+  const updateRound1TopicsByAdmin = async (
+    topics: string[],
+    options?: { rename?: { from: string; to: string } },
+  ) => {
+    if (currentUser.role !== "admin") {
+      pushToast(
+        {
+          en: "Only admin accounts can manage Round 1 topics.",
+          vi: "Chỉ tài khoản admin mới có thể quản lý chủ đề Vòng 1.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch("/api/admin/round-1/topics", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          topics,
+          rename: options?.rename,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not update Round 1 topics.");
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncSiteData();
+      pushToast(
+        {
+          en: "Round 1 topics updated successfully.",
+          vi: "Đã cập nhật chủ đề Vòng 1 thành công.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not update Round 1 topics right now.",
+          vi: "Hiện không thể cập nhật chủ đề Vòng 1.",
         },
         "warning",
       );
@@ -2835,6 +2917,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     teamLockRequests,
     submissions,
     round1TestBanks,
+    round1Topics,
     round1Submissions,
     newsPosts,
     sponsors,
@@ -2873,6 +2956,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     createRound1QuestionByAdmin,
     updateRound1QuestionByAdmin,
     deleteRound1QuestionByAdmin,
+    updateRound1TopicsByAdmin,
     updateRound1EssayScoreByAdmin,
     inviteUser,
     recallInvitation,

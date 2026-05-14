@@ -888,6 +888,7 @@ export interface AppSnapshot {
   teamLockRequests: Round1TeamLockRequest[];
   submissions: TeamSubmission[];
   round1TestBanks: Round1TestBank[];
+  round1Topics: string[];
   round1Submissions: Round1Submission[];
   newsPosts: NewsPost[];
   sponsors: SponsorProfile[];

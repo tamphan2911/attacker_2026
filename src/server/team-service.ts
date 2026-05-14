@@ -33,6 +33,7 @@ import {
   type Round1PaperQuestion,
   type Round1QuestionResponse,
 } from "@/lib/round1";
+import { normalizeRound1Topics, ROUND1_TOPICS_SCOPE } from "@/lib/round1-topics";
 import type {
   Round1Question,
   Round1QuestionDifficulty,
@@ -843,6 +844,23 @@ export async function respondToInvitation(
   });
 }
 
+async function readRound1TopicsForExam(tx: Prisma.TransactionClient) {
+  const entry = await tx.cmsEntry.findUnique({
+    where: { scope: ROUND1_TOPICS_SCOPE },
+    select: { payload: true },
+  });
+
+  if (!entry) {
+    return [];
+  }
+
+  try {
+    return normalizeRound1Topics(JSON.parse(entry.payload) as string[]);
+  } catch {
+    return [];
+  }
+}
+
 export async function recallInvitation(
   actorId: string,
   invitationId: string,
@@ -1518,6 +1536,7 @@ export async function startRound1Attempt(
 
     const objectiveBank = await pickRound1Bank(tx, Round1TestBankType.OBJECTIVE);
     const essayBank = await pickRound1Bank(tx, Round1TestBankType.ESSAY);
+    const round1Topics = await readRound1TopicsForExam(tx);
 
     if (!objectiveBank || !essayBank) {
       return fail(404, "Round 1 bank configuration is incomplete.");
@@ -1528,6 +1547,7 @@ export async function startRound1Attempt(
     const questions = createRound1ExamPaper({
       objectiveBank: mapStoredBankToAppBank(objectiveBank, "objective"),
       essayBank: mapStoredBankToAppBank(essayBank, "essay"),
+      topics: round1Topics,
     });
 
     const attempt = await tx.round1ExamAttempt.create({
