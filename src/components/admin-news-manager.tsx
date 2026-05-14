@@ -509,7 +509,7 @@ export function AdminNewsList() {
             <select
               value={categoryFilter}
               onChange={(event) => setCategoryFilter(event.target.value)}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All categories" : "Tất cả danh mục"}</option>
               {categoryOptions.map((category) => (
@@ -528,7 +528,7 @@ export function AdminNewsList() {
             <select
               value={authorFilter}
               onChange={(event) => setAuthorFilter(event.target.value)}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All authors" : "Tất cả tác giả"}</option>
               {authorOptions.map((author) => (
@@ -547,7 +547,7 @@ export function AdminNewsList() {
             <select
               value={tagFilter}
               onChange={(event) => setTagFilter(event.target.value)}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All tags" : "Tất cả tag"}</option>
               {tagOptions.map((tag) => (
@@ -1430,7 +1430,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                                 : current,
                             )
                           }
-                          className="rounded-full border theme-border theme-panel px-3 py-2 text-sm theme-text-strong"
+                          className="theme-admin-select rounded-full border px-3 py-2 text-sm font-semibold outline-none"
                         >
                           <option value="paragraph">paragraph</option>
                           <option value="image">image</option>
@@ -1618,7 +1618,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                                   : current,
                               )
                             }
-                            className={fieldClassName}
+                            className={`${fieldClassName} theme-admin-select`}
                           >
                             <option value="standard">standard</option>
                             <option value="feature">feature</option>

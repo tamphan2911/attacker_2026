@@ -353,7 +353,7 @@ export function AdminMessagesManager() {
               <select
                 value={kindFilter}
                 onChange={(event) => setKindFilter(event.target.value as ConversationKindFilter)}
-                className="w-full bg-transparent text-sm font-medium theme-text-strong outline-none"
+                className="theme-admin-select w-full rounded-[1rem] border px-3 py-2 text-sm font-semibold outline-none"
               >
                 <option value="all">{locale === "en" ? "All conversations" : "Tất cả cuộc trò chuyện"}</option>
                 <option value="direct">{getKindLabel(locale, "direct")}</option>
@@ -366,7 +366,7 @@ export function AdminMessagesManager() {
               <select
                 value={messageStateFilter}
                 onChange={(event) => setMessageStateFilter(event.target.value as MessageStateFilter)}
-                className="w-full bg-transparent text-sm font-medium theme-text-strong outline-none"
+                className="theme-admin-select w-full rounded-[1rem] border px-3 py-2 text-sm font-semibold outline-none"
               >
                 <option value="all">{locale === "en" ? "All states" : "Tất cả trạng thái"}</option>
                 <option value="active">{locale === "en" ? "Has messages" : "Có tin nhắn"}</option>

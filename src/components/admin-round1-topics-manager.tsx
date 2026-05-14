@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { ChevronDown, CirclePlus, Save, SquarePen, Trash2, X } from "lucide-react";
+import { CirclePlus, Save, SquarePen, Trash2, X } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { StatusPill, Surface } from "@/components/site-ui";
@@ -14,7 +14,7 @@ import type { Locale, Round1TestBank } from "@/types/site";
 
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
-const selectFieldClassName = `${fieldClassName} appearance-none pr-11`;
+const selectFieldClassName = `${fieldClassName} theme-admin-select`;
 
 function sortTopics(locale: Locale, topics: string[]) {
   return [...topics].sort((left, right) => left.localeCompare(right, locale));
@@ -77,7 +77,6 @@ export function Round1QuestionTopicSelect({
           </option>
         ))}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
     </div>
   );
 }
@@ -106,7 +105,6 @@ export function Round1EditorSelect({
       >
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
     </div>
   );
 }

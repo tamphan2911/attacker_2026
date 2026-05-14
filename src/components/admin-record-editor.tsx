@@ -230,7 +230,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
                     current ? { ...current, emailVerified: event.target.value === "verified" } : current,
                   )
                 }
-                className={fieldClassName}
+                className={`${fieldClassName} theme-admin-select`}
               >
                 <option value="verified">
                   {locale === "en" ? "Verified" : "Đã kích hoạt"}
@@ -251,7 +251,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
                     current ? { ...current, role: event.target.value as UserRole } : current,
                   )
                 }
-                className={fieldClassName}
+                className={`${fieldClassName} theme-admin-select`}
               >
                 <option value="student">student</option>
                 <option value="moderator">moderator</option>
@@ -552,7 +552,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
               <select
                 value={draft.leaderId}
                 onChange={(event) => setDraft((current) => (current ? { ...current, leaderId: event.target.value } : current))}
-                className={fieldClassName}
+                className={`${fieldClassName} theme-admin-select`}
               >
                 {members.map((member) => (
                   <option key={member.id} value={member.id}>
@@ -572,7 +572,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
                     current ? { ...current, stage: event.target.value as CompetitionStage } : current,
                   )
                 }
-                className={fieldClassName}
+                className={`${fieldClassName} theme-admin-select`}
               >
                 <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
                 <option value="round-2">{locale === "en" ? "Round 2" : "Vòng 2"}</option>
@@ -595,7 +595,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
                       : current,
                   )
                 }
-                className={fieldClassName}
+                className={`${fieldClassName} theme-admin-select`}
               >
                 <option value="">{locale === "en" ? "No final title yet" : "Chưa có danh hiệu cuối"}</option>
                 {teamFinalOutcomeOptions.map((option) => (

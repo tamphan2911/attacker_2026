@@ -1909,7 +1909,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                                       }),
                                     )
                                   }
-                                  className={fieldClassName}
+                                  className={`${fieldClassName} theme-admin-select`}
                                 >
                                   {faqTopics.map((topic) => (
                                     <option key={topic.id} value={topic.id}>

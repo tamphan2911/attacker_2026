@@ -754,7 +754,7 @@ export function AdminJudgesList() {
                   <select
                     value={filters.round}
                     onChange={(event) => setFilters((current) => ({ ...current, round: event.target.value }))}
-                    className={tableFieldClassName}
+                    className={`${tableFieldClassName} theme-admin-select`}
                   >
                     <option value="all">{locale === "en" ? "All rounds" : "Tất cả vòng"}</option>
                     {(["round-1", "round-2", "round-3"] as CompetitionRoundKey[]).map((round) => (

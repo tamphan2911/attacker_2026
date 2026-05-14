@@ -1721,7 +1721,7 @@ export function Round1ExamPage() {
                                     : current,
                                 )
                               }
-                              className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
+                              className="theme-admin-select theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
                             >
                               <option value="">
                                 {locale === "en" ? "Choose one option" : "Chọn một lựa chọn"}

@@ -206,7 +206,7 @@ function OrganizerAccountModal({
                   onChange({ role: event.target.value as OrganizerAccountDraft["role"] })
                 }
                 disabled={mode === "edit"}
-                className={fieldClassName}
+                className={`${fieldClassName} theme-admin-select`}
               >
                 <option value="admin">
                   {locale === "en" ? "Administrator" : "Quản trị viên"}
@@ -602,7 +602,7 @@ export function AdminOrganizerManager() {
                   <select
                     value={filters.role}
                     onChange={(event) => setFilters((current) => ({ ...current, role: event.target.value }))}
-                    className="w-full rounded-xl border theme-border theme-panel-subtle px-3 py-2 text-xs theme-text-body outline-none"
+                    className="theme-admin-select w-full rounded-xl border px-3 py-2 text-xs font-semibold outline-none"
                   >
                     <option value="all">{locale === "en" ? "All roles" : "Tất cả vai trò"}</option>
                     <option value="admin">{locale === "en" ? "Administrator" : "Quản trị viên"}</option>

@@ -531,7 +531,7 @@ export function AdminRound1ExamList() {
             <select
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as "all" | AdminRound1ExamStatus)}
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All statuses" : "Tất cả trạng thái"}</option>
               <option value="not-initiated">{locale === "en" ? "Not initiated" : "Chưa khởi tạo"}</option>
@@ -550,7 +550,7 @@ export function AdminRound1ExamList() {
               onChange={(event) =>
                 setEssayScoreFilter(event.target.value as "all" | "scored" | "not-scored")
               }
-              className="theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
             >
               <option value="all">{locale === "en" ? "All essay states" : "Tất cả trạng thái tự luận"}</option>
               <option value="scored">{locale === "en" ? "Essay scored" : "Đã có điểm tự luận"}</option>

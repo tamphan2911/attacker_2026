@@ -5,7 +5,6 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState, type Keybo
 import {
   AlertTriangle,
   ArrowRight,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CirclePlus,
@@ -228,7 +227,7 @@ function ForumCategorySelect({
         <select
           value={value}
           onChange={(event) => onChange(event.target.value as ForumThreadCategory)}
-          className="theme-field h-12 w-full appearance-none rounded-[1rem] border bg-white/86 px-4 pr-11 text-sm font-semibold theme-text-strong outline-none shadow-[0_14px_28px_rgba(15,23,42,0.05)] transition focus:border-sky-400/60 focus:ring-4 focus:ring-sky-400/12 dark:bg-slate-950/72"
+          className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm font-semibold outline-none"
         >
           {forumCategoryOrder.map((category) => (
             <option
@@ -240,7 +239,6 @@ function ForumCategorySelect({
             </option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
       </div>
     </label>
   );
