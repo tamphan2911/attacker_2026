@@ -14,7 +14,7 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
   const displayOrganization = judge.organization || (locale === "en" ? "Organization to be updated" : "Đơn vị đang cập nhật");
 
   return (
-    <Surface className="group flex h-full min-h-[21.5rem] flex-col overflow-hidden rounded-[1.35rem] px-0 py-0 transition duration-300 hover:-translate-y-1 hover:border-sky-300/60 hover:shadow-[0_22px_46px_rgba(30,89,145,0.14)] dark:hover:border-sky-200/30 dark:hover:shadow-[0_22px_46px_rgba(2,8,20,0.34)]">
+    <Surface className="group flex h-full min-h-[16.5rem] flex-col overflow-hidden rounded-[1.25rem] px-0 py-0 transition duration-300 hover:-translate-y-1 hover:border-sky-300/60 hover:shadow-[0_22px_46px_rgba(30,89,145,0.14)] dark:hover:border-sky-200/30 dark:hover:shadow-[0_22px_46px_rgba(2,8,20,0.34)]">
       <div className="relative h-36 shrink-0 overflow-hidden">
         <div
           role="img"
@@ -23,36 +23,33 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
           style={{ backgroundImage: `url(${judge.imageSrc})` }}
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.03)_0%,rgba(7,18,35,0.12)_36%,rgba(7,18,35,0.78)_100%)]" />
-        <div className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/24 bg-white/18 text-white shadow-[0_12px_28px_rgba(3,12,24,0.16)] backdrop-blur-md">
-          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+        <div className="absolute right-2.5 top-2.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/24 bg-white/18 text-white shadow-[0_12px_28px_rgba(3,12,24,0.16)] backdrop-blur-md">
+          <Sparkles className="h-3 w-3" aria-hidden="true" />
         </div>
-      </div>
-
-      <div className="flex flex-1 flex-col px-3.5 py-3.5">
-        <div className="min-h-[3.2rem]">
-          <p className="theme-heading line-clamp-2 text-[1rem] font-semibold leading-snug theme-text-strong">
+        <div className="absolute inset-x-0 bottom-0 p-3">
+          <p className="theme-heading line-clamp-2 text-[0.98rem] font-semibold leading-tight text-white [text-shadow:0_8px_22px_rgba(2,8,20,0.48)]">
             {judge.name}
           </p>
         </div>
+      </div>
 
-        <div className="mt-3 grid gap-2.5">
-          <div className="grid min-h-[4.25rem] grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-2 rounded-[1rem] border border-sky-700/12 bg-sky-500/8 px-3 py-2.5 text-[0.72rem] leading-5 theme-text-muted dark:border-sky-200/14 dark:bg-sky-300/10">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-sky-500/12 text-sky-700 dark:bg-sky-300/12 dark:text-sky-100">
-              <BriefcaseBusiness className="h-3.5 w-3.5" aria-hidden="true" />
-            </span>
-            <span className="line-clamp-2 min-w-0 break-words font-medium theme-text-body">
-              {displayPosition}
-            </span>
-          </div>
+      <div className="grid gap-1.5 px-3 py-3">
+        <div className="grid min-h-[2.85rem] grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-[0.9rem] border border-sky-700/12 bg-sky-500/8 px-2.5 py-1.5 text-[0.68rem] leading-4 theme-text-muted dark:border-sky-200/14 dark:bg-sky-300/10">
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/12 text-sky-700 dark:bg-sky-300/12 dark:text-sky-100">
+            <BriefcaseBusiness className="h-3 w-3" aria-hidden="true" />
+          </span>
+          <span className="line-clamp-2 min-w-0 break-words font-medium theme-text-body">
+            {displayPosition}
+          </span>
+        </div>
 
-          <div className="grid min-h-[4.25rem] grid-cols-[1.5rem_minmax(0,1fr)] items-center gap-2 rounded-[1rem] border theme-border bg-white/64 px-3 py-2.5 text-[0.72rem] leading-5 theme-text-muted dark:bg-white/[0.05]">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/12 text-cyan-700 dark:bg-cyan-300/12 dark:text-cyan-100">
-              <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
-            </span>
-            <span className="line-clamp-2 min-w-0 break-words font-medium theme-text-body">
-              {displayOrganization}
-            </span>
-          </div>
+        <div className="grid min-h-[2.85rem] grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-[0.9rem] border theme-border bg-white/64 px-2.5 py-1.5 text-[0.68rem] leading-4 theme-text-muted dark:bg-white/[0.05]">
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500/12 text-cyan-700 dark:bg-cyan-300/12 dark:text-cyan-100">
+            <Building2 className="h-3 w-3" aria-hidden="true" />
+          </span>
+          <span className="line-clamp-2 min-w-0 break-words font-medium theme-text-body">
+            {displayOrganization}
+          </span>
         </div>
       </div>
     </Surface>
