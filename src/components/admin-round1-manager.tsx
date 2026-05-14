@@ -35,7 +35,7 @@ import {
   AdminTablePagination,
   useAdminTablePagination,
 } from "@/components/admin-table-pagination";
-import { Round1QuestionTopicSelect, Round1TopicsManager } from "@/components/admin-round1-topics-manager";
+import { Round1EditorSelect, Round1QuestionTopicSelect, Round1TopicsManager } from "@/components/admin-round1-topics-manager";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
@@ -2835,44 +2835,44 @@ function AdminRound1QuestionEditorInner({
                 <span className="text-sm theme-text-muted">
                   {locale === "en" ? "Difficulty" : "Độ khó"}
                 </span>
-                <select
+                <Round1EditorSelect
                   value={draft.difficulty}
-                  onChange={(event) =>
+                  onChange={(value) =>
                     setDraft((current) =>
                       current
                         ? {
                             ...current,
-                            difficulty: event.target.value as Round1Question["difficulty"],
+                            difficulty: value as Round1Question["difficulty"],
                           }
                         : current,
                     )
                   }
-                  className={fieldClassName}
+                  ariaLabel={locale === "en" ? "Difficulty" : "Độ khó"}
                 >
                   <option value="easy">{pickRound1DifficultyLabel(locale, "easy")}</option>
                   <option value="medium">{pickRound1DifficultyLabel(locale, "medium")}</option>
                   <option value="hard">{pickRound1DifficultyLabel(locale, "hard")}</option>
-                </select>
+                </Round1EditorSelect>
               </label>
             ) : null}
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Question type" : "Loại câu hỏi"}
               </span>
-              <select
+              <Round1EditorSelect
                 value={draft.type}
-                onChange={(event) =>
+                onChange={(value) =>
                   setDraft((current) =>
                     current
                       ? convertRound1QuestionType(
                           current,
-                          event.target.value as Round1QuestionType,
+                          value as Round1QuestionType,
                         )
                       : current,
                   )
                 }
                 disabled={mode === "edit" || isEssayBank}
-                className={fieldClassName}
+                ariaLabel={locale === "en" ? "Question type" : "Loại câu hỏi"}
               >
                 {(isEssayBank
                   ? (["essay"] as Round1QuestionType[])
@@ -2887,7 +2887,7 @@ function AdminRound1QuestionEditorInner({
                     {pickRound1TypeLabel(locale, type)}
                   </option>
                 ))}
-              </select>
+              </Round1EditorSelect>
             </label>
           </div>
 
@@ -3038,30 +3038,30 @@ function AdminRound1QuestionEditorInner({
                             <span className="text-sm theme-text-muted">
 	                              {locale === "en" ? "Correct match" : "Cặp nội dung"}
                             </span>
-                            <select
+                            <Round1EditorSelect
                               value={item.correctOptionId}
-                              onChange={(event) =>
+                              onChange={(value) =>
                                 setDraft((current) =>
                                   current
                                     ? {
                                         ...current,
                                         pairingItems: (current.pairingItems ?? []).map((pairingItem) =>
                                           pairingItem.id === item.id
-                                            ? { ...pairingItem, correctOptionId: event.target.value }
+                                            ? { ...pairingItem, correctOptionId: value }
                                             : pairingItem,
                                         ),
                                       }
                                     : current,
                                 )
                               }
-                              className={fieldClassName}
+                              ariaLabel={locale === "en" ? "Correct match" : "Cặp nội dung"}
                             >
                               {(draft.options ?? []).map((option) => (
                                 <option key={option.id} value={option.id}>
                                   {option.label}
                                 </option>
                               ))}
-                            </select>
+                            </Round1EditorSelect>
                           </label>
                         </div>
                         <div className="mt-4">

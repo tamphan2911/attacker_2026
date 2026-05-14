@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ChevronDown, CirclePlus, Save, SquarePen, Trash2, X } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -76,6 +76,35 @@ export function Round1QuestionTopicSelect({
             {topic}
           </option>
         ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
+    </div>
+  );
+}
+
+export function Round1EditorSelect({
+  value,
+  onChange,
+  disabled = false,
+  ariaLabel,
+  children,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  ariaLabel: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        className={selectFieldClassName}
+      >
+        {children}
       </select>
       <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
     </div>
