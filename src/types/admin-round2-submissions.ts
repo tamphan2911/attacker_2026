@@ -1,3 +1,5 @@
+import type { LocalizedText } from "@/types/site";
+
 export type AdminRound2AssignmentStatus = "unassigned" | "partially-assigned" | "fully-assigned";
 
 export interface AdminRound2AssignedJudgeRecord {
@@ -5,7 +7,7 @@ export interface AdminRound2AssignedJudgeRecord {
   judgeName: string;
   judgeLoginId: string;
   judgeProfileId?: string;
-  organization: string;
+  organization: LocalizedText | string;
   score?: number;
   scoredAt?: string;
 }
@@ -15,7 +17,7 @@ export interface AdminRound2JudgeOption {
   judgeName: string;
   judgeLoginId: string;
   judgeProfileId?: string;
-  organization: string;
+  organization: LocalizedText | string;
 }
 
 export interface AdminRound2SubmissionRow {

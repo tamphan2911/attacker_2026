@@ -2,7 +2,7 @@ import { UserRole } from "@prisma/client";
 import { hash } from "bcryptjs";
 
 import { prisma } from "@/lib/db";
-import { buildJudgeEmail, readStoredJudges } from "@/server/admin-service";
+import { buildJudgeEmail, getJudgeAccountOrganization, readStoredJudges } from "@/server/admin-service";
 
 const DEFAULT_JUDGE_PASSWORD = "Judge@2026";
 let cachedJudgePasswordHash: string | null = null;
@@ -62,7 +62,7 @@ export async function syncJudgeAccounts() {
       judgeProfileId: judge.id,
       phoneNumber: null,
       studentId: null,
-      university: judge.organization,
+      university: getJudgeAccountOrganization(judge),
       major: judge.role.en || judge.role.vi,
       classYear: "",
       bio: judge.bio.en || judge.bio.vi,

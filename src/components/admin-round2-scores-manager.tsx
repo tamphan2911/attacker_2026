@@ -24,6 +24,7 @@ import {
 } from "@/components/admin-table-pagination";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { pickLocalizedText } from "@/lib/site";
 import type { AdminRound2JudgeOption } from "@/types/admin-round2-submissions";
 import type {
   AdminRound2JudgeScoreRecord,
@@ -296,7 +297,7 @@ function JudgeScoreCell({
                 value={option.judgeUserId}
                 disabled={Boolean(otherSelectedJudgeId && option.judgeUserId === otherSelectedJudgeId)}
               >
-                {option.judgeName} {option.organization ? `· ${option.organization}` : ""}
+                {option.judgeName} {pickLocalizedText(locale, option.organization) ? `· ${pickLocalizedText(locale, option.organization)}` : ""}
               </option>
             ))}
           </select>

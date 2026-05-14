@@ -23,6 +23,7 @@ import {
 } from "@/components/admin-table-pagination";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { StatusPill, Surface } from "@/components/site-ui";
+import { pickLocalizedText } from "@/lib/site";
 import type {
   AdminRound2AssignmentStatus,
   AdminRound2JudgeOption,
@@ -224,7 +225,7 @@ function AssignedJudgeCell({
             <p className="font-semibold theme-text-strong">{judge.judgeName}</p>
           )}
           <p className="mt-1 text-xs theme-text-soft">
-            {locale === "en" ? `Judge ${index + 1}` : `Giám khảo ${index + 1}`} · {judge.organization}
+            {locale === "en" ? `Judge ${index + 1}` : `Giám khảo ${index + 1}`} · {pickLocalizedText(locale, judge.organization)}
           </p>
         </div>
       ))}
@@ -340,7 +341,7 @@ function AssignmentDialog({
                 <option value="">{locale === "en" ? "Choose a judge" : "Chọn giám khảo"}</option>
                 {availableJudges.map((judge) => (
                   <option key={judge.judgeUserId} value={judge.judgeUserId}>
-                    {`${judge.judgeName} · ${judge.organization}`}
+                    {`${judge.judgeName} · ${pickLocalizedText(locale, judge.organization)}`}
                   </option>
                 ))}
               </select>
@@ -358,7 +359,7 @@ function AssignmentDialog({
                 <option value="">{locale === "en" ? "Choose a judge" : "Chọn giám khảo"}</option>
                 {availableJudges.map((judge) => (
                   <option key={judge.judgeUserId} value={judge.judgeUserId}>
-                    {`${judge.judgeName} · ${judge.organization}`}
+                    {`${judge.judgeName} · ${pickLocalizedText(locale, judge.organization)}`}
                   </option>
                 ))}
               </select>
@@ -526,7 +527,12 @@ export function AdminRound2SubmissionsManager() {
           row.resourceLabel,
           row.submittedByName,
           row.submittedByLoginId,
-          ...row.assignedJudges.flatMap((judge) => [judge.judgeName, judge.judgeLoginId, judge.organization]),
+          ...row.assignedJudges.flatMap((judge) => [
+            judge.judgeName,
+            judge.judgeLoginId,
+            pickLocalizedText("en", judge.organization),
+            pickLocalizedText("vi", judge.organization),
+          ]),
         ].join(" ");
 
         if (!matchesFilter(searchSource, search)) {

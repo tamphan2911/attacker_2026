@@ -2,7 +2,7 @@
 
 import { BriefcaseBusiness, Building2, Sparkles } from "lucide-react";
 
-import { pickText } from "@/lib/site";
+import { pickLocalizedText, pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
 import type { EditableJudgeRoundSection, JudgeProfile, Locale } from "@/types/site";
@@ -11,7 +11,8 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
   const { locale } = useSiteState();
   const position = pickText(locale, judge.role);
   const displayPosition = position || (locale === "en" ? "Position to be updated" : "Chức vụ đang cập nhật");
-  const displayOrganization = judge.organization || (locale === "en" ? "Organization to be updated" : "Đơn vị đang cập nhật");
+  const displayOrganization =
+    pickLocalizedText(locale, judge.organization) || (locale === "en" ? "Organization to be updated" : "Đơn vị đang cập nhật");
 
   return (
     <Surface className="group flex h-full min-h-[17.5rem] flex-col overflow-hidden rounded-[1.25rem] px-0 py-0 transition duration-300 hover:-translate-y-1 hover:border-sky-300/60 hover:shadow-[0_22px_46px_rgba(30,89,145,0.14)] dark:hover:border-sky-200/30 dark:hover:shadow-[0_22px_46px_rgba(2,8,20,0.34)]">

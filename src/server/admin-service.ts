@@ -10,6 +10,7 @@ import { hash } from "bcryptjs";
 
 import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, round1TestBanks, sponsorProfiles } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import { normalizeLocalizedText, pickText } from "@/lib/site";
 import {
   deriveRound1TopicsFromBanks,
   isRound1ManagedTopic,
@@ -128,6 +129,18 @@ const SPONSORS_SCOPE = "site-sponsors";
 
 export function getDefaultJudges() {
   return judgeProfiles;
+}
+
+function normalizeJudgeProfile(judge: JudgeProfile): JudgeProfile {
+  return {
+    ...judge,
+    organization: normalizeLocalizedText(judge.organization),
+  };
+}
+
+export function getJudgeAccountOrganization(judge: JudgeProfile) {
+  const organization = normalizeLocalizedText(judge.organization);
+  return pickText("en", organization) || pickText("vi", organization);
 }
 
 export function getDefaultSponsors() {
@@ -260,16 +273,19 @@ export async function readStoredJudges() {
     select: { payload: true },
   });
 
-  return cmsEntry ? (JSON.parse(cmsEntry.payload) as JudgeProfile[]) : getDefaultJudges();
+  const judges = cmsEntry ? (JSON.parse(cmsEntry.payload) as JudgeProfile[]) : getDefaultJudges();
+  return judges.map(normalizeJudgeProfile);
 }
 
 async function saveJudges(judges: JudgeProfile[]) {
+  const normalizedJudges = judges.map(normalizeJudgeProfile);
+
   await prisma.cmsEntry.upsert({
     where: { scope: JUDGES_SCOPE },
-    update: { payload: JSON.stringify(judges) },
+    update: { payload: JSON.stringify(normalizedJudges) },
     create: {
       scope: JUDGES_SCOPE,
-      payload: JSON.stringify(judges),
+      payload: JSON.stringify(normalizedJudges),
     },
   });
 }
@@ -325,7 +341,7 @@ export async function updateJudgeByAdmin(
         loginId: nextLoginId,
         email: buildJudgeEmail(nextLoginId),
         name: payload.name,
-        university: payload.organization,
+        university: getJudgeAccountOrganization(payload),
         major: payload.role.en || payload.role.vi,
         avatarTone: payload.avatarTone,
         avatarImageSrc: payload.imageSrc || null,
@@ -336,7 +352,7 @@ export async function updateJudgeByAdmin(
       where: { judgeProfileId: judgeId, role: UserRole.JUDGE },
       data: {
         name: payload.name,
-        university: payload.organization,
+        university: getJudgeAccountOrganization(payload),
         major: payload.role.en || payload.role.vi,
         avatarTone: payload.avatarTone,
         avatarImageSrc: payload.imageSrc || null,

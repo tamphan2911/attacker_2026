@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { getNewsImageValidationError } from "@/lib/news-images";
-import { pickText } from "@/lib/site";
+import { normalizeLocalizedText, pickLocalizedText, pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
   ADMIN_LIST_TABLE_PAGE_SIZE,
@@ -45,7 +45,7 @@ type JudgeDraft = {
   id: string;
   name: string;
   imageSrc: string;
-  organization: string;
+  organization: LocalizedText;
   role: LocalizedText;
   bio: LocalizedText;
   expertiseEnInput: string;
@@ -94,7 +94,7 @@ function draftFromJudge(judge: JudgeProfile): JudgeDraft {
     id: judge.id,
     name: judge.name,
     imageSrc: judge.imageSrc,
-    organization: judge.organization,
+    organization: normalizeLocalizedText(judge.organization),
     role: { ...judge.role },
     bio: { ...judge.bio },
     expertiseEnInput: judge.expertise.map((item) => item.en).join(", "),
@@ -113,7 +113,10 @@ function buildJudgeFromDraft(draft: JudgeDraft): JudgeProfile {
     id: draft.id.trim() || slugify(draft.name),
     name: draft.name.trim(),
     imageSrc: draft.imageSrc.trim(),
-    organization: draft.organization.trim(),
+    organization: {
+      en: draft.organization.en.trim(),
+      vi: draft.organization.vi.trim(),
+    },
     role: {
       en: draft.role.en.trim(),
       vi: draft.role.vi.trim(),
@@ -136,7 +139,7 @@ function createEmptyJudgeDraft(): JudgeDraft {
     id: "",
     name: "",
     imageSrc: "/judges/nguyen-bao-chau.svg",
-    organization: "",
+    organization: { en: "", vi: "" },
     role: { en: "", vi: "" },
     bio: { en: "", vi: "" },
     expertiseEnInput: "",
@@ -325,17 +328,19 @@ function JudgeFormFields({
                 ) : null}
               </div>
             ) : null}
-            <label className="space-y-2 md:col-span-2">
-              <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Organization" : "Tổ chức"}
-              </span>
-              <input
-                value={draft.organization}
-                onChange={(event) => onChange({ ...draft, organization: event.target.value })}
-                className={fieldClassName}
-              />
-            </label>
           </div>
+
+          <LocalizedFieldEditor
+            label={locale === "en" ? "Organization" : "Tổ chức"}
+            rows={2}
+            value={draft.organization}
+            onChange={(language, nextValue) =>
+              onChange({
+                ...draft,
+                organization: { ...draft.organization, [language]: nextValue },
+              })
+            }
+          />
 
           <LocalizedFieldEditor
             label={locale === "en" ? "Position" : "Chức vụ"}
@@ -419,7 +424,7 @@ function JudgeFormFields({
             </p>
             <p className="mt-2 text-sm leading-7 theme-text-soft">
               {pickText(locale, draft.role) || (locale === "en" ? "Position" : "Chức vụ")} ·{" "}
-              {draft.organization || (locale === "en" ? "Organization" : "Tổ chức")}
+              {pickText(locale, draft.organization) || (locale === "en" ? "Organization" : "Tổ chức")}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -582,7 +587,11 @@ function normalizeDraftForSave(draft: JudgeDraft) {
     rounds: draft.rounds,
   };
 
-  if (!nextDraft.name.trim() || !nextDraft.organization.trim() || !nextDraft.imageSrc.trim()) {
+  if (
+    !nextDraft.name.trim() ||
+    (!nextDraft.organization.en.trim() && !nextDraft.organization.vi.trim()) ||
+    !nextDraft.imageSrc.trim()
+  ) {
     return null;
   }
 
@@ -627,7 +636,7 @@ export function AdminJudgesList() {
     () =>
       judges.filter((judge) => {
         const judgeLabel = `${judge.name} ${pickText(locale, judge.role)}`;
-        const organizationLabel = judge.organization;
+        const organizationLabel = `${pickLocalizedText(locale, judge.organization)} ${pickLocalizedText(locale === "en" ? "vi" : "en", judge.organization)}`;
         const expertiseLabel = getJudgeExpertiseText(locale, judge);
 
         return (
@@ -811,7 +820,7 @@ export function AdminJudgesList() {
                     </div>
                   </td>
                   <td className="border-y theme-border px-4 py-4 text-sm theme-text-body">
-                    {judge.organization}
+                    {pickLocalizedText(locale, judge.organization)}
                   </td>
                   <td className="border-y theme-border px-4 py-4">
                     <div className="flex flex-wrap gap-2">

@@ -80,13 +80,17 @@ export async function readAdminRound2JudgeOptions(): Promise<AdminRound2JudgeOpt
     orderBy: [{ name: "asc" }],
   });
 
-  return users.map((user) => ({
-    judgeUserId: user.id,
-    judgeName: user.name,
-    judgeLoginId: user.loginId,
-    judgeProfileId: user.judgeProfileId ?? undefined,
-    organization: user.university,
-  }));
+  return users.map((user) => {
+    const profile = storedJudges.find((judge) => judge.id === user.judgeProfileId);
+
+    return {
+      judgeUserId: user.id,
+      judgeName: user.name,
+      judgeLoginId: user.loginId,
+      judgeProfileId: user.judgeProfileId ?? undefined,
+      organization: profile?.organization ?? user.university,
+    };
+  });
 }
 
 export async function readAdminRound2SubmissionRows(): Promise<{
@@ -149,6 +153,7 @@ export async function readAdminRound2SubmissionRows(): Promise<{
   const round2Closed = round2DeadlineItem
     ? new Date().getTime() > endOfVietnamDay(round2DeadlineItem.endDate).getTime()
     : false;
+  const availableJudgeByUserId = new Map(availableJudges.map((judge) => [judge.judgeUserId, judge]));
 
   const rows = submissions.map<AdminRound2SubmissionRow>((submission) => {
     const assignedJudges = submission.judgeReviews
@@ -159,7 +164,7 @@ export async function readAdminRound2SubmissionRows(): Promise<{
         judgeName: review.judgeUser.name,
         judgeLoginId: review.judgeUser.loginId,
         judgeProfileId: review.judgeUser.judgeProfileId ?? undefined,
-        organization: review.judgeUser.university,
+        organization: availableJudgeByUserId.get(review.judgeUser.id)?.organization ?? review.judgeUser.university,
         score: review.score ?? undefined,
         scoredAt: review.scoredAt?.toISOString(),
       }));

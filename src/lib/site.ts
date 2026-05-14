@@ -4,6 +4,21 @@ export function pickText(locale: Locale, value: LocalizedText): string {
   return value[locale];
 }
 
+export function normalizeLocalizedText(value: LocalizedText | string | null | undefined): LocalizedText {
+  if (typeof value === "string") {
+    return { en: value, vi: value };
+  }
+
+  return {
+    en: value?.en ?? "",
+    vi: value?.vi ?? value?.en ?? "",
+  };
+}
+
+export function pickLocalizedText(locale: Locale, value: LocalizedText | string | null | undefined): string {
+  return pickText(locale, normalizeLocalizedText(value));
+}
+
 export function formatDateLabel(locale: Locale, value: string): string {
   return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
     day: "2-digit",

@@ -31,6 +31,7 @@ import {
   round1IndividualSubmissions,
   round1TestBanks,
 } from "@/data/site-content";
+import { pickLocalizedText } from "@/lib/site";
 import { buildRound1SubmissionArchiveFromBanks } from "@/server/round1-submission-archive";
 
 const prisma = new PrismaClient();
@@ -346,7 +347,7 @@ async function main() {
         judgeProfileId: judge.id,
         studentId: null,
         phoneNumber: null,
-        university: judge.organization,
+        university: pickLocalizedText("en", judge.organization),
         major: judge.role.en,
         classYear: "",
         bio: judge.bio.en,

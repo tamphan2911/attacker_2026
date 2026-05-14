@@ -17,7 +17,7 @@ import {
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { PageIntro, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
-import { formatDateLabel } from "@/lib/site";
+import { formatDateLabel, pickLocalizedText } from "@/lib/site";
 import type {
   CompetitionRoundKey,
   JudgeDashboardData,
@@ -291,8 +291,8 @@ export function JudgeDashboardPage({ data }: { data: JudgeDashboardData }) {
               {locale === "en" ? "Judge profile" : "Hồ sơ giám khảo"}
             </p>
             <p className="mt-3 text-lg font-semibold theme-text-strong">{data.judge.name}</p>
-            <p className="mt-2 text-sm theme-text-muted">{data.judge.position}</p>
-            <p className="mt-2 text-sm theme-text-soft">{data.judge.organization}</p>
+            <p className="mt-2 text-sm theme-text-muted">{pickLocalizedText(locale, data.judge.position)}</p>
+            <p className="mt-2 text-sm theme-text-soft">{pickLocalizedText(locale, data.judge.organization)}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {data.judge.rounds.map((round) => (
                 <StatusPill key={round} tone={round === "round-1" ? "info" : round === "round-2" ? "success" : "warning"}>

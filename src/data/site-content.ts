@@ -2645,7 +2645,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Chief product officer",
       vi: "Giám đốc sản phẩm",
     },
-    organization: "NextBank Lab",
+    organization: { en: "NextBank Lab", vi: "NextBank Lab" },
     bio: {
       en: "Focuses on product discovery, digital banking journeys, and feasibility for consumer-scale fintech ideas.",
       vi: "Tập trung vào product discovery, hành trình ngân hàng số và tính khả thi đối với các ý tưởng fintech hướng đến quy mô người dùng lớn.",
@@ -2666,7 +2666,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Director of innovation strategy",
       vi: "Giám đốc chiến lược đổi mới",
     },
-    organization: "Finverse",
+    organization: { en: "Finverse", vi: "Finverse" },
     bio: {
       en: "Assesses whether finalist teams can connect market insight, product direction, and execution discipline in a way that feels investment-ready.",
       vi: "Đánh giá khả năng các đội chung kết kết nối góc nhìn thị trường, định hướng sản phẩm và kỷ luật thực thi theo cách đủ thuyết phục với nhà đầu tư.",
@@ -2687,7 +2687,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Executive chairman",
       vi: "Chủ tịch điều hành",
     },
-    organization: "BlueFund Capital",
+    organization: { en: "BlueFund Capital", vi: "BlueFund Capital" },
     bio: {
       en: "Reviews the final-stage business case, strategic coherence, and how confidently teams defend assumptions under judge questioning.",
       vi: "Xem xét luận điểm kinh doanh ở chặng cuối, độ gắn kết chiến lược và cách đội thi bảo vệ giả định trước phần chất vấn của hội đồng.",
@@ -2708,7 +2708,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Chief transformation officer",
       vi: "Giám đốc chuyển đổi",
     },
-    organization: "NextBank Lab",
+    organization: { en: "NextBank Lab", vi: "NextBank Lab" },
     bio: {
       en: "Focuses on whether the live presentation shows a realistic implementation path, scalable operations, and clear value creation for users.",
       vi: "Tập trung vào việc phần thuyết trình trực tiếp có thể hiện được lộ trình triển khai thực tế, vận hành có thể mở rộng và giá trị rõ ràng cho người dùng hay không.",
@@ -2729,7 +2729,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Head of risk and compliance",
       vi: "Trưởng bộ phận rủi ro và tuân thủ",
     },
-    organization: "BlueFund Capital",
+    organization: { en: "BlueFund Capital", vi: "BlueFund Capital" },
     bio: {
       en: "Advises on risk framing, compliance readiness, and how student teams can make ambitious ideas more credible.",
       vi: "Đồng hành về khung rủi ro, sự sẵn sàng tuân thủ và cách giúp các đội sinh viên biến ý tưởng tham vọng thành đề xuất đáng tin hơn.",
@@ -2750,7 +2750,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Senior investment manager",
       vi: "Quản lý đầu tư cấp cao",
     },
-    organization: "BlueFund Capital",
+    organization: { en: "BlueFund Capital", vi: "BlueFund Capital" },
     bio: {
       en: "Examines how team reports frame market opportunity, financial logic, and the credibility of the proposed operating model.",
       vi: "Xem xét cách báo cáo của đội thi diễn giải cơ hội thị trường, logic tài chính và độ tin cậy của mô hình vận hành được đề xuất.",
@@ -2771,7 +2771,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Head of enterprise architecture",
       vi: "Trưởng bộ phận kiến trúc doanh nghiệp",
     },
-    organization: "NextBank Lab",
+    organization: { en: "NextBank Lab", vi: "NextBank Lab" },
     bio: {
       en: "Reviews system design clarity, product architecture choices, and whether the proposal can survive real-world institutional constraints.",
       vi: "Đánh giá độ rõ của thiết kế hệ thống, lựa chọn kiến trúc sản phẩm và khả năng đề xuất đứng vững trước các ràng buộc vận hành thực tế.",
@@ -2792,7 +2792,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Regulatory affairs advisor",
       vi: "Cố vấn pháp chế và quản trị",
     },
-    organization: "Finverse",
+    organization: { en: "Finverse", vi: "Finverse" },
     bio: {
       en: "Looks closely at compliance assumptions, licensing logic, and the maturity of governance sections inside project reports.",
       vi: "Theo sát các giả định về tuân thủ, logic giấy phép và độ trưởng thành của phần quản trị trong hồ sơ dự án.",
@@ -2813,7 +2813,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Research and strategy lead",
       vi: "Trưởng nhóm nghiên cứu chiến lược",
     },
-    organization: "Quant Studio",
+    organization: { en: "Quant Studio", vi: "Quant Studio" },
     bio: {
       en: "Evaluates the depth of analysis, report structure, and how convincingly teams translate evidence into a defendable project direction.",
       vi: "Đánh giá chiều sâu phân tích, cấu trúc báo cáo và mức độ thuyết phục khi đội thi chuyển hóa bằng chứng thành định hướng dự án có thể bảo vệ được.",
@@ -2834,7 +2834,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Managing partner",
       vi: "Đối tác điều hành",
     },
-    organization: "Finverse",
+    organization: { en: "Finverse", vi: "Finverse" },
     bio: {
       en: "Works across startup ecosystems and judges teams on clarity of positioning, growth narrative, and founder-level execution.",
       vi: "Làm việc trong hệ sinh thái startup và đánh giá đội thi dựa trên độ rõ định vị, câu chuyện tăng trưởng và năng lực thực thi như một founder.",
@@ -2855,7 +2855,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Quant research lead",
       vi: "Trưởng nhóm nghiên cứu quant",
     },
-    organization: "Quant Studio",
+    organization: { en: "Quant Studio", vi: "Quant Studio" },
     bio: {
       en: "Reviews market structure thinking, signal quality, and whether teams can turn analysis into disciplined decision-making.",
       vi: "Đánh giá tư duy cấu trúc thị trường, chất lượng tín hiệu và khả năng biến phân tích thành cách ra quyết định kỷ luật.",
@@ -2876,7 +2876,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Assessment design specialist",
       vi: "Chuyên gia thiết kế đánh giá",
     },
-    organization: "UEL Academic Office",
+    organization: { en: "UEL Academic Office", vi: "Văn phòng học thuật UEL" },
     bio: {
       en: "Helps shape Round 1 rigor through question design, balance across topics, and consistency in how the first screen measures capability.",
       vi: "Góp phần tạo độ chặt chẽ cho Vòng 1 thông qua thiết kế câu hỏi, cân bằng chủ đề và sự nhất quán trong cách vòng đầu đo lường năng lực.",
@@ -2897,7 +2897,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Data analytics lecturer",
       vi: "Giảng viên phân tích dữ liệu",
     },
-    organization: "University of Economics and Law",
+    organization: { en: "University of Economics and Law", vi: "Trường Đại học Kinh tế - Luật" },
     bio: {
       en: "Reviews whether the early-round bank tests structured thinking, quantitative reading, and careful interpretation of financial information.",
       vi: "Đánh giá việc ngân hàng câu hỏi ở vòng đầu có kiểm tra được tư duy có cấu trúc, khả năng đọc định lượng và diễn giải cẩn trọng thông tin tài chính hay không.",
@@ -2918,7 +2918,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Curriculum and testing advisor",
       vi: "Cố vấn chương trình và khảo thí",
     },
-    organization: "Finverse Learning Hub",
+    organization: { en: "Finverse Learning Hub", vi: "Finverse Learning Hub" },
     bio: {
       en: "Supports Round 1 by checking clarity of wording, fairness between topics, and the practical relevance of the objective paper.",
       vi: "Hỗ trợ Vòng 1 bằng việc kiểm tra độ rõ câu chữ, tính công bằng giữa các chủ đề và mức độ gắn với thực tiễn của phần trắc nghiệm.",
@@ -2939,7 +2939,7 @@ export const judgeProfiles: JudgeProfile[] = [
       en: "Financial modeling mentor",
       vi: "Cố vấn mô hình tài chính",
     },
-    organization: "Quant Studio",
+    organization: { en: "Quant Studio", vi: "Quant Studio" },
     bio: {
       en: "Focuses on the analytical quality of the first-round question bank and whether it distinguishes disciplined thinking from guesswork.",
       vi: "Tập trung vào chất lượng phân tích của ngân hàng câu hỏi vòng đầu và việc đề thi có phân biệt được tư duy kỷ luật với trả lời cảm tính hay không.",

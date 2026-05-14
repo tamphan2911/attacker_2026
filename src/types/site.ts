@@ -97,7 +97,7 @@ export interface JudgeProfile {
   name: string;
   imageSrc: string;
   role: LocalizedText;
-  organization: string;
+  organization: LocalizedText;
   bio: LocalizedText;
   expertise: LocalizedText[];
   avatarTone: string;
@@ -308,8 +308,8 @@ export interface JudgeAssignmentSummary {
   userId: string;
   judgeProfileId: string;
   name: string;
-  position: string;
-  organization: string;
+  position: LocalizedText;
+  organization: LocalizedText;
   rounds: CompetitionRoundKey[];
 }
 

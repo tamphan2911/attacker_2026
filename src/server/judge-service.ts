@@ -82,7 +82,7 @@ async function getJudgeAssignmentSummary(userId: string): Promise<ServiceResult<
     userId: user.id,
     judgeProfileId: profile.id,
     name: user.name,
-    position: profile.role.en || profile.role.vi,
+    position: profile.role,
     organization: profile.organization,
     rounds: profile.rounds,
   });
