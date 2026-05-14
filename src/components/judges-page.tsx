@@ -1,6 +1,6 @@
 "use client";
 
-import { BriefcaseBusiness, Sparkles } from "lucide-react";
+import { BriefcaseBusiness, Building2, Sparkles } from "lucide-react";
 
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -9,15 +9,11 @@ import type { EditableJudgeRoundSection, JudgeProfile, Locale } from "@/types/si
 
 function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
   const { locale } = useSiteState();
-  const expertiseItems = judge.expertise
-    .map((item) => pickText(locale, item))
-    .filter(Boolean);
-  const visibleExpertise = expertiseItems.slice(0, 2);
-  const hiddenExpertiseCount = Math.max(expertiseItems.length - visibleExpertise.length, 0);
+  const position = pickText(locale, judge.role);
 
   return (
-    <Surface className="group overflow-hidden rounded-[1.35rem] px-0 py-0 transition duration-300 hover:-translate-y-1 hover:border-sky-300/60 hover:shadow-[0_22px_46px_rgba(30,89,145,0.14)] dark:hover:border-sky-200/30 dark:hover:shadow-[0_22px_46px_rgba(2,8,20,0.34)]">
-      <div className="relative h-32 overflow-hidden">
+    <Surface className="group flex h-full min-h-[24rem] flex-col overflow-hidden rounded-[1.35rem] px-0 py-0 transition duration-300 hover:-translate-y-1 hover:border-sky-300/60 hover:shadow-[0_22px_46px_rgba(30,89,145,0.14)] dark:hover:border-sky-200/30 dark:hover:shadow-[0_22px_46px_rgba(2,8,20,0.34)]">
+      <div className="relative h-32 shrink-0 overflow-hidden">
         <div
           role="img"
           aria-label={judge.name}
@@ -30,36 +26,30 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
         </div>
       </div>
 
-      <div className="space-y-3 px-3.5 py-3.5">
-        <div>
-          <p className="theme-heading line-clamp-2 text-[1rem] font-semibold leading-tight theme-text-strong">
-            {judge.name}
-          </p>
-          <div className="mt-2 flex items-start gap-1.5 text-[0.72rem] leading-5 theme-text-muted">
-            <BriefcaseBusiness className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600 dark:text-sky-300" aria-hidden="true" />
-            <span className="line-clamp-2">
-              {pickText(locale, judge.role)} · {judge.organization}
+      <div className="flex flex-1 flex-col gap-3 px-3.5 py-3.5">
+        <p className="theme-heading text-[1rem] font-semibold leading-snug theme-text-strong">
+          {judge.name}
+        </p>
+
+        <div className="mt-auto space-y-2.5">
+          <div className="flex items-start gap-2 rounded-[1rem] border border-sky-700/12 bg-sky-500/8 px-3 py-2.5 text-[0.72rem] leading-5 theme-text-muted dark:border-sky-200/14 dark:bg-sky-300/10">
+            <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-sky-500/12 text-sky-700 dark:bg-sky-300/12 dark:text-sky-100">
+              <BriefcaseBusiness className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+            <span className="min-w-0 break-words font-medium theme-text-body">
+              {position || (locale === "en" ? "Position to be updated" : "Chức vụ đang cập nhật")}
+            </span>
+          </div>
+
+          <div className="flex items-start gap-2 rounded-[1rem] border theme-border bg-white/58 px-3 py-2.5 text-[0.72rem] leading-5 theme-text-muted dark:bg-white/[0.05]">
+            <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-cyan-500/12 text-cyan-700 dark:bg-cyan-300/12 dark:text-cyan-100">
+              <Building2 className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+            <span className="min-w-0 break-words font-medium theme-text-body">
+              {judge.organization || (locale === "en" ? "Organization to be updated" : "Đơn vị đang cập nhật")}
             </span>
           </div>
         </div>
-
-        {expertiseItems.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5">
-            {visibleExpertise.map((item) => (
-              <span
-                key={item}
-                className="max-w-full truncate rounded-full border border-sky-700/18 bg-sky-500/10 px-2 py-1 text-[0.64rem] font-semibold leading-none text-sky-900 dark:border-sky-200/18 dark:bg-sky-300/12 dark:text-sky-100"
-              >
-                {item}
-              </span>
-            ))}
-            {hiddenExpertiseCount > 0 ? (
-              <span className="rounded-full border border-slate-700/12 bg-slate-950/[0.04] px-2 py-1 text-[0.64rem] font-semibold leading-none theme-text-soft dark:border-white/12 dark:bg-white/8">
-                +{hiddenExpertiseCount}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </Surface>
   );
@@ -147,7 +137,7 @@ export function JudgesPage() {
           ) : null}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {sectionJudges.map((judge) => (
             <JudgeCompactCard key={judge.id} judge={judge} />
           ))}
