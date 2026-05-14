@@ -36,20 +36,20 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
       </div>
 
       <div className="grid gap-1.5 px-3 pb-3 pt-1.5">
-        <div className="grid min-h-[2.85rem] grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-[0.9rem] border border-sky-700/12 bg-sky-500/8 px-2.5 py-1.5 text-[0.68rem] leading-4 theme-text-muted dark:border-sky-200/14 dark:bg-sky-300/10">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/12 text-sky-700 dark:bg-sky-300/12 dark:text-sky-100">
+        <div className="grid min-h-[2.85rem] grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-2 rounded-[0.9rem] border border-sky-700/12 bg-sky-500/8 px-2.5 py-2 text-[0.68rem] leading-4 theme-text-muted dark:border-sky-200/14 dark:bg-sky-300/10">
+          <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500/12 text-sky-700 dark:bg-sky-300/12 dark:text-sky-100">
             <BriefcaseBusiness className="h-3 w-3" aria-hidden="true" />
           </span>
-          <span className="line-clamp-2 min-w-0 break-words font-medium theme-text-body">
+          <span className="min-w-0 whitespace-normal break-words font-medium theme-text-body">
             {displayPosition}
           </span>
         </div>
 
-        <div className="grid min-h-[2.85rem] grid-cols-[1.25rem_minmax(0,1fr)] items-center gap-2 rounded-[0.9rem] border theme-border bg-white/64 px-2.5 py-1.5 text-[0.68rem] leading-4 theme-text-muted dark:bg-white/[0.05]">
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500/12 text-cyan-700 dark:bg-cyan-300/12 dark:text-cyan-100">
+        <div className="grid min-h-[2.85rem] grid-cols-[1.25rem_minmax(0,1fr)] items-start gap-2 rounded-[0.9rem] border theme-border bg-white/64 px-2.5 py-2 text-[0.68rem] leading-4 theme-text-muted dark:bg-white/[0.05]">
+          <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500/12 text-cyan-700 dark:bg-cyan-300/12 dark:text-cyan-100">
             <Building2 className="h-3 w-3" aria-hidden="true" />
           </span>
-          <span className="line-clamp-2 min-w-0 break-words font-medium theme-text-body">
+          <span className="min-w-0 whitespace-normal break-words font-medium theme-text-body">
             {displayOrganization}
           </span>
         </div>
