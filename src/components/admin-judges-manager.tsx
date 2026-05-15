@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
   ArrowLeft,
+  ArrowDown,
+  ArrowUp,
   ImagePlus,
   PencilLine,
   Plus,
@@ -57,9 +59,10 @@ type JudgeDraft = {
 type JudgeTableFilters = {
   judge: string;
   organization: string;
-  round: string;
   expertise: string;
 };
+
+type JudgePanelKey = "final" | "early";
 
 function slugify(value: string) {
   return value
@@ -87,6 +90,44 @@ function matchesFilter(value: string, filterValue: string) {
 
 function getJudgeExpertiseText(locale: Locale, judge: JudgeProfile) {
   return judge.expertise.map((item) => pickText(locale, item)).filter(Boolean).join(" · ");
+}
+
+function judgeBelongsToPanel(judge: JudgeProfile, panel: JudgePanelKey) {
+  return panel === "final"
+    ? judge.rounds.includes("round-3")
+    : judge.rounds.some((round) => round === "round-1" || round === "round-2");
+}
+
+function getJudgePanelLabel(locale: Locale, panel: JudgePanelKey) {
+  if (panel === "final") {
+    return locale === "en" ? "Final round judges" : "Giám khảo chung kết";
+  }
+
+  return locale === "en" ? "Round 1 & 2 judges" : "Giám khảo Vòng 1 & 2";
+}
+
+function buildJudgeOrderAfterMove(
+  judges: JudgeProfile[],
+  panel: JudgePanelKey,
+  judgeId: string,
+  direction: -1 | 1,
+) {
+  const panelIds = judges.filter((judge) => judgeBelongsToPanel(judge, panel)).map((judge) => judge.id);
+  const currentIndex = panelIds.indexOf(judgeId);
+  const nextIndex = currentIndex + direction;
+
+  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= panelIds.length) {
+    return null;
+  }
+
+  const nextPanelIds = [...panelIds];
+  const [movedId] = nextPanelIds.splice(currentIndex, 1);
+  nextPanelIds.splice(nextIndex, 0, movedId);
+
+  const panelIdSet = new Set(panelIds);
+  let cursor = 0;
+
+  return judges.map((judge) => (panelIdSet.has(judge.id) ? nextPanelIds[cursor++] : judge.id));
 }
 
 function draftFromJudge(judge: JudgeProfile): JudgeDraft {
@@ -611,15 +652,16 @@ function normalizeDraftForSave(draft: JudgeDraft) {
 }
 
 export function AdminJudgesList() {
-  const { locale, judges, createJudgeByAdmin, deleteJudgeByAdmin } = useSiteState();
+  const { locale, judges, createJudgeByAdmin, reorderJudgesByAdmin, deleteJudgeByAdmin } = useSiteState();
+  const [activePanel, setActivePanel] = useState<JudgePanelKey>("final");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addDraft, setAddDraft] = useState<JudgeDraft>(() => createEmptyJudgeDraft());
   const [addValidationMessage, setAddValidationMessage] = useState("");
   const [judgePendingDelete, setJudgePendingDelete] = useState<JudgeProfile | null>(null);
+  const [movingJudgeId, setMovingJudgeId] = useState("");
   const [filters, setFilters] = useState<JudgeTableFilters>({
     judge: "",
     organization: "",
-    round: "all",
     expertise: "",
   });
   useAdminTitleScroll();
@@ -632,9 +674,17 @@ export function AdminJudgesList() {
       })),
     [judges],
   );
+  const panelJudges = useMemo(
+    () => judges.filter((judge) => judgeBelongsToPanel(judge, activePanel)),
+    [activePanel, judges],
+  );
+  const panelIndexByJudgeId = useMemo(
+    () => new Map(panelJudges.map((judge, index) => [judge.id, index])),
+    [panelJudges],
+  );
   const filteredJudges = useMemo(
     () =>
-      judges.filter((judge) => {
+      panelJudges.filter((judge) => {
         const judgeLabel = `${judge.name} ${pickText(locale, judge.role)}`;
         const organizationLabel = `${pickLocalizedText(locale, judge.organization)} ${pickLocalizedText(locale === "en" ? "vi" : "en", judge.organization)}`;
         const expertiseLabel = getJudgeExpertiseText(locale, judge);
@@ -642,11 +692,10 @@ export function AdminJudgesList() {
         return (
           matchesFilter(judgeLabel, filters.judge) &&
           matchesFilter(organizationLabel, filters.organization) &&
-          matchesFilter(expertiseLabel, filters.expertise) &&
-          (filters.round === "all" || judge.rounds.includes(filters.round as CompetitionRoundKey))
+          matchesFilter(expertiseLabel, filters.expertise)
         );
       }),
-    [filters.expertise, filters.judge, filters.organization, filters.round, judges, locale],
+    [filters.expertise, filters.judge, filters.organization, locale, panelJudges],
   );
   const {
     page,
@@ -659,6 +708,21 @@ export function AdminJudgesList() {
   const secondStickyColumnClass = "theme-admin-sticky-cell-strong sticky z-20";
   const firstStickyHeadClass = "theme-admin-sticky-head sticky left-0 z-40";
   const secondStickyHeadClass = "theme-admin-sticky-head sticky z-30";
+
+  const handleMoveJudge = async (judgeId: string, direction: -1 | 1) => {
+    const nextJudgeIds = buildJudgeOrderAfterMove(judges, activePanel, judgeId, direction);
+
+    if (!nextJudgeIds) {
+      return;
+    }
+
+    setMovingJudgeId(judgeId);
+    try {
+      await reorderJudgesByAdmin(nextJudgeIds);
+    } finally {
+      setMovingJudgeId("");
+    }
+  };
 
   const handleCreateJudge = async () => {
     const payload = normalizeDraftForSave(addDraft);
@@ -712,10 +776,33 @@ export function AdminJudgesList() {
 
       <Surface className="px-5 py-5 md:px-6">
         <div className="flex flex-col gap-4 border-b theme-border pb-5 md:flex-row md:items-end md:justify-between">
-          <div>
+          <div className="space-y-4">
             <p className="theme-heading text-2xl font-semibold theme-text-strong">
-              {locale === "en" ? "Judge summary" : "Tổng hợp giám khảo"}
+              {getJudgePanelLabel(locale, activePanel)}
             </p>
+            <div className="inline-flex flex-wrap gap-2 rounded-full border theme-border bg-white/72 p-1 dark:bg-white/[0.04]">
+              {(["final", "early"] as JudgePanelKey[]).map((panel) => (
+                <button
+                  key={panel}
+                  type="button"
+                  onClick={() => {
+                    setActivePanel(panel);
+                    setPage(1);
+                  }}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition",
+                    activePanel === panel
+                      ? "bg-[linear-gradient(135deg,#0a1d34,#1772d0)] text-white shadow-[0_14px_30px_rgba(23,114,208,0.18)]"
+                      : "theme-text-muted hover:bg-[var(--panel-strong)] hover:opacity-85",
+                  )}
+                >
+                  {getJudgePanelLabel(locale, panel)}
+                  <span className="rounded-full bg-white/18 px-2 py-0.5 text-[10px]">
+                    {judges.filter((judge) => judgeBelongsToPanel(judge, panel)).length}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
           <button
             type="button"
@@ -731,7 +818,7 @@ export function AdminJudgesList() {
         </div>
 
         <div className="mt-5 overflow-x-auto">
-          <table className="min-w-[1180px] border-separate border-spacing-y-3 text-sm">
+          <table className="min-w-[1260px] border-separate border-spacing-y-3 text-sm">
             <thead>
               <tr className="text-left text-[0.72rem] font-semibold uppercase tracking-[0.22em] theme-text-soft">
 	                <th style={{ left: 0, width: 72, minWidth: 72 }} className={cn("px-4 py-2", firstStickyHeadClass)}>#</th>
@@ -739,6 +826,7 @@ export function AdminJudgesList() {
                 <th className="min-w-[16rem] px-4 py-2">{locale === "en" ? "Organization" : "Tổ chức"}</th>
                 <th className="min-w-[15rem] px-4 py-2">{locale === "en" ? "Rounds" : "Vòng"}</th>
                 <th className="min-w-[18rem] px-4 py-2">{locale === "en" ? "Expertise" : "Chuyên môn"}</th>
+                <th className="min-w-[8rem] px-4 py-2 text-center">{locale === "en" ? "Order" : "Thứ tự"}</th>
                 <th className="px-4 py-2 text-right">{locale === "en" ? "Actions" : "Tác vụ"}</th>
               </tr>
               <tr>
@@ -759,20 +847,7 @@ export function AdminJudgesList() {
                     className={tableFieldClassName}
                   />
                 </th>
-                <th className="px-4 py-2">
-                  <select
-                    value={filters.round}
-                    onChange={(event) => setFilters((current) => ({ ...current, round: event.target.value }))}
-                    className={`${tableFieldClassName} theme-admin-select`}
-                  >
-                    <option value="all">{locale === "en" ? "All rounds" : "Tất cả vòng"}</option>
-                    {(["round-1", "round-2", "round-3"] as CompetitionRoundKey[]).map((round) => (
-                      <option key={round} value={round}>
-                        {pickText(locale, roundLabels[round])}
-                      </option>
-                    ))}
-                  </select>
-                </th>
+                <th className="px-4 py-2" />
                 <th className="px-4 py-2">
                   <input
                     value={filters.expertise}
@@ -782,10 +857,14 @@ export function AdminJudgesList() {
                   />
                 </th>
                 <th className="px-4 py-2" />
+                <th className="px-4 py-2" />
               </tr>
             </thead>
             <tbody>
-              {paginatedRows.map((judge, index) => (
+              {paginatedRows.map((judge, index) => {
+                const panelIndex = panelIndexByJudgeId.get(judge.id) ?? 0;
+
+                return (
                 <tr key={judge.id} id={`judge-row-${judge.id}`} className="theme-panel-strong scroll-mt-32">
 	                  <td
 	                    style={{ left: 0, width: 72, minWidth: 72 }}
@@ -838,6 +917,34 @@ export function AdminJudgesList() {
                   <td className="border-y theme-border px-4 py-4 text-sm theme-text-body">
                     <p className="line-clamp-2">{getJudgeExpertiseText(locale, judge) || "--"}</p>
                   </td>
+                  <td className="border-y theme-border px-4 py-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        disabled={panelIndex === 0 || movingJudgeId === judge.id}
+                        onClick={() => {
+                          void handleMoveJudge(judge.id, -1);
+                        }}
+                        title={locale === "en" ? "Move judge up" : "Đưa giám khảo lên"}
+                        aria-label={locale === "en" ? "Move judge up" : "Đưa giám khảo lên"}
+                        className="theme-button-secondary inline-flex h-9 w-9 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={panelIndex >= panelJudges.length - 1 || movingJudgeId === judge.id}
+                        onClick={() => {
+                          void handleMoveJudge(judge.id, 1);
+                        }}
+                        title={locale === "en" ? "Move judge down" : "Đưa giám khảo xuống"}
+                        aria-label={locale === "en" ? "Move judge down" : "Đưa giám khảo xuống"}
+                        className="theme-button-secondary inline-flex h-9 w-9 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
                   <td className="rounded-r-[1.4rem] border-y border-r theme-border px-4 py-4">
                     <div className="flex justify-end gap-2">
                       <Link
@@ -862,7 +969,8 @@ export function AdminJudgesList() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

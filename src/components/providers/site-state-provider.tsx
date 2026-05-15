@@ -168,6 +168,7 @@ interface SiteStateValue {
   deleteNewsPostByAdmin: (slug: string) => void;
   createJudgeByAdmin: (payload: JudgeProfile) => Promise<boolean>;
   updateJudgeByAdmin: (judgeId: string, payload: JudgeProfile) => Promise<boolean>;
+  reorderJudgesByAdmin: (judgeIds: string[]) => Promise<boolean>;
   deleteJudgeByAdmin: (judgeId: string) => Promise<boolean>;
   updateTimelineItemsByAdmin: (timelineItems: TimelineItem[]) => void;
   createOrganizerAccountByAdmin: (payload: {
@@ -899,6 +900,55 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         {
           en: "Could not delete the judge right now.",
           vi: "Hiện không thể xóa giám khảo.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
+  const reorderJudgesByAdmin = async (judgeIds: string[]) => {
+    if (!canAccessAdminMode) {
+      pushToast(
+        {
+          en: "Only admin and moderator accounts can reorder judges here.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể sắp xếp giám khảo tại đây.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch("/api/admin/judges/order", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ judgeIds }),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not save the judge order.");
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncSiteData();
+      pushToast(
+        {
+          en: "Judge display order updated.",
+          vi: "Thứ tự hiển thị giám khảo đã được cập nhật.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not save the judge order right now.",
+          vi: "Hiện không thể lưu thứ tự giám khảo.",
         },
         "warning",
       );
@@ -2941,6 +2991,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     deleteNewsPostByAdmin,
     createJudgeByAdmin,
     updateJudgeByAdmin,
+    reorderJudgesByAdmin,
     deleteJudgeByAdmin,
     updateTimelineItemsByAdmin: setTimelineItems,
     createOrganizerAccountByAdmin,

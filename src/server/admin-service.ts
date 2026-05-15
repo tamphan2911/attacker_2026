@@ -370,6 +370,27 @@ export async function updateJudgeByAdmin(
   return ok({ judgeId: nextJudgeId });
 }
 
+export async function reorderJudgesByAdmin(
+  judgeIds: string[],
+): Promise<ServiceResult<{ saved: true }>> {
+  const judges = await readStoredJudges();
+  const existingIds = new Set(judges.map((judge) => judge.id));
+  const nextIds = judgeIds.map((judgeId) => judgeId.trim()).filter(Boolean);
+
+  if (nextIds.length !== judges.length || new Set(nextIds).size !== judges.length) {
+    return fail(400, "The judge order payload must include every judge exactly once.");
+  }
+
+  if (nextIds.some((judgeId) => !existingIds.has(judgeId))) {
+    return fail(400, "The judge order payload contains an unknown judge.");
+  }
+
+  const judgeById = new Map(judges.map((judge) => [judge.id, judge]));
+  await saveJudges(nextIds.map((judgeId) => judgeById.get(judgeId)!));
+
+  return ok({ saved: true });
+}
+
 export async function deleteJudgeByAdmin(
   judgeId: string,
 ): Promise<ServiceResult<{ judgeId: string }>> {
