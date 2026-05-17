@@ -3059,45 +3059,47 @@ function AdminRound1QuestionEditorInner({
                           <p className="text-lg font-semibold theme-text-strong">
                             {locale === "en" ? `Option ${option.label}` : `Lựa chọn ${option.label}`}
                           </p>
-                          <label className="inline-flex items-center gap-2 text-sm font-semibold theme-text-strong">
-                            <input
-                              type={draft.type === "multiple-choice" ? "checkbox" : "radio"}
-                              name={`question-${draft.id}-correct`}
-                              checked={isCorrectSingle}
-                              onChange={() =>
-                                setDraft((current) => {
-                                  if (!current) {
-                                    return current;
-                                  }
+                          {draft.type !== "pairing" ? (
+                            <label className="inline-flex items-center gap-2 text-sm font-semibold theme-text-strong">
+                              <input
+                                type={draft.type === "multiple-choice" ? "checkbox" : "radio"}
+                                name={`question-${draft.id}-correct`}
+                                checked={isCorrectSingle}
+                                onChange={() =>
+                                  setDraft((current) => {
+                                    if (!current) {
+                                      return current;
+                                    }
 
-                                  if (current.type === "multiple-choice") {
-                                    const nextCorrect = current.correctOptionIds?.includes(option.id)
-                                      ? (current.correctOptionIds ?? []).filter((item) => item !== option.id)
-                                      : [...(current.correctOptionIds ?? []), option.id];
+                                    if (current.type === "multiple-choice") {
+                                      const nextCorrect = current.correctOptionIds?.includes(option.id)
+                                        ? (current.correctOptionIds ?? []).filter((item) => item !== option.id)
+                                        : [...(current.correctOptionIds ?? []), option.id];
+
+                                      return {
+                                        ...current,
+                                        correctOptionIds: nextCorrect,
+                                      };
+                                    }
 
                                     return {
                                       ...current,
-                                      correctOptionIds: nextCorrect,
+                                      correctOptionIds: [option.id],
                                     };
-                                  }
-
-                                  return {
-                                    ...current,
-                                    correctOptionIds: [option.id],
-                                  };
-                                })
-                              }
-                            />
-                            <span>
-                              {draft.type === "multiple-choice"
-                                ? locale === "en"
-                                  ? "Correct choice"
-                                  : "Đáp án đúng"
-                                : locale === "en"
-                                  ? "Correct answer"
-                                  : "Đáp án đúng"}
-                            </span>
-                          </label>
+                                  })
+                                }
+                              />
+                              <span>
+                                {draft.type === "multiple-choice"
+                                  ? locale === "en"
+                                    ? "Correct choice"
+                                    : "Đáp án đúng"
+                                  : locale === "en"
+                                    ? "Correct answer"
+                                    : "Đáp án đúng"}
+                              </span>
+                            </label>
+                          ) : null}
                         </div>
 
                         <div className="mt-4">
