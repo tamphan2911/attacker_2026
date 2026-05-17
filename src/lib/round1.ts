@@ -110,6 +110,74 @@ export function pickRound1QuestionText(value?: LocalizedText | null) {
   return value.vi.trim() || value.en.trim();
 }
 
+export type Round1PairingValidationIssue =
+  | "missing-structure"
+  | "invalid-prompt-or-match"
+  | "not-one-to-one";
+
+export function getRound1PairingValidationIssue(
+  question: Pick<Round1Question, "type" | "options" | "pairingItems">,
+): Round1PairingValidationIssue | null {
+  if (question.type !== "pairing") {
+    return null;
+  }
+
+  const options = question.options ?? [];
+  const pairingItems = question.pairingItems ?? [];
+  const optionIds = new Set(options.map((option) => option.id).filter(Boolean));
+
+  if (options.length < 2 || pairingItems.length < 2 || optionIds.size !== options.length) {
+    return "missing-structure";
+  }
+
+  const matchedOptionIds = pairingItems.map((item) => item.correctOptionId).filter(Boolean);
+  const uniqueMatchedOptionIds = new Set(matchedOptionIds);
+
+  if (
+    pairingItems.some(
+      (item) =>
+        !item.prompt.en.trim() ||
+        !item.prompt.vi.trim() ||
+        !optionIds.has(item.correctOptionId),
+    )
+  ) {
+    return "invalid-prompt-or-match";
+  }
+
+  if (
+    pairingItems.length !== options.length ||
+    matchedOptionIds.length !== pairingItems.length ||
+    uniqueMatchedOptionIds.size !== matchedOptionIds.length ||
+    uniqueMatchedOptionIds.size !== optionIds.size ||
+    options.some((option) => !uniqueMatchedOptionIds.has(option.id))
+  ) {
+    return "not-one-to-one";
+  }
+
+  return null;
+}
+
+export function getRound1PairingValidationMessage(issue: Round1PairingValidationIssue): LocalizedText {
+  if (issue === "missing-structure") {
+    return {
+      en: "Pairing questions need at least 2 right-side options and 2 left-side prompts.",
+      vi: "Câu nối cặp cần ít nhất 2 lựa chọn bên phải và 2 prompt bên trái.",
+    };
+  }
+
+  if (issue === "invalid-prompt-or-match") {
+    return {
+      en: "Each left-side prompt must include content and choose a valid correct match.",
+      vi: "Mỗi prompt bên trái cần có nội dung và chọn một đáp án ghép cặp hợp lệ.",
+    };
+  }
+
+  return {
+    en: "Pairing questions must be one-to-one: every option must be matched by exactly one left-side prompt, and no option can be used by two or more prompts.",
+    vi: "Câu nối cặp phải ghép một-một: mỗi lựa chọn phải được nối với đúng một prompt bên trái, và không lựa chọn nào được dùng cho hai prompt trở lên.",
+  };
+}
+
 export function getActiveRound1Bank(
   banks: Round1TestBank[],
   bankType: Round1TestBankType,

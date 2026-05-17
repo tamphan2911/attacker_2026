@@ -47,6 +47,8 @@ import {
   ROUND1_TOTAL_MAX_SCORE,
   getActiveRound1Bank,
   getRound1AnswerSummary,
+  getRound1PairingValidationIssue,
+  getRound1PairingValidationMessage,
   getRound1QuestionOptionPreview,
   getRound1QuestionStructureSummary,
   isRound1EssayPending,
@@ -2759,6 +2761,7 @@ function AdminRound1QuestionEditorInner({
     pristineQuestion ? cloneRound1Question(pristineQuestion) : null,
   );
   const [savePending, setSavePending] = useState(false);
+  const [validationMessage, setValidationMessage] = useState<LocalizedText | null>(null);
   const isEssayBank = bank?.bankType === "essay";
   const usesDifficulty = !isEssayBank && draft?.type !== "essay";
 
@@ -2798,6 +2801,13 @@ function AdminRound1QuestionEditorInner({
   }
 
   const saveDraft = async () => {
+    const pairingIssue = getRound1PairingValidationIssue(draft);
+    if (pairingIssue) {
+      setValidationMessage(getRound1PairingValidationMessage(pairingIssue));
+      return;
+    }
+
+    setValidationMessage(null);
     const draftWithoutName = { ...draft };
     delete draftWithoutName.name;
     const normalizedDraft =
@@ -2904,6 +2914,12 @@ function AdminRound1QuestionEditorInner({
           </button>
         </div>
       </div>
+
+      {validationMessage ? (
+        <div className="rounded-[1.35rem] border border-amber-400/30 bg-amber-400/12 px-5 py-4 text-sm font-semibold leading-7 text-amber-800 shadow-[0_18px_45px_rgba(245,158,11,0.12)] dark:border-amber-300/25 dark:bg-amber-300/10 dark:text-amber-100">
+          {validationMessage[locale]}
+        </div>
+      ) : null}
 
       <section>
         <Surface className="px-6 py-6 md:px-8 md:py-8">

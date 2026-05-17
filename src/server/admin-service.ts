@@ -10,6 +10,10 @@ import { hash } from "bcryptjs";
 
 import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, round1TestBanks, sponsorProfiles } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import {
+  getRound1PairingValidationIssue,
+  getRound1PairingValidationMessage,
+} from "@/lib/round1";
 import { normalizeLocalizedText, pickText } from "@/lib/site";
 import {
   deriveRound1TopicsFromBanks,
@@ -960,6 +964,15 @@ async function validateRound1QuestionTopic(topic: string) {
   return null;
 }
 
+function validateRound1QuestionStructure(question: Round1Question) {
+  const pairingIssue = getRound1PairingValidationIssue(question);
+  if (pairingIssue) {
+    return fail(400, getRound1PairingValidationMessage(pairingIssue).en);
+  }
+
+  return null;
+}
+
 function isValidRound1QuestionId(value: string) {
   return /^[A-Za-z0-9][A-Za-z0-9._-]{0,79}$/.test(value);
 }
@@ -1003,6 +1016,11 @@ export async function createRound1QuestionByAdmin(
   const topicError = await validateRound1QuestionTopic(payload.topic);
   if (topicError) {
     return topicError;
+  }
+
+  const structureError = validateRound1QuestionStructure(payload);
+  if (structureError) {
+    return structureError;
   }
 
   const questions = JSON.parse(bank.questions) as Round1Question[];
@@ -1054,6 +1072,11 @@ export async function updateRound1QuestionByAdmin(
   const topicError = await validateRound1QuestionTopic(payload.topic);
   if (topicError) {
     return topicError;
+  }
+
+  const structureError = validateRound1QuestionStructure(payload);
+  if (structureError) {
+    return structureError;
   }
 
   const questions = JSON.parse(bank.questions) as Round1Question[];

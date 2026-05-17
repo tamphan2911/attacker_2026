@@ -49,6 +49,10 @@ import {
 import {
   getSubmissionValidationError,
 } from "@/lib/submission-files";
+import {
+  getRound1PairingValidationIssue,
+  getRound1PairingValidationMessage,
+} from "@/lib/round1";
 import { deriveRound1TopicsFromBanks, normalizeRound1Topics } from "@/lib/round1-topics";
 import type {
   AppSnapshot,
@@ -1619,21 +1623,9 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
 
     if (payload.type === "pairing") {
-      const pairingItems = payload.pairingItems ?? [];
-      if (
-        options.length < 2 ||
-        pairingItems.length < 2 ||
-        pairingItems.some(
-          (item) =>
-            !item.prompt.en.trim() ||
-            !item.prompt.vi.trim() ||
-            !optionIds.has(item.correctOptionId),
-        )
-      ) {
-        return {
-          en: "Pairing questions need left-side prompts and valid right-side matches.",
-          vi: "Cau noi cap can co ve trai day du va dap an ben phai hop le.",
-        } satisfies LocalizedText;
+      const pairingIssue = getRound1PairingValidationIssue(payload);
+      if (pairingIssue) {
+        return getRound1PairingValidationMessage(pairingIssue);
       }
     }
 
