@@ -8,6 +8,8 @@ import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { BrandMark } from "@/components/site-ui";
 
+const ATTACKER_FOOTER_FACEBOOK_URL = "https://www.facebook.com/share/g/1Z784MYC6A/?mibextid=wwXIfr";
+
 function FacebookIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
@@ -74,7 +76,7 @@ export function SiteFooter() {
               </a>
               <a
                 className="inline-flex items-center gap-3 transition hover:text-[var(--text-strong)]"
-                href={contactInfo.attackerFacebook}
+                href={ATTACKER_FOOTER_FACEBOOK_URL}
                 target="_blank"
                 rel="noreferrer"
               >
