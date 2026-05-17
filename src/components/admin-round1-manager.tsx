@@ -2991,7 +2991,6 @@ function AdminRound1QuestionEditorInner({
                       "single-choice",
                       "multiple-choice",
                       "pairing",
-                      "essay",
                     ] as Round1QuestionType[])).map((type) => (
                   <option key={type} value={type}>
                     {pickRound1TypeLabel(locale, type)}
