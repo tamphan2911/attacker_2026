@@ -822,6 +822,7 @@ export function AdminRound1Manager() {
     tone: "success" | "warning";
     text: string;
   } | null>(null);
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
 
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
@@ -837,17 +838,22 @@ export function AdminRound1Manager() {
 
   const canResetRound1Submissions = currentUser.role === "admin";
 
-  const handleResetRound1Submissions = async () => {
-    const confirmed = window.confirm(
-      locale === "en"
-        ? "Delete all existing Round 1 submissions, attempts, and judge reviews, then recreate the clean canonical submission set?"
-        : "Xóa toàn bộ bài nộp, lượt thi và phiếu chấm Vòng 1 hiện có, rồi tạo lại bộ bài nộp chuẩn mới?",
-    );
-
-    if (!confirmed) {
+  useEffect(() => {
+    if (!isResetConfirmOpen || resetPending) {
       return;
     }
 
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsResetConfirmOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isResetConfirmOpen, resetPending]);
+
+  const handleResetRound1Submissions = async () => {
     setResetPending(true);
     setResetMessage(null);
 
@@ -922,7 +928,8 @@ export function AdminRound1Manager() {
             <button
               type="button"
               onClick={() => {
-                void handleResetRound1Submissions();
+                setResetMessage(null);
+                setIsResetConfirmOpen(true);
               }}
               disabled={resetPending}
               className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-55"
@@ -939,6 +946,109 @@ export function AdminRound1Manager() {
             </div>
           ) : null}
         </Surface>
+      ) : null}
+
+      {isResetConfirmOpen ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 py-6">
+          <button
+            type="button"
+            aria-label={locale === "en" ? "Close rebuild confirmation" : "Đóng xác nhận dựng lại"}
+            className="absolute inset-0 cursor-default bg-slate-950/55 backdrop-blur-sm"
+            onClick={() => {
+              if (!resetPending) {
+                setIsResetConfirmOpen(false);
+              }
+            }}
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/20 bg-[var(--panel)] shadow-[0_32px_90px_rgba(15,23,42,0.34)]"
+          >
+            <div className="border-b theme-border bg-[linear-gradient(135deg,rgba(239,68,68,0.14),rgba(59,130,246,0.08))] px-6 py-5">
+              <div className="flex items-start gap-4">
+                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-500/12 text-red-500 ring-1 ring-red-500/20">
+                  <Trash2 className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="theme-heading text-xl font-semibold theme-text-strong">
+                    {locale === "en" ? "Rebuild Round 1 submissions?" : "Dựng lại bài nộp Vòng 1?"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 theme-text-muted">
+                    {locale === "en"
+                      ? "This deletes existing Round 1 submissions, attempts, and judge reviews, then recreates a clean canonical submission set from the current test banks."
+                      : "Thao tác này xóa toàn bộ bài nộp, lượt thi và phiếu chấm Vòng 1 hiện có, rồi tạo lại bộ bài nộp chuẩn từ các test bank hiện tại."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4 px-6 py-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[1.25rem] border theme-border theme-panel-subtle p-4">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                    {locale === "en" ? "Will be removed" : "Sẽ bị xóa"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 theme-text-body">
+                    {locale === "en"
+                      ? "Submissions, attempts, and judge reviews"
+                      : "Bài nộp, lượt thi và phiếu chấm"}
+                  </p>
+                </div>
+                <div className="rounded-[1.25rem] border theme-border theme-panel-subtle p-4">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                    {locale === "en" ? "Will be created" : "Sẽ được tạo lại"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 theme-text-body">
+                    {locale === "en"
+                      ? "Canonical Round 1 submission set"
+                      : "Bộ bài nộp Vòng 1 chuẩn"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-[1.25rem] border border-amber-400/24 bg-amber-400/12 px-4 py-3 text-sm leading-6 text-amber-800 dark:text-amber-100">
+                {locale === "en"
+                  ? "Use this only when you are intentionally rebuilding the Round 1 dataset."
+                  : "Chỉ dùng thao tác này khi bạn thật sự muốn dựng lại dữ liệu Vòng 1."}
+              </div>
+
+              {resetMessage?.tone === "warning" ? (
+                <div className="rounded-[1.25rem] border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-500">
+                  {resetMessage.text}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex flex-col-reverse gap-3 border-t theme-border bg-[var(--panel-strong)] px-6 py-5 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                disabled={resetPending}
+                onClick={() => setIsResetConfirmOpen(false)}
+                className="theme-button-secondary rounded-full border px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {locale === "en" ? "Cancel" : "Hủy"}
+              </button>
+              <button
+                type="button"
+                disabled={resetPending}
+                onClick={() => {
+                  void handleResetRound1Submissions();
+                }}
+                className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Trash2 className={cn("h-4 w-4", resetPending ? "animate-pulse" : "")} />
+                {resetPending
+                  ? locale === "en"
+                    ? "Rebuilding..."
+                    : "Đang dựng lại..."
+                  : locale === "en"
+                    ? "Rebuild submissions"
+                    : "Dựng lại bài nộp"}
+              </button>
+            </div>
+          </div>
+        </div>
       ) : null}
 
       {activeObjectiveBank && activeEssayBank ? (
