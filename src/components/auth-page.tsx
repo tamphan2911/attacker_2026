@@ -49,7 +49,6 @@ declare global {
 
 const popularVietnamUniversities: LocalizedText[] = [
   { en: "University of Economics and Law (VNU-HCM)", vi: "Đại học Kinh tế - Luật (ĐHQG TP.HCM)" },
-  { en: "University of Economics Ho Chi Minh City", vi: "Đại học Kinh tế TP.HCM" },
   { en: "Ho Chi Minh City University of Economics", vi: "Trường Đại học Kinh tế TP.HCM" },
   { en: "Foreign Trade University", vi: "Đại học Ngoại thương" },
   { en: "National Economics University", vi: "Đại học Kinh tế Quốc dân" },
