@@ -8,7 +8,8 @@ Attacker 2026 is a Next.js frontend prototype for a student fintech competition.
 - React 19
 - TypeScript
 - Prisma
-- SQLite for local development
+- PostgreSQL for application data
+- Railway volume storage for uploaded files
 - NextAuth.js with credentials login and optional Google login
 
 ## Environment
@@ -36,6 +37,8 @@ Optional values:
 - `SMTP_PASSWORD`
 - `SMTP_FROM`
 - `APP_STORAGE_ROOT`
+- `SQLITE_DATABASE_URL` (only during the one-time SQLite to Postgres migration)
+- `MIGRATE_SQLITE_TO_POSTGRES` (only during the one-time SQLite to Postgres migration)
 - `BOOTSTRAP_DEMO_DATA`
 - `ENSURE_PREPARATION_TEST_DATA`
 
@@ -53,10 +56,10 @@ Generate the Prisma client:
 npm run prisma:generate
 ```
 
-Create the local SQLite schema:
+Apply database migrations:
 
 ```bash
-npm run db:push
+npm run db:migrate
 ```
 
 Seed demo data:
@@ -69,7 +72,7 @@ Or run the full local setup sequence:
 
 ```bash
 npm run prisma:generate
-npm run db:setup
+npm run db:migrate
 npm run db:seed
 ```
 
@@ -78,11 +81,6 @@ To inject the expanded preparation-phase test accounts into an existing local da
 ```bash
 npm run db:ensure:preparation
 ```
-
-Important note:
-
-- `npm run db:push` and `npm run db:setup` currently recreate `prisma/dev.db` from the Prisma schema using `prisma migrate diff`.
-- This is fine for local bootstrap right now, but it is destructive for existing local data.
 
 ## Run
 
@@ -96,11 +94,11 @@ App URL:
 
 ## Railway deployment
 
-For the current codebase, the cheapest practical online test setup is a single Railway service with:
+For the current codebase, the recommended Railway setup is:
 
 - Railway public domain (`*.up.railway.app`)
 - one persistent volume
-- SQLite stored on that volume
+- Railway Postgres
 - uploaded team submission files stored on that volume
 
 ### Recommended Railway env vars
@@ -108,7 +106,7 @@ For the current codebase, the cheapest practical online test setup is a single R
 Set these in Railway:
 
 ```bash
-DATABASE_URL="file:/data/sqlite/attacker.db"
+DATABASE_URL="${{Postgres.DATABASE_URL}}"
 NEXTAUTH_URL="https://your-service.up.railway.app"
 NEXTAUTH_SECRET="replace-with-a-long-random-secret"
 APP_STORAGE_ROOT="/data"
@@ -130,9 +128,18 @@ SMTP_FROM="Attacker 2026 <no-reply@example.com>"
 ENSURE_PREPARATION_TEST_DATA="false"
 ```
 
+One-time SQLite to Postgres migration only:
+
+```bash
+SQLITE_DATABASE_URL="file:/data/sqlite/attacker.db"
+MIGRATE_SQLITE_TO_POSTGRES="true"
+```
+
 Important:
 
 - mount the Railway volume at `/data`
+- keep `SQLITE_DATABASE_URL` only until the migration is verified
+- set `MIGRATE_SQLITE_TO_POSTGRES="false"` or remove it immediately after a successful migration
 - only leave `BOOTSTRAP_DEMO_DATA="true"` for the first boot if you want the demo dataset
 - after the database is initialized and seeded, set `BOOTSTRAP_DEMO_DATA="false"`
 - set `ENSURE_PREPARATION_TEST_DATA="true"` only when you want Railway to upsert the 20 preparation-phase student test accounts into an existing database on boot
@@ -148,10 +155,11 @@ Use these service commands:
 The Railway start script now does this safely:
 
 1. creates persistent folders inside `APP_STORAGE_ROOT`
-2. runs `prisma db push` against the configured SQLite file
-3. optionally seeds demo data when the database is empty and `BOOTSTRAP_DEMO_DATA=true`
-4. optionally upserts the preparation-phase test accounts when `ENSURE_PREPARATION_TEST_DATA=true`
-5. starts Next.js on Railway's `PORT`
+2. runs `prisma migrate deploy` against Postgres
+3. optionally copies the old SQLite data into Postgres when `MIGRATE_SQLITE_TO_POSTGRES=true`
+4. optionally seeds demo data when the database is empty and `BOOTSTRAP_DEMO_DATA=true`
+5. optionally upserts the preparation-phase test accounts when `ENSURE_PREPARATION_TEST_DATA=true`
+6. starts Next.js on Railway's `PORT`
 
 ### Health check
 
@@ -163,7 +171,8 @@ Health endpoint:
 
 With the recommended Railway setup:
 
-- SQLite DB: `/data/sqlite/attacker.db`
+- Postgres DB: Railway Postgres service
+- Old SQLite DB during migration: `/data/sqlite/attacker.db`
 - Uploaded team files: `/data/team-submissions`
 
 ### Updating the live site later

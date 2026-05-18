@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -117,126 +117,126 @@ enum ForumThreadStatus {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  loginId         String    @unique @default(cuid())
-  email           String    @unique
-  emailVerifiedAt DateTime?
-  passwordHash    String?
-  name            String
-  role            UserRole  @default(STUDENT)
-  studentId       String?   @unique
-  phoneNumber     String?
-  university      String    @default("")
-  major           String    @default("")
-  classYear       String    @default("")
-  bio             String    @default("")
-  avatarTone      String    @default("from-sky-500 via-cyan-400 to-emerald-400")
-  avatarImageSrc  String?
-  judgeProfileId  String?   @unique
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  accounts        Account[]
-  sessions        Session[]
-  teamMembership  TeamMember?
-  ledTeams        Team[]                     @relation("TeamLeader")
-  declinedLocks   Team[]                     @relation("DeclinedRound1Lock")
-  sentInvitations TeamInvitation[]           @relation("InvitationSender")
-  receivedInvites TeamInvitation[]           @relation("InvitationRecipient")
-  messageParticipations MessageParticipant[]
-  sentMessages    DirectMessage[]            @relation("DirectMessageSender")
-  sentTransfers   LeadershipTransferRequest[] @relation("TransferSender")
-  receivedTransfers LeadershipTransferRequest[] @relation("TransferRecipient")
-  sentLockRequests Round1TeamLockRequest[]   @relation("Round1LockSender")
-  receivedLockRequests Round1TeamLockRequest[] @relation("Round1LockRecipient")
-  round1ExamAttempt  Round1ExamAttempt?
-  round1Submissions Round1Submission[]
-  teamSubmissions TeamSubmission[]
-  round1JudgeReviews Round1JudgeReview[]
+  id                         String                      @id @default(cuid())
+  loginId                    String                      @unique @default(cuid())
+  email                      String                      @unique
+  emailVerifiedAt            DateTime?
+  passwordHash               String?
+  name                       String
+  role                       UserRole                    @default(STUDENT)
+  studentId                  String?                     @unique
+  phoneNumber                String?
+  university                 String                      @default("")
+  major                      String                      @default("")
+  classYear                  String                      @default("")
+  bio                        String                      @default("")
+  avatarTone                 String                      @default("from-sky-500 via-cyan-400 to-emerald-400")
+  avatarImageSrc             String?
+  judgeProfileId             String?                     @unique
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  accounts                   Account[]
+  sessions                   Session[]
+  teamMembership             TeamMember?
+  ledTeams                   Team[]                      @relation("TeamLeader")
+  declinedLocks              Team[]                      @relation("DeclinedRound1Lock")
+  sentInvitations            TeamInvitation[]            @relation("InvitationSender")
+  receivedInvites            TeamInvitation[]            @relation("InvitationRecipient")
+  messageParticipations      MessageParticipant[]
+  sentMessages               DirectMessage[]             @relation("DirectMessageSender")
+  sentTransfers              LeadershipTransferRequest[] @relation("TransferSender")
+  receivedTransfers          LeadershipTransferRequest[] @relation("TransferRecipient")
+  sentLockRequests           Round1TeamLockRequest[]     @relation("Round1LockSender")
+  receivedLockRequests       Round1TeamLockRequest[]     @relation("Round1LockRecipient")
+  round1ExamAttempt          Round1ExamAttempt?
+  round1Submissions          Round1Submission[]
+  teamSubmissions            TeamSubmission[]
+  round1JudgeReviews         Round1JudgeReview[]
   teamSubmissionJudgeReviews TeamSubmissionJudgeReview[]
-  actionTokens    UserActionToken[]
-  forumThreads    ForumThread[] @relation("ForumThreadAuthor")
-  forumReplies    ForumReply[]  @relation("ForumReplyAuthor")
+  actionTokens               UserActionToken[]
+  forumThreads               ForumThread[]               @relation("ForumThreadAuthor")
+  forumReplies               ForumReply[]                @relation("ForumReplyAuthor")
 }
 
 model UserActionToken {
-  id         String            @id @default(cuid())
-  userId      String
-  email       String
-  type        UserActionTokenType
-  tokenHash   String            @unique
-  expiresAt   DateTime
-  consumedAt  DateTime?
-  createdAt   DateTime          @default(now())
-  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String              @id @default(cuid())
+  userId     String
+  email      String
+  type       UserActionTokenType
+  tokenHash  String              @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime            @default(now())
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, type, createdAt])
   @@index([email, type, createdAt])
 }
 
 model Team {
-  id                        String                @id @default(cuid())
-  name                      String
-  tag                       String                @unique
-  leaderId                  String
-  stage                     CompetitionStage      @default(ROUND_1)
-  finalOutcome              TeamFinalOutcome?
-  round1LockStatus          TeamRound1LockStatus  @default(OPEN)
-  round1LockProtocolId      String?
-  round1LockRequestedAt     DateTime?
-  round1LockedAt            DateTime?
-  round1LockDeclinedAt      DateTime?
+  id                         String                      @id @default(cuid())
+  name                       String
+  tag                        String                      @unique
+  leaderId                   String
+  stage                      CompetitionStage            @default(ROUND_1)
+  finalOutcome               TeamFinalOutcome?
+  round1LockStatus           TeamRound1LockStatus        @default(OPEN)
+  round1LockProtocolId       String?
+  round1LockRequestedAt      DateTime?
+  round1LockedAt             DateTime?
+  round1LockDeclinedAt       DateTime?
   round1LockDeclinedByUserId String?
-  avatarTone                String
-  avatarImageSrc            String?
-  track                     String
-  bio                       String
-  createdAt                 DateTime              @default(now())
-  updatedAt                 DateTime              @updatedAt
-  leader                    User                  @relation("TeamLeader", fields: [leaderId], references: [id], onDelete: Restrict)
-  declinedByUser            User?                 @relation("DeclinedRound1Lock", fields: [round1LockDeclinedByUserId], references: [id], onDelete: SetNull)
-  members                   TeamMember[]
-  invitations               TeamInvitation[]
+  avatarTone                 String
+  avatarImageSrc             String?
+  track                      String
+  bio                        String
+  createdAt                  DateTime                    @default(now())
+  updatedAt                  DateTime                    @updatedAt
+  leader                     User                        @relation("TeamLeader", fields: [leaderId], references: [id], onDelete: Restrict)
+  declinedByUser             User?                       @relation("DeclinedRound1Lock", fields: [round1LockDeclinedByUserId], references: [id], onDelete: SetNull)
+  members                    TeamMember[]
+  invitations                TeamInvitation[]
   leadershipTransferRequests LeadershipTransferRequest[]
-  round1LockRequests        Round1TeamLockRequest[]
-  round1ExamAttempts        Round1ExamAttempt[]
-  round1Submissions         Round1Submission[]
-  submissions               TeamSubmission[]
+  round1LockRequests         Round1TeamLockRequest[]
+  round1ExamAttempts         Round1ExamAttempt[]
+  round1Submissions          Round1Submission[]
+  submissions                TeamSubmission[]
 }
 
 model TeamMember {
-  id        String   @id @default(cuid())
-  teamId     String
-  userId     String   @unique
-  joinedAt   DateTime @default(now())
-  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String   @unique
+  joinedAt DateTime @default(now())
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([teamId, userId])
 }
 
 model TeamInvitation {
   id          String               @id @default(cuid())
-  teamId       String
-  fromUserId   String
-  toUserId     String
-  status       TeamInvitationStatus @default(PENDING)
-  createdAt    DateTime             @default(now())
-  respondedAt  DateTime?
-  team         Team                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  fromUser     User                 @relation("InvitationSender", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser       User                 @relation("InvitationRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
+  teamId      String
+  fromUserId  String
+  toUserId    String
+  status      TeamInvitationStatus @default(PENDING)
+  createdAt   DateTime             @default(now())
+  respondedAt DateTime?
+  team        Team                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  fromUser    User                 @relation("InvitationSender", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser      User                 @relation("InvitationRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
 }
 
 model MessageConversation {
-  id            String               @id @default(cuid())
-  kind          MessageConversationKind @default(DIRECT)
-  requesterId   String?
+  id              String                  @id @default(cuid())
+  kind            MessageConversationKind @default(DIRECT)
+  requesterId     String?
   organizerReadAt DateTime?
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
-  lastMessageAt DateTime             @default(now())
-  participants  MessageParticipant[]
-  messages      DirectMessage[]
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  lastMessageAt   DateTime                @default(now())
+  participants    MessageParticipant[]
+  messages        DirectMessage[]
 
   @@index([lastMessageAt])
   @@index([kind, requesterId])
@@ -275,83 +275,83 @@ model DirectMessage {
 
 model LeadershipTransferRequest {
   id          String                   @id @default(cuid())
-  teamId       String
-  fromUserId   String
-  toUserId     String
-  status       LeadershipTransferStatus @default(PENDING)
-  createdAt    DateTime                 @default(now())
-  respondedAt  DateTime?
-  team         Team                     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  fromUser     User                     @relation("TransferSender", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser       User                     @relation("TransferRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
+  teamId      String
+  fromUserId  String
+  toUserId    String
+  status      LeadershipTransferStatus @default(PENDING)
+  createdAt   DateTime                 @default(now())
+  respondedAt DateTime?
+  team        Team                     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  fromUser    User                     @relation("TransferSender", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser      User                     @relation("TransferRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
 }
 
 model Round1TeamLockRequest {
-  id          String                       @id @default(cuid())
-  protocolId   String
-  teamId       String
-  fromUserId   String
-  toUserId     String
-  status       Round1TeamLockRequestStatus @default(PENDING)
-  createdAt    DateTime                    @default(now())
-  respondedAt  DateTime?
-  team         Team                        @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  fromUser     User                        @relation("Round1LockSender", fields: [fromUserId], references: [id], onDelete: Cascade)
-  toUser       User                        @relation("Round1LockRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
+  id          String                      @id @default(cuid())
+  protocolId  String
+  teamId      String
+  fromUserId  String
+  toUserId    String
+  status      Round1TeamLockRequestStatus @default(PENDING)
+  createdAt   DateTime                    @default(now())
+  respondedAt DateTime?
+  team        Team                        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  fromUser    User                        @relation("Round1LockSender", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser      User                        @relation("Round1LockRecipient", fields: [toUserId], references: [id], onDelete: Cascade)
 
   @@index([teamId, protocolId])
 }
 
 model Round1TestBank {
-  id                  String                @id @default(cuid())
-  slug                String                @unique
+  id                  String              @id @default(cuid())
+  slug                String              @unique
   bankType            Round1TestBankType
-  status              Round1BankStatus      @default(DRAFT)
+  status              Round1BankStatus    @default(DRAFT)
   titleEn             String
   titleVi             String
   descriptionEn       String
   descriptionVi       String
   questionPoolSize    Int
   questionsPerAttempt Int
-  shuffleQuestions    Boolean               @default(true)
-  shuffleOptions      Boolean               @default(true)
+  shuffleQuestions    Boolean             @default(true)
+  shuffleOptions      Boolean             @default(true)
   durationMinutes     Int
   wordLimit           Int?
   publishedAt         DateTime?
   questions           String
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   attempts            Round1ExamAttempt[]
   submissions         Round1Submission[]
 }
 
 model Round1ExamAttempt {
-  id                   String             @id @default(cuid())
+  id                   String              @id @default(cuid())
   bankId               String
   teamId               String
-  userId               String             @unique
+  userId               String              @unique
   status               Round1AttemptStatus @default(IN_PROGRESS)
   startedAt            DateTime
   deadlineAt           DateTime
-  currentQuestionIndex Int                @default(0)
+  currentQuestionIndex Int                 @default(0)
   questions            String
-  answers              String             @default("{}")
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
-  bank                 Round1TestBank     @relation(fields: [bankId], references: [id], onDelete: Restrict)
-  team                 Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers              String              @default("{}")
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  bank                 Round1TestBank      @relation(fields: [bankId], references: [id], onDelete: Restrict)
+  team                 Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user                 User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([teamId, deadlineAt])
   @@index([deadlineAt])
 }
 
 model Round1Submission {
-  id             String   @id @default(cuid())
+  id              String              @id @default(cuid())
   bankId          String
   teamId          String
   userId          String
-  submittedAt     DateTime @default(now())
+  submittedAt     DateTime            @default(now())
   rightCount      Int
   wrongCount      Int
   score           Int
@@ -360,9 +360,9 @@ model Round1Submission {
   totalScore      Int?
   durationMinutes Int
   answers         String?
-  bank            Round1TestBank @relation(fields: [bankId], references: [id], onDelete: Restrict)
-  team            Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bank            Round1TestBank      @relation(fields: [bankId], references: [id], onDelete: Restrict)
+  team            Team                @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   judgeReviews    Round1JudgeReview[]
 
   @@unique([userId])
@@ -370,102 +370,102 @@ model Round1Submission {
 }
 
 model TeamSubmission {
-  id                 String                     @id @default(cuid())
-  teamId              String
-  round               SubmissionRound
-  version             Int
-  title               String
-  summary             String
-  resourceSource      TeamSubmissionResourceSource
-  resourceLabel       String
-  resourceUrl         String?
-  resourceStorageKey  String?
-  resourceMimeType    String?
-  resourceSizeBytes   Int?
-  submittedByUserId   String
-  submittedAt         DateTime                   @default(now())
-  team                Team                       @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  submittedByUser     User                       @relation(fields: [submittedByUserId], references: [id], onDelete: Restrict)
-  judgeReviews        TeamSubmissionJudgeReview[]
+  id                 String                       @id @default(cuid())
+  teamId             String
+  round              SubmissionRound
+  version            Int
+  title              String
+  summary            String
+  resourceSource     TeamSubmissionResourceSource
+  resourceLabel      String
+  resourceUrl        String?
+  resourceStorageKey String?
+  resourceMimeType   String?
+  resourceSizeBytes  Int?
+  submittedByUserId  String
+  submittedAt        DateTime                     @default(now())
+  team               Team                         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  submittedByUser    User                         @relation(fields: [submittedByUserId], references: [id], onDelete: Restrict)
+  judgeReviews       TeamSubmissionJudgeReview[]
 
   @@unique([teamId, round, version])
 }
 
 model Round1JudgeReview {
-  id            String           @id @default(cuid())
-  judgeUserId   String
-  submissionId  String
-  score         Float?
-  note          String           @default("")
-  scoredAt      DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  judgeUser     User             @relation(fields: [judgeUserId], references: [id], onDelete: Cascade)
-  submission    Round1Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  id           String           @id @default(cuid())
+  judgeUserId  String
+  submissionId String
+  score        Float?
+  note         String           @default("")
+  scoredAt     DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  judgeUser    User             @relation(fields: [judgeUserId], references: [id], onDelete: Cascade)
+  submission   Round1Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@unique([judgeUserId, submissionId])
   @@index([judgeUserId, scoredAt])
 }
 
 model TeamSubmissionJudgeReview {
-  id            String         @id @default(cuid())
-  judgeUserId   String
-  submissionId  String
-  score         Float?
-  note          String         @default("")
-  scoredAt      DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  judgeUser     User           @relation(fields: [judgeUserId], references: [id], onDelete: Cascade)
-  submission    TeamSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  id           String         @id @default(cuid())
+  judgeUserId  String
+  submissionId String
+  score        Float?
+  note         String         @default("")
+  scoredAt     DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  judgeUser    User           @relation(fields: [judgeUserId], references: [id], onDelete: Cascade)
+  submission   TeamSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
 
   @@unique([judgeUserId, submissionId])
   @@index([judgeUserId, scoredAt])
 }
 
 model NewsPost {
-  id             String   @id @default(cuid())
-  slug           String   @unique
-  categoryEn     String
-  categoryVi     String
-  titleEn        String
-  titleVi        String
-  excerptEn      String
-  excerptVi      String
-  author         String
-  publishedAt    DateTime
-  readTime       String
-  coverLabelEn   String
-  coverLabelVi   String
-  coverImageSrc  String
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  categoryEn      String
+  categoryVi      String
+  titleEn         String
+  titleVi         String
+  excerptEn       String
+  excerptVi       String
+  author          String
+  publishedAt     DateTime
+  readTime        String
+  coverLabelEn    String
+  coverLabelVi    String
+  coverImageSrc   String
   coverImageAltEn String
   coverImageAltVi String
-  highlights     String
-  content        String
-  tags           String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  highlights      String
+  content         String
+  tags            String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model ForumThread {
-  id               String              @id @default(cuid())
-  slug             String              @unique
-  authorId         String
-  title            String
-  summary          String
-  body             String
-  category         ForumThreadCategory
-  status           ForumThreadStatus   @default(OPEN)
-  university       String
-  preferredRoles   String              @default("[]")
-  contactNote      String              @default("")
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  lastActivityAt   DateTime            @default(now())
-  editedAt         DateTime?
-  editedByName     String?
-  author           User                @relation("ForumThreadAuthor", fields: [authorId], references: [id], onDelete: Cascade)
-  replies          ForumReply[]
+  id             String              @id @default(cuid())
+  slug           String              @unique
+  authorId       String
+  title          String
+  summary        String
+  body           String
+  category       ForumThreadCategory
+  status         ForumThreadStatus   @default(OPEN)
+  university     String
+  preferredRoles String              @default("[]")
+  contactNote    String              @default("")
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  lastActivityAt DateTime            @default(now())
+  editedAt       DateTime?
+  editedByName   String?
+  author         User                @relation("ForumThreadAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  replies        ForumReply[]
 
   @@index([category, status, lastActivityAt])
   @@index([authorId, createdAt])
@@ -491,26 +491,26 @@ model ForumReply {
 }
 
 model CmsEntry {
-  id         String   @id @default(cuid())
-  scope      String   @unique
-  payload    String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid())
+  scope     String   @unique
+  payload   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Account {
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
-  user               User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
 }

@@ -43,6 +43,35 @@ function runCommand(command) {
   });
 }
 
+function assertPostgresDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL?.trim() ?? "";
+
+  if (
+    databaseUrl.startsWith("postgresql://") ||
+    databaseUrl.startsWith("postgres://")
+  ) {
+    return;
+  }
+
+  throw new Error(
+    "DATABASE_URL must point to Railway Postgres for this build. Keep the old SQLite URL in SQLITE_DATABASE_URL during migration.",
+  );
+}
+
+function runPrismaMigrations() {
+  assertPostgresDatabaseUrl();
+  runCommand("npx prisma migrate deploy");
+}
+
+async function maybeMigrateSqliteToPostgres() {
+  if (process.env.MIGRATE_SQLITE_TO_POSTGRES !== "true") {
+    return;
+  }
+
+  process.stdout.write("[deploy] migrating old SQLite data into Postgres\n");
+  runCommand("npx tsx scripts/migrate-sqlite-to-postgres.ts");
+}
+
 async function maybeSeedDatabase() {
   if (process.env.BOOTSTRAP_DEMO_DATA !== "true") {
     return;
@@ -102,8 +131,8 @@ function startNextServer() {
 
 async function main() {
   await preparePersistentDirectories();
-  // Railway boots should not block on Prisma's interactive data-loss warning prompt.
-  runCommand("npx prisma db push --skip-generate --accept-data-loss");
+  runPrismaMigrations();
+  await maybeMigrateSqliteToPostgres();
   await maybeSeedDatabase();
   await maybeEnsurePreparationTestData();
   startNextServer();
