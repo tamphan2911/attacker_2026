@@ -42,6 +42,7 @@ import { TEAM_MIN_MEMBERS } from "@/data/site-content";
 import {
   ROUND1_ESSAY_TOTAL,
   ROUND1_ESSAY_MAX_SCORE,
+  ROUND1_ESSAY_WORD_LIMIT,
   ROUND1_OBJECTIVE_MAX_SCORE,
   ROUND1_OBJECTIVE_TOTAL,
   ROUND1_TOTAL_MAX_SCORE,
@@ -157,6 +158,13 @@ function createLocalizedEmpty(): LocalizedText {
   return { en: "", vi: "" };
 }
 
+function createDefaultEssayPlaceholder(): LocalizedText {
+  return {
+    en: `Write your answer here. Maximum ${ROUND1_ESSAY_WORD_LIMIT} words.`,
+    vi: `Nhập câu trả lời tại đây. Tối đa ${ROUND1_ESSAY_WORD_LIMIT} từ.`,
+  };
+}
+
 function createRound1Option(id: string, label: string, text?: LocalizedText): Round1QuestionOption {
   return {
     id,
@@ -244,7 +252,7 @@ function createQuestionShapeForType(type: Round1QuestionType, seed?: Partial<Rou
   return {
     ...base,
     rubricNote: createLocalizedEmpty(),
-    placeholder: createLocalizedEmpty(),
+    placeholder: seed?.placeholder ?? createDefaultEssayPlaceholder(),
   };
 }
 
@@ -295,7 +303,7 @@ function convertRound1QuestionType(question: Round1Question, nextType: Round1Que
   return {
     ...createQuestionShapeForType("essay", seed),
     rubricNote: question.rubricNote ?? createLocalizedEmpty(),
-    placeholder: question.placeholder ?? createLocalizedEmpty(),
+    placeholder: question.placeholder ?? createDefaultEssayPlaceholder(),
   };
 }
 
