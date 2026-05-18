@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -562,6 +562,59 @@ function buildBankTopicSummaryRows(bank: Round1TestBank, locale: Locale) {
 
 type BankPreviewSortKey = "type" | "topic" | "difficulty" | "question" | "answerKey";
 type SortDirection = "asc" | "desc";
+
+const BANK_DETAIL_QUERY_KEYS = ["q", "type", "topic", "difficulty", "sort", "dir", "page"];
+const ROUND1_QUESTION_TYPE_VALUES: Round1QuestionType[] = [
+  "single-choice",
+  "multiple-choice",
+  "true-false",
+  "pairing",
+  "essay",
+];
+const ROUND1_DIFFICULTY_VALUES: Round1Question["difficulty"][] = ["easy", "medium", "hard"];
+const BANK_PREVIEW_SORT_KEYS: BankPreviewSortKey[] = ["type", "topic", "difficulty", "question", "answerKey"];
+
+function getInitialBankDetailSearchParams(bankId: string) {
+  if (typeof window === "undefined") {
+    return new URLSearchParams();
+  }
+
+  const currentParams = new URLSearchParams(window.location.search);
+  if (BANK_DETAIL_QUERY_KEYS.some((key) => currentParams.has(key))) {
+    return currentParams;
+  }
+
+  try {
+    return new URLSearchParams(
+      window.sessionStorage.getItem(`admin-round1-bank-detail:${bankId}`) ?? "",
+    );
+  } catch {
+    return new URLSearchParams();
+  }
+}
+
+function parseBankQuestionTypeFilter(value: string | null): "all" | Round1QuestionType {
+  return ROUND1_QUESTION_TYPE_VALUES.includes(value as Round1QuestionType)
+    ? (value as Round1QuestionType)
+    : "all";
+}
+
+function parseBankDifficultyFilter(value: string | null): "all" | Round1Question["difficulty"] {
+  return ROUND1_DIFFICULTY_VALUES.includes(value as Round1Question["difficulty"])
+    ? (value as Round1Question["difficulty"])
+    : "all";
+}
+
+function parseBankPreviewSortKey(value: string | null) {
+  return BANK_PREVIEW_SORT_KEYS.includes(value as BankPreviewSortKey)
+    ? (value as BankPreviewSortKey)
+    : null;
+}
+
+function parseBankDetailPage(value: string | null) {
+  const page = Number(value);
+  return Number.isInteger(page) && page > 0 ? page : 1;
+}
 
 function createStringCompare(locale: Locale) {
   const collator = new Intl.Collator(locale === "vi" ? "vi-VN" : "en-US", {
@@ -1800,15 +1853,28 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
   const bank = round1TestBanks.find((item) => item.id === bankId);
   const questionList = useMemo(() => bank?.questions ?? [], [bank]);
   const isEssayBank = bank?.bankType === "essay";
-  const [questionSearch, setQuestionSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"all" | Round1QuestionType>("all");
-  const [topicFilter, setTopicFilter] = useState("all");
-  const [difficultyFilter, setDifficultyFilter] = useState<"all" | Round1Question["difficulty"]>("all");
-  const [sortKey, setSortKey] = useState<BankPreviewSortKey | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const initialQueryRef = useRef<URLSearchParams | null>(null);
+  if (!initialQueryRef.current) {
+    initialQueryRef.current = getInitialBankDetailSearchParams(bankId);
+  }
+  const [questionSearch, setQuestionSearch] = useState(() => initialQueryRef.current?.get("q") ?? "");
+  const [typeFilter, setTypeFilter] = useState<"all" | Round1QuestionType>(() =>
+    parseBankQuestionTypeFilter(initialQueryRef.current?.get("type") ?? null),
+  );
+  const [topicFilter, setTopicFilter] = useState(() => initialQueryRef.current?.get("topic") ?? "all");
+  const [difficultyFilter, setDifficultyFilter] = useState<"all" | Round1Question["difficulty"]>(() =>
+    parseBankDifficultyFilter(initialQueryRef.current?.get("difficulty") ?? null),
+  );
+  const [sortKey, setSortKey] = useState<BankPreviewSortKey | null>(() =>
+    parseBankPreviewSortKey(initialQueryRef.current?.get("sort") ?? null),
+  );
+  const [sortDirection, setSortDirection] = useState<SortDirection>(() =>
+    initialQueryRef.current?.get("dir") === "desc" ? "desc" : "asc",
+  );
   const [deletePendingQuestionId, setDeletePendingQuestionId] = useState<string | null>(null);
   const [pendingDeleteQuestion, setPendingDeleteQuestion] = useState<Round1Question | null>(null);
   const [deleteQuestionError, setDeleteQuestionError] = useState("");
+  const didMountFilterStateRef = useRef(false);
 
   const bankExportRows = bank ? buildBankExportRows([bank]) : [];
   const topicOptions = useMemo(
@@ -1894,11 +1960,91 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
     pageCount,
     startIndex,
     paginatedRows,
-  } = useAdminTablePagination(sortedQuestions, ADMIN_LIST_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(
+    sortedQuestions,
+    ADMIN_LIST_TABLE_PAGE_SIZE,
+    parseBankDetailPage(initialQueryRef.current?.get("page") ?? null),
+  );
 
   useEffect(() => {
+    if (!didMountFilterStateRef.current) {
+      didMountFilterStateRef.current = true;
+      return;
+    }
+
     setPage(1);
   }, [difficultyFilter, questionSearch, setPage, sortDirection, sortKey, topicFilter, typeFilter]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const trimmedSearch = questionSearch.trim();
+
+    if (trimmedSearch) {
+      params.set("q", trimmedSearch);
+    } else {
+      params.delete("q");
+    }
+
+    if (typeFilter === "all") {
+      params.delete("type");
+    } else {
+      params.set("type", typeFilter);
+    }
+
+    if (topicFilter === "all") {
+      params.delete("topic");
+    } else {
+      params.set("topic", topicFilter);
+    }
+
+    if (isEssayBank || difficultyFilter === "all") {
+      params.delete("difficulty");
+    } else {
+      params.set("difficulty", difficultyFilter);
+    }
+
+    if (sortKey) {
+      params.set("sort", sortKey);
+      params.set("dir", sortDirection);
+    } else {
+      params.delete("sort");
+      params.delete("dir");
+    }
+
+    if (page > 1) {
+      params.set("page", page.toString());
+    } else {
+      params.delete("page");
+    }
+
+    const nextSearch = params.toString();
+    const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+
+    try {
+      window.sessionStorage.setItem(`admin-round1-bank-detail:${bankId}`, nextSearch);
+    } catch {
+      // Session storage is only a convenience for returning from editor pages.
+    }
+
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState(window.history.state, "", nextUrl);
+    }
+  }, [
+    bankId,
+    difficultyFilter,
+    isEssayBank,
+    page,
+    questionSearch,
+    sortDirection,
+    sortKey,
+    topicFilter,
+    typeFilter,
+  ]);
 
   useEffect(() => {
     if (!pendingDeleteQuestion || deletePendingQuestionId) {

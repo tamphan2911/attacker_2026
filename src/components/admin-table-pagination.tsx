@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { Locale } from "@/types/site";
@@ -12,13 +12,17 @@ function cn(...values: Array<string | undefined | false>) {
 export const ADMIN_TABLE_PAGE_SIZE = 20;
 export const ADMIN_LIST_TABLE_PAGE_SIZE = 10;
 
-export function useAdminTablePagination<T>(rows: T[], pageSize = ADMIN_TABLE_PAGE_SIZE) {
-  const [pageState, setPageState] = useState(1);
+export function useAdminTablePagination<T>(
+  rows: T[],
+  pageSize = ADMIN_TABLE_PAGE_SIZE,
+  initialPage = 1,
+) {
+  const [pageState, setPageState] = useState(() => Math.max(1, initialPage));
   const pageCount = Math.max(1, Math.ceil(rows.length / pageSize));
   const page = Math.min(pageState, pageCount);
-  const setPage = (nextPage: number) => {
+  const setPage = useCallback((nextPage: number) => {
     setPageState(Math.max(1, Math.min(nextPage, pageCount)));
-  };
+  }, [pageCount]);
 
   const paginatedRows = useMemo(() => {
     const startIndex = (page - 1) * pageSize;
