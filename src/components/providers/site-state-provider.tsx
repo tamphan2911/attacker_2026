@@ -171,7 +171,7 @@ interface SiteStateValue {
   updateNewsPostByAdmin: (slug: string, payload: NewsPost) => void;
   deleteNewsPostByAdmin: (slug: string) => void;
   createJudgeByAdmin: (payload: JudgeProfile) => Promise<boolean>;
-  updateJudgeByAdmin: (judgeId: string, payload: JudgeProfile) => Promise<boolean>;
+  updateJudgeByAdmin: (judgeId: string, payload: JudgeProfile & { accountPassword?: string }) => Promise<boolean>;
   reorderJudgesByAdmin: (judgeIds: string[]) => Promise<boolean>;
   deleteJudgeByAdmin: (judgeId: string) => Promise<boolean>;
   updateTimelineItemsByAdmin: (timelineItems: TimelineItem[]) => void;
@@ -817,7 +817,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateJudgeByAdmin = async (judgeId: string, payload: JudgeProfile) => {
+  const updateJudgeByAdmin = async (judgeId: string, payload: JudgeProfile & { accountPassword?: string }) => {
     if (!canAccessAdminMode) {
       pushToast(
         {

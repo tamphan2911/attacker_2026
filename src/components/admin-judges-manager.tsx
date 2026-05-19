@@ -8,6 +8,7 @@ import {
   ArrowDown,
   ArrowUp,
   ImagePlus,
+  KeyRound,
   PencilLine,
   Plus,
   Sparkles,
@@ -1024,9 +1025,10 @@ export function AdminJudgesList() {
 
 export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
   const router = useRouter();
-  const { locale, hasHydrated, judges, updateJudgeByAdmin, deleteJudgeByAdmin } = useSiteState();
+  const { locale, hasHydrated, judges, currentUser, updateJudgeByAdmin, deleteJudgeByAdmin } = useSiteState();
   const judge = judges.find((item) => item.id === judgeId);
   const [draft, setDraft] = useState<JudgeDraft | null>(() => (judge ? draftFromJudge(judge) : null));
+  const [judgeAccountPassword, setJudgeAccountPassword] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [validationMessage, setValidationMessage] = useState("");
   const [imageUploadMessage, setImageUploadMessage] = useState("");
@@ -1069,7 +1071,8 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
     );
   }
 
-  const isDirty = JSON.stringify(draft) !== JSON.stringify(draftFromJudge(judge));
+  const canManageJudgeAccount = currentUser.role === "admin";
+  const isDirty = JSON.stringify(draft) !== JSON.stringify(draftFromJudge(judge)) || Boolean(judgeAccountPassword.trim());
 
   const uploadJudgeImage = async (file: File) => {
     const validationError = getNewsImageValidationError(file);
@@ -1143,13 +1146,30 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
       return;
     }
 
-    const saved = await updateJudgeByAdmin(judgeId, payload);
+    const nextPassword = judgeAccountPassword.trim();
+    if (nextPassword && nextPassword.length < 8) {
+      setValidationMessage(
+        locale === "en"
+          ? "Judge account password must be at least 8 characters."
+          : "Mật khẩu tài khoản giám khảo phải có ít nhất 8 ký tự.",
+      );
+      return;
+    }
+
+    const saved = await updateJudgeByAdmin(
+      judgeId,
+      nextPassword ? { ...payload, accountPassword: nextPassword } : payload,
+    );
     if (!saved) {
       return;
     }
 
     setValidationMessage("");
+    setJudgeAccountPassword("");
     setDraft(draftFromJudge(payload));
+    if (payload.id !== judgeId) {
+      router.replace(`/admin/judges/${payload.id}`);
+    }
   };
 
   return (
@@ -1172,6 +1192,7 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
             onClick={() => {
               setValidationMessage("");
               setImageUploadMessage("");
+              setJudgeAccountPassword("");
               setDraft(draftFromJudge(judge));
             }}
             className="theme-button-secondary rounded-full px-5 py-3 text-sm font-semibold"
@@ -1200,6 +1221,62 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
       </div>
 
       <Surface className="px-6 py-6 md:px-7 md:py-7">
+        <div className="mb-6 rounded-[1.6rem] border theme-border theme-panel-subtle px-5 py-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-sky-700/18 bg-sky-500/12 text-sky-700 dark:border-sky-300/18 dark:bg-sky-300/12 dark:text-sky-100">
+                <KeyRound className="h-4.5 w-4.5" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold theme-text-strong">
+                  {locale === "en" ? "Judge account access" : "Truy cập tài khoản giám khảo"}
+                </p>
+                <p className="mt-1 text-sm leading-7 theme-text-muted">
+                  {canManageJudgeAccount
+                    ? locale === "en"
+                      ? "Admin can change the judge login ID and set a new password here."
+                      : "Admin có thể đổi ID đăng nhập và đặt mật khẩu mới cho tài khoản giám khảo tại đây."
+                    : locale === "en"
+                      ? "Only admin can change the judge login ID or password."
+                      : "Chỉ admin có thể đổi ID đăng nhập hoặc mật khẩu của tài khoản giám khảo."}
+                </p>
+              </div>
+            </div>
+            <StatusPill tone={canManageJudgeAccount ? "success" : "warning"}>
+              {canManageJudgeAccount
+                ? locale === "en"
+                  ? "Admin control"
+                  : "Quyền admin"
+                : locale === "en"
+                  ? "Profile only"
+                  : "Chỉ sửa hồ sơ"}
+            </StatusPill>
+          </div>
+
+          {canManageJudgeAccount ? (
+            <label className="mt-5 block space-y-2">
+              <span className="text-sm theme-text-muted">
+                {locale === "en" ? "New judge account password" : "Mật khẩu mới cho tài khoản giám khảo"}
+              </span>
+              <input
+                type="password"
+                value={judgeAccountPassword}
+                onChange={(event) => {
+                  setValidationMessage("");
+                  setJudgeAccountPassword(event.target.value);
+                }}
+                placeholder={locale === "en" ? "Leave blank to keep current password" : "Để trống nếu giữ mật khẩu hiện tại"}
+                className={fieldClassName}
+              />
+              <p className="text-xs leading-6 theme-text-soft">
+                {locale === "en"
+                  ? "Minimum 8 characters. The password is saved only when you click Save judge."
+                  : "Tối thiểu 8 ký tự. Mật khẩu chỉ được lưu khi bấm Lưu giám khảo."}
+              </p>
+            </label>
+          ) : null}
+        </div>
+
         <JudgeFormFields
           locale={locale}
           draft={draft}
@@ -1207,7 +1284,7 @@ export function AdminJudgeEditor({ judgeId }: { judgeId: string }) {
             setValidationMessage("");
             setDraft(nextDraft);
           }}
-          idEditable={false}
+          idEditable={canManageJudgeAccount}
           imageUploadMessage={imageUploadMessage}
           imageUploadHelper={
             locale === "en"

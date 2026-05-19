@@ -151,10 +151,12 @@ export function getJudgeAccountOrganization(judge: JudgeProfile) {
 async function ensureJudgeUserForProfile(
   judge: JudgeProfile,
   previousJudgeId?: string,
+  options?: { password?: string },
 ): Promise<ServiceResult<{ userId: string }>> {
   const judgeId = judge.id.trim();
   const loginId = getJudgeLoginIdFromProfileId(judgeId);
   const email = buildJudgeEmail(loginId);
+  const nextPassword = options?.password?.trim();
 
   const conflictingNonJudge = await prisma.user.findFirst({
     where: {
@@ -214,7 +216,9 @@ async function ensureJudgeUserForProfile(
       where: { id: existingJudgeUser.id },
       data: {
         ...baseData,
-        passwordHash: existingJudgeUser.passwordHash || (await hash(DEFAULT_JUDGE_PASSWORD, 12)),
+        passwordHash: nextPassword
+          ? await hash(nextPassword, 12)
+          : existingJudgeUser.passwordHash || (await hash(DEFAULT_JUDGE_PASSWORD, 12)),
       },
     });
 
@@ -224,7 +228,7 @@ async function ensureJudgeUserForProfile(
   const createdJudgeUser = await prisma.user.create({
     data: {
       ...baseData,
-      passwordHash: await hash(DEFAULT_JUDGE_PASSWORD, 12),
+      passwordHash: await hash(nextPassword || DEFAULT_JUDGE_PASSWORD, 12),
     },
     select: { id: true },
   });
@@ -404,9 +408,11 @@ export async function createJudgeByAdmin(
 }
 
 export async function updateJudgeByAdmin(
+  actorRole: UserRole,
   judgeId: string,
-  payload: JudgeProfile,
+  payload: JudgeProfile & { accountPassword?: string },
 ): Promise<ServiceResult<{ judgeId: string }>> {
+  const { accountPassword, ...judgeProfilePayload } = payload;
   const judges = await readStoredJudges();
   const existingJudge = judges.find((judge) => judge.id === judgeId);
 
@@ -414,7 +420,7 @@ export async function updateJudgeByAdmin(
     return fail(404, "Judge not found.");
   }
 
-  const nextJudgeId = payload.id.trim();
+  const nextJudgeId = judgeProfilePayload.id.trim();
   if (!nextJudgeId) {
     return fail(400, "Judge ID is required.");
   }
@@ -423,8 +429,25 @@ export async function updateJudgeByAdmin(
     return fail(409, "That judge ID already exists.");
   }
 
-  const normalizedPayload = normalizeJudgeProfile({ ...payload, id: nextJudgeId });
-  const accountResult = await ensureJudgeUserForProfile(normalizedPayload, judgeId);
+  if (judgeId !== nextJudgeId && actorRole !== UserRole.ADMIN) {
+    return fail(403, "Only admin can change a judge account ID.");
+  }
+
+  const nextPassword = accountPassword?.trim();
+  if (nextPassword && actorRole !== UserRole.ADMIN) {
+    return fail(403, "Only admin can reset a judge account password.");
+  }
+
+  if (nextPassword && nextPassword.length < 8) {
+    return fail(400, "Judge account password must be at least 8 characters.");
+  }
+
+  const normalizedPayload = normalizeJudgeProfile({ ...judgeProfilePayload, id: nextJudgeId });
+  const accountResult = await ensureJudgeUserForProfile(
+    normalizedPayload,
+    judgeId,
+    nextPassword ? { password: nextPassword } : undefined,
+  );
   if (!accountResult.ok) {
     return accountResult;
   }

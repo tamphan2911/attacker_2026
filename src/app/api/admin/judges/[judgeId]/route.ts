@@ -18,7 +18,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Invalid judge payload." }, { status: 400 });
   }
 
-  const result = await updateJudgeByAdmin(judgeId, payload);
+  const result = await updateJudgeByAdmin(user.role, judgeId, payload);
   if (result.ok) {
     return NextResponse.json(result.data, { status: result.status });
   }
