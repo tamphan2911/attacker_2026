@@ -1297,7 +1297,7 @@ export function Round1ExamPage() {
 
               <div className="rounded-[1.8rem] border theme-border theme-panel-subtle px-5 py-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-text-soft">
-                  {locale === "en" ? "Exam flow" : "Luồng làm bài"}
+                  {locale === "en" ? "Exam flow" : "Lưu ý"}
                 </p>
                 <div className="mt-5 space-y-4">
                   {[
@@ -1323,7 +1323,7 @@ export function Round1ExamPage() {
                       body:
                         locale === "en"
                           ? "Objective score is shown immediately, while essay score stays pending moderator review."
-                          : "Điểm trắc nghiệm có ngay, còn điểm tự luận sẽ chờ moderator hoặc admin chấm.",
+                          : "Điểm trắc nghiệm có ngay, còn điểm tự luận sẽ chờ giám khảo chấm.",
                     },
                   ].map((item) => (
                     <div key={item.step} className="flex gap-4">
