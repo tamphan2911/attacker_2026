@@ -24,6 +24,7 @@ import {
   ROUND1_TOPICS_SCOPE,
 } from "@/lib/round1-topics";
 import { deleteJudgeImageFile, getJudgeImageStorageKeyFromUrl } from "@/server/judge-image-storage";
+import { DEFAULT_JUDGE_PASSWORD, getJudgeLoginIdFromProfileId } from "@/server/judge-account-utils";
 import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/news-image-storage";
 import { ensureRound1SubmissionArchive } from "@/server/round1-submission-archive";
 import type {
@@ -145,6 +146,90 @@ function normalizeJudgeProfile(judge: JudgeProfile): JudgeProfile {
 export function getJudgeAccountOrganization(judge: JudgeProfile) {
   const organization = normalizeLocalizedText(judge.organization);
   return pickText("en", organization) || pickText("vi", organization);
+}
+
+async function ensureJudgeUserForProfile(
+  judge: JudgeProfile,
+  previousJudgeId?: string,
+): Promise<ServiceResult<{ userId: string }>> {
+  const judgeId = judge.id.trim();
+  const loginId = getJudgeLoginIdFromProfileId(judgeId);
+  const email = buildJudgeEmail(loginId);
+
+  const conflictingNonJudge = await prisma.user.findFirst({
+    where: {
+      OR: [{ loginId }, { email }, { judgeProfileId: judgeId }],
+      role: { not: UserRole.JUDGE },
+    },
+    select: { id: true },
+  });
+
+  if (conflictingNonJudge) {
+    return fail(409, "Another account already uses that judge ID.");
+  }
+
+  const existingJudgeUser = await prisma.user.findFirst({
+    where: {
+      role: UserRole.JUDGE,
+      OR: [{ judgeProfileId: previousJudgeId ?? judgeId }, { judgeProfileId: judgeId }],
+    },
+    select: {
+      id: true,
+      passwordHash: true,
+    },
+  });
+
+  const conflictingJudgeUser = await prisma.user.findFirst({
+    where: {
+      role: UserRole.JUDGE,
+      ...(existingJudgeUser ? { id: { not: existingJudgeUser.id } } : {}),
+      OR: [{ loginId }, { email }, { judgeProfileId: judgeId }],
+    },
+    select: { id: true },
+  });
+
+  if (conflictingJudgeUser) {
+    return fail(409, "Another judge account already uses that judge ID.");
+  }
+
+  const baseData = {
+    loginId,
+    email,
+    emailVerifiedAt: new Date(),
+    name: judge.name,
+    role: UserRole.JUDGE,
+    judgeProfileId: judgeId,
+    phoneNumber: null,
+    studentId: null,
+    university: getJudgeAccountOrganization(judge),
+    major: judge.role.en || judge.role.vi,
+    classYear: "",
+    bio: judge.bio.en || judge.bio.vi,
+    avatarTone: judge.avatarTone,
+    avatarImageSrc: judge.imageSrc || null,
+  };
+
+  if (existingJudgeUser) {
+    await prisma.user.update({
+      where: { id: existingJudgeUser.id },
+      data: {
+        ...baseData,
+        passwordHash: existingJudgeUser.passwordHash || (await hash(DEFAULT_JUDGE_PASSWORD, 12)),
+      },
+    });
+
+    return ok({ userId: existingJudgeUser.id });
+  }
+
+  const createdJudgeUser = await prisma.user.create({
+    data: {
+      ...baseData,
+      passwordHash: await hash(DEFAULT_JUDGE_PASSWORD, 12),
+    },
+    select: { id: true },
+  });
+
+  return ok({ userId: createdJudgeUser.id });
 }
 
 export function getDefaultSponsors() {
@@ -308,7 +393,13 @@ export async function createJudgeByAdmin(
     return fail(409, "That judge ID already exists.");
   }
 
-  await saveJudges([...judges, payload]);
+  const normalizedPayload = normalizeJudgeProfile({ ...payload, id: judgeId });
+  const accountResult = await ensureJudgeUserForProfile(normalizedPayload);
+  if (!accountResult.ok) {
+    return accountResult;
+  }
+
+  await saveJudges([...judges, normalizedPayload]);
   return ok({ judgeId }, 201);
 }
 
@@ -332,37 +423,15 @@ export async function updateJudgeByAdmin(
     return fail(409, "That judge ID already exists.");
   }
 
-  await saveJudges(
-    judges.map((judge) => (judge.id === judgeId ? payload : judge)),
-  );
-
-  if (judgeId !== nextJudgeId) {
-    const nextLoginId = nextJudgeId.trim().toLowerCase();
-    await prisma.user.updateMany({
-      where: { judgeProfileId: judgeId, role: UserRole.JUDGE },
-      data: {
-        judgeProfileId: nextJudgeId,
-        loginId: nextLoginId,
-        email: buildJudgeEmail(nextLoginId),
-        name: payload.name,
-        university: getJudgeAccountOrganization(payload),
-        major: payload.role.en || payload.role.vi,
-        avatarTone: payload.avatarTone,
-        avatarImageSrc: payload.imageSrc || null,
-      },
-    });
-  } else {
-    await prisma.user.updateMany({
-      where: { judgeProfileId: judgeId, role: UserRole.JUDGE },
-      data: {
-        name: payload.name,
-        university: getJudgeAccountOrganization(payload),
-        major: payload.role.en || payload.role.vi,
-        avatarTone: payload.avatarTone,
-        avatarImageSrc: payload.imageSrc || null,
-      },
-    });
+  const normalizedPayload = normalizeJudgeProfile({ ...payload, id: nextJudgeId });
+  const accountResult = await ensureJudgeUserForProfile(normalizedPayload, judgeId);
+  if (!accountResult.ok) {
+    return accountResult;
   }
+
+  await saveJudges(
+    judges.map((judge) => (judge.id === judgeId ? normalizedPayload : judge)),
+  );
 
   if (existingJudge.imageSrc !== payload.imageSrc) {
     const previousStorageKey = getJudgeImageStorageKeyFromUrl(existingJudge.imageSrc);

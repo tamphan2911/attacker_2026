@@ -9,7 +9,6 @@ import { compare } from "bcryptjs";
 import { z } from "zod";
 
 import { prisma } from "@/lib/db";
-import { syncJudgeAccounts } from "@/server/judge-accounts";
 import { verifyTurnstileToken } from "@/server/turnstile";
 
 const credentialsSchema = z.object({
@@ -128,8 +127,6 @@ export const authOptions: NextAuthOptions = {
           throw new Error("CAPTCHA_FAILED");
         }
 
-        await syncJudgeAccounts();
-
         const login = parsed.data.login.trim().toLowerCase();
         const user = await prisma.user.findFirst({
           where: {
@@ -202,6 +199,12 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role ?? token.role;
         token.loginId = user.loginId ?? token.loginId;
+        token.name = user.name ?? token.name;
+        token.email = user.email ?? token.email;
+
+        if (user.role && user.loginId) {
+          return token;
+        }
       }
 
       if (!token.sub) {

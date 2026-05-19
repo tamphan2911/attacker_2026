@@ -3,17 +3,11 @@ import { hash } from "bcryptjs";
 
 import { prisma } from "@/lib/db";
 import { buildJudgeEmail, getJudgeAccountOrganization, readStoredJudges } from "@/server/admin-service";
+import { DEFAULT_JUDGE_PASSWORD, getJudgeLoginIdFromProfileId } from "@/server/judge-account-utils";
 
-const DEFAULT_JUDGE_PASSWORD = "Judge@2026";
+export { getDefaultJudgePassword, getJudgeLoginIdFromProfileId } from "@/server/judge-account-utils";
+
 let cachedJudgePasswordHash: string | null = null;
-
-export function getDefaultJudgePassword() {
-  return DEFAULT_JUDGE_PASSWORD;
-}
-
-export function getJudgeLoginIdFromProfileId(judgeProfileId: string) {
-  return judgeProfileId.trim().toLowerCase();
-}
 
 export async function syncJudgeAccounts() {
   const judges = await readStoredJudges();
