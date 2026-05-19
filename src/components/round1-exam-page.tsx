@@ -71,6 +71,65 @@ type AttemptStateResponse = {
 };
 
 type DialogMode = "start" | "submit" | null;
+type Round1WindowAvailability = "not-started" | "open" | "closed";
+
+function startOfVietnamDay(value: string) {
+  return new Date(`${value}T00:00:00.000+07:00`);
+}
+
+function endOfVietnamDay(value: string) {
+  return new Date(`${value}T23:59:59.999+07:00`);
+}
+
+function getRound1WindowAvailability(
+  round1Window: { startDate: string; endDate: string } | undefined,
+  nowMs: number,
+): Round1WindowAvailability {
+  if (!round1Window) {
+    return "open";
+  }
+
+  const startsAt = startOfVietnamDay(round1Window.startDate).getTime();
+  const endsAt = endOfVietnamDay(round1Window.endDate).getTime();
+
+  if (nowMs < startsAt) {
+    return "not-started";
+  }
+
+  if (nowMs > endsAt) {
+    return "closed";
+  }
+
+  return "open";
+}
+
+function getRound1WindowWarning(
+  locale: "en" | "vi",
+  availability: Round1WindowAvailability,
+  dateRangeLabel: string | null,
+) {
+  if (availability === "not-started") {
+    return {
+      title: locale === "en" ? "Round 1 is not open yet." : "Vòng 1 chưa mở.",
+      body:
+        locale === "en"
+          ? `The official attempt can only start during the Round 1 exam window${dateRangeLabel ? `: ${dateRangeLabel}` : "."}`
+          : `Lượt thi chính thức chỉ có thể bắt đầu trong thời gian mở bài Vòng 1${dateRangeLabel ? `: ${dateRangeLabel}` : "."}`,
+    };
+  }
+
+  if (availability === "closed") {
+    return {
+      title: locale === "en" ? "Round 1 is closed." : "Vòng 1 đã đóng.",
+      body:
+        locale === "en"
+          ? "The individual exam window has ended, so new official attempts are no longer accepted."
+          : "Thời gian làm bài cá nhân đã kết thúc, vì vậy hệ thống không nhận lượt thi chính thức mới.",
+    };
+  }
+
+  return null;
+}
 
 function formatRemainingTime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
@@ -98,6 +157,7 @@ function Round1ConfirmDialog({
   totalCount,
   unansweredCount,
   essayWarning,
+  blockingWarning,
   onClose,
   onConfirm,
 }: {
@@ -110,6 +170,7 @@ function Round1ConfirmDialog({
   totalCount: number;
   unansweredCount: number;
   essayWarning: boolean;
+  blockingWarning?: { title: string; body: string } | null;
   onClose: () => void;
   onConfirm: () => void;
 }) {
@@ -161,6 +222,20 @@ function Round1ConfirmDialog({
         </div>
 
         <div className="space-y-4 overflow-y-auto px-6 py-6">
+          {blockingWarning ? (
+            <div className="rounded-[1.5rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-4 py-4 text-amber-950 shadow-[0_16px_38px_rgba(245,158,11,0.12)] dark:border-amber-300/24 dark:bg-[linear-gradient(135deg,rgba(120,53,15,0.38),rgba(113,63,18,0.28))] dark:text-amber-100">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-amber-700/18 bg-amber-400/20 dark:border-amber-200/20 dark:bg-amber-300/14">
+                  <AlertTriangle className="h-4.5 w-4.5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">{blockingWarning.title}</p>
+                  <p className="mt-1 text-sm leading-7">{blockingWarning.body}</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
@@ -250,7 +325,7 @@ function Round1ConfirmDialog({
           <button
             type="button"
             onClick={onConfirm}
-            disabled={pending}
+            disabled={pending || Boolean(blockingWarning)}
             className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
             {pending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : isStart ? <Play className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
@@ -310,6 +385,15 @@ export function Round1ExamPage() {
   const round1Window =
     getCompetitionRoundPrimaryTimelineItem("round-1", timelineItems) ??
     getCompetitionRoundWindow("round-1", timelineItems);
+  const round1WindowDateRangeLabel = round1Window
+    ? formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate)
+    : null;
+  const round1WindowAvailability = getRound1WindowAvailability(round1Window, nowMs);
+  const round1StartWarning = getRound1WindowWarning(
+    locale,
+    round1WindowAvailability,
+    round1WindowDateRangeLabel,
+  );
   const round1Finished = isTimelineItemFinished("round-1-individual-qualifier", timelineItems, new Date());
   const teamRound1Locked = Boolean(currentTeam && isTeamRound1Locked(currentTeam));
   const isEligibleForRound1 = Boolean(
@@ -549,6 +633,20 @@ export function Round1ExamPage() {
   }, [session]);
 
   useEffect(() => {
+    if (session) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 30000);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [session]);
+
+  useEffect(() => {
     if (!session) {
       return;
     }
@@ -767,6 +865,11 @@ export function Round1ExamPage() {
   }, [existingSubmission, remainingSeconds, session, submitExamAttempt]);
 
   const startExam = useCallback(async () => {
+    if (round1StartWarning) {
+      setDialogError(null);
+      return;
+    }
+
     setDialogPending(true);
     setDialogError(null);
     setAttemptState("loading");
@@ -826,7 +929,7 @@ export function Round1ExamPage() {
     } finally {
       setDialogPending(false);
     }
-  }, [applyAttemptPayload, locale]);
+  }, [applyAttemptPayload, locale, round1StartWarning]);
 
   const handleConfirmSubmit = async () => {
     if (!session) {
@@ -1456,6 +1559,7 @@ export function Round1ExamPage() {
           totalCount={ROUND1_TOTAL_QUESTIONS}
           unansweredCount={ROUND1_TOTAL_QUESTIONS}
           essayWarning={false}
+          blockingWarning={round1StartWarning}
           onClose={() => {
             if (!dialogPending) {
               setDialogMode(null);
@@ -2077,6 +2181,7 @@ export function Round1ExamPage() {
               return wordCount < ROUND1_ESSAY_MIN_WORDS || wordCount > round1WordLimit;
             }),
         )}
+        blockingWarning={null}
         onClose={() => {
           if (!dialogPending) {
             setDialogMode(null);

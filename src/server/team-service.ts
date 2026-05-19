@@ -67,19 +67,34 @@ function endOfVietnamDay(date: string) {
   return new Date(`${date}T23:59:59.999+07:00`);
 }
 
-async function isRound1Finished(now = new Date()) {
+function startOfVietnamDay(date: string) {
+  return new Date(`${date}T00:00:00.000+07:00`);
+}
+
+async function getRound1ExamWindowStatus(now = new Date()) {
   const timelineItems = await readTimelineItems();
-  const round1Qualifier = getTimelineItemById("round-1-individual-qualifier", timelineItems);
-  if (round1Qualifier) {
-    return now.getTime() > endOfVietnamDay(round1Qualifier.endDate).getTime();
-  }
+  const round1Window =
+    getTimelineItemById("round-1-individual-qualifier", timelineItems) ??
+    getCompetitionRoundWindow("round-1", timelineItems) ??
+    getCompetitionRoundWindow("round-1");
 
-  const round1Window = getCompetitionRoundWindow("round-1");
   if (!round1Window) {
-    return false;
+    return "open";
   }
 
-  return now.getTime() > endOfVietnamDay(round1Window.endDate).getTime();
+  if (now.getTime() < startOfVietnamDay(round1Window.startDate).getTime()) {
+    return "not-started";
+  }
+
+  if (now.getTime() > endOfVietnamDay(round1Window.endDate).getTime()) {
+    return "closed";
+  }
+
+  return "open";
+}
+
+async function isRound1Finished(now = new Date()) {
+  return (await getRound1ExamWindowStatus(now)) === "closed";
 }
 
 async function isSubmissionRoundFinished(round: SubmissionRound, now = new Date()) {
@@ -1510,7 +1525,12 @@ export async function startRound1Attempt(
       return fail(actorContext.status, actorContext.error);
     }
 
-    if (await isRound1Finished()) {
+    const round1ExamWindowStatus = await getRound1ExamWindowStatus();
+    if (round1ExamWindowStatus === "not-started") {
+      return fail(409, "Round 1 has not started yet. New Round 1 attempts are not open.");
+    }
+
+    if (round1ExamWindowStatus === "closed") {
       return fail(409, "Round 1 is finished. New Round 1 submissions are closed.");
     }
 
