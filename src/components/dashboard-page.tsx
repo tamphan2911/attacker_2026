@@ -222,6 +222,9 @@ export function DashboardPage() {
   const [teamForm, setTeamForm] = useState<TeamFormState>(() => createTeamFormState(currentTeam));
   const [teamAvatarError, setTeamAvatarError] = useState("");
   const [inviteSearch, setInviteSearch] = useState("");
+  const [inviteSearchResults, setInviteSearchResults] = useState<UserProfile[]>([]);
+  const [inviteSearchTeams, setInviteSearchTeams] = useState<TeamProfile[]>([]);
+  const [inviteSearchPending, setInviteSearchPending] = useState(false);
   const [pendingInviteUserId, setPendingInviteUserId] = useState<string | null>(null);
   const [pendingRecallInvitationId, setPendingRecallInvitationId] = useState<string | null>(null);
   const [leadershipTargetId, setLeadershipTargetId] = useState("");
@@ -237,6 +240,15 @@ export function DashboardPage() {
     "round-2": createSubmissionFormState(),
     "round-3": createSubmissionFormState(),
   });
+  const sentInvitations = currentTeam
+    ? invitations.filter(
+        (invitation) => invitation.teamId === currentTeam.id && invitation.status === "pending",
+      )
+    : [];
+  const isLeader = currentTeam?.leaderId === activeUserId;
+  const teamRosterLocked = Boolean(currentTeam && isTeamRosterLocked(currentTeam));
+  const isTeamFull = Boolean(currentTeam && currentTeam.memberIds.length >= TEAM_MAX_MEMBERS);
+  const inviteSearchKeyword = inviteSearch.trim();
 
   useEffect(() => {
     setTeamForm(createTeamFormState(currentTeam));
@@ -291,6 +303,65 @@ export function DashboardPage() {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [pendingKickMemberId]);
+
+  useEffect(() => {
+    if (
+      !isLeader ||
+      !currentTeam ||
+      teamRosterLocked ||
+      isTeamFull ||
+      inviteSearchKeyword.length < 2
+    ) {
+      setInviteSearchResults([]);
+      setInviteSearchTeams([]);
+      setInviteSearchPending(false);
+      return;
+    }
+
+    let cancelled = false;
+    setInviteSearchPending(true);
+
+    const timeoutId = window.setTimeout(() => {
+      void (async () => {
+        const response = await fetch(`/api/users/search?q=${encodeURIComponent(inviteSearchKeyword)}`, {
+          cache: "no-store",
+          credentials: "same-origin",
+        });
+
+        if (!response.ok) {
+          throw new Error("Could not search invite candidates.");
+        }
+
+        const payload = (await response.json()) as {
+          users?: UserProfile[];
+          teams?: TeamProfile[];
+        };
+
+        if (cancelled) {
+          return;
+        }
+
+        setInviteSearchResults(payload.users ?? []);
+        setInviteSearchTeams(payload.teams ?? []);
+      })()
+        .catch(() => {
+          if (!cancelled) {
+            setInviteSearchResults([]);
+            setInviteSearchTeams([]);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setInviteSearchPending(false);
+          }
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutId);
+    };
+  }, [currentTeam, inviteSearchKeyword, isLeader, isTeamFull, teamRosterLocked]);
 
   if (authStatus === "loading") {
     return (
@@ -410,11 +481,6 @@ export function DashboardPage() {
     (request) => request.toUserId === activeUserId && request.status === "pending",
   );
 
-  const sentInvitations = currentTeam
-    ? invitations.filter(
-        (invitation) => invitation.teamId === currentTeam.id && invitation.status === "pending",
-      )
-    : [];
   const outgoingLeadershipTransfer = currentTeam
     ? leadershipTransferRequests.find(
         (request) =>
@@ -424,23 +490,19 @@ export function DashboardPage() {
       )
     : undefined;
 
-  const inviteCandidateUsers = users.filter(
-    (user) =>
-      user.id !== activeUserId &&
-      user.role === "student" &&
-      !(currentTeam?.memberIds.includes(user.id) ?? false),
-  );
-  const isLeader = currentTeam?.leaderId === activeUserId;
   const teamReadinessCount = currentTeam?.memberIds.length ?? 0;
   const membersNeeded = Math.max(0, TEAM_MIN_MEMBERS - teamReadinessCount);
   const hasProfilePhoneNumber = Boolean(currentUser.phoneNumber.trim());
   const currentCompetitionState = currentTeam ? getTeamCompetitionState(currentTeam) : undefined;
-  const teamRosterLocked = Boolean(currentTeam && isTeamRosterLocked(currentTeam));
   const teamRound1Locked = Boolean(currentTeam && isTeamRound1Locked(currentTeam));
-  const isTeamFull = Boolean(currentTeam && currentTeam.memberIds.length >= TEAM_MAX_MEMBERS);
   const openSlots = currentTeam
     ? TEAM_MAX_MEMBERS - currentTeam.memberIds.length - sentInvitations.length
     : TEAM_MAX_MEMBERS;
+
+  const inviteTeams = [
+    ...teams,
+    ...inviteSearchTeams.filter((team) => !teams.some((existingTeam) => existingTeam.id === team.id)),
+  ];
   const round1Window =
     getCompetitionRoundPrimaryTimelineItem("round-1", timelineItems) ??
     getCompetitionRoundWindow("round-1", timelineItems);
@@ -533,7 +595,7 @@ export function DashboardPage() {
     teamRound1EssayAverage == null ||
     teamRound1TotalAverage == null ||
     teamRound1DurationAverage == null;
-  const filteredAvailableUsers = inviteCandidateUsers.filter((user) => {
+  const filteredAvailableUsers = inviteSearchResults.filter((user) => {
     const keyword = inviteSearch.trim().toLowerCase();
     if (!keyword) {
       return false;
@@ -545,9 +607,10 @@ export function DashboardPage() {
       .includes(keyword);
   });
   const pendingInviteUser = pendingInviteUserId
-    ? users.find((user) => user.id === pendingInviteUserId)
+    ? users.find((user) => user.id === pendingInviteUserId) ??
+      inviteSearchResults.find((user) => user.id === pendingInviteUserId)
     : undefined;
-  const pendingInviteUserTeam = pendingInviteUser ? getTeamForUser(pendingInviteUser.id, teams) : undefined;
+  const pendingInviteUserTeam = pendingInviteUser ? getTeamForUser(pendingInviteUser.id, inviteTeams) : undefined;
   const pendingInviteAlreadyInvited = Boolean(
     pendingInviteUser && sentInvitations.some((invitation) => invitation.toUserId === pendingInviteUser.id),
   );
@@ -558,7 +621,8 @@ export function DashboardPage() {
     pendingInviteUserTeam && (!currentTeam || pendingInviteUserTeam.id !== currentTeam.id),
   );
   const pendingInviteTeamLeader = pendingInviteUserTeam
-    ? users.find((user) => user.id === pendingInviteUserTeam.leaderId)
+    ? users.find((user) => user.id === pendingInviteUserTeam.leaderId) ??
+      inviteSearchResults.find((user) => user.id === pendingInviteUserTeam.leaderId)
     : undefined;
   const inviteConfirmBlockingReason = pendingInviteUserInAnotherTeam
     ? locale === "en"
@@ -1682,7 +1746,7 @@ export function DashboardPage() {
 
                 <div className="mt-4 max-h-[420px] space-y-3 overflow-y-auto pr-1">
                   {filteredAvailableUsers.map((user) => {
-                    const userTeam = getTeamForUser(user.id, teams);
+                    const userTeam = getTeamForUser(user.id, inviteTeams);
                     const isInAnotherTeam = Boolean(userTeam && userTeam.id !== currentTeam.id);
                     const alreadyInvited = sentInvitations.some((invitation) => invitation.toUserId === user.id);
                     const canOpenInviteConfirm = Boolean(
@@ -1738,6 +1802,10 @@ export function DashboardPage() {
                         ? locale === "en"
                           ? "Roster changes are locked right now, so the invite list is intentionally disabled."
                           : "Đội hình hiện đang bị khóa nên danh sách mời thêm thành viên đang được tắt có chủ đích."
+                        : inviteSearchPending
+                          ? locale === "en"
+                            ? "Searching student accounts..."
+                            : "Đang tìm tài khoản sinh viên..."
                         : !inviteSearch.trim()
                           ? locale === "en"
                             ? "Start typing in the search box to look for student accounts."

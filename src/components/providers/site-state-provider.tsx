@@ -24,7 +24,6 @@ import {
   mockRound1TeamLockRequests,
   newsPosts as seedNewsPosts,
   round1IndividualSubmissions as seedRound1Submissions,
-  round1TestBanks as seedRound1TestBanks,
   sponsorProfiles as seedSponsorProfiles,
   timelineItems as seedTimelineItems,
   mockSubmissions,
@@ -52,6 +51,10 @@ import {
 import {
   getRound1PairingValidationIssue,
   getRound1PairingValidationMessage,
+  ROUND1_DURATION_MINUTES,
+  ROUND1_ESSAY_TOTAL,
+  ROUND1_ESSAY_WORD_LIMIT,
+  ROUND1_OBJECTIVE_TOTAL,
 } from "@/lib/round1";
 import { deriveRound1TopicsFromBanks, normalizeRound1Topics } from "@/lib/round1-topics";
 import type {
@@ -94,6 +97,50 @@ const GUEST_USER: UserProfile = {
   avatarTone: "from-sky-500 via-cyan-400 to-emerald-400",
   providers: [],
 };
+
+const seedRound1TestBanks: Round1TestBank[] = [
+  {
+    id: "bank-2026-official-a",
+    bankType: "objective",
+    title: {
+      en: "Multiple choice test bank",
+      vi: "Ngân hàng đề trắc nghiệm",
+    },
+    description: {
+      en: "Public metadata for the Round 1 multiple-choice bank.",
+      vi: "Thông tin công khai của ngân hàng đề trắc nghiệm Vòng 1.",
+    },
+    status: "active",
+    questionPoolSize: 0,
+    questionsPerAttempt: ROUND1_OBJECTIVE_TOTAL,
+    shuffleQuestions: true,
+    shuffleOptions: true,
+    durationMinutes: ROUND1_DURATION_MINUTES,
+    publishedAt: "2026-05-02T00:00:00.000Z",
+    questions: [],
+  },
+  {
+    id: "bank-2026-essay-a",
+    bankType: "essay",
+    title: {
+      en: "Essay test bank",
+      vi: "Ngân hàng đề tự luận",
+    },
+    description: {
+      en: "Public metadata for the Round 1 essay bank.",
+      vi: "Thông tin công khai của ngân hàng đề tự luận Vòng 1.",
+    },
+    status: "active",
+    questionPoolSize: 0,
+    questionsPerAttempt: ROUND1_ESSAY_TOTAL,
+    shuffleQuestions: true,
+    shuffleOptions: false,
+    durationMinutes: ROUND1_DURATION_MINUTES,
+    wordLimit: ROUND1_ESSAY_WORD_LIMIT,
+    publishedAt: "2026-05-02T00:00:00.000Z",
+    questions: [],
+  },
+];
 
 function normalizeUserProfile(user: UserProfile): UserProfile {
   return {
@@ -252,6 +299,28 @@ function normalizeSponsorProfiles(sponsors: SponsorProfile[]): SponsorProfile[] 
   return sponsors.map(normalizeSponsorProfile);
 }
 
+function stripRound1BankQuestions(banks: Round1TestBank[]) {
+  return banks.map((bank) => ({
+    ...bank,
+    questions: [],
+  }));
+}
+
+function mergeRound1BankMetadata(
+  metadataBanks: Round1TestBank[],
+  currentBanks: Round1TestBank[],
+) {
+  const currentBankById = new Map(currentBanks.map((bank) => [bank.id, bank]));
+
+  return metadataBanks.map((bank) => {
+    const currentBank = currentBankById.get(bank.id);
+    return {
+      ...bank,
+      questions: currentBank?.questions.length ? currentBank.questions : bank.questions,
+    };
+  });
+}
+
 function createInitialSnapshot(): AppSnapshot {
   return {
     locale: "vi",
@@ -319,7 +388,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       );
       setTeamLockRequests(snapshot.teamLockRequests ?? mockRound1TeamLockRequests);
       setSubmissions(snapshot.submissions ?? mockSubmissions);
-      setRound1TestBanks(snapshot.round1TestBanks ?? seedRound1TestBanks);
+      setRound1TestBanks(stripRound1BankQuestions(snapshot.round1TestBanks ?? seedRound1TestBanks));
       setRound1Topics(
         normalizeRound1Topics(
           snapshot.round1Topics ?? deriveRound1TopicsFromBanks(snapshot.round1TestBanks ?? seedRound1TestBanks),
@@ -357,7 +426,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       leadershipTransferRequests,
       teamLockRequests,
       submissions,
-      round1TestBanks,
+      round1TestBanks: stripRound1BankQuestions(round1TestBanks),
       round1Topics,
       round1Submissions,
       newsPosts,
@@ -400,9 +469,23 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     setSponsors(normalizeSponsorProfiles(payload.sponsors));
     setJudges(payload.judges);
     setNewsPosts(payload.newsPosts);
-    setRound1TestBanks(payload.round1TestBanks);
+    setRound1TestBanks((current) => mergeRound1BankMetadata(payload.round1TestBanks, current));
     setRound1Topics(normalizeRound1Topics(payload.round1Topics ?? []));
     setTimelineItems(payload.timelineItems);
+  }, []);
+
+  const syncAdminRound1Banks = useCallback(async () => {
+    const response = await fetch("/api/admin/round-1/banks", {
+      cache: "no-store",
+      credentials: "same-origin",
+    });
+
+    if (!response.ok) {
+      throw new Error("Unable to load the full Round 1 bank data.");
+    }
+
+    const payload = (await response.json()) as { round1TestBanks: Round1TestBank[] };
+    setRound1TestBanks(payload.round1TestBanks);
   }, []);
 
   const syncWorkspace = useCallback(async () => {
@@ -476,6 +559,22 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
   const currentTeam = currentUser.id ? getTeamForUser(activeUserId, teams) : undefined;
   const canAccessAdminMode =
     isAuthenticated && (currentUser.role === "admin" || currentUser.role === "moderator");
+
+  useEffect(() => {
+    if (!hasHydrated || !canAccessAdminMode) {
+      return;
+    }
+
+    void syncAdminRound1Banks().catch(() => {
+      pushToast(
+        {
+          en: "Could not load the full Round 1 bank data for admin mode.",
+          vi: "Không thể tải đầy đủ dữ liệu ngân hàng đề Vòng 1 cho admin mode.",
+        },
+        "warning",
+      );
+    });
+  }, [canAccessAdminMode, hasHydrated, syncAdminRound1Banks]);
 
   const getPendingTeamLockRequests = (teamId: string, protocolId?: string) =>
     teamLockRequests.filter(
@@ -1684,7 +1783,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       }
 
       const result = (await response.json().catch(() => null)) as { questionId?: string } | null;
-      await syncSiteData();
+      await Promise.all([syncSiteData(), syncAdminRound1Banks()]);
       pushToast(
         {
           en: "Round 1 question created in admin mode.",
@@ -1744,7 +1843,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       }
 
       const result = (await response.json().catch(() => null)) as { questionId?: string } | null;
-      await syncSiteData();
+      await Promise.all([syncSiteData(), syncAdminRound1Banks()]);
       pushToast(
         {
           en: "Round 1 question updated in admin mode.",
@@ -1789,7 +1888,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      await syncSiteData();
+      await Promise.all([syncSiteData(), syncAdminRound1Banks()]);
       pushToast(
         {
           en: "Round 1 question deleted from the admin dataset.",
@@ -1844,7 +1943,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         return false;
       }
 
-      await syncSiteData();
+      await Promise.all([syncSiteData(), syncAdminRound1Banks()]);
       pushToast(
         {
           en: "Round 1 topics updated successfully.",

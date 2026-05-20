@@ -514,6 +514,32 @@ export function serializeRound1TestBank(bank: Round1TestBank): AppRound1TestBank
   };
 }
 
+export function serializeRound1TestBankMetadata(
+  bank: Omit<Round1TestBank, "questions">,
+): AppRound1TestBank {
+  return {
+    id: bank.id,
+    bankType: mapBankType(bank.bankType),
+    title: {
+      en: bank.titleEn,
+      vi: bank.titleVi,
+    },
+    description: {
+      en: bank.descriptionEn,
+      vi: bank.descriptionVi,
+    },
+    status: bank.status.toLowerCase() as AppRound1TestBank["status"],
+    questionPoolSize: bank.questionPoolSize,
+    questionsPerAttempt: bank.questionsPerAttempt,
+    shuffleQuestions: bank.shuffleQuestions,
+    shuffleOptions: bank.shuffleOptions,
+    durationMinutes: bank.durationMinutes,
+    wordLimit: mapRound1WordLimit(bank.bankType, bank.wordLimit),
+    publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
+    questions: [],
+  };
+}
+
 export function serializeNewsPost(post: PrismaNewsPost): AppNewsPost {
   return {
     slug: post.slug,
