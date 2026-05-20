@@ -131,6 +131,88 @@ function getRound1WindowWarning(
   return null;
 }
 
+function getRound1StartErrorMessage(
+  locale: "en" | "vi",
+  status: number | null,
+  serverMessage?: string,
+) {
+  const normalizedMessage = serverMessage?.trim() ?? "";
+
+  if (normalizedMessage) {
+    if (normalizedMessage.includes("Round 1 has not started yet")) {
+      return locale === "en"
+        ? "Round 1 has not opened yet. Please check the official timeline before starting the exam."
+        : "Vòng 1 chưa mở theo lịch chính thức. Vui lòng kiểm tra lại mốc thời gian trước khi bắt đầu bài thi.";
+    }
+
+    if (normalizedMessage.includes("Round 1 is finished")) {
+      return locale === "en"
+        ? "Round 1 has already closed. New official attempts are no longer accepted."
+        : "Vòng 1 đã kết thúc. Hệ thống không còn nhận lượt thi chính thức mới.";
+    }
+
+    if (normalizedMessage.includes("This account has already submitted")) {
+      return locale === "en"
+        ? "This account has already submitted Round 1, so a new attempt cannot be started."
+        : "Tài khoản này đã nộp bài Vòng 1, vì vậy không thể bắt đầu lượt thi mới.";
+    }
+
+    if (normalizedMessage.includes("Join a team")) {
+      return locale === "en"
+        ? "You need to join an eligible team before starting the Round 1 exam."
+        : "Bạn cần tham gia một đội đủ điều kiện trước khi bắt đầu bài thi Vòng 1.";
+    }
+
+    if (normalizedMessage.includes("at least")) {
+      return locale === "en"
+        ? "Your team does not have enough members for Round 1 yet. Please complete the team roster first."
+        : "Đội của bạn chưa đủ số lượng thành viên để vào Vòng 1. Vui lòng hoàn tất đội hình trước.";
+    }
+
+    if (normalizedMessage.includes("no longer competing in Round 1")) {
+      return locale === "en"
+        ? "Your team is not currently in Round 1, so this account cannot start a Round 1 attempt."
+        : "Đội của bạn hiện không ở Vòng 1, nên tài khoản này không thể bắt đầu lượt thi Vòng 1.";
+    }
+
+    if (normalizedMessage.includes("lock protocol")) {
+      return locale === "en"
+        ? "Your team must be locked for Round 1 before any member can start the exam."
+        : "Đội của bạn cần hoàn tất khóa đội hình Vòng 1 trước khi thành viên bắt đầu bài thi.";
+    }
+
+    if (normalizedMessage.includes("bank configuration") || normalizedMessage.includes("test bank")) {
+      return locale === "en"
+        ? "The Round 1 test bank is not ready yet. Please contact the organizing team to activate the exam banks."
+        : "Ngân hàng đề Vòng 1 chưa sẵn sàng. Vui lòng liên hệ ban tổ chức để kích hoạt ngân hàng đề.";
+    }
+
+    return normalizedMessage;
+  }
+
+  if (status === 401) {
+    return locale === "en"
+      ? "Your login session has expired. Please sign in again before starting the exam."
+      : "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại trước khi bắt đầu bài thi.";
+  }
+
+  if (status === 403) {
+    return locale === "en"
+      ? "Only eligible participant accounts can start the Round 1 exam."
+      : "Chỉ tài khoản thí sinh đủ điều kiện mới có thể bắt đầu bài thi Vòng 1.";
+  }
+
+  if (status === 409) {
+    return locale === "en"
+      ? "Your account or team is not currently eligible to start Round 1. Please check team status, roster lock, and the official exam window."
+      : "Tài khoản hoặc đội của bạn hiện chưa đủ điều kiện bắt đầu Vòng 1. Vui lòng kiểm tra trạng thái đội, khóa đội hình và thời gian mở bài.";
+  }
+
+  return locale === "en"
+    ? "The system could not start the Round 1 exam because the server did not return a usable response. Please try again or contact technical support."
+    : "Hệ thống chưa thể bắt đầu bài thi Vòng 1 vì máy chủ không trả về phản hồi hợp lệ. Vui lòng thử lại hoặc liên hệ hỗ trợ kỹ thuật.";
+}
+
 function formatRemainingTime(totalSeconds: number) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -236,6 +318,22 @@ function Round1ConfirmDialog({
             </div>
           ) : null}
 
+          {error ? (
+            <div className="rounded-[1.5rem] border border-rose-700/24 bg-[linear-gradient(135deg,rgba(255,241,242,0.98),rgba(255,228,230,0.94))] px-4 py-4 text-rose-950 shadow-[0_16px_38px_rgba(225,29,72,0.1)] dark:border-rose-300/22 dark:bg-[linear-gradient(135deg,rgba(127,29,29,0.34),rgba(136,19,55,0.24))] dark:text-rose-100">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-rose-700/18 bg-rose-400/18 dark:border-rose-200/18 dark:bg-rose-300/12">
+                  <AlertTriangle className="h-4.5 w-4.5" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">
+                    {locale === "en" ? "Cannot start yet" : "Chưa thể bắt đầu"}
+                  </p>
+                  <p className="mt-1 text-sm leading-7">{error}</p>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
@@ -305,12 +403,6 @@ function Round1ConfirmDialog({
               ? `Technical support: ${contactInfo.email} · ${contactInfo.phone}`
               : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${contactInfo.phone}`}
           </div>
-
-          {error ? (
-            <div className="rounded-[1.4rem] border border-rose-700/18 bg-[linear-gradient(135deg,rgba(255,241,242,0.98),rgba(255,228,230,0.94))] px-4 py-3.5 text-sm leading-7 text-rose-900 dark:border-rose-300/18 dark:bg-rose-300/12 dark:text-rose-100">
-              {error}
-            </div>
-          ) : null}
         </div>
 
         <div className="flex flex-col-reverse gap-3 border-t theme-border px-6 py-5 sm:flex-row sm:justify-end">
@@ -883,12 +975,7 @@ export function Round1ExamPage() {
 
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(
-          payload?.error ||
-            (locale === "en"
-              ? "Could not start the Round 1 exam right now."
-              : "Hiện không thể bắt đầu bài thi Vòng 1."),
-        );
+        throw new Error(getRound1StartErrorMessage(locale, response.status, payload?.error));
       }
 
       const payload = (await response.json()) as AttemptStateResponse;
@@ -922,9 +1009,7 @@ export function Round1ExamPage() {
       setDialogError(
         error instanceof Error
           ? error.message
-          : locale === "en"
-            ? "Could not start the Round 1 exam right now."
-            : "Hiện không thể bắt đầu bài thi Vòng 1.",
+          : getRound1StartErrorMessage(locale, null),
       );
     } finally {
       setDialogPending(false);
