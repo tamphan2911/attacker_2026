@@ -1,8 +1,6 @@
 import {
   CompetitionStage,
   LeadershipTransferStatus,
-  Round1QuestionDifficulty,
-  Round1QuestionType,
   TeamFinalOutcome,
   Round1TeamLockRequestStatus,
   Round1TestBankType,
@@ -43,7 +41,7 @@ import type {
   UserProfile,
   LeadershipTransferRequest as AppLeadershipTransferRequest,
 } from "@/types/site";
-import { ROUND1_ESSAY_WORD_LIMIT } from "@/lib/round1";
+import { normalizeRound1QuestionsForApp, ROUND1_ESSAY_WORD_LIMIT } from "@/lib/round1";
 
 type UserWithAccounts = User & {
   accounts?: Pick<Account, "provider">[];
@@ -158,36 +156,6 @@ function mapSubmissionSource(
   source: TeamSubmissionResourceSource,
 ): AppTeamSubmission["resourceSource"] {
   return source === TeamSubmissionResourceSource.UPLOAD ? "upload" : "external";
-}
-
-function mapQuestionDifficulty(
-  difficulty: Round1QuestionDifficulty,
-): Round1Question["difficulty"] {
-  switch (difficulty) {
-    case Round1QuestionDifficulty.MEDIUM:
-      return "medium";
-    case Round1QuestionDifficulty.HARD:
-      return "hard";
-    case Round1QuestionDifficulty.EASY:
-    default:
-      return "easy";
-  }
-}
-
-function mapQuestionType(type: Round1QuestionType): Round1Question["type"] {
-  switch (type) {
-    case Round1QuestionType.TRUE_FALSE:
-      return "true-false";
-    case Round1QuestionType.MULTIPLE_CHOICE:
-      return "multiple-choice";
-    case Round1QuestionType.PAIRING:
-      return "pairing";
-    case Round1QuestionType.ESSAY:
-      return "essay";
-    case Round1QuestionType.SINGLE_CHOICE:
-    default:
-      return "single-choice";
-  }
 }
 
 function mapBankType(type: Round1TestBankType): AppRound1TestBank["bankType"] {
@@ -480,12 +448,7 @@ export function serializeTeamSubmission(
 }
 
 export function serializeRound1TestBank(bank: Round1TestBank): AppRound1TestBank {
-  const parsedQuestions = JSON.parse(bank.questions) as Array<
-    Omit<Round1Question, "difficulty" | "type"> & {
-      difficulty: Round1QuestionDifficulty;
-      type: Round1QuestionType;
-    }
-  >;
+  const parsedQuestions = JSON.parse(bank.questions) as Round1Question[];
 
   return {
     id: bank.id,
@@ -506,11 +469,7 @@ export function serializeRound1TestBank(bank: Round1TestBank): AppRound1TestBank
     durationMinutes: bank.durationMinutes,
     wordLimit: mapRound1WordLimit(bank.bankType, bank.wordLimit),
     publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
-    questions: parsedQuestions.map((question) => ({
-      ...question,
-      difficulty: mapQuestionDifficulty(question.difficulty),
-      type: mapQuestionType(question.type),
-    })),
+    questions: normalizeRound1QuestionsForApp(parsedQuestions),
   };
 }
 

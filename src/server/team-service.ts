@@ -29,6 +29,7 @@ import {
   createRound1ExamPaper,
   getRound1ObjectiveScore,
   limitEssayToWordCount,
+  normalizeRound1QuestionsForApp,
   ROUND1_ESSAY_TOTAL,
   ROUND1_ESSAY_WORD_LIMIT,
   ROUND1_TOTAL_QUESTIONS,
@@ -386,7 +387,8 @@ function isRound1AttemptExpired(attempt: Pick<Round1ExamAttempt, "deadlineAt">, 
 
 function parseStoredRound1Questions(rawQuestions: string) {
   try {
-    return JSON.parse(rawQuestions) as Round1Question[];
+    const parsed = JSON.parse(rawQuestions) as Round1Question[];
+    return Array.isArray(parsed) ? normalizeRound1QuestionsForApp(parsed) : [];
   } catch {
     return [];
   }

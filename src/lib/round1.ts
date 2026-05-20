@@ -61,6 +61,50 @@ export const round1QuestionTypeLabels: Record<Round1QuestionType, LocalizedText>
   essay: { en: "Essay", vi: "Tự luận" },
 };
 
+export function normalizeRound1QuestionDifficultyValue(value: unknown): Round1QuestionDifficulty {
+  switch (String(value ?? "").toLowerCase()) {
+    case "medium":
+      return "medium";
+    case "hard":
+      return "hard";
+    case "easy":
+    default:
+      return "easy";
+  }
+}
+
+export function normalizeRound1QuestionTypeValue(value: unknown): Round1QuestionType {
+  switch (String(value ?? "").toLowerCase().replaceAll("_", "-")) {
+    case "true-false":
+      return "true-false";
+    case "multiple-choice":
+      return "multiple-choice";
+    case "pairing":
+      return "pairing";
+    case "essay":
+      return "essay";
+    case "single-choice":
+    default:
+      return "single-choice";
+  }
+}
+
+export function normalizeRound1QuestionForApp<T extends Pick<Round1Question, "difficulty" | "type">>(
+  question: T,
+) {
+  return {
+    ...question,
+    difficulty: normalizeRound1QuestionDifficultyValue(question.difficulty),
+    type: normalizeRound1QuestionTypeValue(question.type),
+  } as Omit<T, "difficulty" | "type"> & Pick<Round1Question, "difficulty" | "type">;
+}
+
+export function normalizeRound1QuestionsForApp<T extends Pick<Round1Question, "difficulty" | "type">>(
+  questions: T[],
+) {
+  return questions.map(normalizeRound1QuestionForApp);
+}
+
 const questionVariants: LocalizedText[] = [
   { en: "Scenario set 01", vi: "Bộ tình huống 01" },
   { en: "Scenario set 02", vi: "Bộ tình huống 02" },

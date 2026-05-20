@@ -1,7 +1,5 @@
 import {
   CompetitionStage,
-  Round1QuestionDifficulty,
-  Round1QuestionType,
   TeamFinalOutcome,
   TeamRound1LockStatus,
   UserRole,
@@ -13,6 +11,9 @@ import { prisma } from "@/lib/db";
 import {
   getRound1PairingValidationIssue,
   getRound1PairingValidationMessage,
+  normalizeRound1QuestionDifficultyValue,
+  normalizeRound1QuestionsForApp,
+  normalizeRound1QuestionTypeValue,
 } from "@/lib/round1";
 import { normalizeLocalizedText, pickText } from "@/lib/site";
 import {
@@ -252,7 +253,7 @@ async function deriveRound1TopicsFromStoredBanks() {
 
   const parsedBanks = banks.map((bank) => {
     try {
-      return { questions: JSON.parse(bank.questions) as Round1Question[] };
+      return { questions: normalizeRound1QuestionsForApp(JSON.parse(bank.questions) as Round1Question[]) };
     } catch {
       return { questions: [] };
     }
@@ -1000,36 +1001,6 @@ export function getDefaultPageContent() {
   return defaultPageContent;
 }
 
-function mapQuestionDifficulty(
-  difficulty: Round1Question["difficulty"],
-): Round1QuestionDifficulty {
-  switch (difficulty) {
-    case "medium":
-      return Round1QuestionDifficulty.MEDIUM;
-    case "hard":
-      return Round1QuestionDifficulty.HARD;
-    case "easy":
-    default:
-      return Round1QuestionDifficulty.EASY;
-  }
-}
-
-function mapQuestionType(type: Round1Question["type"]): Round1QuestionType {
-  switch (type) {
-    case "true-false":
-      return Round1QuestionType.TRUE_FALSE;
-    case "multiple-choice":
-      return Round1QuestionType.MULTIPLE_CHOICE;
-    case "pairing":
-      return Round1QuestionType.PAIRING;
-    case "essay":
-      return Round1QuestionType.ESSAY;
-    case "single-choice":
-    default:
-      return Round1QuestionType.SINGLE_CHOICE;
-  }
-}
-
 function normalizeQuestionForStorage(question: Round1Question) {
   const questionWithoutName = { ...question };
   delete questionWithoutName.name;
@@ -1037,8 +1008,8 @@ function normalizeQuestionForStorage(question: Round1Question) {
   return {
     ...questionWithoutName,
     id: question.id.trim(),
-    difficulty: mapQuestionDifficulty(question.difficulty),
-    type: mapQuestionType(question.type),
+    difficulty: normalizeRound1QuestionDifficultyValue(question.difficulty),
+    type: normalizeRound1QuestionTypeValue(question.type),
   };
 }
 
