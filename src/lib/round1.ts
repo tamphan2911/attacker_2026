@@ -297,6 +297,23 @@ function pickEssayQuestions(bank: Round1TestBank, count: number, random: () => n
   return shuffleArray(expandQuestionPool(essayQuestions, count, random), random).slice(0, count);
 }
 
+export function createRound1EssayPaperQuestions({
+  essayBank,
+  count,
+  startIndex,
+  random,
+}: {
+  essayBank: Round1TestBank;
+  count: number;
+  startIndex: number;
+  random?: () => number;
+}) {
+  const pickRandom = random ?? Math.random;
+  return pickEssayQuestions(essayBank, count, pickRandom).map((question, index) =>
+    createPaperQuestion(question, startIndex + index, false),
+  );
+}
+
 export function createRound1ExamPaper({
   objectiveBank,
   essayBank,
@@ -320,7 +337,12 @@ export function createRound1ExamPaper({
   const orderedObjectiveQuestions = objectiveBank.shuffleQuestions
     ? shuffleArray(objectiveQuestions, pickRandom)
     : objectiveQuestions;
-  const essayQuestions = pickEssayQuestions(essayBank, ROUND1_ESSAY_TOTAL, pickRandom);
+  const essayQuestions = createRound1EssayPaperQuestions({
+    essayBank,
+    count: ROUND1_ESSAY_TOTAL,
+    startIndex: ROUND1_OBJECTIVE_TOTAL,
+    random: pickRandom,
+  });
   const paperQuestions = [
     ...orderedObjectiveQuestions.slice(0, ROUND1_OBJECTIVE_TOTAL),
     ...essayQuestions,

@@ -25,10 +25,13 @@ import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assig
 import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
+  createRound1EssayPaperQuestions,
   createRound1ExamPaper,
   getRound1ObjectiveScore,
   limitEssayToWordCount,
+  ROUND1_ESSAY_TOTAL,
   ROUND1_ESSAY_WORD_LIMIT,
+  ROUND1_TOTAL_QUESTIONS,
   scoreRound1Question,
   type Round1PaperQuestion,
   type Round1QuestionResponse,
@@ -410,6 +413,70 @@ function mapStoredBankToAppBank(
   };
 }
 
+function countEssayPaperQuestions(questions: Round1PaperQuestion[]) {
+  return questions.filter((question) => question.type === "essay").length;
+}
+
+function hasCompleteRound1Paper(questions: Round1PaperQuestion[]) {
+  return questions.length >= ROUND1_TOTAL_QUESTIONS && countEssayPaperQuestions(questions) >= ROUND1_ESSAY_TOTAL;
+}
+
+async function ensureRound1AttemptHasEssayQuestions(
+  tx: Prisma.TransactionClient,
+  attempt: Round1ExamAttempt,
+) {
+  const questions = parseRound1AttemptQuestions(attempt.questions);
+  const essayCount = countEssayPaperQuestions(questions);
+
+  if (hasCompleteRound1Paper(questions)) {
+    return attempt;
+  }
+
+  const missingEssayCount = Math.max(0, ROUND1_ESSAY_TOTAL - essayCount);
+  if (missingEssayCount === 0) {
+    return attempt;
+  }
+
+  const essayBank = await pickRound1Bank(tx, Round1TestBankType.ESSAY);
+  if (!essayBank) {
+    return attempt;
+  }
+
+  const mappedEssayBank = mapStoredBankToAppBank(essayBank, "essay");
+  const usedQuestionIds = new Set(questions.map((question) => question.id));
+  const unusedEssayQuestions = mappedEssayBank.questions.filter(
+    (question) => question.type === "essay" && !usedQuestionIds.has(question.id),
+  );
+  const repairEssayBank = {
+    ...mappedEssayBank,
+    questions: unusedEssayQuestions.length ? unusedEssayQuestions : mappedEssayBank.questions,
+  };
+
+  const appendedEssayQuestions = createRound1EssayPaperQuestions({
+    essayBank: repairEssayBank,
+    count: missingEssayCount,
+    startIndex: questions.length,
+  }).map((question) =>
+    usedQuestionIds.has(question.id)
+      ? { ...question, id: `${question.id}-repair-${randomUUID()}` }
+      : question,
+  );
+
+  if (!appendedEssayQuestions.length) {
+    return attempt;
+  }
+
+  const nextQuestions = [...questions, ...appendedEssayQuestions].map((question, index) => ({
+    ...question,
+    paperOrder: index + 1,
+  }));
+
+  return tx.round1ExamAttempt.update({
+    where: { id: attempt.id },
+    data: { questions: JSON.stringify(nextQuestions) },
+  });
+}
+
 async function pickRound1Bank(
   tx: Prisma.TransactionClient,
   bankType: Round1TestBankType,
@@ -460,8 +527,9 @@ async function finalizeRound1AttemptRecord(
     throw new Error("Round 1 test bank not found while finalizing the attempt.");
   }
 
-  const questions = parseRound1AttemptQuestions(attempt.questions);
-  const answers = sanitizeRound1EssayAnswers(override?.answers ?? parseRound1AttemptAnswers(attempt.answers)) ?? {};
+  const completeAttempt = await ensureRound1AttemptHasEssayQuestions(tx, attempt);
+  const questions = parseRound1AttemptQuestions(completeAttempt.questions);
+  const answers = sanitizeRound1EssayAnswers(override?.answers ?? parseRound1AttemptAnswers(completeAttempt.answers)) ?? {};
 
   const scoreSummary = questions.reduce(
     (result, question) => {
@@ -484,14 +552,14 @@ async function finalizeRound1AttemptRecord(
   const objectiveScore = getRound1ObjectiveScore(rightCount);
   const elapsedMinutes = Math.max(
     1,
-    Math.ceil((Math.min(Date.now(), attempt.deadlineAt.getTime()) - attempt.startedAt.getTime()) / 60000),
+    Math.ceil((Math.min(Date.now(), completeAttempt.deadlineAt.getTime()) - completeAttempt.startedAt.getTime()) / 60000),
   );
 
   const submission = await tx.round1Submission.create({
     data: {
-      bankId: attempt.bankId,
-      teamId: attempt.teamId,
-      userId: attempt.userId,
+      bankId: completeAttempt.bankId,
+      teamId: completeAttempt.teamId,
+      userId: completeAttempt.userId,
       rightCount,
       wrongCount,
       score: objectiveScore,
@@ -507,7 +575,7 @@ async function finalizeRound1AttemptRecord(
   await assignRound1SubmissionToRandomJudge(tx, submission.id);
 
   await tx.round1ExamAttempt.delete({
-    where: { id: attempt.id },
+    where: { id: completeAttempt.id },
   });
 
   return submission;
@@ -1512,7 +1580,8 @@ export async function getRound1ExamState(
       return ok({ attempt: null, submission, autoSubmitted: true });
     }
 
-    return ok({ attempt: serializeRound1AttemptRecord(attempt), submission: null });
+    const completeAttempt = await ensureRound1AttemptHasEssayQuestions(tx, attempt);
+    return ok({ attempt: serializeRound1AttemptRecord(completeAttempt), submission: null });
   });
 }
 
@@ -1551,7 +1620,8 @@ export async function startRound1Attempt(
         return ok({ attempt: null, submission, autoSubmitted: true });
       }
 
-      return ok({ attempt: serializeRound1AttemptRecord(existingAttempt), submission: null });
+      const completeAttempt = await ensureRound1AttemptHasEssayQuestions(tx, existingAttempt);
+      return ok({ attempt: serializeRound1AttemptRecord(completeAttempt), submission: null });
     }
 
     const objectiveBank = await pickRound1Bank(tx, Round1TestBankType.OBJECTIVE);
@@ -1569,6 +1639,10 @@ export async function startRound1Attempt(
       essayBank: mapStoredBankToAppBank(essayBank, "essay"),
       topics: round1Topics,
     });
+
+    if (!hasCompleteRound1Paper(questions)) {
+      return fail(409, "Round 1 test bank must generate 36 multiple-choice questions and 2 essay questions.");
+    }
 
     const attempt = await tx.round1ExamAttempt.create({
       data: {

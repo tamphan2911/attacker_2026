@@ -1,6 +1,7 @@
 import { UserRole, type Prisma } from "@prisma/client";
 
 import { judgeProfiles } from "@/data/site-content";
+import { syncJudgeAccounts } from "@/server/judge-accounts";
 import type { JudgeProfile } from "@/types/site";
 
 type AssignmentDb = Pick<
@@ -9,6 +10,16 @@ type AssignmentDb = Pick<
 >;
 
 const JUDGES_SCOPE = "site-judges";
+let judgeAccountsSynced = false;
+
+async function ensureJudgeAccountsSynced() {
+  if (judgeAccountsSynced) {
+    return;
+  }
+
+  await syncJudgeAccounts();
+  judgeAccountsSynced = true;
+}
 
 function parseStoredJudges(payload: string | null | undefined): JudgeProfile[] {
   if (!payload) {
@@ -64,6 +75,8 @@ export async function assignRound1SubmissionToRandomJudge(
   if (existingAssignment) {
     return existingAssignment;
   }
+
+  await ensureJudgeAccountsSynced();
 
   const judgeUserIds = await readRound1JudgeUserIds(db);
   if (judgeUserIds.length === 0) {
