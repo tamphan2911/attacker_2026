@@ -2458,20 +2458,37 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     const targetMember = users.find((user) => user.id === memberId);
     const trimmedReason = reason.trim();
 
-    if (!team || team.leaderId !== activeUserId) {
-      pushToast(
-        {
-          en: "Only the team leader can remove team members.",
+	    if (!team || team.leaderId !== activeUserId) {
+	      pushToast(
+	        {
+	          en: "Only the team leader can remove team members.",
           vi: "Chỉ đội trưởng mới có thể đưa thành viên ra khỏi đội.",
         },
         "warning",
       );
-      return false;
-    }
+	      return false;
+	    }
 
-    if (!targetMember || !team.memberIds.includes(memberId) || memberId === team.leaderId) {
-      pushToast(
-        {
+	    if (isTeamRosterLocked(team)) {
+	      pushToast(
+	        {
+	          en:
+	            team.round1LockStatus === "pending"
+	              ? "Members cannot be removed while the Round 1 lock workflow is pending."
+	              : "Members can no longer be removed after the team roster is locked.",
+	          vi:
+	            team.round1LockStatus === "pending"
+	              ? "Không thể đưa thành viên ra khỏi đội khi quy trình khóa đội cho Vòng 1 vẫn đang chờ xác nhận."
+	              : "Không thể đưa thành viên ra khỏi đội sau khi đội hình đã bị khóa.",
+	        },
+	        "warning",
+	      );
+	      return false;
+	    }
+
+	    if (!targetMember || !team.memberIds.includes(memberId) || memberId === team.leaderId) {
+	      pushToast(
+	        {
           en: "Choose a current non-leader member to remove.",
           vi: "Hãy chọn một thành viên hiện tại không phải đội trưởng.",
         },

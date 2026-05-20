@@ -1060,6 +1060,10 @@ export async function kickTeamMember(
       return fail(403, "Only the team leader can remove team members.");
     }
 
+    if (isTeamRosterLocked(team)) {
+      return fail(409, "Team members can no longer be removed after the team roster is locked.");
+    }
+
     if (targetUserId === actorId || targetUserId === team.leaderId) {
       return fail(400, "The team leader cannot be removed from the team.");
     }

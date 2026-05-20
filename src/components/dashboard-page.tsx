@@ -1366,8 +1366,8 @@ export function DashboardPage() {
                     </div>
                   </div>
 
-                  {isLeader ? (
-                    <div className="rounded-[1.5rem] border border-rose-400/22 bg-[linear-gradient(135deg,rgba(244,63,94,0.1),rgba(255,255,255,0.72))] px-4 py-4 shadow-[0_18px_44px_rgba(244,63,94,0.08)] dark:bg-[linear-gradient(135deg,rgba(244,63,94,0.14),rgba(15,23,42,0.76))]">
+	                  {isLeader && !teamRosterLocked ? (
+	                    <div className="rounded-[1.5rem] border border-rose-400/22 bg-[linear-gradient(135deg,rgba(244,63,94,0.1),rgba(255,255,255,0.72))] px-4 py-4 shadow-[0_18px_44px_rgba(244,63,94,0.08)] dark:bg-[linear-gradient(135deg,rgba(244,63,94,0.14),rgba(15,23,42,0.76))]">
                       <div className="flex items-start gap-3">
                         <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] border border-rose-400/24 bg-rose-400/12 text-rose-700 dark:text-rose-100">
                           <UserMinus2 className="h-5 w-5" />
