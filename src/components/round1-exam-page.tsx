@@ -1739,24 +1739,31 @@ export function Round1ExamPage() {
             </div>
           </div>
 
-          {currentQuestion ? (
-            <div className="pt-6">
-              <div className="flex flex-wrap items-center gap-3">
-                <StatusPill>{currentQuestion.topic}</StatusPill>
-                <StatusPill>{pickRound1TypeLabel(locale, currentQuestion.type)}</StatusPill>
-                <StatusPill tone={currentQuestion.type === "essay" ? "warning" : "success"}>
-                  {locale === "en"
+	              {currentQuestion ? (
+	            <div className="pt-6">
+	              <div className="flex flex-wrap items-center gap-3">
+	                <StatusPill>{pickRound1TypeLabel(locale, currentQuestion.type)}</StatusPill>
+	                <StatusPill tone={currentQuestion.type === "essay" ? "warning" : "success"}>
+	                  {locale === "en"
                     ? `${currentQuestionPointValue} points`
                     : `${currentQuestionPointValue} điểm`}
                 </StatusPill>
               </div>
 
-              <p className="mt-6 text-2xl font-semibold leading-10 theme-text-strong">
-                {pickRound1QuestionText(currentQuestion.prompt)}
-              </p>
+	              <p className="mt-6 text-2xl font-semibold leading-10 theme-text-strong">
+	                {pickRound1QuestionText(currentQuestion.prompt)}
+	              </p>
 
-              {(currentQuestion.type === "true-false" || currentQuestion.type === "single-choice") &&
-              currentQuestion.options ? (
+	              {currentQuestion.type === "essay" ? (
+	                <div className="mt-5 rounded-[1.35rem] border border-sky-700/18 bg-[linear-gradient(135deg,rgba(224,242,254,0.9),rgba(219,234,254,0.72))] px-4 py-3.5 text-sm leading-7 text-slate-900 shadow-[0_14px_34px_rgba(14,116,144,0.08)] dark:border-sky-300/18 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.16),rgba(37,99,235,0.12))] dark:text-sky-100">
+	                  {locale === "en"
+	                    ? `The essay answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words and no more than ${round1WordLimit} words.`
+	                    : `Câu trả lời tự luận cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ và không vượt quá ${round1WordLimit} từ.`}
+	                </div>
+	              ) : null}
+
+	              {(currentQuestion.type === "true-false" || currentQuestion.type === "single-choice") &&
+	              currentQuestion.options ? (
                 <div className="mt-8 space-y-3">
                   {currentQuestion.options.map((option) => {
                     const isSelected = currentResponse?.selectedOptionIds?.[0] === option.id;
@@ -1929,40 +1936,10 @@ export function Round1ExamPage() {
                 </div>
               ) : null}
 
-              {currentQuestion.type === "essay" ? (
-                <div className="mt-8 space-y-4">
-                  <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
-                      {locale === "en" ? "Response guidance" : "Hướng dẫn trả lời"}
-                    </p>
-                    <p className="mt-3 text-sm leading-7 theme-text-muted">
-                      {pickRound1QuestionText(currentQuestion.rubricNote ?? { en: "", vi: "" })}
-                    </p>
-                    <p className="mt-3 rounded-[1.15rem] border border-sky-500/18 bg-sky-500/10 px-4 py-3 text-sm leading-7 text-slate-800 dark:border-sky-300/18 dark:bg-sky-300/10 dark:text-sky-100">
-                      {locale === "en"
-                        ? `This essay answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words and no more than ${round1WordLimit} words. The counter below updates while you type.`
-                        : `Câu trả lời tự luận này cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ và không vượt quá ${round1WordLimit} từ. Bộ đếm bên dưới sẽ cập nhật khi bạn nhập.`}
-                    </p>
-                    <div className="mt-4 flex flex-wrap items-center gap-3">
-                      <StatusPill tone={currentEssayMeetsMinimum ? "success" : "warning"}>
-                        {locale === "en"
-                          ? `More than ${ROUND1_ESSAY_MIN_WORDS - 1} words required`
-                          : `Cần hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ`}
-                      </StatusPill>
-                      <StatusPill tone="warning">
-                        {locale === "en"
-                          ? `${round1WordLimit} words maximum`
-                          : `Tối đa ${round1WordLimit} từ`}
-                      </StatusPill>
-                      <span className="text-xs uppercase tracking-[0.18em] theme-text-soft">
-                        {locale === "en"
-                          ? "Essay questions stay at the end of the paper"
-                          : "Các câu tự luận luôn nằm ở cuối đề"}
-                      </span>
-                    </div>
-                  </div>
-                  <textarea
-                    data-round1-essay-answer="true"
+	              {currentQuestion.type === "essay" ? (
+	                <div className="mt-8 space-y-4">
+	                  <textarea
+	                    data-round1-essay-answer="true"
                     rows={8}
                     value={currentResponse?.essayText ?? ""}
                     placeholder={pickRound1QuestionText(
