@@ -73,6 +73,8 @@ type AttemptStateResponse = {
 type DialogMode = "start" | "submit" | null;
 type Round1WindowAvailability = "not-started" | "open" | "closed";
 
+const ROUND1_SUBMITTED_DASHBOARD_URL = "/dashboard?round1=submitted";
+
 function startOfVietnamDay(value: string) {
   return new Date(`${value}T00:00:00.000+07:00`);
 }
@@ -548,7 +550,7 @@ export function Round1ExamPage() {
     (payload: AttemptStateResponse) => {
       if (payload.submission) {
         setResolvedSubmission(payload.submission);
-        window.location.assign("/dashboard#round1-result");
+        window.location.assign(ROUND1_SUBMITTED_DASHBOARD_URL);
         return true;
       }
 
@@ -582,6 +584,12 @@ export function Round1ExamPage() {
   useEffect(() => {
     submissionRef.current = existingSubmission ?? null;
   }, [existingSubmission]);
+
+  useEffect(() => {
+    if (hasHydrated && isAuthenticated && isStudent && existingSubmission && !session) {
+      window.location.replace(ROUND1_SUBMITTED_DASHBOARD_URL);
+    }
+  }, [existingSubmission, hasHydrated, isAuthenticated, isStudent, session]);
 
   const showCaptureWarning = useCallback(() => {
     const message =
@@ -633,7 +641,7 @@ export function Round1ExamPage() {
         setAttemptState("ready");
 
         if (payload.submission && (payload.autoSubmitted || !providerSubmission)) {
-          window.location.assign("/dashboard#round1-result");
+          window.location.assign(ROUND1_SUBMITTED_DASHBOARD_URL);
         }
       } catch {
         if (!cancelled) {
@@ -690,7 +698,7 @@ export function Round1ExamPage() {
       if (payload.submission) {
         setResolvedSubmission(payload.submission);
         setSession(null);
-        window.location.assign("/dashboard#round1-result");
+        window.location.assign(ROUND1_SUBMITTED_DASHBOARD_URL);
       }
     },
     [locale],
@@ -895,7 +903,7 @@ export function Round1ExamPage() {
           );
         }
 
-        window.location.assign("/dashboard#round1-result");
+        window.location.assign(ROUND1_SUBMITTED_DASHBOARD_URL);
       } catch (error) {
         setDialogError(
           error instanceof Error

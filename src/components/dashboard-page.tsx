@@ -240,6 +240,7 @@ export function DashboardPage() {
     "round-2": createSubmissionFormState(),
     "round-3": createSubmissionFormState(),
   });
+  const [hasRound1SubmittedRedirect, setHasRound1SubmittedRedirect] = useState(false);
   const sentInvitations = currentTeam
     ? invitations.filter(
         (invitation) => invitation.teamId === currentTeam.id && invitation.status === "pending",
@@ -261,6 +262,11 @@ export function DashboardPage() {
     setPendingKickMemberId(null);
     setKickReason("");
   }, [currentTeam?.id]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setHasRound1SubmittedRedirect(params.get("round1") === "submitted");
+  }, []);
 
   useEffect(() => {
     setLeadershipTargetId("");
@@ -525,6 +531,7 @@ export function DashboardPage() {
     ? submissions.filter((submission) => submission.teamId === currentTeam.id)
     : [];
   const currentRound1Submission = round1Submissions.find((submission) => submission.userId === activeUserId);
+  const showRound1SubmittedNotice = hasRound1SubmittedRedirect && Boolean(currentRound1Submission);
   const currentTeamRound1LockRequests =
     currentTeam?.round1LockProtocolId
       ? teamLockRequests.filter(
@@ -1290,6 +1297,34 @@ export function DashboardPage() {
                           })}
                         </div>
                       ) : null}
+                    </div>
+                  ) : null}
+                  {showRound1SubmittedNotice ? (
+                    <div className="mt-4 max-w-4xl rounded-[1.45rem] border border-sky-700/18 bg-[linear-gradient(135deg,rgba(224,242,254,0.92),rgba(219,234,254,0.78))] px-4 py-4 text-slate-950 shadow-[0_18px_42px_rgba(14,116,144,0.10)] dark:border-sky-300/22 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.16),rgba(37,99,235,0.12))] dark:text-sky-100 dark:shadow-none">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex min-w-0 items-start gap-3">
+                          <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-sky-600/18 bg-white/68 text-sky-700 shadow-[0_12px_28px_rgba(14,116,144,0.10)] dark:border-sky-200/18 dark:bg-white/10 dark:text-sky-100 dark:shadow-none">
+                            <ShieldCheck className="h-4.5 w-4.5" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold">
+                              {locale === "en" ? "Round 1 test already completed" : "Bạn đã hoàn tất bài thi Vòng 1"}
+                            </p>
+                            <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-sky-100/78">
+                              {locale === "en"
+                                ? "Each participant can take Round 1 only once. You can review the saved result in the Round 1 result block below."
+                                : "Mỗi thí sinh chỉ được làm bài Vòng 1 một lần. Bạn có thể xem kết quả đã lưu tại khối Kết quả Vòng 1 bên dưới."}
+                            </p>
+                          </div>
+                        </div>
+                        <a
+                          href="#round1-result"
+                          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-sky-700/18 bg-white/72 px-3.5 py-2 text-xs font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-white active:translate-y-0 dark:border-sky-200/18 dark:bg-white/10 dark:text-sky-50 dark:hover:bg-white/14"
+                        >
+                          <ArrowRight className="h-3.5 w-3.5" />
+                          {locale === "en" ? "Open result" : "Xem kết quả"}
+                        </a>
+                      </div>
                     </div>
                   ) : null}
                 </div>
