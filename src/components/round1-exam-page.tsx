@@ -1898,7 +1898,7 @@ export function Round1ExamPage() {
                           {item.displayLabel}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm leading-7 theme-text-body">
+                          <p className="text-[0.95rem] leading-7 theme-text-body">
                             {pickRound1QuestionText(item.prompt)}
                           </p>
                           <label className="mt-4 block space-y-2">
