@@ -392,7 +392,9 @@ export function AuthPage() {
     confirmPassword: "",
   });
   const [isUniversityMenuOpen, setIsUniversityMenuOpen] = useState(false);
+  const [isClassYearMenuOpen, setIsClassYearMenuOpen] = useState(false);
   const universityMenuRef = useRef<HTMLDivElement | null>(null);
+  const classYearMenuRef = useRef<HTMLDivElement | null>(null);
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
 
@@ -400,6 +402,10 @@ export function AuthPage() {
     const handlePointerDown = (event: MouseEvent) => {
       if (!universityMenuRef.current?.contains(event.target as Node)) {
         setIsUniversityMenuOpen(false);
+      }
+
+      if (!classYearMenuRef.current?.contains(event.target as Node)) {
+        setIsClassYearMenuOpen(false);
       }
     };
 
@@ -520,6 +526,12 @@ export function AuthPage() {
 
     return normalizeSearch(entry.en) === keyword || normalizeSearch(entry.vi) === keyword;
   });
+  const selectedClassYearOption = classYearOptions.find((option) => option.value === registerForm.classYear);
+  const selectedClassYearLabel = selectedClassYearOption
+    ? pickText(locale, selectedClassYearOption.label)
+    : locale === "en"
+      ? "Choose class year"
+      : "Chọn năm học";
 
   const modeHelperText = {
     signin: {
@@ -741,6 +753,7 @@ export function AuthPage() {
     setSigninActionHref(null);
     setSigninActionLabel(null);
     setIsUniversityMenuOpen(false);
+    setIsClassYearMenuOpen(false);
     setIsSigninPasswordVisible(false);
     setIsRegisterPasswordVisible(false);
     setIsRegisterConfirmPasswordVisible(false);
@@ -749,6 +762,11 @@ export function AuthPage() {
   const applyUniversityValue = (value: string) => {
     setRegisterForm((current) => ({ ...current, university: value }));
     setIsUniversityMenuOpen(false);
+  };
+
+  const applyClassYearValue = (value: string) => {
+    setRegisterForm((current) => ({ ...current, classYear: value }));
+    setIsClassYearMenuOpen(false);
   };
 
   const handleSignInSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -1057,23 +1075,56 @@ export function AuthPage() {
 
                   <label className="space-y-2">
 	                    <span className="text-sm theme-text-muted">{requiredFieldLabel(locale === "en" ? "Class year" : "Năm học")}</span>
-                    <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
-                      <CalendarDays className="mr-3 h-4 w-4 theme-text-faint" />
-                      <select
-                        value={registerForm.classYear}
-                        onChange={handleRegisterFieldChange("classYear")}
-                        className={`${authFieldClassName} theme-admin-select`}
-                        required
+                    <div ref={classYearMenuRef} className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsClassYearMenuOpen((current) => !current)}
+                        className="flex w-full items-center rounded-2xl border theme-border theme-panel px-4 py-3.5 text-left outline-none transition hover:border-sky-400/32 focus:border-sky-400/44 focus:ring-4 focus:ring-sky-400/12"
+                        aria-haspopup="listbox"
+                        aria-expanded={isClassYearMenuOpen}
                       >
-                        <option value="">
-                          {locale === "en" ? "Choose class year" : "Chọn năm học"}
-                        </option>
-                        {classYearOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {pickText(locale, option.label)}
-                          </option>
-                        ))}
-                      </select>
+                        <CalendarDays className="mr-3 h-4 w-4 theme-text-faint" />
+                        <span className={`min-w-0 flex-1 truncate text-sm ${selectedClassYearOption ? "theme-text-strong" : "theme-text-faint"}`}>
+                          {selectedClassYearLabel}
+                        </span>
+                        <span className="theme-panel-subtle theme-text-soft ml-3 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border theme-border transition hover:bg-[var(--panel-strong)]">
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform ${
+                              isClassYearMenuOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </span>
+                      </button>
+
+                      {isClassYearMenuOpen ? (
+                        <div className="theme-auth-university-menu theme-panel-strong absolute left-0 right-0 top-[calc(100%+0.6rem)] z-20 rounded-[1.4rem] border theme-border p-2 shadow-[0_22px_55px_rgba(15,23,42,0.14)]">
+                          <div className="max-h-64 space-y-1 overflow-y-auto pr-1" role="listbox">
+                            {classYearOptions.map((option) => {
+                              const label = pickText(locale, option.label);
+                              const isSelected = registerForm.classYear === option.value;
+
+                              return (
+                                <button
+                                  key={option.value}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={isSelected}
+                                  onMouseDown={(event) => event.preventDefault()}
+                                  onClick={() => applyClassYearValue(option.value)}
+                                  className={`flex w-full items-center justify-between rounded-[1rem] px-3 py-3 text-left text-sm transition hover:bg-[rgba(23,114,208,0.06)] ${
+                                    isSelected ? "bg-[rgba(23,114,208,0.08)]" : ""
+                                  }`}
+                                >
+                                  <span className="theme-text-strong">{label}</span>
+                                  <span className="text-[11px] uppercase tracking-[0.22em] theme-text-faint">
+                                    {isSelected ? (locale === "en" ? "Selected" : "Đã chọn") : locale === "en" ? "Pick" : "Chọn"}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
                   </label>
 

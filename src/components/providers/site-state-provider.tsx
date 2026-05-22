@@ -2147,7 +2147,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (!targetUser || targetUser.role !== "student") {
+    if (targetUser && targetUser.role !== "student") {
       pushToast(
         {
           en: "Only student accounts can receive team invitations.",
