@@ -1805,7 +1805,7 @@ export function Round1ExamPage() {
                           <div className="theme-panel-strong flex h-9 w-9 shrink-0 items-center justify-center rounded-full border theme-border text-sm font-semibold theme-text-strong">
                             {option.displayLabel}
                           </div>
-                          <p className="text-sm leading-7 theme-text-body">
+                          <p className="text-lg leading-8 theme-text-body">
                             {pickRound1QuestionText(option.text)}
                           </p>
                         </div>
@@ -1863,7 +1863,7 @@ export function Round1ExamPage() {
                             {option.displayLabel}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm leading-7 theme-text-body">
+                            <p className="text-lg leading-8 theme-text-body">
                               {pickRound1QuestionText(option.text)}
                             </p>
                             {isSelected ? (
