@@ -1465,7 +1465,7 @@ export function Round1ExamPage() {
                     body:
                       locale === "en"
                         ? `${ROUND1_ESSAY_TOTAL} essay questions stay at the end of the paper. Each answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words, cannot exceed ${round1WordLimit} words, and is reviewed manually later.`
-                        : `${ROUND1_ESSAY_TOTAL} câu tự luận luôn nằm ở cuối đề. Mỗi câu trả lời cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ, không vượt quá ${round1WordLimit} từ và sẽ được chấm thủ công sau đó.`,
+                        : `Gồm ${ROUND1_ESSAY_TOTAL} câu ở cuối đề, yêu cầu trình bày ý tưởng rõ ràng trong khoảng ${ROUND1_ESSAY_MIN_WORDS - 1}–${round1WordLimit} từ mỗi câu.`,
                   },
                   {
                     icon: <ShieldCheck className="h-5 w-5 text-amber-300" />,
