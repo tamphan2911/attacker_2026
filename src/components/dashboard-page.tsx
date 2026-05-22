@@ -1555,8 +1555,8 @@ export function DashboardPage() {
                           </button>
 
                           {isKickMenuOpen ? (
-                            <div className="theme-auth-university-menu theme-panel-strong absolute left-0 right-0 top-[calc(100%+0.55rem)] z-30 rounded-[1.35rem] border theme-border p-2 shadow-[0_22px_55px_rgba(15,23,42,0.14)]">
-                              <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                            <div className="theme-auth-university-menu theme-panel-strong relative z-20 mt-2 rounded-[1.35rem] border theme-border p-2 shadow-[0_18px_42px_rgba(15,23,42,0.12)]">
+                              <div className="max-h-52 space-y-1 overflow-y-auto overscroll-contain pr-1">
                                 {kickMemberOptions.length > 0 ? (
                                   kickMemberOptions.map((member) => (
                                     <button
