@@ -14,6 +14,7 @@ import {
   LogOut,
   MailPlus,
   Phone,
+  PlayCircle,
   Search,
   ShieldCheck,
   Undo2,
@@ -88,6 +89,12 @@ interface SubmissionFormState {
   title: string;
   summary: string;
   resourceFile: File | null;
+}
+
+interface ActiveRound1AttemptSummary {
+  id: string;
+  teamId: string;
+  deadlineAt: string;
 }
 
 function createTeamFormState(team?: TeamProfile): TeamFormState {
@@ -241,6 +248,7 @@ export function DashboardPage() {
     "round-3": createSubmissionFormState(),
   });
   const [hasRound1SubmittedRedirect, setHasRound1SubmittedRedirect] = useState(false);
+  const [activeRound1Attempt, setActiveRound1Attempt] = useState<ActiveRound1AttemptSummary | null>(null);
   const sentInvitations = currentTeam
     ? invitations.filter(
         (invitation) => invitation.teamId === currentTeam.id && invitation.status === "pending",
@@ -250,6 +258,8 @@ export function DashboardPage() {
   const teamRosterLocked = Boolean(currentTeam && isTeamRosterLocked(currentTeam));
   const isTeamFull = Boolean(currentTeam && currentTeam.memberIds.length >= TEAM_MAX_MEMBERS);
   const inviteSearchKeyword = inviteSearch.trim();
+  const currentTeamId = currentTeam?.id;
+  const currentTeamStage = currentTeam?.stage;
 
   useEffect(() => {
     setTeamForm(createTeamFormState(currentTeam));
@@ -267,6 +277,85 @@ export function DashboardPage() {
     const params = new URLSearchParams(window.location.search);
     setHasRound1SubmittedRedirect(params.get("round1") === "submitted");
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || currentUser.role !== "student" || !currentTeamId || currentTeamStage !== "round-1") {
+      setActiveRound1Attempt(null);
+      return;
+    }
+
+    let cancelled = false;
+    const controller = new AbortController();
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/round-1/attempt", {
+          cache: "no-store",
+          credentials: "same-origin",
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error("Could not load the active Round 1 attempt.");
+        }
+
+        const payload = (await response.json()) as {
+          attempt?: Partial<ActiveRound1AttemptSummary> | null;
+        };
+        const attempt = payload.attempt;
+        const deadlineMs = attempt?.deadlineAt ? new Date(attempt.deadlineAt).getTime() : Number.NaN;
+
+        if (cancelled) {
+          return;
+        }
+
+        setActiveRound1Attempt(
+          attempt?.id &&
+            attempt.teamId === currentTeamId &&
+            attempt.deadlineAt &&
+            Number.isFinite(deadlineMs) &&
+            deadlineMs > Date.now()
+            ? {
+                id: attempt.id,
+                teamId: currentTeamId,
+                deadlineAt: attempt.deadlineAt,
+              }
+            : null,
+        );
+      } catch (error) {
+        if (!cancelled && !(error instanceof DOMException && error.name === "AbortError")) {
+          setActiveRound1Attempt(null);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, [activeUserId, currentTeamId, currentTeamStage, currentUser.role, isAuthenticated]);
+
+  useEffect(() => {
+    if (!activeRound1Attempt) {
+      return;
+    }
+
+    const deadlineMs = new Date(activeRound1Attempt.deadlineAt).getTime();
+    const msUntilExpiry = deadlineMs - Date.now();
+
+    if (!Number.isFinite(deadlineMs) || msUntilExpiry <= 0) {
+      setActiveRound1Attempt(null);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setActiveRound1Attempt(null);
+    }, Math.min(msUntilExpiry + 1000, 2_147_483_647));
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [activeRound1Attempt]);
 
   useEffect(() => {
     setLeadershipTargetId("");
@@ -1271,7 +1360,8 @@ export function DashboardPage() {
                             const roundLabel = pickRoundLabel(locale, target.round);
 
                             return (
-                              <div key={target.round} className="group relative">
+                              <div key={target.round} className="contents">
+                                <div className="group relative">
                                 <button
                                   type="button"
                                   aria-label={
@@ -1291,7 +1381,22 @@ export function DashboardPage() {
                                   {locale === "en"
                                     ? `Scroll to ${roundLabel}`
                                     : `Cuộn tới ${roundLabel}`}
-                                </span>
+                                  </span>
+                                </div>
+                                {target.round === "round-1" && activeRound1Attempt ? (
+                                  <Link
+                                    href="/round-1"
+                                    className="relative inline-flex items-center gap-1.5 rounded-full border border-sky-200/70 bg-[linear-gradient(135deg,#38bdf8,#2563eb)] px-3.5 py-2 text-[0.72rem] font-bold text-white shadow-[0_16px_34px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_42px_rgba(37,99,235,0.36)] active:translate-y-0 dark:border-sky-200/20"
+                                    aria-label={locale === "en" ? "Continue your active Round 1 test" : "Tiếp tục bài thi Vòng 1 đang làm"}
+                                  >
+                                    <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-amber-300 shadow-[0_0_0_4px_rgba(251,191,36,0.24)]" />
+                                    <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/18">
+                                      <PlayCircle className="h-3.5 w-3.5" />
+                                    </span>
+                                    <span>{locale === "en" ? "Continue test" : "Tiếp tục bài thi"}</span>
+                                    <ArrowRight className="h-3.5 w-3.5" />
+                                  </Link>
+                                ) : null}
                               </div>
                             );
                           })}
