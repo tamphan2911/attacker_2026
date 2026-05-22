@@ -1454,7 +1454,7 @@ export function Round1ExamPage() {
                     body:
                       locale === "en"
                         ? `${ROUND1_OBJECTIVE_TOTAL} questions: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} per topic across ${ROUND1_TOPIC_COUNT} topics, with 2 easy, 2 medium, and 2 hard questions in each topic.`
-                        : `${ROUND1_OBJECTIVE_TOTAL} câu: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu trên mỗi chủ đề trong ${ROUND1_TOPIC_COUNT} chủ đề, gồm 2 câu dễ, 2 câu trung bình và 2 câu khó cho từng chủ đề.`,
+                        : `${ROUND1_OBJECTIVE_TOTAL} câu, chia thành ${ROUND1_TOPIC_COUNT} chủ đề. Mỗi chủ đề có ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu gồm: 2 câu dễ, 2 câu trung bình, 2 câu khó.`,
                   },
                   {
                     icon: <BookText className="h-5 w-5 text-emerald-300" />,
