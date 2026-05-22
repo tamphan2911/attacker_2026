@@ -1187,7 +1187,7 @@ export function Round1ExamPage() {
       <div className="space-y-8">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
           <ArrowLeft className="h-4 w-4" />
-          {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
+          {locale === "en" ? "Back to Team Workspace" : "Quay lại Đội thi"}
         </Link>
 
         <Surface className="px-6 py-6 md:px-8 md:py-8">
@@ -1196,7 +1196,7 @@ export function Round1ExamPage() {
             title={
               locale === "en"
                 ? "This attempt is locked. View the result in Team Workspace."
-                : "Bài làm này đã được khóa. Hãy xem kết quả trong Không gian đội."
+                : "Bài làm này đã được khóa. Hãy xem kết quả trong Đội thi."
             }
             description={
               locale === "en"
@@ -1233,10 +1233,10 @@ export function Round1ExamPage() {
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/dashboard#round1-result" className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold">
               <ArrowRight className="h-4 w-4" />
-              {locale === "en" ? "Open Round 1 result in Team Workspace" : "Mở kết quả Vòng 1 trong Không gian đội"}
+              {locale === "en" ? "Open Round 1 result in Team Workspace" : "Mở kết quả Vòng 1 trong Đội thi"}
             </Link>
             <Link href="/dashboard" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
-              {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
+              {locale === "en" ? "Back to Team Workspace" : "Quay lại Đội thi"}
             </Link>
           </div>
         </Surface>
@@ -1281,7 +1281,7 @@ export function Round1ExamPage() {
           }
         />
         <Link href="/dashboard" className="theme-button-primary mt-6 inline-flex rounded-full px-5 py-3 text-sm font-semibold">
-          {locale === "en" ? "Go to Team Workspace" : "Đến Không gian đội"}
+          {locale === "en" ? "Go to Team Workspace" : "Đến Đội thi"}
         </Link>
       </Surface>
     );
@@ -1307,7 +1307,7 @@ export function Round1ExamPage() {
           <div className="mt-6 flex flex-wrap gap-3">
             <StatusPill tone="success">{pickCompetitionStateLabel(locale, currentCompetitionState)}</StatusPill>
             <Link href="/dashboard" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
-              {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
+              {locale === "en" ? "Back to Team Workspace" : "Quay lại Đội thi"}
             </Link>
           </div>
         </Surface>
@@ -1337,7 +1337,7 @@ export function Round1ExamPage() {
               </StatusPill>
             ) : null}
             <Link href="/dashboard" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
-              {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
+              {locale === "en" ? "Back to Team Workspace" : "Quay lại Đội thi"}
             </Link>
           </div>
         </Surface>
@@ -1409,7 +1409,7 @@ export function Round1ExamPage() {
         <div className="space-y-8">
           <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
             <ArrowLeft className="h-4 w-4" />
-            {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
+            {locale === "en" ? "Back to Team Workspace" : "Quay lại Đội thi"}
           </Link>
 
           {pageError ? (
@@ -1432,7 +1432,7 @@ export function Round1ExamPage() {
               <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted md:text-base">
                 {locale === "en"
                   ? "Each student receives 36 objective questions generated from 6 topics and 2 essay questions placed at the end. The timer runs for 60 minutes, the exam cannot be paused, and the result returns to Team Workspace after submission."
-                  : "Mỗi thí sinh nhận 36 câu trắc nghiệm được tạo từ 6 chủ đề và 2 câu tự luận luôn đặt ở cuối đề. Đồng hồ chạy trong 60 phút, bài thi không thể tạm dừng và kết quả sẽ quay về Không gian đội sau khi nộp."}
+                  : "Mỗi thí sinh nhận 36 câu trắc nghiệm được tạo từ 6 chủ đề và 2 câu tự luận luôn đặt ở cuối đề. Đồng hồ chạy trong 60 phút, bài thi không thể tạm dừng và kết quả sẽ quay về Đội thi sau khi nộp."}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 <StatusPill>{`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
@@ -1684,7 +1684,7 @@ export function Round1ExamPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
           <ArrowLeft className="h-4 w-4" />
-          {locale === "en" ? "Back to Team Workspace" : "Quay lại Không gian đội"}
+          {locale === "en" ? "Back to Team Workspace" : "Quay lại Đội thi"}
         </Link>
         <div className="flex flex-wrap gap-2">
           <StatusPill>{`#${currentTeam!.tag}`}</StatusPill>

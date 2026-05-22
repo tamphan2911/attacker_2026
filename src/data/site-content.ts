@@ -674,7 +674,7 @@ export const heroCopy = {
     en: "A bilingual competition platform for algorithmic thinking, product strategy, and venture-ready execution. Built for modern students, mentors, and organizers.",
     vi: "Một nền tảng song ngữ cho cuộc thi kết hợp tư duy giao dịch thuật toán, chiến lược sản phẩm và khả năng triển khai như một startup. Được thiết kế cho sinh viên, mentor và ban tổ chức hiện đại.",
   },
-  primaryCta: { en: "Start team workspace", vi: "Mở không gian đội" },
+  primaryCta: { en: "Start team workspace", vi: "Mở Đội thi" },
   secondaryCta: { en: "Explore competition", vi: "Khám phá cuộc thi" },
   panelTitle: { en: "Why this concept works", vi: "Vì sao concept này phù hợp" },
   panelItems: [
@@ -1039,7 +1039,7 @@ export const defaultPageContent: SitePageContent = {
       },
       description: {
         en: "The public site, the newsroom, and the team workspace already share one consistent structure, so the backend phase can focus on data and permissions instead of redesign.",
-        vi: "Trang công khai, newsroom và không gian đội đã chia sẻ cùng một cấu trúc nhất quán, để giai đoạn backend sau này có thể tập trung vào dữ liệu và phân quyền thay vì thiết kế lại.",
+        vi: "Trang công khai, newsroom và Đội thi đã chia sẻ cùng một cấu trúc nhất quán, để giai đoạn backend sau này có thể tập trung vào dữ liệu và phân quyền thay vì thiết kế lại.",
       },
     },
   },
@@ -1777,7 +1777,7 @@ export const defaultPageContent: SitePageContent = {
   },
   workspace: {
     header: {
-      eyebrow: { en: "Team workspace", vi: "Không gian đội" },
+      eyebrow: { en: "Team workspace", vi: "Đội thi" },
       title: {
         en: "Team identity, members, invitations, and submission flow in one place.",
         vi: "Nhận diện đội, thành viên, lời mời và luồng nộp bài trong cùng một nơi.",
@@ -3044,7 +3044,7 @@ export const timelineItems: TimelineItem[] = [
     },
     location: {
       en: "Online team workspace",
-      vi: "Không gian đội trực tuyến",
+      vi: "Đội thi trực tuyến",
     },
     method: {
       en: "Roster freeze and team lock confirmation on platform",
@@ -3113,7 +3113,7 @@ export const timelineItems: TimelineItem[] = [
     },
     location: {
       en: "Team workspace submission center",
-      vi: "Trung tâm nộp bài trong không gian đội",
+      vi: "Trung tâm nộp bài trong Đội thi",
     },
     method: {
       en: "Team leader uploads versioned report files through the submission center",
@@ -3159,7 +3159,7 @@ export const timelineItems: TimelineItem[] = [
     },
     location: {
       en: "Team workspace submission center",
-      vi: "Trung tâm nộp bài trong không gian đội",
+      vi: "Trung tâm nộp bài trong Đội thi",
     },
     method: {
       en: "Team leader uploads the final report package before the submission deadline",
@@ -3361,7 +3361,7 @@ export const featurePages = [
     href: "/dashboard",
     title: {
       en: "Team workspace",
-      vi: "Không gian đội",
+      vi: "Đội thi",
     },
     description: {
       en: "Mocked account and team logic enforcing one-team-at-a-time membership.",

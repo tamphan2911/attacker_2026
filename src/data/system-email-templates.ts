@@ -8,7 +8,7 @@ export const defaultSystemEmailTemplates: SystemEmailTemplates = {
     },
     preview: {
       en: "Confirm your email to activate the competition account and enter the workspace.",
-      vi: "Xác nhận email để kích hoạt tài khoản dự thi và truy cập không gian đội.",
+      vi: "Xác nhận email để kích hoạt tài khoản dự thi và truy cập Đội thi.",
     },
     headline: {
       en: "Activate your competition account.",

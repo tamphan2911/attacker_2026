@@ -670,7 +670,7 @@ export function ProfilePage() {
           : "Chế độ admin"
         : locale === "en"
           ? "Open workspace"
-          : "Mở không gian đội";
+          : "Mở Đội thi";
   const universityDisplay = currentUser.university || (locale === "en" ? "No university yet" : "Chưa có trường");
   const majorClassYearDisplay =
     [currentUser.major, currentUser.classYear].filter(Boolean).join(" · ") ||
