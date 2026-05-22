@@ -7,6 +7,7 @@ import {
 import { hash } from "bcryptjs";
 
 import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, round1TestBanks, sponsorProfiles } from "@/data/site-content";
+import { normalizeStudentClassYear } from "@/lib/class-year";
 import { prisma } from "@/lib/db";
 import {
   getRound1PairingValidationIssue,
@@ -691,7 +692,7 @@ export async function updateUserByAdmin(
       phoneNumber: nextPhoneNumber === undefined ? undefined : nextPhoneNumber || null,
       university: payload.university?.trim(),
       major: payload.major?.trim(),
-      classYear: payload.classYear?.trim(),
+      classYear: payload.classYear === undefined ? undefined : normalizeStudentClassYear(payload.classYear),
       bio: payload.bio?.trim(),
       avatarTone: payload.avatarTone?.trim(),
       avatarImageSrc:

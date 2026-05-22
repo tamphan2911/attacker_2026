@@ -1,5 +1,6 @@
 import { MessageConversationKind, TeamInvitationStatus, UserRole, type Prisma } from "@prisma/client";
 
+import { normalizeClassYearForRole } from "@/lib/class-year";
 import { prisma } from "@/lib/db";
 import { moderateMessageText } from "@/lib/message-moderation";
 import type { ServiceResult } from "@/server/team-service";
@@ -87,7 +88,7 @@ function serializeMessageUser(user: MessageUserRecord) {
     role: mapRole(user.role),
     university: user.university,
     major: user.major,
-    classYear: user.classYear,
+    classYear: normalizeClassYearForRole(user.classYear, mapRole(user.role)),
     avatarTone: user.avatarTone,
     avatarImageSrc: user.avatarImageSrc ?? undefined,
   };

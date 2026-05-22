@@ -25,6 +25,7 @@ import {
   type ForumThread,
 } from "@prisma/client";
 
+import { normalizeClassYearForRole } from "@/lib/class-year";
 import type {
   ForumAuthor,
   ForumReply as AppForumReply,
@@ -207,7 +208,7 @@ export function serializeUser(user: UserWithAccounts): UserProfile {
     phoneNumber: user.phoneNumber ?? "",
     university: user.university,
     major: user.major,
-    classYear: user.classYear,
+    classYear: normalizeClassYearForRole(user.classYear, mapUserRole(user.role)),
     bio: user.bio,
     avatarTone: user.avatarTone,
     avatarImageSrc: user.avatarImageSrc ?? undefined,
@@ -227,7 +228,7 @@ export function serializePublicUserProfile(
     role: mapUserRole(user.role),
     university: user.university,
     major: user.major,
-    classYear: user.classYear,
+    classYear: normalizeClassYearForRole(user.classYear, mapUserRole(user.role)),
     bio: user.bio,
     avatarTone: user.avatarTone,
     avatarImageSrc: user.avatarImageSrc ?? undefined,

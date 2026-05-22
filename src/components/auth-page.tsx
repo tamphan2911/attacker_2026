@@ -20,6 +20,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { pickText } from "@/lib/site";
+import { classYearOptions, isAllowedClassYear } from "@/lib/class-year";
 import type { LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
@@ -204,8 +205,8 @@ function getRegistrationFieldGuidance(field: keyof RegistrationFormState | "turn
       vi: "Nhập ngành học hoặc chương trình học để hồ sơ có đủ thông tin học thuật.",
     },
     classYear: {
-      en: "Enter your current class year, for example Year 2, Year 3, or K24.",
-      vi: "Nhập năm học hoặc khóa hiện tại, ví dụ Năm 2, Năm 3 hoặc K24.",
+      en: "Choose your current class year from the list before creating the account.",
+      vi: "Chọn năm học hiện tại trong danh sách trước khi tạo tài khoản.",
     },
     bio: {
       en: "Keep the bio to 600 characters or fewer. You can add more detail after registration.",
@@ -259,7 +260,7 @@ function getRegistrationInputMessage(form: RegistrationFormState) {
     return getRegistrationFieldGuidance("studentId");
   }
 
-  if (!trimmedForm.classYear) {
+  if (!trimmedForm.classYear || !isAllowedClassYear(trimmedForm.classYear)) {
     return getRegistrationFieldGuidance("classYear");
   }
 
@@ -491,7 +492,7 @@ export function AuthPage() {
 
   const handleRegisterFieldChange =
     (field: keyof typeof registerForm) =>
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+    (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const nextValue = event.target.value;
       setRegisterForm((current) => ({ ...current, [field]: nextValue }));
 
@@ -1058,13 +1059,21 @@ export function AuthPage() {
 	                    <span className="text-sm theme-text-muted">{requiredFieldLabel(locale === "en" ? "Class year" : "Năm học")}</span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <CalendarDays className="mr-3 h-4 w-4 theme-text-faint" />
-                      <input
+                      <select
                         value={registerForm.classYear}
                         onChange={handleRegisterFieldChange("classYear")}
-                        placeholder={locale === "en" ? "Year 2..." : "Năm 2..."}
-                        className={authFieldClassName}
+                        className={`${authFieldClassName} theme-admin-select`}
                         required
-                      />
+                      >
+                        <option value="">
+                          {locale === "en" ? "Choose class year" : "Chọn năm học"}
+                        </option>
+                        {classYearOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {pickText(locale, option.label)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </label>
 

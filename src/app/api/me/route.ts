@@ -3,6 +3,7 @@ import { UserRole } from "@prisma/client";
 import { z } from "zod";
 
 import { getAuthSession } from "@/lib/auth";
+import { normalizeClassYearForRole } from "@/lib/class-year";
 import { prisma } from "@/lib/db";
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { serializeUser } from "@/server/site-serializers";
@@ -112,7 +113,7 @@ export async function PATCH(request: Request) {
         phoneNumber: normalizedPhoneNumber || null,
         university: payload.data.university.trim(),
         major: payload.data.major.trim(),
-        classYear: payload.data.classYear.trim(),
+        classYear: normalizeClassYearForRole(payload.data.classYear, existingUser.role),
         bio: payload.data.bio.trim(),
         avatarImageSrc: avatarReplacement.imageSrc,
       },

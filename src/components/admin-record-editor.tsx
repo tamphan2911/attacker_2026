@@ -10,6 +10,7 @@ import {
   pickAdminUserEmailVerificationLabel,
   pickAdminUserEmailVerificationTone,
 } from "@/lib/admin-users";
+import { classYearOptions, normalizeStudentClassYear } from "@/lib/class-year";
 import {
   pickTeamDisplayStatusDescription,
   pickTeamDisplayStatusLabel,
@@ -66,7 +67,9 @@ export function AdminUserEditor({ userId }: { userId: string }) {
   useAdminTitleScroll();
   const user = users.find((item) => item.id === userId);
   const team = user ? getTeamForUser(user.id, teams) : undefined;
-  const [draft, setDraft] = useState<UserProfile | null>(user ?? null);
+  const [draft, setDraft] = useState<UserProfile | null>(
+    user ? { ...user, classYear: user.role === "student" ? normalizeStudentClassYear(user.classYear) : user.classYear } : null,
+  );
 
   const isLocked = user?.id === DEMO_ADMIN_LOGIN_ID;
   const isDirty = useMemo(() => {
@@ -262,11 +265,17 @@ export function AdminUserEditor({ userId }: { userId: string }) {
               <span className="text-sm theme-text-muted">
                 {locale === "en" ? "Class year" : "Năm học"}
               </span>
-              <input
+              <select
                 value={draft.classYear}
                 onChange={(event) => setDraft((current) => (current ? { ...current, classYear: event.target.value } : current))}
-                className={fieldClassName}
-              />
+                className={`${fieldClassName} theme-admin-select`}
+              >
+                {classYearOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label[locale]}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">

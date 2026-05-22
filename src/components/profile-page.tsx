@@ -19,6 +19,7 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, Surface } from "@/components/site-ui";
 import { ALLOWED_AVATAR_IMAGE_TYPES, MAX_AVATAR_IMAGE_BYTES, formatAvatarFileSize } from "@/lib/avatar-images";
+import { classYearOptions, normalizeClassYearForRole } from "@/lib/class-year";
 import { pickRound1LockStatusLabel } from "@/lib/competition";
 
 interface ProfileFormState {
@@ -41,7 +42,7 @@ function createProfileFormState(user: ReturnType<typeof useSiteState>["currentUs
     phoneNumber: user.phoneNumber,
     university: user.university,
     major: user.major,
-    classYear: user.classYear,
+    classYear: normalizeClassYearForRole(user.classYear, user.role),
     bio: user.bio,
     avatarImageSrc: user.avatarImageSrc,
   };
@@ -239,11 +240,25 @@ function ProfileEditor({
 
             <label className="space-y-2 md:col-span-2">
               <span className="text-sm theme-text-muted">{locale === "en" ? "Class year" : "Khóa / năm học"}</span>
-              <input
-                value={form.classYear}
-                onChange={(event) => setForm((current) => ({ ...current, classYear: event.target.value }))}
-                className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
-              />
+              {isStudentAccount ? (
+                <select
+                  value={form.classYear}
+                  onChange={(event) => setForm((current) => ({ ...current, classYear: event.target.value }))}
+                  className="theme-admin-select theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
+                >
+                  {classYearOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label[locale]}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  value={form.classYear}
+                  onChange={(event) => setForm((current) => ({ ...current, classYear: event.target.value }))}
+                  className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none"
+                />
+              )}
             </label>
 
             <label className="space-y-2 md:col-span-2">

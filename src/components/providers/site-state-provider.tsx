@@ -45,6 +45,7 @@ import {
   pickCompetitionStateLabel,
   pickRoundLabel,
 } from "@/lib/competition";
+import { normalizeClassYearForRole } from "@/lib/class-year";
 import {
   getSubmissionValidationError,
 } from "@/lib/submission-files";
@@ -148,6 +149,7 @@ function normalizeUserProfile(user: UserProfile): UserProfile {
     emailVerified: Boolean(user.emailVerified),
     loginId: user.loginId ?? user.studentId ?? user.email,
     phoneNumber: user.phoneNumber ?? "",
+    classYear: normalizeClassYearForRole(user.classYear, user.role),
   };
 }
 

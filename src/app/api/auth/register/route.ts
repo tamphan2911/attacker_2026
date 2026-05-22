@@ -3,6 +3,7 @@ import { UserRole } from "@prisma/client";
 import { hash } from "bcryptjs";
 import { z } from "zod";
 
+import { normalizeStudentClassYear } from "@/lib/class-year";
 import { prisma } from "@/lib/db";
 import { sendAccountActivationEmail } from "@/server/auth-email";
 import { verifyTurnstileToken } from "@/server/turnstile";
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
       studentId,
       university: payload.data.university.trim(),
       major: payload.data.major.trim(),
-      classYear: payload.data.classYear.trim(),
+      classYear: normalizeStudentClassYear(payload.data.classYear),
       bio: payload.data.bio.trim(),
       avatarTone: "from-sky-500 via-cyan-400 to-emerald-400",
     },
