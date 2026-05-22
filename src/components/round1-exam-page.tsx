@@ -1258,7 +1258,7 @@ export function Round1ExamPage() {
         />
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/dashboard" className="theme-button-primary rounded-full px-5 py-3 text-sm font-semibold">
-            {locale === "en" ? "Open Team Workspace" : "Mở Không gian đội"}
+            {locale === "en" ? "Open Team Workspace" : "Mở Đội thi"}
           </Link>
           <Link href="/admin/round-1" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
             {locale === "en" ? "Open Round 1 admin" : "Mở admin Vòng 1"}
