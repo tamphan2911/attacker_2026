@@ -1008,8 +1008,8 @@ function QuestionRecordCard({
 
   return (
     <Surface className="px-5 py-5 md:px-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-3">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_9.5rem] lg:items-start">
+        <div className="min-w-0 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <StatusPill>{`${locale === "en" ? "Question" : "Câu"} ${String(question.paperOrder).padStart(2, "0")}`}</StatusPill>
             <StatusPill>{pickRound1TypeLabel(locale, question.type)}</StatusPill>
@@ -1027,11 +1027,11 @@ function QuestionRecordCard({
           <p className="text-sm leading-7 theme-text-soft">{question.topic}</p>
         </div>
 
-        <div className="rounded-[1.15rem] border theme-border bg-white/82 px-4 py-3 dark:bg-white/[0.05]">
+        <div className="rounded-[1.15rem] border theme-border bg-white/82 px-4 py-3 dark:bg-white/[0.05] lg:w-[9.5rem]">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
             {locale === "en" ? "Review note" : "Ghi chú"}
           </p>
-          <p className="mt-2 text-sm leading-7 theme-text-body">
+          <p className="mt-2 text-sm leading-6 theme-text-body">
             {!question.answered
               ? locale === "en"
                 ? "No saved answer yet."
