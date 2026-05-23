@@ -17,7 +17,7 @@ import {
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface, StatusPill } from "@/components/site-ui";
 import { estimateEssayAiLikelihood } from "@/lib/essay-ai-guard";
-import { pickRound1QuestionText } from "@/lib/round1";
+import { ROUND1_ESSAY_POINT_VALUE, pickRound1QuestionText } from "@/lib/round1";
 import { formatDateLabel } from "@/lib/site";
 import type { JudgeRound1Detail, JudgeTeamSubmissionDetail, Locale } from "@/types/site";
 
@@ -225,11 +225,32 @@ export function JudgeRound1ScorePage({
     [detail.essays, questionScores],
   );
 
+  const handleQuestionScoreChange = (questionId: string, value: string) => {
+    if (value === "") {
+      setQuestionScores((current) => ({
+        ...current,
+        [questionId]: "",
+      }));
+      return;
+    }
+
+    const parsedValue = Number(value);
+    if (!Number.isFinite(parsedValue)) {
+      return;
+    }
+
+    const boundedScore = Math.max(0, Math.min(ROUND1_ESSAY_POINT_VALUE, Math.trunc(parsedValue)));
+    setQuestionScores((current) => ({
+      ...current,
+      [questionId]: String(boundedScore),
+    }));
+  };
+
   const handleSubmit = async () => {
     const parsedQuestionScores: Record<string, number> = {};
     for (const essay of detail.essays) {
       const parsedScore = Number(questionScores[essay.questionId]);
-      if (!Number.isFinite(parsedScore) || !Number.isInteger(parsedScore) || parsedScore < 0 || parsedScore > 14) {
+      if (!Number.isFinite(parsedScore) || !Number.isInteger(parsedScore) || parsedScore < 0 || parsedScore > ROUND1_ESSAY_POINT_VALUE) {
         setMessage(
           locale === "en"
             ? "Each essay question score must be a whole number from 0 to 14."
@@ -403,15 +424,10 @@ export function JudgeRound1ScorePage({
                   <input
                     type="number"
                     min={0}
-                    max={14}
+                    max={ROUND1_ESSAY_POINT_VALUE}
                     step={1}
                     value={questionScores[essay.questionId] ?? ""}
-                    onChange={(event) =>
-                      setQuestionScores((current) => ({
-                        ...current,
-                        [essay.questionId]: event.target.value,
-                      }))
-                    }
+                    onChange={(event) => handleQuestionScoreChange(essay.questionId, event.target.value)}
                     className="theme-placeholder h-11 w-20 shrink-0 rounded-2xl border theme-border theme-panel px-3 text-center text-sm font-semibold theme-text-strong outline-none"
                   />
                 </label>

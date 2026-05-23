@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { ROUND1_ESSAY_POINT_VALUE } from "@/lib/round1";
 import { getCurrentDbUser, hasJudgeRole } from "@/server/auth-helpers";
 import { saveJudgeRound1Review } from "@/server/judge-service";
 
 const payloadSchema = z.object({
-  questionScores: z.record(z.string(), z.number().int().min(0).max(14)),
+  questionScores: z.record(z.string(), z.number().int().min(0).max(ROUND1_ESSAY_POINT_VALUE)),
   note: z.string().trim().max(2000).optional().default(""),
 });
 
