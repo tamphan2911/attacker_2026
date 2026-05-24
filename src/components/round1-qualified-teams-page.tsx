@@ -29,6 +29,7 @@ type QualifiedTeam = {
 
 type Round1QualifiedTeamsPayload = {
   released: boolean;
+  adminPreview?: boolean;
   announcementStartDate?: string;
   announcementEndDate?: string;
   qualifiedTeams: QualifiedTeam[];
@@ -182,6 +183,26 @@ export function Round1QualifiedTeamsPage() {
             : "Danh sách được tổng hợp theo điểm trung bình đội ở Vòng 1 sau khi phần tự luận đã được chấm."
         }
       />
+
+      {payload.adminPreview ? (
+        <Surface className="border-sky-500/28 bg-[linear-gradient(135deg,rgba(224,242,254,0.92),rgba(219,234,254,0.70))] px-5 py-4 dark:border-sky-300/20 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.14),rgba(37,99,235,0.10))]">
+          <div className="flex items-start gap-3">
+            <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-sky-500/24 bg-white/70 text-sky-700 dark:border-sky-200/18 dark:bg-white/10 dark:text-sky-100">
+              <ShieldCheck className="h-4.5 w-4.5" />
+            </span>
+            <div>
+              <p className="text-sm font-semibold theme-text-strong">
+                {locale === "en" ? "Admin preview is enabled" : "Đang xem trước bằng quyền admin"}
+              </p>
+              <p className="mt-1 text-sm leading-6 theme-text-muted">
+                {locale === "en"
+                  ? "This Round 1 result page is visible to admin-mode accounts before the official announcement time."
+                  : "Trang kết quả Vòng 1 này được mở cho tài khoản admin mode trước thời điểm công bố chính thức."}
+              </p>
+            </div>
+          </div>
+        </Surface>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-3">
         <Surface className="px-5 py-5">

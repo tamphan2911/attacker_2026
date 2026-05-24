@@ -6,6 +6,7 @@ import {
   ROUND1_OBJECTIVE_MAX_SCORE,
   ROUND1_TOTAL_MAX_SCORE,
 } from "@/lib/round1";
+import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
 import { readTimelineItems } from "@/server/timeline-items";
 
 const QUALIFIED_TEAM_LIMIT = 50;
@@ -24,17 +25,19 @@ function average(values: number[]) {
 }
 
 export async function GET() {
-  const timelineItems = await readTimelineItems();
+  const [timelineItems, currentUser] = await Promise.all([readTimelineItems(), getCurrentDbUser()]);
   const announcementItem = timelineItems.find((item) => item.id === ROUND1_ANNOUNCEMENT_ID);
   const announcementAt = announcementItem?.startDate
     ? startOfVietnamDay(announcementItem.startDate)
     : new Date(0);
   const released = Date.now() >= announcementAt.getTime();
+  const canPreviewBeforeRelease = currentUser ? hasElevatedRole(currentUser.role) : false;
 
-  if (!released) {
+  if (!released && !canPreviewBeforeRelease) {
     return NextResponse.json(
       {
         released: false,
+        adminPreview: false,
         announcementStartDate: announcementItem?.startDate,
         announcementEndDate: announcementItem?.endDate,
         qualifiedTeams: [],
@@ -126,6 +129,7 @@ export async function GET() {
   return NextResponse.json(
     {
       released: true,
+      adminPreview: !released && canPreviewBeforeRelease,
       announcementStartDate: announcementItem?.startDate,
       announcementEndDate: announcementItem?.endDate,
       qualifiedTeams: rankedTeams,
