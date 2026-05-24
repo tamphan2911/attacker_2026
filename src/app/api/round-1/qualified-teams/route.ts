@@ -61,9 +61,18 @@ export async function GET() {
           },
         },
         members: {
-          select: {
-            userId: true,
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                university: true,
+                avatarTone: true,
+                avatarImageSrc: true,
+              },
+            },
           },
+          orderBy: { joinedAt: "asc" },
         },
       },
       orderBy: [{ createdAt: "asc" }],
@@ -80,13 +89,12 @@ export async function GET() {
     submissionsByTeamId.set(submission.teamId, current);
   }
 
-  const rankedTeams = teams
+  const qualifiedTeams = teams
     .map((team) => {
       const teamSubmissions = submissionsByTeamId.get(team.id) ?? [];
       const scoredSubmissions = teamSubmissions.filter(
         (submission) => submission.essayScore != null && submission.totalScore != null,
       );
-      const latestSubmittedAt = teamSubmissions[0]?.submittedAt;
 
       return {
         team,
@@ -95,7 +103,6 @@ export async function GET() {
         averageObjectiveScore: average(scoredSubmissions.map((submission) => submission.objectiveScore)),
         averageEssayScore: average(scoredSubmissions.map((submission) => submission.essayScore ?? 0)),
         averageTotalScore: average(scoredSubmissions.map((submission) => submission.totalScore ?? 0)),
-        latestSubmittedAt,
       };
     })
     .filter((group) => group.scoredMembers > 0)
@@ -107,8 +114,8 @@ export async function GET() {
         left.team.name.localeCompare(right.team.name),
     )
     .slice(0, QUALIFIED_TEAM_LIMIT)
-    .map((group, index) => ({
-      rank: index + 1,
+    .sort((left, right) => left.team.name.localeCompare(right.team.name))
+    .map((group) => ({
       teamId: group.team.id,
       teamName: group.team.name,
       teamTag: group.team.tag,
@@ -118,12 +125,27 @@ export async function GET() {
       memberCount: group.team.members.length,
       leaderName: group.team.leader.name,
       leaderUniversity: group.team.leader.university,
+      members: group.team.members
+        .map((member) => ({
+          userId: member.user.id,
+          name: member.user.name,
+          university: member.user.university,
+          avatarTone: member.user.avatarTone,
+          avatarImageSrc: member.user.avatarImageSrc,
+          isLeader: member.user.id === group.team.leaderId,
+        }))
+        .sort((left, right) => {
+          if (left.isLeader !== right.isLeader) {
+            return left.isLeader ? -1 : 1;
+          }
+
+          return left.name.localeCompare(right.name);
+        }),
       completedMembers: group.completedMembers,
       scoredMembers: group.scoredMembers,
       averageObjectiveScore: Number(group.averageObjectiveScore.toFixed(2)),
       averageEssayScore: Number(group.averageEssayScore.toFixed(2)),
       averageTotalScore: Number(group.averageTotalScore.toFixed(2)),
-      latestSubmittedAt: group.latestSubmittedAt?.toISOString(),
     }));
 
   return NextResponse.json(
@@ -132,7 +154,7 @@ export async function GET() {
       adminPreview: !released && canPreviewBeforeRelease,
       announcementStartDate: announcementItem?.startDate,
       announcementEndDate: announcementItem?.endDate,
-      qualifiedTeams: rankedTeams,
+      qualifiedTeams,
       maxScores: {
         objective: ROUND1_OBJECTIVE_MAX_SCORE,
         essay: ROUND1_ESSAY_MAX_SCORE,

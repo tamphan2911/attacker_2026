@@ -1,15 +1,23 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Clock3, Medal, Search, ShieldCheck, Trophy, Users2 } from "lucide-react";
+import { ArrowRight, Clock3, Search, ShieldCheck, Users2 } from "lucide-react";
 import Link from "next/link";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
-import { formatDateLabel, formatDateRangeLabel } from "@/lib/site";
+import { GradientAvatar, SectionHeading, Surface } from "@/components/site-ui";
+import { formatDateRangeLabel } from "@/lib/site";
+
+type QualifiedTeamMember = {
+  userId: string;
+  name: string;
+  university: string;
+  avatarTone: string;
+  avatarImageSrc?: string | null;
+  isLeader: boolean;
+};
 
 type QualifiedTeam = {
-  rank: number;
   teamId: string;
   teamName: string;
   teamTag: string;
@@ -19,12 +27,12 @@ type QualifiedTeam = {
   memberCount: number;
   leaderName: string;
   leaderUniversity: string;
+  members: QualifiedTeamMember[];
   completedMembers: number;
   scoredMembers: number;
   averageObjectiveScore: number;
   averageEssayScore: number;
   averageTotalScore: number;
-  latestSubmittedAt?: string;
 };
 
 type Round1QualifiedTeamsPayload = {
@@ -40,15 +48,12 @@ type Round1QualifiedTeamsPayload = {
   };
 };
 
-function formatScore(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.00$/, "");
-}
-
 export function Round1QualifiedTeamsPage() {
   const { locale, currentTeam } = useSiteState();
   const [payload, setPayload] = useState<Round1QualifiedTeamsPayload | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -97,6 +102,29 @@ export function Round1QualifiedTeamsPage() {
 
     return formatDateRangeLabel(locale, payload.announcementStartDate, payload.announcementEndDate ?? payload.announcementStartDate);
   }, [locale, payload?.announcementEndDate, payload?.announcementStartDate]);
+
+  const qualifiedTeams = useMemo(() => payload?.qualifiedTeams ?? [], [payload?.qualifiedTeams]);
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const filteredTeams = useMemo(() => {
+    if (!normalizedSearchTerm) {
+      return qualifiedTeams;
+    }
+
+    return qualifiedTeams.filter((team) => {
+      const searchHaystack = [
+        team.teamName,
+        team.teamTag,
+        team.track,
+        team.leaderName,
+        team.leaderUniversity,
+        ...team.members.flatMap((member) => [member.name, member.university]),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return searchHaystack.includes(normalizedSearchTerm);
+    });
+  }, [normalizedSearchTerm, qualifiedTeams]);
 
   if (isLoading) {
     return (
@@ -169,9 +197,6 @@ export function Round1QualifiedTeamsPage() {
     );
   }
 
-  const qualifiedTeams = payload.qualifiedTeams;
-  const topThree = qualifiedTeams.slice(0, 3);
-
   return (
     <div className="space-y-10 md:space-y-12">
       <SectionHeading
@@ -179,8 +204,8 @@ export function Round1QualifiedTeamsPage() {
         title={locale === "en" ? "Teams qualified for Round 2" : "Danh sách đội vào Vòng 2"}
         description={
           locale === "en"
-            ? "The list is based on reviewed Round 1 team-average scores after essay scoring is completed."
-            : "Danh sách được tổng hợp theo điểm trung bình đội ở Vòng 1 sau khi phần tự luận đã được chấm."
+            ? "This page lists qualified teams only. The display order does not indicate ranking, placement, or score order."
+            : "Trang này chỉ liệt kê các đội đủ điều kiện vào Vòng 2. Thứ tự hiển thị không thể hiện xếp hạng, thứ hạng hay thứ tự điểm."
         }
       />
 
@@ -204,30 +229,6 @@ export function Round1QualifiedTeamsPage() {
         </Surface>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Surface className="px-5 py-5">
-          <ShieldCheck className="h-6 w-6 text-emerald-500" />
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-            {locale === "en" ? "Qualified teams" : "Đội vào Vòng 2"}
-          </p>
-          <p className="mt-3 text-3xl font-semibold theme-text-strong">{qualifiedTeams.length}</p>
-        </Surface>
-        <Surface className="px-5 py-5">
-          <Trophy className="h-6 w-6 text-amber-500" />
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-            {locale === "en" ? "Announcement" : "Công bố"}
-          </p>
-          <p className="mt-3 text-lg font-semibold theme-text-strong">{announcementLabel}</p>
-        </Surface>
-        <Surface className="px-5 py-5">
-          <Medal className="h-6 w-6 text-sky-500" />
-          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-            {locale === "en" ? "Scoring scale" : "Thang điểm"}
-          </p>
-          <p className="mt-3 text-lg font-semibold theme-text-strong">{`/ ${payload.maxScores.total}`}</p>
-        </Surface>
-      </div>
-
       {qualifiedTeams.length === 0 ? (
         <Surface className="px-6 py-8 text-center">
           <Search className="mx-auto h-8 w-8 theme-text-faint" />
@@ -241,70 +242,52 @@ export function Round1QualifiedTeamsPage() {
           </p>
         </Surface>
       ) : (
-        <>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {topThree.map((team) => (
-              <Surface
-                key={team.teamId}
-                className={`px-5 py-5 ${currentTeam?.id === team.teamId ? "border-sky-500/35 shadow-[0_24px_56px_rgba(37,99,235,0.16)]" : ""}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <GradientAvatar
-                    label={team.teamName}
-                    tone={team.avatarTone}
-                    imageSrc={team.avatarImageSrc ?? undefined}
-                    className="h-14 w-14 rounded-[1.15rem]"
+        <Surface className="overflow-hidden px-0 py-0">
+            <div className="border-b theme-border px-5 py-5">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
+                    {locale === "en" ? "Qualified team list" : "Danh sách đội vượt qua Vòng 1"}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 theme-text-muted">
+                    {locale === "en"
+                      ? "Search updates the table immediately by team name, code, keyword, member name, or university."
+                      : "Ô tìm kiếm cập nhật bảng ngay theo tên đội, mã đội, từ khóa, tên thành viên hoặc trường đại học."}
+                  </p>
+                </div>
+                <label className="relative w-full lg:max-w-md">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-sky-700 dark:text-sky-100" />
+                  <input
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder={
+                      locale === "en"
+                        ? "Search teams or members..."
+                        : "Tìm đội hoặc thành viên..."
+                    }
+                    className="theme-field h-12 w-full rounded-full border px-11 text-sm font-medium outline-none transition focus:border-sky-400/60"
                   />
-                  <StatusPill tone={team.rank <= 3 ? "warning" : "success"}>{`#${team.rank}`}</StatusPill>
-                </div>
-                <h3 className="mt-4 text-xl font-semibold theme-text-strong">{team.teamName}</h3>
-                <p className="mt-2 text-sm theme-text-soft">{team.track}</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <StatusPill>{team.teamTag}</StatusPill>
-                  <StatusPill tone="success">
-                    {locale === "en" ? "Round 2" : "Vòng 2"}
-                  </StatusPill>
-                </div>
-                <p className="mt-4 text-sm leading-6 theme-text-muted">
-                  {locale === "en" ? "Team average" : "Điểm trung bình"}:{" "}
-                  <span className="font-semibold theme-text-strong">
-                    {formatScore(team.averageTotalScore)} / {payload.maxScores.total}
-                  </span>
-                </p>
-              </Surface>
-            ))}
-          </div>
-
-          <Surface className="overflow-hidden px-0 py-0">
+                </label>
+              </div>
+            </div>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b theme-border bg-[rgba(244,249,255,0.9)] dark:bg-white/[0.04]">
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">#</th>
                     <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
                       {locale === "en" ? "Team" : "Đội thi"}
                     </th>
                     <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                      {locale === "en" ? "Members" : "Thành viên"}
-                    </th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                      {locale === "en" ? "Average score" : "Điểm trung bình"}
-                    </th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                      {locale === "en" ? "Latest submission" : "Bài nộp gần nhất"}
-                    </th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                      {locale === "en" ? "Status" : "Trạng thái"}
+                      {locale === "en" ? "Team members" : "Thành viên đội"}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {qualifiedTeams.map((team) => (
+                  {filteredTeams.map((team) => (
                     <tr
                       key={team.teamId}
                       className={`border-b theme-border last:border-b-0 ${currentTeam?.id === team.teamId ? "bg-sky-400/10" : ""}`}
                     >
-                      <td className="px-5 py-4 font-semibold theme-text-strong">{String(team.rank).padStart(2, "0")}</td>
                       <td className="px-5 py-4">
                         <div className="flex min-w-[15rem] items-center gap-3">
                           <GradientAvatar
@@ -316,40 +299,62 @@ export function Round1QualifiedTeamsPage() {
                           <div>
                             <p className="font-semibold theme-text-strong">{team.teamName}</p>
                             <p className="mt-1 text-xs theme-text-soft">{`${team.teamTag} · ${team.track}`}</p>
-                            <p className="mt-1 text-xs theme-text-faint">{team.leaderName}</p>
                           </div>
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-3 py-1.5 font-semibold theme-text-strong">
-                          <Users2 className="h-3.5 w-3.5 theme-text-soft" />
-                          {team.memberCount}
+                        <div className="min-w-[32rem]">
+                          <div className="mb-3 inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-3 py-1 text-xs font-semibold theme-text-strong">
+                            <Users2 className="h-3.5 w-3.5 theme-text-soft" />
+                            {team.memberCount} {locale === "en" ? "members" : "thành viên"}
+                          </div>
+                          <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                            {team.members.map((member) => (
+                              <div
+                                key={member.userId}
+                                className="flex min-w-0 items-center gap-2 rounded-[1rem] border theme-border bg-white/70 px-3 py-2 dark:bg-white/[0.04]"
+                              >
+                                <GradientAvatar
+                                  label={member.name}
+                                  tone={member.avatarTone}
+                                  imageSrc={member.avatarImageSrc ?? undefined}
+                                  className="h-8 w-8 rounded-xl"
+                                />
+                                <div className="min-w-0">
+                                  <div className="flex min-w-0 items-center gap-2">
+                                    <p className="truncate text-xs font-semibold theme-text-strong">{member.name}</p>
+                                    {member.isLeader ? (
+                                      <span className="shrink-0 rounded-full border border-sky-600/20 bg-sky-100/82 px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-sky-800 dark:border-sky-300/18 dark:bg-sky-300/12 dark:text-sky-100">
+                                        {locale === "en" ? "Leader" : "Đội trưởng"}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <p className="mt-0.5 line-clamp-2 text-[0.68rem] leading-4 theme-text-soft">
+                                    {member.university || (locale === "en" ? "University not updated" : "Chưa cập nhật trường")}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-5 py-4">
-                        <p className="font-semibold theme-text-strong">
-                          {formatScore(team.averageTotalScore)} / {payload.maxScores.total}
-                        </p>
-                        <p className="mt-1 text-xs theme-text-soft">
-                          {locale === "en" ? "Objective" : "Trắc nghiệm"} {formatScore(team.averageObjectiveScore)} ·{" "}
-                          {locale === "en" ? "Essay" : "Tự luận"} {formatScore(team.averageEssayScore)}
-                        </p>
-                      </td>
-                      <td className="px-5 py-4 text-sm theme-text-soft">
-                        {team.latestSubmittedAt ? formatDateLabel(locale, team.latestSubmittedAt) : "--"}
-                      </td>
-                      <td className="px-5 py-4">
-                        <StatusPill tone="success">
-                          {locale === "en" ? "Qualified" : "Đủ điều kiện"}
-                        </StatusPill>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              {filteredTeams.length === 0 ? (
+                <div className="px-6 py-10 text-center">
+                  <Search className="mx-auto h-8 w-8 theme-text-faint" />
+                  <p className="mt-4 text-sm font-semibold theme-text-strong">
+                    {locale === "en" ? "No matching teams found." : "Không tìm thấy đội phù hợp."}
+                  </p>
+                  <p className="mt-2 text-sm theme-text-muted">
+                    {locale === "en" ? "Try another team name, member, or university." : "Hãy thử tên đội, thành viên hoặc trường đại học khác."}
+                  </p>
+                </div>
+              ) : null}
             </div>
           </Surface>
-        </>
       )}
     </div>
   );
