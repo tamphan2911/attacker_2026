@@ -3098,7 +3098,7 @@ export const timelineItems: TimelineItem[] = [
       vi: "Công bố kết quả công khai kèm xếp hạng đội và thông báo đủ điều kiện",
     },
     supportLinks: [
-      { href: "/news", label: { en: "Check announcements", vi: "Xem thông báo" } },
+      { href: "/competition/round-1-results", label: { en: "Check announcements", vi: "Xem thông báo" } },
     ],
   },
   {

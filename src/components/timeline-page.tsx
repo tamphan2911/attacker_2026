@@ -154,6 +154,19 @@ function buildTimelineActionLinks({
   }
 
   for (const supportLink of item.supportLinks ?? []) {
+    if (
+      item.id === "round-1-top-50-announcement" &&
+      (supportLink.href === "/news" || supportLink.href === "/competition/round-1-results")
+    ) {
+      actionLinks.push({
+        key: `${item.id}-round-1-results`,
+        href: "/competition/round-1-results",
+        label: supportLink.label,
+        icon: Presentation,
+      });
+      continue;
+    }
+
     if (item.id === "registration-deadline-team-lock" && supportLink.href === "/rules#general-rules") {
       actionLinks.push({
         key: `${item.id}-eligibility`,
