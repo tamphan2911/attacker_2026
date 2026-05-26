@@ -24,7 +24,6 @@ import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
 import { attachRound2SubmissionJudgeAssignments } from "@/server/round2-judge-assignment";
-import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
   createRound1EssayPaperQuestions,
@@ -1865,7 +1864,6 @@ export async function createTeamSubmission(
 ): Promise<ServiceResult<{ submissionId: string; teamId: string; teamName: string; version: number }>> {
   await syncRound1QualificationStages();
 
-  const staleRound2StorageKeys: string[] = [];
   const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: actorId } });
     if (!user) {
@@ -1963,21 +1961,6 @@ export async function createTeamSubmission(
       );
     }
 
-    if (payload.round === SubmissionRound.ROUND_2 && existingSubmissions.length > 0) {
-      await tx.teamSubmission.deleteMany({
-        where: {
-          id: {
-            in: existingSubmissions.map((existingSubmission) => existingSubmission.id),
-          },
-        },
-      });
-      staleRound2StorageKeys.push(
-        ...existingSubmissions
-          .map((existingSubmission) => existingSubmission.resourceStorageKey)
-          .filter((storageKey): storageKey is string => Boolean(storageKey)),
-      );
-    }
-
     return ok(
       {
         submissionId: submission.id,
@@ -1988,21 +1971,6 @@ export async function createTeamSubmission(
       201,
     );
   });
-
-  if (result.ok && staleRound2StorageKeys.length > 0) {
-    await Promise.all(
-      staleRound2StorageKeys.map(async (storageKey) => {
-        try {
-          await deleteTeamSubmissionFile(storageKey);
-        } catch (error) {
-          console.warn("[team-submission] Could not delete stale Round 2 report file.", {
-            storageKey,
-            error: error instanceof Error ? error.message : "Unknown error",
-          });
-        }
-      }),
-    );
-  }
 
   return result;
 }

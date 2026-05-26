@@ -3237,9 +3237,9 @@ function SubmissionRoundCard({
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-4">
           {latestSubmission ? (
-            <div className="rounded-[1.35rem] border theme-border theme-panel px-4 py-4">
+            <div className="rounded-[1.35rem] border border-emerald-200/80 bg-[linear-gradient(135deg,rgba(209,250,229,0.96),rgba(219,234,254,0.9),rgba(240,253,244,0.88))] px-4 py-4 shadow-[0_18px_42px_rgba(16,185,129,0.14)] dark:border-emerald-300/24 dark:bg-[linear-gradient(135deg,rgba(6,95,70,0.34),rgba(30,64,175,0.24),rgba(20,83,45,0.22))] dark:shadow-[0_18px_42px_rgba(16,185,129,0.1)]">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-200/80">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700 dark:text-emerald-100">
                   {locale === "en" ? "Current valid version" : "Phiên bản hợp lệ hiện tại"}
                 </p>
                 <StatusPill tone="success">{`v${latestSubmission.version}`}</StatusPill>
