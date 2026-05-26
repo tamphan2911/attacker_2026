@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
 import { ArrowRight, Images, Plus, Trash2, Upload } from "lucide-react";
 
 import { pickText } from "@/lib/site";
@@ -100,6 +100,17 @@ function createOrganizerSeasonArchiveDraft(year: string): EditableOrganizerSeaso
     topTeams: Array.from({ length: 5 }, (_, index) => createSeasonArchiveTeamDraft(index, year)),
     photoSlides: Array.from({ length: 10 }, (_, index) => createSeasonArchiveSlideDraft(index, year)),
   };
+}
+
+function ensureSeasonDraftRecords(draft: SitePageContent, year: string) {
+  if (!draft.organizer.seasonStories.some((item) => item.year === year)) {
+    draft.organizer.seasonStories.push(createSeasonStoryDraft(year));
+  }
+
+  draft.organizer.seasonArchives = draft.organizer.seasonArchives ?? [];
+  if (!draft.organizer.seasonArchives.some((item) => item.year === year)) {
+    draft.organizer.seasonArchives.push(createOrganizerSeasonArchiveDraft(year));
+  }
 }
 
 function unoptimizedImage(src: string) {
@@ -254,6 +265,18 @@ export function SeasonArchiveContentEditor({
   const seasonArchives = draft.organizer.seasonArchives ?? [];
   const archiveIndex = seasonArchives.findIndex((item) => item.year === year);
 
+  useEffect(() => {
+    if (storyIndex >= 0 && archiveIndex >= 0) {
+      return;
+    }
+
+    setDraft((current) =>
+      updateDraftContent(current, (next) => {
+        ensureSeasonDraftRecords(next, year);
+      }),
+    );
+  }, [archiveIndex, setDraft, storyIndex, year]);
+
   const uploadSeasonImage = async (
     file: File,
     key: string,
@@ -313,28 +336,12 @@ export function SeasonArchiveContentEditor({
       <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
         <BlockIntro
           title={`Season ${year}`}
-          description="This season record is missing from the current content dataset. Initialize it before editing."
-        />
-        <button
-          type="button"
-          onClick={() =>
-            setDraft((current) =>
-              updateDraftContent(current, (next) => {
-                if (!next.organizer.seasonStories.some((item) => item.year === year)) {
-                  next.organizer.seasonStories.push(createSeasonStoryDraft(year));
-                }
-                next.organizer.seasonArchives = next.organizer.seasonArchives ?? [];
-                if (!next.organizer.seasonArchives.some((item) => item.year === year)) {
-                  next.organizer.seasonArchives.push(createOrganizerSeasonArchiveDraft(year));
-                }
-              }),
-            )
+          description={
+            locale === "en"
+              ? "Preparing editable fields for this season. The editor will open automatically."
+              : "Đang chuẩn bị các trường chỉnh sửa cho mùa thi này. Trình chỉnh sửa sẽ tự mở."
           }
-          className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-        >
-          <Plus className="h-4 w-4" />
-          {locale === "en" ? "Initialize season editor" : "Khởi tạo trang sửa mùa thi"}
-        </button>
+        />
       </Surface>
     );
   }
@@ -436,15 +443,8 @@ export function SeasonArchiveContentEditor({
                 <span className="text-sm theme-text-muted">Year</span>
                 <input
                   value={story.year}
-                  onChange={(event) =>
-                    setDraft((current) =>
-                      updateDraftContent(current, (next) => {
-                        next.organizer.seasonStories[storyIndex].year = event.target.value;
-                        next.organizer.seasonArchives[archiveIndex].year = event.target.value;
-                      }),
-                    )
-                  }
-                  className={fieldClassName}
+                  readOnly
+                  className={`${fieldClassName} cursor-not-allowed opacity-75`}
                 />
               </label>
               <LocalizedFieldEditor
