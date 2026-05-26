@@ -1,46 +1,29 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
-import type { TeamFinalOutcome, TeamProfile, UserProfile } from "@/types/site";
 
-const finalOutcomeOrder: Record<TeamFinalOutcome, number> = {
-  champion: 0,
-  "runner-up": 1,
-  "third-place": 2,
-  "fourth-place": 3,
-  "emerging-team": 4,
-};
-
-function getFinalistTeams(teams: TeamProfile[]) {
-  return [...teams]
-    .filter((team) => team.stage === "round-3" || (team.finalOutcome && team.finalOutcome !== "emerging-team"))
-    .sort((left, right) => {
-      const leftRank = left.finalOutcome ? finalOutcomeOrder[left.finalOutcome] : 10;
-      const rightRank = right.finalOutcome ? finalOutcomeOrder[right.finalOutcome] : 10;
-      if (leftRank !== rightRank) {
-        return leftRank - rightRank;
-      }
-
-      if (left.createdAt !== right.createdAt) {
-        return left.createdAt.localeCompare(right.createdAt);
-      }
-
-      return left.name.localeCompare(right.name);
-    })
-    .slice(0, 5);
+interface Round2FinalistTeam {
+  id: string;
+  name: string;
+  tag: string;
+  leaderId: string;
+  leaderName: string;
+  leaderUniversity: string;
+  memberCount: number;
+  avatarTone: string;
+  avatarImageSrc?: string;
+  track: string;
+  averageScore: number;
 }
 
-function getEmergingTeams(teams: TeamProfile[], finalistIds: Set<string>) {
-  return [...teams]
-    .filter((team) => team.finalOutcome === "emerging-team" && !finalistIds.has(team.id))
-    .sort((left, right) => left.name.localeCompare(right.name))
-    .slice(0, 10);
-}
-
-function getLeader(team: TeamProfile, users: UserProfile[]) {
-  return users.find((user) => user.id === team.leaderId);
+interface Round2FinalistsPayload {
+  released: boolean;
+  finalists: Round2FinalistTeam[];
+  emergingTeams: Round2FinalistTeam[];
 }
 
 function createEmptySlots<T>(items: T[], count: number) {
@@ -48,13 +31,53 @@ function createEmptySlots<T>(items: T[], count: number) {
 }
 
 export function FinalistsPage() {
-  const { locale, teams, users, currentTeam, timelineItems, pageContent } = useSiteState();
+  const { locale, currentTeam, timelineItems, pageContent } = useSiteState();
+  const [round2Results, setRound2Results] = useState<Round2FinalistsPayload>({
+    released: false,
+    finalists: [],
+    emergingTeams: [],
+  });
   const finalPresentationItem = timelineItems.find((item) => item.id === "round-3-final-presentation");
-  const finalists = getFinalistTeams(teams);
-  const finalistIds = new Set(finalists.map((team) => team.id));
-  const emergingTeams = getEmergingTeams(teams, finalistIds);
-  const finalistSlots = createEmptySlots(finalists, 5);
-  const emergingSlots = createEmptySlots(emergingTeams, 10);
+  const finalistSlots = createEmptySlots(round2Results.released ? round2Results.finalists : [], 5);
+  const emergingSlots = createEmptySlots(round2Results.released ? round2Results.emergingTeams : [], 10);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/round-2/finalists", {
+          cache: "no-store",
+          credentials: "same-origin",
+        });
+
+        if (!response.ok) {
+          throw new Error("Could not load Round 2 finalist results.");
+        }
+
+        const payload = (await response.json()) as Round2FinalistsPayload;
+        if (!cancelled) {
+          setRound2Results({
+            released: Boolean(payload.released),
+            finalists: payload.finalists ?? [],
+            emergingTeams: payload.emergingTeams ?? [],
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setRound2Results({
+            released: false,
+            finalists: [],
+            emergingTeams: [],
+          });
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="space-y-12 md:space-y-16">
@@ -105,7 +128,6 @@ export function FinalistsPage() {
                 );
               }
 
-              const leader = getLeader(team, users);
               const isCurrentTeam = currentTeam?.id === team.id;
 
               return (
@@ -144,7 +166,7 @@ export function FinalistsPage() {
                             {pickText(locale, pageContent.finalists.finalistTeamLabel)}
                           </StatusPill>
                           <StatusPill tone="default">
-                            {`${team.memberIds.length} ${pickText(locale, pageContent.finalists.membersSuffix)}`}
+                            {`${team.memberCount} ${pickText(locale, pageContent.finalists.membersSuffix)}`}
                           </StatusPill>
                         </div>
                       </div>
@@ -160,8 +182,8 @@ export function FinalistsPage() {
                           : pickText(locale, pageContent.finalists.toBeAnnouncedLabel)}
                       </p>
                       <p className="mt-1 text-xs leading-6 theme-text-soft">
-                        {leader?.name
-                          ? `${pickText(locale, pageContent.finalists.teamLeaderPrefix)} · ${leader.name}`
+                        {team.leaderName
+                          ? `${pickText(locale, pageContent.finalists.teamLeaderPrefix)} · ${team.leaderName}`
                           : pickText(locale, pageContent.finalists.leaderInfoUpdating)}
                       </p>
                     </div>
@@ -224,7 +246,6 @@ export function FinalistsPage() {
                       );
                     }
 
-                    const leader = getLeader(team, users);
                     const isCurrentTeam = currentTeam?.id === team.id;
 
                     return (
@@ -248,8 +269,8 @@ export function FinalistsPage() {
                           </div>
                         </td>
                         <td className="px-5 py-4">
-                          <p className="font-medium theme-text-body">{leader?.name ?? "--"}</p>
-                          <p className="mt-1 text-xs theme-text-soft">{leader?.university ?? "--"}</p>
+                          <p className="font-medium theme-text-body">{team.leaderName || "--"}</p>
+                          <p className="mt-1 text-xs theme-text-soft">{team.leaderUniversity || "--"}</p>
                         </td>
                         <td className="px-5 py-4 text-sm leading-7 theme-text-body">{team.track}</td>
                         <td className="px-5 py-4">
