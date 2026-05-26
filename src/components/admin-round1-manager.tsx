@@ -40,6 +40,10 @@ import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
 import {
+  canApplyRound1Qualification,
+  isRound1ResultAnnouncementReleased,
+} from "@/lib/competition";
+import {
   ROUND1_ESSAY_TOTAL,
   ROUND1_ESSAY_MAX_SCORE,
   ROUND1_ESSAY_WORD_LIMIT,
@@ -67,6 +71,7 @@ import type {
   Round1Submission,
   Round1TestBank,
   TeamProfile,
+  TimelineItem,
   UserProfile,
 } from "@/types/site";
 
@@ -800,7 +805,7 @@ function getStandingTone(group: TeamResultGroup): "info" | "success" | "warning"
   return group.rank <= 50 ? "success" : "info";
 }
 
-function getStandingLabel(locale: Locale, group: TeamResultGroup) {
+function getStandingLabel(locale: Locale, group: TeamResultGroup, timelineItems?: TimelineItem[]) {
   if (group.team.memberIds.length < TEAM_MIN_MEMBERS) {
     return locale === "en" ? "Below minimum size" : "Chưa đủ số thành viên";
   }
@@ -818,6 +823,14 @@ function getStandingLabel(locale: Locale, group: TeamResultGroup) {
   }
 
   if ((group.rank ?? Number.POSITIVE_INFINITY) <= 50) {
+    if (canApplyRound1Qualification(timelineItems)) {
+      return locale === "en" ? "Qualified for Round 2" : "Đủ điều kiện Vòng 2";
+    }
+
+    if (isRound1ResultAnnouncementReleased(timelineItems)) {
+      return locale === "en" ? "Top 50 confirmed" : "Top 50 chính thức";
+    }
+
     return locale === "en" ? "Top 50 provisional" : "Top 50 tạm thời";
   }
 
@@ -1359,7 +1372,7 @@ export function AdminRound1Manager() {
 }
 
 export function AdminRound1ScoresManager() {
-  const { locale, round1Submissions, teams, users } = useSiteState();
+  const { locale, round1Submissions, teams, timelineItems, users } = useSiteState();
   useAdminTitleScroll();
   const [activeScoreView, setActiveScoreView] = useState<"team" | "individual">("team");
 
@@ -1816,7 +1829,7 @@ export function AdminRound1ScoresManager() {
                   </td>
                   <td className="px-4 py-4 text-center">
                     <StatusPill tone={getStandingTone(group)}>
-                      {getStandingLabel(locale, group)}
+                      {getStandingLabel(locale, group, timelineItems)}
                     </StatusPill>
                   </td>
                   <td className="px-4 py-4">
@@ -2489,7 +2502,7 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
 }
 
 export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
-  const { locale, round1Submissions, round1TestBanks, teams, users } = useSiteState();
+  const { locale, round1Submissions, round1TestBanks, teams, timelineItems, users } = useSiteState();
   useAdminTitleScroll();
   const team = teams.find((item) => item.id === teamId);
   const teamGroups = buildTeamResultGroups(round1Submissions, teams, users);
@@ -2589,7 +2602,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
           icon={<Trophy className="h-5 w-5 text-amber-300" />}
           label={locale === "en" ? "Current rank" : "Hạng hiện tại"}
           value={group.rank ? `#${group.rank}` : "--"}
-          note={getStandingLabel(locale, group)}
+          note={getStandingLabel(locale, group, timelineItems)}
         />
         <MetricCard
           icon={<UsersRound className="h-5 w-5 text-cyan-300" />}
@@ -2680,7 +2693,7 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
               </p>
               <div className="mt-3">
                 <StatusPill tone={getStandingTone(group)}>
-                  {getStandingLabel(locale, group)}
+                  {getStandingLabel(locale, group, timelineItems)}
                 </StatusPill>
               </div>
             </div>

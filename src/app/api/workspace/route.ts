@@ -13,6 +13,7 @@ import {
   serializeUser,
 } from "@/server/site-serializers";
 import { ensureRound1SubmissionArchives } from "@/server/round1-submission-archive";
+import { syncRound1QualificationStages } from "@/server/round1-qualification";
 import { getRound1ExamState } from "@/server/team-service";
 
 function addIfPresent(target: Set<string>, value: string | null | undefined) {
@@ -30,6 +31,8 @@ export async function GET() {
   if (currentDbUser.role === UserRole.STUDENT) {
     await getRound1ExamState(currentDbUser.id);
   }
+
+  await syncRound1QualificationStages();
 
   const membership = await prisma.teamMember.findUnique({
     where: { userId: currentDbUser.id },

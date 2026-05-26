@@ -22,6 +22,7 @@ import { prisma } from "@/lib/db";
 import { getCompetitionRoundWindow, getTimelineItemById } from "@/lib/competition";
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
+import { syncRound1QualificationStages } from "@/server/round1-qualification";
 import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
@@ -1861,6 +1862,8 @@ export async function createTeamSubmission(
     resourceSizeBytes?: number;
   },
 ): Promise<ServiceResult<{ submissionId: string; teamId: string; teamName: string; version: number }>> {
+  await syncRound1QualificationStages();
+
   const staleRound2StorageKeys: string[] = [];
   const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: actorId } });

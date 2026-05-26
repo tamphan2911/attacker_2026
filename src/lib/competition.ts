@@ -23,6 +23,8 @@ const primaryRoundTimelineItemIds: Record<CompetitionRoundKey, string> = {
   "round-3": "round-3-final-presentation",
 };
 
+export const ROUND1_RESULT_ANNOUNCEMENT_TIMELINE_ID = "round-1-top-50-announcement";
+
 function sortTimelineItemsByDate(items: TimelineItem[]) {
   return [...items].sort((left, right) => {
     if (left.startDate !== right.startDate) {
@@ -73,6 +75,10 @@ function endOfDay(value: string) {
   return new Date(`${value}T23:59:59.999`);
 }
 
+function startOfVietnamDay(value: string) {
+  return new Date(`${value}T00:00:00.000+07:00`);
+}
+
 function getSubmissionDeadlineItemId(round: SubmissionRound) {
   return round === "round-3" ? "round-3-final-report-submission" : "round-2-report-submission";
 }
@@ -99,6 +105,41 @@ export function isTimelineItemFinished(
   }
 
   return now.getTime() > endOfDay(item.endDate).getTime();
+}
+
+export function isTimelineItemStarted(
+  itemId: string,
+  timelineItems?: TimelineItem[],
+  now = new Date(),
+) {
+  const item = getTimelineItemById(itemId, timelineItems);
+  if (!item) {
+    return false;
+  }
+
+  return now.getTime() >= startOfVietnamDay(item.startDate).getTime();
+}
+
+export function isRound1ResultAnnouncementReleased(timelineItems?: TimelineItem[], now = new Date()) {
+  return isTimelineItemStarted(ROUND1_RESULT_ANNOUNCEMENT_TIMELINE_ID, timelineItems, now);
+}
+
+export function isRound2Started(timelineItems?: TimelineItem[], now = new Date()) {
+  const round2Item = getCompetitionRoundPrimaryTimelineItem("round-2", timelineItems);
+  if (round2Item) {
+    return now.getTime() >= startOfVietnamDay(round2Item.startDate).getTime();
+  }
+
+  const round2Window = getCompetitionRoundWindow("round-2", timelineItems);
+  if (!round2Window) {
+    return false;
+  }
+
+  return now.getTime() >= startOfVietnamDay(round2Window.startDate).getTime();
+}
+
+export function canApplyRound1Qualification(timelineItems?: TimelineItem[], now = new Date()) {
+  return isRound1ResultAnnouncementReleased(timelineItems, now) && isRound2Started(timelineItems, now);
 }
 
 export function isRoundFinished(

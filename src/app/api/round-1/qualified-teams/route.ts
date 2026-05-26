@@ -2,19 +2,21 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
 import {
+  ROUND1_RESULT_ANNOUNCEMENT_TIMELINE_ID,
+  canApplyRound1Qualification,
+  isRound1ResultAnnouncementReleased,
+} from "@/lib/competition";
+import {
   ROUND1_ESSAY_MAX_SCORE,
   ROUND1_OBJECTIVE_MAX_SCORE,
   ROUND1_TOTAL_MAX_SCORE,
 } from "@/lib/round1";
 import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
+import {
+  ROUND1_QUALIFIED_TEAM_LIMIT,
+  syncRound1QualificationStages,
+} from "@/server/round1-qualification";
 import { readTimelineItems } from "@/server/timeline-items";
-
-const QUALIFIED_TEAM_LIMIT = 50;
-const ROUND1_ANNOUNCEMENT_ID = "round-1-top-50-announcement";
-
-function startOfVietnamDay(value: string) {
-  return new Date(`${value}T00:00:00.000+07:00`);
-}
 
 function average(values: number[]) {
   if (values.length === 0) {
@@ -26,11 +28,8 @@ function average(values: number[]) {
 
 export async function GET() {
   const [timelineItems, currentUser] = await Promise.all([readTimelineItems(), getCurrentDbUser()]);
-  const announcementItem = timelineItems.find((item) => item.id === ROUND1_ANNOUNCEMENT_ID);
-  const announcementAt = announcementItem?.startDate
-    ? startOfVietnamDay(announcementItem.startDate)
-    : new Date(0);
-  const released = Date.now() >= announcementAt.getTime();
+  const announcementItem = timelineItems.find((item) => item.id === ROUND1_RESULT_ANNOUNCEMENT_TIMELINE_ID);
+  const released = isRound1ResultAnnouncementReleased(timelineItems);
   const canPreviewBeforeRelease = currentUser ? hasElevatedRole(currentUser.role) : false;
 
   if (!released && !canPreviewBeforeRelease) {
@@ -49,6 +48,10 @@ export async function GET() {
       },
       { status: 200 },
     );
+  }
+
+  if (canApplyRound1Qualification(timelineItems)) {
+    await syncRound1QualificationStages({ timelineItems });
   }
 
   const [teams, submissions] = await Promise.all([
@@ -113,7 +116,7 @@ export async function GET() {
         right.completedMembers - left.completedMembers ||
         left.team.name.localeCompare(right.team.name),
     )
-    .slice(0, QUALIFIED_TEAM_LIMIT)
+    .slice(0, ROUND1_QUALIFIED_TEAM_LIMIT)
     .sort((left, right) => left.team.name.localeCompare(right.team.name))
     .map((group) => ({
       teamId: group.team.id,
