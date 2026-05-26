@@ -44,23 +44,23 @@ export async function POST(request: Request) {
   const resourceFile = formData.get("resourceFile");
   if (!(resourceFile instanceof File)) {
     return NextResponse.json(
-      { error: "Upload a PDF or RAR file before submitting." },
+      { error: "Upload a PDF file before submitting." },
       { status: 400 },
     );
   }
 
   const validationError = getSubmissionValidationError(resourceFile);
   if (validationError === "type") {
-    return NextResponse.json({ error: "Only PDF and RAR files are allowed." }, { status: 400 });
+    return NextResponse.json({ error: "Only PDF files are allowed." }, { status: 400 });
   }
 
   if (validationError === "size") {
-    return NextResponse.json({ error: "The uploaded file must be 5MB or smaller." }, { status: 400 });
+    return NextResponse.json({ error: "The uploaded PDF must be 20MB or smaller." }, { status: 400 });
   }
 
   if (validationError === "missing") {
     return NextResponse.json(
-      { error: "Upload a PDF or RAR file before submitting." },
+      { error: "Upload a PDF file before submitting." },
       { status: 400 },
     );
   }

@@ -2,13 +2,11 @@ const DB_NAME = "attacker-2026-submission-files";
 const STORE_NAME = "team-submission-files";
 const DB_VERSION = 1;
 
-export const MAX_SUBMISSION_FILE_BYTES = 5 * 1024 * 1024;
+export const MAX_SUBMISSION_FILE_BYTES = 20 * 1024 * 1024;
 
-const allowedSubmissionExtensions = [".pdf", ".rar"];
+const allowedSubmissionExtensions = [".pdf"];
 const allowedSubmissionMimeTypes = new Set([
   "application/pdf",
-  "application/x-rar-compressed",
-  "application/vnd.rar",
   "application/octet-stream",
 ]);
 

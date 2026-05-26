@@ -3275,15 +3275,15 @@ function SubmissionRoundCard({
                     {form.resourceFile
                       ? form.resourceFile.name
                       : locale === "en"
-                        ? "Choose a PDF or RAR file"
-                        : "Chọn tệp PDF hoặc RAR"}
+                        ? "Choose a PDF file"
+                        : "Chọn tệp PDF"}
                   </span>
                   <span className="rounded-full border theme-border px-3 py-1 text-xs font-semibold theme-text-soft">
                     {locale === "en" ? "Browse" : "Chọn tệp"}
                   </span>
                   <input
                     type="file"
-                    accept=".pdf,.rar,application/pdf,application/x-rar-compressed,application/vnd.rar"
+                    accept=".pdf,application/pdf"
                     onChange={(event) =>
                       onFormChange({ resourceFile: event.target.files?.[0] ?? null })
                     }
@@ -3292,8 +3292,8 @@ function SubmissionRoundCard({
                 </label>
                 <p className="text-xs leading-6 theme-text-faint">
                   {locale === "en"
-                    ? `Allowed: PDF or RAR. Maximum size ${formatFileSize(MAX_SUBMISSION_FILE_BYTES)}.`
-                    : `Cho phép: PDF hoặc RAR. Dung lượng tối đa ${formatFileSize(MAX_SUBMISSION_FILE_BYTES)}.`}
+                    ? `Upload one PDF report only. Maximum file size: ${formatFileSize(MAX_SUBMISSION_FILE_BYTES)}.`
+                    : `Chỉ tải lên một tệp báo cáo PDF. Dung lượng tối đa: ${formatFileSize(MAX_SUBMISSION_FILE_BYTES)}.`}
                 </p>
                 {form.resourceFile ? (
                   <p className="text-xs theme-text-soft">

@@ -2999,8 +2999,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     if (validationError === "missing") {
       pushToast(
         {
-          en: "Upload a PDF or RAR file before submitting.",
-          vi: "Hay tai len tep PDF hoac RAR truoc khi nop.",
+          en: "Upload a PDF file before submitting.",
+          vi: "Hãy tải lên tệp PDF trước khi nộp.",
         },
         "warning",
       );
@@ -3010,8 +3010,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     if (validationError === "type") {
       pushToast(
         {
-          en: "Only PDF and RAR files are allowed.",
-          vi: "Chi cho phep tep PDF va RAR.",
+          en: "Only PDF files are allowed.",
+          vi: "Chỉ cho phép tệp PDF.",
         },
         "warning",
       );
@@ -3021,8 +3021,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     if (validationError === "size") {
       pushToast(
         {
-          en: "The uploaded file must be 5MB or smaller.",
-          vi: "Tep tai len phai nho hon hoac bang 5MB.",
+          en: "The uploaded PDF must be 20MB or smaller.",
+          vi: "Tệp PDF tải lên phải nhỏ hơn hoặc bằng 20MB.",
         },
         "warning",
       );
