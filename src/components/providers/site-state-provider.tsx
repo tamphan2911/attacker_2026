@@ -281,6 +281,8 @@ interface SiteStateValue {
     title: string;
     summary: string;
     resourceFile: File | null;
+    onUploadStart?: () => void;
+    onUploadProgress?: (progress: number) => void;
   }) => Promise<boolean>;
 }
 
@@ -2928,6 +2930,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     title: string;
     summary: string;
     resourceFile: File | null;
+    onUploadStart?: () => void;
+    onUploadProgress?: (progress: number) => void;
   }) => {
     const team = getTeamForUser(activeUserId, teams);
 
@@ -3040,24 +3044,65 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     formData.set("summary", payload.summary.trim());
     formData.set("resourceFile", resourceFile);
 
-    const response = await fetch("/api/teams/current/submissions", {
-      method: "POST",
-      body: formData,
-      credentials: "same-origin",
+    payload.onUploadStart?.();
+    payload.onUploadProgress?.(4);
+    pushToast(
+      {
+        en: "Your report is uploading. Please keep this page open and wait.",
+        vi: "Báo cáo đang được tải lên. Vui lòng giữ trang này mở và chờ trong giây lát.",
+      },
+      "info",
+    );
+
+    const uploadResult = await new Promise<{
+      ok: boolean;
+      payload: { error?: string; version?: number } | null;
+    }>((resolve) => {
+      const request = new XMLHttpRequest();
+      request.open("POST", "/api/teams/current/submissions");
+      request.withCredentials = true;
+      request.upload.onprogress = (event) => {
+        if (!event.lengthComputable || event.total <= 0) {
+          return;
+        }
+
+        const progress = Math.max(4, Math.min(96, Math.round((event.loaded / event.total) * 96)));
+        payload.onUploadProgress?.(progress);
+      };
+      request.onload = () => {
+        const responsePayload = (() => {
+          try {
+            return JSON.parse(request.responseText) as { error?: string; version?: number };
+          } catch {
+            return null;
+          }
+        })();
+        resolve({
+          ok: request.status >= 200 && request.status < 300,
+          payload: responsePayload,
+        });
+      };
+      request.onerror = () =>
+        resolve({
+          ok: false,
+          payload: { error: "Could not submit the team report." },
+        });
+      request.send(formData);
     });
 
-    if (!response.ok) {
-      const error = await extractResponseError(response, "Could not submit the team report.");
+    if (!uploadResult.ok) {
+      const error = uploadResult.payload?.error || "Could not submit the team report.";
       pushToast({ en: error, vi: error }, "warning");
       return false;
     }
 
-    const result = (await response.json()) as { version?: number };
+    payload.onUploadProgress?.(100);
+    const result = uploadResult.payload;
     await syncWorkspace();
     pushToast(
       {
-        en: `Submitted version ${result.version ?? "new"} for ${payload.round === "round-2" ? "Round 2" : "Round 3"}. The latest version is now the valid one.`,
-        vi: `Đã nộp phiên bản ${result.version ?? "mới"} cho ${payload.round === "round-2" ? "Vòng 2" : "Vòng 3"}. Phiên bản mới nhất hiện là phiên bản hợp lệ.`,
+        en: `The report uploaded successfully. Version ${result?.version ?? "new"} is now the final valid version for ${payload.round === "round-2" ? "Round 2" : "Round 3"}.`,
+        vi: `Báo cáo đã tải lên thành công. Phiên bản ${result?.version ?? "mới"} hiện là phiên bản hợp lệ cuối cùng cho ${payload.round === "round-2" ? "Vòng 2" : "Vòng 3"}.`,
       },
       "success",
     );

@@ -91,6 +91,11 @@ interface SubmissionFormState {
   resourceFile: File | null;
 }
 
+interface SubmissionUploadState {
+  isUploading: boolean;
+  progress: number;
+}
+
 interface ActiveRound1AttemptSummary {
   id: string;
   teamId: string;
@@ -113,6 +118,13 @@ function createSubmissionFormState(): SubmissionFormState {
     title: "",
     summary: "",
     resourceFile: null,
+  };
+}
+
+function createSubmissionUploadState(): SubmissionUploadState {
+  return {
+    isUploading: false,
+    progress: 0,
   };
 }
 
@@ -246,6 +258,10 @@ export function DashboardPage() {
   const [submissionForms, setSubmissionForms] = useState<Record<SubmissionRound, SubmissionFormState>>({
     "round-2": createSubmissionFormState(),
     "round-3": createSubmissionFormState(),
+  });
+  const [submissionUploadStates, setSubmissionUploadStates] = useState<Record<SubmissionRound, SubmissionUploadState>>({
+    "round-2": createSubmissionUploadState(),
+    "round-3": createSubmissionUploadState(),
   });
   const [hasRound1SubmittedRedirect, setHasRound1SubmittedRedirect] = useState(false);
   const [activeRound1Attempt, setActiveRound1Attempt] = useState<ActiveRound1AttemptSummary | null>(null);
@@ -877,23 +893,49 @@ export function DashboardPage() {
   };
 
   const handleSubmission = async (round: SubmissionRound) => {
-    const form = submissionForms[round];
-
-    const wasSubmitted = await submitTeamSubmission({
-      round,
-      title: form.title,
-      summary: form.summary,
-      resourceFile: form.resourceFile,
-    });
-
-    if (!wasSubmitted) {
+    if (submissionUploadStates[round].isUploading) {
       return;
     }
 
+    const form = submissionForms[round];
+    const setRoundUploadState = (state: SubmissionUploadState) =>
+      setSubmissionUploadStates((current) => ({
+        ...current,
+        [round]: state,
+      }));
+
+    let wasSubmitted = false;
+    try {
+      wasSubmitted = await submitTeamSubmission({
+        round,
+        title: form.title,
+        summary: form.summary,
+        resourceFile: form.resourceFile,
+        onUploadStart: () => setRoundUploadState({ isUploading: true, progress: 4 }),
+        onUploadProgress: (progress) =>
+          setRoundUploadState({
+            isUploading: true,
+            progress: Math.max(4, Math.min(100, progress)),
+          }),
+      });
+    } catch {
+      setRoundUploadState(createSubmissionUploadState());
+      return;
+    }
+
+    if (!wasSubmitted) {
+      setRoundUploadState(createSubmissionUploadState());
+      return;
+    }
+
+    setRoundUploadState({ isUploading: true, progress: 100 });
     setSubmissionForms((current) => ({
       ...current,
       [round]: createSubmissionFormState(),
     }));
+    window.setTimeout(() => {
+      setRoundUploadState(createSubmissionUploadState());
+    }, 900);
   };
 
   const handleConfirmInvite = () => {
@@ -2446,6 +2488,7 @@ export function DashboardPage() {
                   submissions={teamSubmissions.filter((submission) => submission.round === "round-2")}
                   users={users}
                   form={submissionForms["round-2"]}
+                  uploadState={submissionUploadStates["round-2"]}
                   onFormChange={(payload) =>
                     setSubmissionForms((current) => ({
                       ...current,
@@ -2469,6 +2512,7 @@ export function DashboardPage() {
                   submissions={teamSubmissions.filter((submission) => submission.round === "round-3")}
                   users={users}
                   form={submissionForms["round-3"]}
+                  uploadState={submissionUploadStates["round-3"]}
                   onFormChange={(payload) =>
                     setSubmissionForms((current) => ({
                       ...current,
@@ -3075,6 +3119,7 @@ function SubmissionRoundCard({
   submissions,
   users,
   form,
+  uploadState,
   onFormChange,
   onSubmit,
 }: {
@@ -3090,12 +3135,16 @@ function SubmissionRoundCard({
   submissions: TeamSubmission[];
   users: UserProfile[];
   form: SubmissionFormState;
+  uploadState: SubmissionUploadState;
   onFormChange: (payload: Partial<SubmissionFormState>) => void;
   onSubmit: () => void | Promise<void>;
 }) {
   const sectionId = round === "round-2" ? "round-2-section" : "round-3-section";
   const sortedSubmissions = [...submissions].sort((a, b) => b.version - a.version);
   const latestSubmission = sortedSubmissions[0];
+  const historicalSubmissions = sortedSubmissions.slice(1);
+  const uploadProgress = Math.max(4, Math.min(100, uploadState.progress));
+  const isUploading = uploadState.isUploading;
   const roundLabel =
     round === "round-2"
       ? locale === "en"
@@ -3212,42 +3261,68 @@ function SubmissionRoundCard({
 
           <div className="rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4">
             <p className="text-sm font-semibold theme-text-strong">
-              {locale === "en" ? "Version history" : "Lịch sử phiên bản"}
+              {locale === "en" ? "Older version history" : "Lịch sử phiên bản cũ"}
             </p>
-            <div className="mt-3 space-y-2">
-              {sortedSubmissions.length > 0 ? (
-                sortedSubmissions.map((submission, index) => (
-                  <div
-                    key={submission.id}
-                    className="overflow-x-auto rounded-[1.15rem] border theme-border theme-panel px-3 py-3"
-                  >
-                    <div className="grid min-w-[760px] grid-cols-[120px_minmax(180px,1fr)_116px_140px_minmax(150px,0.8fr)_72px] items-center gap-3 text-sm">
-                      <div className="min-w-0">
-                        <StatusPill tone={index === 0 ? "success" : "default"}>
-                          {index === 0
-                            ? locale === "en"
-                              ? `Valid v${submission.version}`
-                              : `v${submission.version} hợp lệ`
-                            : locale === "en"
-                              ? `Archived v${submission.version}`
-                              : `v${submission.version} cũ`}
-                        </StatusPill>
-                      </div>
-                      <p className="truncate font-semibold theme-text-strong">{submission.title}</p>
-                      <span className="truncate text-xs theme-text-soft">{formatDateLabel(locale, submission.submittedAt)}</span>
-                      <span className="truncate text-xs theme-text-soft">
-                        {(users.find((user) => user.id === submission.submittedByUserId) ?? users[0]).name}
-                      </span>
-                      <span className="truncate text-xs theme-text-soft">{submission.resourceLabel}</span>
-                      <span className="text-right text-xs theme-text-faint">
-                        {submission.resourceSizeBytes ? formatFileSize(submission.resourceSizeBytes) : "—"}
-                      </span>
-                    </div>
-                  </div>
-                ))
+            <div className="mt-3">
+              {historicalSubmissions.length > 0 ? (
+                <div className="overflow-x-auto rounded-[1.15rem] border theme-border">
+                  <table className="min-w-[820px] w-full text-left text-xs">
+                    <thead className="bg-slate-900/[0.04] theme-text-soft dark:bg-white/[0.06]">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold uppercase tracking-[0.16em]">
+                          {locale === "en" ? "Version" : "Phiên bản"}
+                        </th>
+                        <th className="px-4 py-3 font-semibold uppercase tracking-[0.16em]">
+                          {locale === "en" ? "Title" : "Tiêu đề"}
+                        </th>
+                        <th className="px-4 py-3 font-semibold uppercase tracking-[0.16em]">
+                          {locale === "en" ? "Submitted" : "Thời gian"}
+                        </th>
+                        <th className="px-4 py-3 font-semibold uppercase tracking-[0.16em]">
+                          {locale === "en" ? "Submitted by" : "Người nộp"}
+                        </th>
+                        <th className="px-4 py-3 font-semibold uppercase tracking-[0.16em]">
+                          {locale === "en" ? "File" : "Tệp"}
+                        </th>
+                        <th className="px-4 py-3 text-right font-semibold uppercase tracking-[0.16em]">
+                          {locale === "en" ? "Size" : "Dung lượng"}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historicalSubmissions.map((submission) => (
+                        <tr
+                          key={submission.id}
+                          className="border-t theme-border bg-slate-900/[0.035] text-slate-600 dark:bg-white/[0.045] dark:text-slate-300"
+                        >
+                          <td className="px-4 py-3">
+                            <StatusPill tone="default">{`v${submission.version}`}</StatusPill>
+                          </td>
+                          <td className="max-w-[220px] truncate px-4 py-3 font-semibold">
+                            {submission.title}
+                          </td>
+                          <td className="px-4 py-3">
+                            {formatDateLabel(locale, submission.submittedAt)}
+                          </td>
+                          <td className="max-w-[160px] truncate px-4 py-3">
+                            {(users.find((user) => user.id === submission.submittedByUserId) ?? users[0]).name}
+                          </td>
+                          <td className="max-w-[190px] truncate px-4 py-3">
+                            {submission.resourceLabel}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            {submission.resourceSizeBytes ? formatFileSize(submission.resourceSizeBytes) : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <p className="text-sm theme-text-soft">
-                  {locale === "en" ? "Version history will appear after the first upload." : "Lịch sử phiên bản sẽ hiện ra sau lần nộp đầu tiên."}
+                  {locale === "en"
+                    ? "Older versions will appear here after the next upload."
+                    : "Các phiên bản cũ sẽ hiện ở đây sau lần nộp tiếp theo."}
                 </p>
               )}
             </div>
@@ -3264,13 +3339,14 @@ function SubmissionRoundCard({
                 <span className="text-sm theme-text-muted">{locale === "en" ? "Submission title" : "Tiêu đề báo cáo"}</span>
                 <input
                   value={form.title}
+                  disabled={isUploading}
                   onChange={(event) => onFormChange({ title: event.target.value })}
-                  className="theme-placeholder w-full rounded-2xl border theme-border theme-panel-subtle px-4 py-3 text-sm theme-text-strong outline-none"
+                  className="theme-placeholder w-full rounded-2xl border theme-border theme-panel-subtle px-4 py-3 text-sm theme-text-strong outline-none disabled:cursor-wait disabled:opacity-65"
                 />
               </label>
               <label className="space-y-2">
                 <span className="text-sm theme-text-muted">{locale === "en" ? "Submission file" : "Tệp báo cáo"}</span>
-                <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border theme-border theme-panel-subtle px-4 py-3 text-sm theme-text-strong">
+                <label className={`flex items-center justify-between gap-3 rounded-2xl border theme-border theme-panel-subtle px-4 py-3 text-sm theme-text-strong ${isUploading ? "cursor-wait opacity-70" : "cursor-pointer"}`}>
                   <span className="truncate">
                     {form.resourceFile
                       ? form.resourceFile.name
@@ -3284,6 +3360,7 @@ function SubmissionRoundCard({
                   <input
                     type="file"
                     accept=".pdf,application/pdf"
+                    disabled={isUploading}
                     onChange={(event) =>
                       onFormChange({ resourceFile: event.target.files?.[0] ?? null })
                     }
@@ -3300,23 +3377,52 @@ function SubmissionRoundCard({
                     {formatFileSize(form.resourceFile.size)}
                   </p>
                 ) : null}
+                {isUploading ? (
+                  <div className="rounded-[1.15rem] border border-sky-400/35 bg-[linear-gradient(135deg,rgba(56,189,248,0.16),rgba(37,99,235,0.08))] px-3 py-3 shadow-[0_16px_34px_rgba(14,165,233,0.13)] dark:border-sky-300/24 dark:bg-sky-300/12">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-sky-700 dark:text-sky-200">
+                        {locale === "en" ? "Uploading report" : "Đang tải báo cáo"}
+                      </p>
+                      <span className="text-xs font-semibold theme-text-strong">{uploadProgress}%</span>
+                    </div>
+                    <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-900/10 dark:bg-white/12">
+                      <div
+                        className="h-full rounded-full bg-[linear-gradient(90deg,#38bdf8,#2563eb,#14b8a6)] shadow-[0_0_18px_rgba(56,189,248,0.48)] transition-[width] duration-300 ease-out"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs leading-5 theme-text-muted">
+                      {locale === "en"
+                        ? "Please keep this page open while the final version is updated."
+                        : "Vui lòng giữ trang này mở trong khi hệ thống cập nhật phiên bản hợp lệ cuối cùng."}
+                    </p>
+                  </div>
+                ) : null}
               </label>
               <label className="space-y-2">
                 <span className="text-sm theme-text-muted">{locale === "en" ? "Submission notes" : "Ghi chú báo cáo"}</span>
                 <textarea
                   value={form.summary}
                   rows={4}
+                  disabled={isUploading}
                   onChange={(event) => onFormChange({ summary: event.target.value })}
-                  className="theme-placeholder w-full rounded-2xl border theme-border theme-panel-subtle px-4 py-3 text-sm theme-text-strong outline-none"
+                  className="theme-placeholder w-full rounded-2xl border theme-border theme-panel-subtle px-4 py-3 text-sm theme-text-strong outline-none disabled:cursor-wait disabled:opacity-65"
                 />
               </label>
               <button
                 type="button"
+                disabled={isUploading}
                 onClick={onSubmit}
-                className="theme-button-primary inline-flex w-full items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold"
+                className="theme-button-primary inline-flex w-full items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3.5 text-sm font-semibold disabled:cursor-wait disabled:opacity-70"
               >
                 <Upload className="h-4 w-4" />
-                {locale === "en" ? "Submit new version" : "Nộp phiên bản mới"}
+                {isUploading
+                  ? locale === "en"
+                    ? "Uploading report..."
+                    : "Đang tải báo cáo..."
+                  : locale === "en"
+                    ? "Submit new version"
+                    : "Nộp phiên bản mới"}
               </button>
             </div>
           ) : (
