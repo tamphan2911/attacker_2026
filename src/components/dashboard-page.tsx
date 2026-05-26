@@ -263,6 +263,10 @@ export function DashboardPage() {
     "round-2": createSubmissionUploadState(),
     "round-3": createSubmissionUploadState(),
   });
+  const submissionUploadLocksRef = useRef<Record<SubmissionRound, boolean>>({
+    "round-2": false,
+    "round-3": false,
+  });
   const [hasRound1SubmittedRedirect, setHasRound1SubmittedRedirect] = useState(false);
   const [activeRound1Attempt, setActiveRound1Attempt] = useState<ActiveRound1AttemptSummary | null>(null);
   const sentInvitations = currentTeam
@@ -893,9 +897,11 @@ export function DashboardPage() {
   };
 
   const handleSubmission = async (round: SubmissionRound) => {
-    if (submissionUploadStates[round].isUploading) {
+    if (submissionUploadStates[round].isUploading || submissionUploadLocksRef.current[round]) {
       return;
     }
+
+    submissionUploadLocksRef.current[round] = true;
 
     const form = submissionForms[round];
     const setRoundUploadState = (state: SubmissionUploadState) =>
@@ -919,11 +925,13 @@ export function DashboardPage() {
           }),
       });
     } catch {
+      submissionUploadLocksRef.current[round] = false;
       setRoundUploadState(createSubmissionUploadState());
       return;
     }
 
     if (!wasSubmitted) {
+      submissionUploadLocksRef.current[round] = false;
       setRoundUploadState(createSubmissionUploadState());
       return;
     }
@@ -934,6 +942,7 @@ export function DashboardPage() {
       [round]: createSubmissionFormState(),
     }));
     window.setTimeout(() => {
+      submissionUploadLocksRef.current[round] = false;
       setRoundUploadState(createSubmissionUploadState());
     }, 900);
   };
