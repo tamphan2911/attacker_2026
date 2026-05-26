@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -207,6 +207,49 @@ function PhoneRequirementNotice({
   );
 }
 
+function CollapseToggleButton({
+  collapsed,
+  label,
+  onToggle,
+}: {
+  collapsed: boolean;
+  label: string;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      aria-expanded={!collapsed}
+      onClick={onToggle}
+      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border theme-border bg-white/70 theme-text-soft shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:border-sky-400/40 hover:bg-white hover:text-sky-700 active:translate-y-0 dark:bg-white/8 dark:shadow-none dark:hover:bg-white/12 dark:hover:text-sky-100"
+    >
+      <ChevronDown className={`h-4 w-4 transition-transform duration-300 ease-out ${collapsed ? "" : "rotate-180"}`} />
+    </button>
+  );
+}
+
+function CollapsibleBlockContent({
+  collapsed,
+  children,
+}: {
+  collapsed: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={`grid transition-[grid-template-rows,opacity,transform] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        collapsed ? "grid-rows-[0fr] -translate-y-1 opacity-0" : "grid-rows-[1fr] translate-y-0 opacity-100"
+      }`}
+    >
+      <div className="min-h-0 overflow-hidden">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function DashboardPage() {
   const {
     locale,
@@ -255,6 +298,8 @@ export function DashboardPage() {
   const [pendingKickMemberId, setPendingKickMemberId] = useState<string | null>(null);
   const [kickReason, setKickReason] = useState("");
   const [isKickMemberPending, setIsKickMemberPending] = useState(false);
+  const [isRosterActionsCollapsed, setIsRosterActionsCollapsed] = useState(false);
+  const [isRound1LockCollapsed, setIsRound1LockCollapsed] = useState(false);
   const [submissionForms, setSubmissionForms] = useState<Record<SubmissionRound, SubmissionFormState>>({
     "round-2": createSubmissionFormState(),
     "round-3": createSubmissionFormState(),
@@ -280,6 +325,7 @@ export function DashboardPage() {
   const inviteSearchKeyword = inviteSearch.trim();
   const currentTeamId = currentTeam?.id;
   const currentTeamStage = currentTeam?.stage;
+  const shouldAutoCollapseTeamLock = currentTeam?.round1LockStatus === "locked";
 
   useEffect(() => {
     setTeamForm(createTeamFormState(currentTeam));
@@ -297,6 +343,17 @@ export function DashboardPage() {
     const params = new URLSearchParams(window.location.search);
     setHasRound1SubmittedRedirect(params.get("round1") === "submitted");
   }, []);
+
+  useEffect(() => {
+    if (shouldAutoCollapseTeamLock) {
+      setIsRosterActionsCollapsed(true);
+      setIsRound1LockCollapsed(true);
+      return;
+    }
+
+    setIsRosterActionsCollapsed(false);
+    setIsRound1LockCollapsed(false);
+  }, [currentTeamId, shouldAutoCollapseTeamLock]);
 
   useEffect(() => {
     if (!isAuthenticated || currentUser.role !== "student" || !currentTeamId || currentTeamStage !== "round-1") {
@@ -1512,12 +1569,26 @@ export function DashboardPage() {
         <>
           <section className="space-y-6">
             <Surface className="px-6 py-6 md:px-8 md:py-8">
-              <div>
+              <div className="flex items-start justify-between gap-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
                   {locale === "en" ? "Roster & actions" : "Đội hình và thao tác"}
                 </p>
+                <CollapseToggleButton
+                  collapsed={isRosterActionsCollapsed}
+                  label={
+                    isRosterActionsCollapsed
+                      ? locale === "en"
+                        ? "Expand roster and actions"
+                        : "Mở đội hình và thao tác"
+                      : locale === "en"
+                        ? "Collapse roster and actions"
+                        : "Thu gọn đội hình và thao tác"
+                  }
+                  onToggle={() => setIsRosterActionsCollapsed((current) => !current)}
+                />
               </div>
 
+              <CollapsibleBlockContent collapsed={isRosterActionsCollapsed}>
               <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(360px,1.1fr)_minmax(0,0.9fr)]">
                 <div className="space-y-4 xl:order-2">
                   <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -2014,6 +2085,7 @@ export function DashboardPage() {
               </div>
                 </div>
               </div>
+              </CollapsibleBlockContent>
             </Surface>
           </section>
 
@@ -2053,7 +2125,7 @@ export function DashboardPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
                   <StatusPill
                     tone={
                       currentTeam.round1LockStatus === "locked"
@@ -2068,9 +2140,23 @@ export function DashboardPage() {
                   {round1Window ? (
                     <StatusPill>{formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate)}</StatusPill>
                   ) : null}
+                  <CollapseToggleButton
+                    collapsed={isRound1LockCollapsed}
+                    label={
+                      isRound1LockCollapsed
+                        ? locale === "en"
+                          ? "Expand Round 1 team lock"
+                          : "Mở khóa đội Vòng 1"
+                        : locale === "en"
+                          ? "Collapse Round 1 team lock"
+                          : "Thu gọn khóa đội Vòng 1"
+                    }
+                    onToggle={() => setIsRound1LockCollapsed((current) => !current)}
+                  />
                 </div>
               </div>
 
+              <CollapsibleBlockContent collapsed={isRound1LockCollapsed}>
               <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                   <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
@@ -2292,6 +2378,7 @@ export function DashboardPage() {
                             : "Nếu có bất kỳ thành viên nào từ chối, toàn bộ quy trình khóa đội sẽ dừng lại và đội trưởng phải khởi động lại vào lúc khác."}
                 </p>
               ) : null}
+              </CollapsibleBlockContent>
             </Surface>
           </section>
 
