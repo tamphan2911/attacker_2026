@@ -113,7 +113,7 @@ export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]>
         version: submission.version,
         resourceLabel: submission.resourceLabel,
         resourceUrl:
-          submission.resourceSource === TeamSubmissionResourceSource.UPLOAD
+          submission.resourceSource === TeamSubmissionResourceSource.UPLOAD && submission.resourceStorageKey
             ? `/api/team-submissions/${submission.id}/file`
             : submission.resourceUrl ?? undefined,
         resourceSource: submission.resourceSource === TeamSubmissionResourceSource.UPLOAD ? "upload" : "external",

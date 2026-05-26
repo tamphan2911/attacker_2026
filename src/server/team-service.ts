@@ -24,6 +24,7 @@ import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
 import { attachRound2SubmissionJudgeAssignments } from "@/server/round2-judge-assignment";
+import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
   createRound1EssayPaperQuestions,
@@ -1864,6 +1865,7 @@ export async function createTeamSubmission(
 ): Promise<ServiceResult<{ submissionId: string; teamId: string; teamName: string; version: number }>> {
   await syncRound1QualificationStages();
 
+  const archivedRound2Files: Array<{ id: string; storageKey: string }> = [];
   const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: actorId } });
     if (!user) {
@@ -1959,6 +1961,15 @@ export async function createTeamSubmission(
         submission.id,
         membership.teamId,
       );
+
+      archivedRound2Files.push(
+        ...existingSubmissions
+          .filter((existingSubmission) => Boolean(existingSubmission.resourceStorageKey))
+          .map((existingSubmission) => ({
+            id: existingSubmission.id,
+            storageKey: existingSubmission.resourceStorageKey!,
+          })),
+      );
     }
 
     return ok(
@@ -1971,6 +1982,26 @@ export async function createTeamSubmission(
       201,
     );
   });
+
+  if (result.ok && archivedRound2Files.length > 0) {
+    await Promise.all(
+      archivedRound2Files.map(async ({ id, storageKey }) => {
+        try {
+          await deleteTeamSubmissionFile(storageKey);
+          await prisma.teamSubmission.update({
+            where: { id },
+            data: { resourceStorageKey: null },
+          });
+        } catch (error) {
+          console.warn("[team-submission] Could not archive stale Round 2 report file.", {
+            submissionId: id,
+            storageKey,
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }),
+    );
+  }
 
   return result;
 }

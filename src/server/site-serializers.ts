@@ -437,7 +437,7 @@ export function serializeTeamSubmission(
     resourceSource: mapSubmissionSource(submission.resourceSource),
     resourceLabel: submission.resourceLabel,
     resourceUrl:
-      submission.resourceSource === TeamSubmissionResourceSource.UPLOAD
+      submission.resourceSource === TeamSubmissionResourceSource.UPLOAD && submission.resourceStorageKey
         ? `/api/team-submissions/${submission.id}/file`
         : submission.resourceUrl ?? undefined,
     resourceStorageKey: submission.resourceStorageKey ?? undefined,

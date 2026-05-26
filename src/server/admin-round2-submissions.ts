@@ -181,7 +181,7 @@ export async function readAdminRound2SubmissionRows(): Promise<{
       isLatest: isLatest ? "valid latest" : "history only",
       resourceLabel: submission.resourceLabel,
       resourceUrl:
-        submission.resourceSource === TeamSubmissionResourceSource.UPLOAD
+        submission.resourceSource === TeamSubmissionResourceSource.UPLOAD && submission.resourceStorageKey
           ? `/api/team-submissions/${submission.id}/file`
           : submission.resourceUrl ?? undefined,
       resourceSource: submission.resourceSource === TeamSubmissionResourceSource.UPLOAD ? "upload" : "external",
