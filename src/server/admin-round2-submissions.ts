@@ -98,9 +98,17 @@ export async function readAdminRound2SubmissionRows(): Promise<{
   availableJudges: AdminRound2JudgeOption[];
   round2Closed: boolean;
 }> {
-  await ensureRound2JudgeAssignments(prisma);
+  const timelineItems = await readTimelineItems();
+  const round2DeadlineItem = getTimelineItemById("round-2-report-submission", timelineItems);
+  const round2Closed = round2DeadlineItem
+    ? new Date().getTime() > endOfVietnamDay(round2DeadlineItem.endDate).getTime()
+    : false;
 
-  const [submissions, availableJudges, timelineItems] = await Promise.all([
+  if (round2Closed) {
+    await ensureRound2JudgeAssignments(prisma);
+  }
+
+  const [submissions, availableJudges] = await Promise.all([
     prisma.teamSubmission.findMany({
       where: {
         round: SubmissionRound.ROUND_2,
@@ -139,24 +147,27 @@ export async function readAdminRound2SubmissionRows(): Promise<{
       },
     }),
     readAdminRound2JudgeOptions(),
-    readTimelineItems(),
   ]);
 
   const latestByTeam = new Map<string, (typeof submissions)[number]>();
   for (const submission of submissions) {
-    if (!latestByTeam.has(submission.teamId)) {
+    const currentLatest = latestByTeam.get(submission.teamId);
+    if (
+      !currentLatest ||
+      submission.version > currentLatest.version ||
+      (submission.version === currentLatest.version &&
+        submission.submittedAt.getTime() > currentLatest.submittedAt.getTime())
+    ) {
       latestByTeam.set(submission.teamId, submission);
     }
   }
 
-  const round2DeadlineItem = getTimelineItemById("round-2-report-submission", timelineItems);
-  const round2Closed = round2DeadlineItem
-    ? new Date().getTime() > endOfVietnamDay(round2DeadlineItem.endDate).getTime()
-    : false;
   const availableJudgeByUserId = new Map(availableJudges.map((judge) => [judge.judgeUserId, judge]));
 
   const rows = submissions.map<AdminRound2SubmissionRow>((submission) => {
-    const assignedJudges = submission.judgeReviews
+    const isLatest = latestByTeam.get(submission.teamId)?.id === submission.id;
+    const visibleJudgeReviews = isLatest && round2Closed ? submission.judgeReviews : [];
+    const assignedJudges = visibleJudgeReviews
       .filter((review) => review.judgeUser.role === UserRole.JUDGE)
       .slice(0, 2)
       .map<AdminRound2AssignedJudgeRecord>((review) => ({
@@ -168,7 +179,6 @@ export async function readAdminRound2SubmissionRows(): Promise<{
         score: review.score ?? undefined,
         scoredAt: review.scoredAt?.toISOString(),
       }));
-    const isLatest = latestByTeam.get(submission.teamId)?.id === submission.id;
     const assignmentLocked = assignedJudges.some((judge) => Boolean(judge.scoredAt));
 
     return {

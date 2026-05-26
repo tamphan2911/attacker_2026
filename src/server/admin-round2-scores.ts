@@ -40,7 +40,11 @@ async function isRound2SubmissionClosed(now = new Date()) {
 }
 
 export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]> {
-  await ensureRound2JudgeAssignments(prisma);
+  const round2Closed = await isRound2SubmissionClosed();
+
+  if (round2Closed) {
+    await ensureRound2JudgeAssignments(prisma);
+  }
 
   const submissions = await prisma.teamSubmission.findMany({
     where: {
@@ -80,7 +84,13 @@ export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]>
 
   const latestByTeam = new Map<string, (typeof submissions)[number]>();
   for (const submission of submissions) {
-    if (!latestByTeam.has(submission.teamId)) {
+    const currentLatest = latestByTeam.get(submission.teamId);
+    if (
+      !currentLatest ||
+      submission.version > currentLatest.version ||
+      (submission.version === currentLatest.version &&
+        submission.submittedAt.getTime() > currentLatest.submittedAt.getTime())
+    ) {
       latestByTeam.set(submission.teamId, submission);
     }
   }
@@ -88,7 +98,7 @@ export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]>
   return Array.from(latestByTeam.values())
     .map<AdminRound2ScoreRow>((submission) => {
       const judges = submission.judgeReviews
-        .filter((review) => review.judgeUser.role === UserRole.JUDGE)
+        .filter((review) => round2Closed && review.judgeUser.role === UserRole.JUDGE)
         .slice(0, 2)
         .map<AdminRound2JudgeScoreRecord>((review) => ({
           judgeUserId: review.judgeUser.id,

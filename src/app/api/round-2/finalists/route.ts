@@ -61,7 +61,13 @@ export async function GET() {
 
   const latestByTeam = new Map<string, (typeof submissions)[number]>();
   for (const submission of submissions) {
-    if (!latestByTeam.has(submission.teamId)) {
+    const currentLatest = latestByTeam.get(submission.teamId);
+    if (
+      !currentLatest ||
+      submission.version > currentLatest.version ||
+      (submission.version === currentLatest.version &&
+        submission.submittedAt.getTime() > currentLatest.submittedAt.getTime())
+    ) {
       latestByTeam.set(submission.teamId, submission);
     }
   }

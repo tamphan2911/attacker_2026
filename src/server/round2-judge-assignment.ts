@@ -109,7 +109,7 @@ function pickRandomJudgeIds(judgeUserIds: string[], count: number) {
   return picked;
 }
 
-export async function ensureRound2TeamJudgeAssignments(
+async function ensureRound2TeamJudgeAssignments(
   db: AssignmentDb,
   options: { teamIds?: string[] } = {},
 ) {
@@ -174,42 +174,11 @@ export async function ensureRound2TeamJudgeAssignments(
   return created;
 }
 
-export async function attachRound2SubmissionJudgeAssignments(
-  db: AssignmentDb,
-  submissionId: string,
-  teamId: string,
-) {
-  await ensureRound2TeamJudgeAssignments(db, { teamIds: [teamId] });
-
-  const assignments = await db.round2TeamJudgeAssignment.findMany({
-    where: { teamId },
-    select: { judgeUserId: true },
-    orderBy: { createdAt: "asc" },
-    take: 2,
-  });
-
-  let created = 0;
-  for (const assignment of assignments) {
-    await db.teamSubmissionJudgeReview.upsert({
-      where: {
-        judgeUserId_submissionId: {
-          judgeUserId: assignment.judgeUserId,
-          submissionId,
-        },
-      },
-      update: {},
-      create: {
-        judgeUserId: assignment.judgeUserId,
-        submissionId,
-      },
-    });
-    created += 1;
+export async function ensureRound2JudgeAssignments(db: AssignmentDb) {
+  if (!(await isRound2SubmissionClosed())) {
+    return 0;
   }
 
-  return created;
-}
-
-export async function ensureRound2JudgeAssignments(db: AssignmentDb) {
   const submissions = await db.teamSubmission.findMany({
     where: { round: SubmissionRound.ROUND_2 },
     orderBy: [{ submittedAt: "desc" }, { version: "desc" }],
@@ -230,9 +199,28 @@ export async function ensureRound2JudgeAssignments(db: AssignmentDb) {
 
   const latestByTeam = new Map<string, (typeof submissions)[number]>();
   for (const submission of submissions) {
-    if (!latestByTeam.has(submission.teamId)) {
+    const currentLatest = latestByTeam.get(submission.teamId);
+    if (
+      !currentLatest ||
+      submission.version > currentLatest.version ||
+      (submission.version === currentLatest.version &&
+        submission.submittedAt.getTime() > currentLatest.submittedAt.getTime())
+    ) {
       latestByTeam.set(submission.teamId, submission);
     }
+  }
+
+  const latestSubmissionIds = new Set(Array.from(latestByTeam.values()).map((submission) => submission.id));
+  const historySubmissionIds = submissions
+    .filter((submission) => !latestSubmissionIds.has(submission.id))
+    .map((submission) => submission.id);
+
+  if (historySubmissionIds.length > 0) {
+    await db.teamSubmissionJudgeReview.deleteMany({
+      where: {
+        submissionId: { in: historySubmissionIds },
+      },
+    });
   }
 
   let created = 0;

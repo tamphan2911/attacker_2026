@@ -253,7 +253,13 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
     const latestByRoundTeam = new Map<string, typeof submissions[number]>();
     for (const submission of submissions) {
       const key = `${submission.round}:${submission.teamId}`;
-      if (!latestByRoundTeam.has(key)) {
+      const currentLatest = latestByRoundTeam.get(key);
+      if (
+        !currentLatest ||
+        submission.version > currentLatest.version ||
+        (submission.version === currentLatest.version &&
+          submission.submittedAt.getTime() > currentLatest.submittedAt.getTime())
+      ) {
         latestByRoundTeam.set(key, submission);
       }
     }
