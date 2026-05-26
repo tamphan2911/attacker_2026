@@ -2,6 +2,7 @@ import { CompetitionStage } from "@prisma/client";
 
 import { canApplyRound1Qualification } from "@/lib/competition";
 import { prisma } from "@/lib/db";
+import { ensureRound2TeamJudgeAssignments } from "@/server/round2-judge-assignment";
 import { readTimelineItems } from "@/server/timeline-items";
 import type { TimelineItem } from "@/types/site";
 
@@ -109,14 +110,20 @@ export async function syncRound1QualificationStages(options: Round1Qualification
     };
   }
 
-  const updateResult = await prisma.team.updateMany({
-    where: {
-      id: { in: qualifiedTeamIds },
-      stage: CompetitionStage.ROUND_1,
-    },
-    data: {
-      stage: CompetitionStage.ROUND_2,
-    },
+  const updateResult = await prisma.$transaction(async (tx) => {
+    const promotedTeams = await tx.team.updateMany({
+      where: {
+        id: { in: qualifiedTeamIds },
+        stage: CompetitionStage.ROUND_1,
+      },
+      data: {
+        stage: CompetitionStage.ROUND_2,
+      },
+    });
+
+    await ensureRound2TeamJudgeAssignments(tx, { teamIds: qualifiedTeamIds });
+
+    return promotedTeams;
   });
 
   return {

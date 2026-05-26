@@ -153,6 +153,7 @@ model User {
   teamSubmissions            TeamSubmission[]
   round1JudgeReviews         Round1JudgeReview[]
   teamSubmissionJudgeReviews TeamSubmissionJudgeReview[]
+  round2TeamJudgeAssignments Round2TeamJudgeAssignment[]
   actionTokens               UserActionToken[]
   forumThreads               ForumThread[]               @relation("ForumThreadAuthor")
   forumReplies               ForumReply[]                @relation("ForumReplyAuthor")
@@ -201,6 +202,7 @@ model Team {
   round1ExamAttempts         Round1ExamAttempt[]
   round1Submissions          Round1Submission[]
   submissions                TeamSubmission[]
+  round2JudgeAssignments     Round2TeamJudgeAssignment[]
 }
 
 model TeamMember {
@@ -421,6 +423,19 @@ model TeamSubmissionJudgeReview {
 
   @@unique([judgeUserId, submissionId])
   @@index([judgeUserId, scoredAt])
+}
+
+model Round2TeamJudgeAssignment {
+  id          String   @id @default(cuid())
+  teamId      String
+  judgeUserId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  judgeUser   User     @relation(fields: [judgeUserId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, judgeUserId])
+  @@index([judgeUserId])
 }
 
 model NewsPost {

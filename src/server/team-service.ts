@@ -23,6 +23,7 @@ import { getCompetitionRoundWindow, getTimelineItemById } from "@/lib/competitio
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
+import { attachRound2SubmissionJudgeAssignments } from "@/server/round2-judge-assignment";
 import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
@@ -1953,6 +1954,14 @@ export async function createTeamSubmission(
         submittedByUserId: actorId,
       },
     });
+
+    if (payload.round === SubmissionRound.ROUND_2) {
+      await attachRound2SubmissionJudgeAssignments(
+        tx,
+        submission.id,
+        membership.teamId,
+      );
+    }
 
     if (payload.round === SubmissionRound.ROUND_2 && existingSubmissions.length > 0) {
       await tx.teamSubmission.deleteMany({

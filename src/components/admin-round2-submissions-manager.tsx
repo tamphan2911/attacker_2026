@@ -625,19 +625,19 @@ export function AdminRound2SubmissionsManager() {
           </p>
           <p className="mt-3 text-sm leading-7 theme-text-muted">
             {locale === "en"
-              ? "Review Round 2 report versions, download the file directly, and track the two judges assigned automatically after the deadline closes."
-              : "Rà soát các phiên bản báo cáo Vòng 2, tải trực tiếp tệp bài nộp và theo dõi hai giám khảo được tự động phân cho phiên bản mới nhất sau hạn nộp."}
+              ? "Review Round 2 report versions, download the file directly, and track the two judges assigned automatically when the Top 50 announcement goes live."
+              : "Rà soát các phiên bản báo cáo Vòng 2, tải trực tiếp tệp bài nộp và theo dõi hai giám khảo được tự động phân khi công bố Top 50."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <StatusPill tone={round2Closed ? "success" : "warning"}>
             {round2Closed
               ? locale === "en"
-                ? "Auto assignment active"
-                : "Đang tự động phân công"
+                ? "Scoring open"
+                : "Đã mở chấm điểm"
               : locale === "en"
-                ? "Auto assignment after deadline"
-                : "Tự động phân công sau hạn nộp"}
+                ? "Auto assignment from Top 50"
+                : "Tự động phân từ Top 50"}
           </StatusPill>
           <button
             type="button"
