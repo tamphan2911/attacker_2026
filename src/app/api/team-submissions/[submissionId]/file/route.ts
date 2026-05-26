@@ -7,6 +7,21 @@ import { readTeamSubmissionFile } from "@/server/team-submission-storage";
 
 export const runtime = "nodejs";
 
+function createContentDisposition(fileName: string) {
+  const sanitizedFileName =
+    fileName.replace(/[\r\n"]/g, "").trim() || "submission.pdf";
+  const fallbackFileName =
+    sanitizedFileName
+      .normalize("NFKD")
+      .replace(/[^\x20-\x7E]/g, "")
+      .replace(/[\\;]/g, "")
+      .trim() || "submission.pdf";
+
+  return `attachment; filename="${fallbackFileName}"; filename*=UTF-8''${encodeURIComponent(
+    sanitizedFileName,
+  )}`;
+}
+
 export async function GET(
   request: Request,
   context: { params: Promise<{ submissionId: string }> },
@@ -55,14 +70,12 @@ export async function GET(
     return NextResponse.json({ error: "The stored submission file is unavailable." }, { status: 404 });
   }
 
-  const safeFileName = submission.resourceLabel.replace(/"/g, "");
-
   return new Response(new Uint8Array(fileBuffer), {
     status: 200,
     headers: {
       "Content-Type": submission.resourceMimeType || "application/octet-stream",
       "Content-Length": String(fileBuffer.byteLength),
-      "Content-Disposition": `attachment; filename="${safeFileName}"`,
+      "Content-Disposition": createContentDisposition(submission.resourceLabel),
       "Cache-Control": "private, no-store",
     },
   });
