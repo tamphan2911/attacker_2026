@@ -113,6 +113,17 @@ function ensureSeasonDraftRecords(draft: SitePageContent, year: string) {
   }
 }
 
+function findSeasonRecordIndex(records: Array<{ year: string }>, slotYear: string) {
+  const directIndex = records.findIndex((item) => item.year === slotYear);
+
+  if (directIndex >= 0) {
+    return directIndex;
+  }
+
+  const slotIndex = seasonContentYears.findIndex((item) => item === slotYear);
+  return slotIndex >= 0 && slotIndex < records.length ? slotIndex : -1;
+}
+
 function unoptimizedImage(src: string) {
   return src.startsWith("/api/hero-slide-images/") || src.startsWith("data:");
 }
@@ -214,7 +225,7 @@ function LocalizedListEditor({
   );
 }
 
-export function SeasonLinksContentEditor({ locale }: { locale: Locale }) {
+export function SeasonLinksContentEditor({ locale, draft }: { locale: Locale; draft: SitePageContent }) {
   return (
     <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
       <BlockIntro
@@ -222,8 +233,12 @@ export function SeasonLinksContentEditor({ locale }: { locale: Locale }) {
         description="Open one season editor to update the public detail page, including text, top teams, statistics, and slider images."
       />
       <div className="grid gap-3 md:grid-cols-2">
-        {seasonContentYears.map((year) => (
-          <Link key={year} href={`/admin/content/pages/season-${year}`} className="block">
+        {seasonContentYears.map((slotYear) => {
+          const storyIndex = findSeasonRecordIndex(draft.organizer.seasonStories, slotYear);
+          const displayYear = draft.organizer.seasonStories[storyIndex]?.year ?? slotYear;
+
+          return (
+          <Link key={slotYear} href={`/admin/content/pages/season-${slotYear}`} className="block">
             <div className="group rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4 transition hover:border-sky-300/40 hover:bg-[rgba(23,114,208,0.06)]">
               <div className="flex items-center gap-3">
                 <span className="theme-brand-gradient flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_16px_34px_rgba(23,114,208,0.18)]">
@@ -231,7 +246,7 @@ export function SeasonLinksContentEditor({ locale }: { locale: Locale }) {
                 </span>
                 <div>
                   <p className="text-sm font-semibold theme-text-strong">
-                    {locale === "en" ? `Season ${year}` : `Mùa ${year}`}
+                    {locale === "en" ? `Season ${displayYear}` : `Mùa ${displayYear}`}
                   </p>
                   <p className="mt-1 text-xs leading-5 theme-text-muted">
                     {locale === "en"
@@ -242,7 +257,8 @@ export function SeasonLinksContentEditor({ locale }: { locale: Locale }) {
               </div>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </div>
     </Surface>
   );
@@ -261,9 +277,9 @@ export function SeasonArchiveContentEditor({
 }) {
   const [imageUploadError, setImageUploadError] = useState("");
   const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
-  const storyIndex = draft.organizer.seasonStories.findIndex((item) => item.year === year);
+  const storyIndex = findSeasonRecordIndex(draft.organizer.seasonStories, year);
   const seasonArchives = draft.organizer.seasonArchives ?? [];
-  const archiveIndex = seasonArchives.findIndex((item) => item.year === year);
+  const archiveIndex = findSeasonRecordIndex(seasonArchives, year);
 
   useEffect(() => {
     if (storyIndex >= 0 && archiveIndex >= 0) {
@@ -348,17 +364,18 @@ export function SeasonArchiveContentEditor({
 
   const story = draft.organizer.seasonStories[storyIndex];
   const archive = draft.organizer.seasonArchives[archiveIndex];
+  const publicSeasonYear = story.year.trim() || year;
 
   return (
     <>
       <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <BlockIntro
-            title={`Season ${year} / Public page`}
+            title={`Season ${publicSeasonYear} / Public page`}
             description="Edit every public text block and upload every image used by this season page."
           />
           <Link
-            href={`/organizer/seasons/${year}`}
+            href={`/organizer/seasons/${encodeURIComponent(publicSeasonYear)}`}
             className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold"
           >
             {locale === "en" ? "Open live page" : "Mở trang mùa thi"}
@@ -416,7 +433,7 @@ export function SeasonArchiveContentEditor({
                   event.target.value = "";
                   if (!file) return;
                   void uploadSeasonImage(file, "hero", (next, imageUrl) => {
-                    const nextStoryIndex = next.organizer.seasonStories.findIndex((item) => item.year === year);
+                    const nextStoryIndex = findSeasonRecordIndex(next.organizer.seasonStories, year);
                     if (nextStoryIndex >= 0) next.organizer.seasonStories[nextStoryIndex].image = imageUrl;
                   });
                 }}
@@ -443,8 +460,24 @@ export function SeasonArchiveContentEditor({
                 <span className="text-sm theme-text-muted">Year</span>
                 <input
                   value={story.year}
-                  readOnly
-                  className={`${fieldClassName} cursor-not-allowed opacity-75`}
+                  onChange={(event) => {
+                    const nextYear = event.target.value;
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        const nextStoryIndex = findSeasonRecordIndex(next.organizer.seasonStories, year);
+                        const nextArchiveIndex = findSeasonRecordIndex(next.organizer.seasonArchives ?? [], year);
+
+                        if (nextStoryIndex >= 0) {
+                          next.organizer.seasonStories[nextStoryIndex].year = nextYear;
+                        }
+
+                        if (nextArchiveIndex >= 0) {
+                          next.organizer.seasonArchives[nextArchiveIndex].year = nextYear;
+                        }
+                      }),
+                    );
+                  }}
+                  className={fieldClassName}
                 />
               </label>
               <LocalizedFieldEditor

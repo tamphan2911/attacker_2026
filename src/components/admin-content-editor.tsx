@@ -3071,7 +3071,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
           </>
         ) : null}
 
-        {pageId === "seasons" ? <SeasonLinksContentEditor locale={locale} /> : null}
+        {pageId === "seasons" ? <SeasonLinksContentEditor locale={locale} draft={draft} /> : null}
 
         {seasonYear ? (
           <SeasonArchiveContentEditor locale={locale} draft={draft} setDraft={setDraft} year={seasonYear} />
