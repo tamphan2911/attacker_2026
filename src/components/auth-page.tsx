@@ -193,8 +193,8 @@ function getRegistrationFieldGuidance(field: keyof RegistrationFormState | "turn
       vi: "Nhập email hợp lệ. Liên kết kích hoạt tài khoản sẽ được gửi đến hộp thư này.",
     },
     studentId: {
-      en: "Enter your student ID exactly as used by your university. It will also be your account ID.",
-      vi: "Nhập mã số sinh viên đúng theo thông tin của trường. Mã này cũng sẽ là ID tài khoản của bạn.",
+      en: "Enter your student ID exactly as used by your university. Sign-in will use your email address.",
+      vi: "Nhập mã số sinh viên đúng theo thông tin của trường. Khi đăng nhập, bạn sẽ dùng địa chỉ email.",
     },
     university: {
       en: "Choose or type your university name before creating the account.",
@@ -535,12 +535,12 @@ export function AuthPage() {
 
   const modeHelperText = {
     signin: {
-      en: "Sign in with your email or account ID to continue into the workspace.",
-      vi: "Đăng nhập bằng email hoặc ID tài khoản để tiếp tục vào workspace.",
+      en: "Sign in with your registered email to continue into the workspace.",
+      vi: "Đăng nhập bằng email đã đăng ký để tiếp tục vào workspace.",
     },
     register: {
-      en: "Create your student profile first, then move to team formation and Round 1.",
-      vi: "Tạo hồ sơ sinh viên trước, sau đó chuyển sang lập đội và Vòng 1.",
+      en: "Create your participant profile first, then move to team formation and Round 1.",
+      vi: "Tạo hồ sơ thí sinh trước, sau đó chuyển sang lập đội và Vòng 1.",
     },
   };
 
@@ -636,8 +636,8 @@ export function AuthPage() {
       setSigninMessageTone("error");
       setSigninMessage(
         createAuthMessage(
-          "Invalid credentials. Please check your account ID or password.",
-          "Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại ID tài khoản hoặc mật khẩu.",
+          "Invalid credentials. Please check your email or password.",
+          "Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại email hoặc mật khẩu.",
         ),
       );
       setIsBusy(false);
@@ -852,7 +852,7 @@ export function AuthPage() {
                 <div className="grid gap-4 xl:grid-cols-2">
                   <label className="space-y-2 xl:col-span-2">
                     <span className="text-sm theme-text-muted">
-                      {locale === "en" ? "Email or account ID" : "Email hoặc ID tài khoản"}
+                      {locale === "en" ? "Email" : "Email"}
                     </span>
                     <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
                       <ShieldCheck className="mr-3 h-4 w-4 theme-text-faint" />
@@ -861,8 +861,9 @@ export function AuthPage() {
                         onChange={(event) => setLoginId(event.target.value)}
                         autoCapitalize="none"
                         autoCorrect="off"
-                        autoComplete="username"
-                        placeholder={locale === "en" ? "Email or account ID" : "Email hoặc ID tài khoản"}
+                        autoComplete="email"
+                        inputMode="email"
+                        placeholder={locale === "en" ? "you@example.com" : "you@example.com"}
                         className={`${authFieldClassName} min-w-0`}
                         required
                       />

@@ -1758,8 +1758,8 @@ export const defaultPageContent: SitePageContent = {
     header: {
       eyebrow: { en: "Authentication", vi: "Xác thực" },
       title: {
-        en: "Sign in or create a student account.",
-        vi: "Đăng nhập hoặc tạo tài khoản sinh viên.",
+        en: "Sign in or create a participant account.",
+        vi: "Đăng nhập hoặc tạo tài khoản thí sinh.",
       },
       description: {
         en: "Simple entry points for email/password and Google sign-in.",
@@ -1767,8 +1767,8 @@ export const defaultPageContent: SitePageContent = {
       },
     },
     registerNote: {
-      en: "Basic student fields only. Extra profile editing can happen after login.",
-      vi: "Chỉ giữ các trường cơ bản cho sinh viên. Các thông tin mở rộng có thể sửa sau khi đăng nhập.",
+      en: "Basic participant fields only. Extra profile editing can happen after login.",
+      vi: "Chỉ giữ các trường cơ bản cho thí sinh. Các thông tin mở rộng có thể sửa sau khi đăng nhập.",
     },
     signinNote: {
       en: "Use the same clean entry point for both email/password and Google.",

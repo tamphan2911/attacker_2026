@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { UserActionTokenType, type User as PrismaUser } from "@prisma/client";
+import { UserActionTokenType, UserRole, type User as PrismaUser } from "@prisma/client";
 import { compare } from "bcryptjs";
 import { z } from "zod";
 
@@ -102,7 +102,7 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        login: { label: "Email or account ID", type: "text" },
+        login: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(rawCredentials, request) {
@@ -128,11 +128,16 @@ export const authOptions: NextAuthOptions = {
         }
 
         const login = parsed.data.login.trim().toLowerCase();
-        const user = await prisma.user.findFirst({
-          where: {
-            OR: [{ email: login }, { loginId: login }],
-          },
-        });
+        const user = login.includes("@")
+          ? await prisma.user.findUnique({
+              where: { email: login },
+            })
+          : await prisma.user.findFirst({
+              where: {
+                loginId: login,
+                role: { in: [UserRole.ADMIN, UserRole.MODERATOR, UserRole.JUDGE] },
+              },
+            });
 
         if (!user?.passwordHash) {
           return null;
