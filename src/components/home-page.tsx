@@ -199,7 +199,7 @@ export function HomePage() {
 
           <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl items-end px-4 pb-16 pt-24 text-white md:min-h-[620px] md:px-8 md:pb-20 md:pt-28">
             <div className="grid w-full gap-4 lg:grid-cols-[390px_390px] lg:items-end lg:justify-between">
-              <div className="max-w-[390px] rounded-[1.25rem] border border-white/12 bg-[linear-gradient(135deg,rgba(7,18,35,0.56),rgba(7,18,35,0.28))] px-4 py-4 shadow-[0_20px_54px_rgba(7,18,35,0.24)] backdrop-blur-sm lg:translate-y-6">
+              <div className="max-w-[390px] rounded-[1.25rem] bg-[linear-gradient(135deg,rgba(7,18,35,0.50),rgba(7,18,35,0.24))] px-4 py-4 shadow-[0_22px_62px_rgba(7,18,35,0.24)] backdrop-blur-md lg:translate-y-6">
                 <h1 className="theme-heading max-w-[22rem] text-[1.24rem] font-semibold leading-[1.17] text-white [text-shadow:0_12px_28px_rgba(7,18,35,0.38)] md:text-[1.58rem] md:leading-[1.14]">
                   {pickText(locale, currentHeroSlide.title)}
                 </h1>
@@ -215,11 +215,11 @@ export function HomePage() {
                   return (
                     <div
                       key={item.label.en}
-                      className="rounded-[1.1rem] border border-white/10 bg-[linear-gradient(135deg,rgba(7,18,35,0.56),rgba(7,18,35,0.30))] px-3.5 py-2 shadow-[0_16px_36px_rgba(7,18,35,0.20)] backdrop-blur-sm"
+                      className="rounded-[1.1rem] bg-[linear-gradient(135deg,rgba(7,18,35,0.50),rgba(7,18,35,0.24))] px-3.5 py-2 shadow-[0_18px_42px_rgba(7,18,35,0.22)] backdrop-blur-md"
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.8rem] border border-white/12 ${heroCardIconClasses[index % heroCardIconClasses.length]}`}
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.8rem] ${heroCardIconClasses[index % heroCardIconClasses.length]}`}
                         >
                           <Icon className="h-4 w-4" />
                         </div>
