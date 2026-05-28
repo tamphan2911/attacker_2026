@@ -26,7 +26,6 @@ import {
 
 import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import {
-  canTeamSubmitForRound,
   getCompetitionRoundWindow,
   getCompetitionRoundPrimaryTimelineItem,
   getSubmissionDeadlineTimelineItem,
@@ -48,7 +47,7 @@ import {
   ROUND1_TOTAL_MAX_SCORE,
 } from "@/lib/round1";
 import {
-  MAX_SUBMISSION_FILE_BYTES,
+  getMaxSubmissionFileBytes,
 } from "@/lib/submission-files";
 import { ALLOWED_AVATAR_IMAGE_TYPES, MAX_AVATAR_IMAGE_BYTES } from "@/lib/avatar-images";
 import { formatDateLabel, formatDateRangeLabel, getTeamForUser, pickText } from "@/lib/site";
@@ -100,6 +99,11 @@ interface ActiveRound1AttemptSummary {
   id: string;
   teamId: string;
   deadlineAt: string;
+}
+
+interface Round2FinalistResultsPayload {
+  released: boolean;
+  finalists: Array<{ id: string }>;
 }
 
 function createTeamFormState(team?: TeamProfile): TeamFormState {
@@ -300,6 +304,13 @@ export function DashboardPage() {
   const [isKickMemberPending, setIsKickMemberPending] = useState(false);
   const [isRosterActionsCollapsed, setIsRosterActionsCollapsed] = useState(false);
   const [isRound1LockCollapsed, setIsRound1LockCollapsed] = useState(false);
+  const [isRound1ResultCollapsed, setIsRound1ResultCollapsed] = useState(false);
+  const [isRound2SubmissionCollapsed, setIsRound2SubmissionCollapsed] = useState(false);
+  const [isRound3SubmissionCollapsed, setIsRound3SubmissionCollapsed] = useState(false);
+  const [round2FinalistResults, setRound2FinalistResults] = useState<Round2FinalistResultsPayload>({
+    released: false,
+    finalists: [],
+  });
   const [submissionForms, setSubmissionForms] = useState<Record<SubmissionRound, SubmissionFormState>>({
     "round-2": createSubmissionFormState(),
     "round-3": createSubmissionFormState(),
@@ -326,6 +337,13 @@ export function DashboardPage() {
   const currentTeamId = currentTeam?.id;
   const currentTeamStage = currentTeam?.stage;
   const shouldAutoCollapseTeamLock = currentTeam?.round1LockStatus === "locked";
+  const teamReachedRound2 = currentTeam ? hasTeamReachedRound(currentTeam, "round-2") : false;
+  const round2ResultsReleased = round2FinalistResults.released;
+  const currentTeamIsRound2Finalist = Boolean(
+    currentTeamId &&
+      round2ResultsReleased &&
+      round2FinalistResults.finalists.some((team) => team.id === currentTeamId),
+  );
 
   useEffect(() => {
     setTeamForm(createTeamFormState(currentTeam));
@@ -354,6 +372,49 @@ export function DashboardPage() {
     setIsRosterActionsCollapsed(false);
     setIsRound1LockCollapsed(false);
   }, [currentTeamId, shouldAutoCollapseTeamLock]);
+
+  useEffect(() => {
+    setIsRound1ResultCollapsed(teamReachedRound2);
+  }, [currentTeamId, teamReachedRound2]);
+
+  useEffect(() => {
+    setIsRound2SubmissionCollapsed(currentTeamIsRound2Finalist);
+    setIsRound3SubmissionCollapsed(false);
+  }, [currentTeamId, currentTeamIsRound2Finalist]);
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+
+    void (async () => {
+      try {
+        const response = await fetch("/api/round-2/finalists", {
+          cache: "no-store",
+          credentials: "same-origin",
+          signal: controller.signal,
+        });
+        const payload = (await response.json().catch(() => null)) as Partial<Round2FinalistResultsPayload> | null;
+
+        if (!active || !response.ok || !payload) {
+          return;
+        }
+
+        setRound2FinalistResults({
+          released: Boolean(payload.released),
+          finalists: Array.isArray(payload.finalists) ? payload.finalists : [],
+        });
+      } catch {
+        if (active) {
+          setRound2FinalistResults({ released: false, finalists: [] });
+        }
+      }
+    })();
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated || currentUser.role !== "student" || !currentTeamId || currentTeamStage !== "round-1") {
@@ -684,8 +745,9 @@ export function DashboardPage() {
   const round3SubmissionDeadlineItem = getSubmissionDeadlineTimelineItem("round-3", timelineItems);
   const round3SubmissionClosed = Boolean(
     currentTeam &&
-      round3SubmissionDeadlineItem &&
-      !canTeamSubmitForRound(currentTeam, "round-3", new Date(), timelineItems),
+      (round3SubmissionDeadlineItem
+        ? isTimelineItemFinished(round3SubmissionDeadlineItem.id, timelineItems, new Date())
+        : round3Finished),
   );
   const round3SubmissionWindowLabel = round3SubmissionDeadlineItem
     ? formatDateRangeLabel(
@@ -696,8 +758,10 @@ export function DashboardPage() {
         round3SubmissionDeadlineItem.endTime,
       )
     : undefined;
-  const showRound2Submission = currentTeam ? hasTeamReachedRound(currentTeam, "round-2") : false;
-  const showRound3Submission = currentTeam ? hasTeamReachedRound(currentTeam, "round-3") : false;
+  const showRound2Submission = teamReachedRound2;
+  const showRound3Submission = Boolean(
+    currentTeam && (hasTeamReachedRound(currentTeam, "round-3") || currentTeamIsRound2Finalist),
+  );
 
   const teamSubmissions = currentTeam
     ? submissions.filter((submission) => submission.teamId === currentTeam.id)
@@ -865,6 +929,7 @@ export function DashboardPage() {
             ]
           : []),
         ...(hasTeamReachedRound(currentTeam, "round-3")
+        || currentTeamIsRound2Finalist
           ? [
               {
                 round: "round-3" as const,
@@ -980,6 +1045,7 @@ export function DashboardPage() {
         title: form.title,
         summary: form.summary,
         resourceFile: form.resourceFile,
+        allowRound3FinalistSubmission: round === "round-3" && currentTeamIsRound2Finalist,
         onUploadStart: () => setRoundUploadState({ isUploading: true, progress: 4 }),
         onUploadProgress: (progress) =>
           setRoundUploadState({
@@ -2098,8 +2164,28 @@ export function DashboardPage() {
           <section id="round-1-section" className="scroll-mt-36">
             <Surface className="px-6 py-6 md:px-8 md:py-8">
               <div id="round1-lock" />
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                <div className="max-w-3xl">
+              <div className="flex items-center justify-between gap-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
+                  {locale === "en" ? "Round 1 team lock" : "Khóa đội cho Vòng 1"}
+                </p>
+                <CollapseToggleButton
+                  collapsed={isRound1LockCollapsed}
+                  label={
+                    isRound1LockCollapsed
+                      ? locale === "en"
+                        ? "Expand Round 1 team lock"
+                        : "Mở khóa đội Vòng 1"
+                      : locale === "en"
+                        ? "Collapse Round 1 team lock"
+                        : "Thu gọn khóa đội Vòng 1"
+                  }
+                  onToggle={() => setIsRound1LockCollapsed((current) => !current)}
+                />
+              </div>
+
+              <CollapsibleBlockContent collapsed={isRound1LockCollapsed}>
+                <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="max-w-3xl">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
                     {locale === "en" ? "Round 1 team lock" : "Khóa đội cho Vòng 1"}
                   </p>
@@ -2131,40 +2217,26 @@ export function DashboardPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <StatusPill
-                    tone={
-                      currentTeam.round1LockStatus === "locked"
-                        ? "success"
-                        : currentTeam.round1LockStatus === "pending" || currentTeam.round1LockStatus === "declined"
-                          ? "warning"
-                          : "info"
-                    }
-                  >
-                    {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
-                  </StatusPill>
-                  {round1Window ? (
-                    <StatusPill>
-                      {formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate, round1Window.startTime, round1Window.endTime)}
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <StatusPill
+                      tone={
+                        currentTeam.round1LockStatus === "locked"
+                          ? "success"
+                          : currentTeam.round1LockStatus === "pending" || currentTeam.round1LockStatus === "declined"
+                            ? "warning"
+                            : "info"
+                      }
+                    >
+                      {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
                     </StatusPill>
-                  ) : null}
-                  <CollapseToggleButton
-                    collapsed={isRound1LockCollapsed}
-                    label={
-                      isRound1LockCollapsed
-                        ? locale === "en"
-                          ? "Expand Round 1 team lock"
-                          : "Mở khóa đội Vòng 1"
-                        : locale === "en"
-                          ? "Collapse Round 1 team lock"
-                          : "Thu gọn khóa đội Vòng 1"
-                    }
-                    onToggle={() => setIsRound1LockCollapsed((current) => !current)}
-                  />
+                    {round1Window ? (
+                      <StatusPill>
+                        {formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate, round1Window.startTime, round1Window.endTime)}
+                      </StatusPill>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
 
-              <CollapsibleBlockContent collapsed={isRound1LockCollapsed}>
               <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
                   <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
@@ -2393,11 +2465,31 @@ export function DashboardPage() {
           {hasAnyTeamRound1Result ? (
             <section id="round1-result" className="scroll-mt-36">
               <Surface className="px-6 py-6 md:px-8 md:py-8">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                  <div className="max-w-3xl">
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                      {locale === "en" ? "Round 1 result" : "Kết quả Vòng 1"}
-                    </p>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
+                    {locale === "en" ? "Round 1 result" : "Kết quả Vòng 1"}
+                  </p>
+                  <CollapseToggleButton
+                    collapsed={isRound1ResultCollapsed}
+                    label={
+                      isRound1ResultCollapsed
+                        ? locale === "en"
+                          ? "Expand Round 1 result"
+                          : "Mở kết quả Vòng 1"
+                        : locale === "en"
+                          ? "Collapse Round 1 result"
+                          : "Thu gọn kết quả Vòng 1"
+                    }
+                    onToggle={() => setIsRound1ResultCollapsed((current) => !current)}
+                  />
+                </div>
+
+                <CollapsibleBlockContent collapsed={isRound1ResultCollapsed}>
+                  <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="max-w-3xl">
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
+                        {locale === "en" ? "Round 1 result" : "Kết quả Vòng 1"}
+                      </p>
                     <p className="theme-heading mt-4 text-3xl font-semibold theme-text-strong">
                       {locale === "en"
                         ? "Team average result is recorded."
@@ -2422,7 +2514,7 @@ export function DashboardPage() {
                         ? "Team average complete"
                         : "Trung bình đội hoàn tất"}
                   </StatusPill>
-                </div>
+                  </div>
 
                 <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -2574,6 +2666,7 @@ export function DashboardPage() {
                     </table>
                   </div>
                 </div>
+                </CollapsibleBlockContent>
               </Surface>
             </section>
           ) : null}
@@ -2589,6 +2682,8 @@ export function DashboardPage() {
                   isCurrentRound={isTeamCurrentlyCompetingRound(currentTeam, "round-2")}
                   hasPassedRound={hasTeamPassedRound(currentTeam, "round-2")}
                   isRoundFinished={round2Finished}
+                  collapsed={isRound2SubmissionCollapsed}
+                  onToggleCollapsed={() => setIsRound2SubmissionCollapsed((current) => !current)}
                   submissions={teamSubmissions.filter((submission) => submission.round === "round-2")}
                   users={users}
                   form={submissionForms["round-2"]}
@@ -2608,11 +2703,13 @@ export function DashboardPage() {
                   round="round-3"
                   timelineItems={timelineItems}
                   isLeader={Boolean(isLeader)}
-                  isCurrentRound={isTeamCurrentlyCompetingRound(currentTeam, "round-3")}
+                  isCurrentRound={isTeamCurrentlyCompetingRound(currentTeam, "round-3") || currentTeamIsRound2Finalist}
                   hasPassedRound={hasTeamPassedRound(currentTeam, "round-3")}
                   isRoundFinished={round3Finished}
                   isSubmissionClosed={round3SubmissionClosed || round3Finished}
                   submissionWindowLabel={round3SubmissionWindowLabel}
+                  collapsed={isRound3SubmissionCollapsed}
+                  onToggleCollapsed={() => setIsRound3SubmissionCollapsed((current) => !current)}
                   submissions={teamSubmissions.filter((submission) => submission.round === "round-3")}
                   users={users}
                   form={submissionForms["round-3"]}
@@ -3220,6 +3317,8 @@ function SubmissionRoundCard({
   isRoundFinished,
   isSubmissionClosed,
   submissionWindowLabel,
+  collapsed,
+  onToggleCollapsed,
   submissions,
   users,
   form,
@@ -3236,6 +3335,8 @@ function SubmissionRoundCard({
   isRoundFinished: boolean;
   isSubmissionClosed?: boolean;
   submissionWindowLabel?: string;
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
   submissions: TeamSubmission[];
   users: UserProfile[];
   form: SubmissionFormState;
@@ -3261,6 +3362,7 @@ function SubmissionRoundCard({
   const roundWindowLabel = submissionWindowLabel ?? (roundWindow
     ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate, roundWindow.startTime, roundWindow.endTime)
     : undefined);
+  const maxSubmissionFileBytes = getMaxSubmissionFileBytes(round);
   const submissionClosed = isSubmissionClosed ?? isRoundFinished;
   const canSubmit = isLeader && isCurrentRound && !submissionClosed;
   const statusPill = submissionClosed
@@ -3324,11 +3426,29 @@ function SubmissionRoundCard({
             <p className="mt-2 text-sm theme-text-soft">{roundWindowLabel}</p>
           ) : null}
         </div>
-        <StatusPill tone={submissionClosed ? "warning" : latestSubmission || isCurrentRound || hasPassedRound ? "success" : "warning"}>
-          {statusPill}
-        </StatusPill>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <StatusPill tone={submissionClosed ? "warning" : latestSubmission || isCurrentRound || hasPassedRound ? "success" : "warning"}>
+            {statusPill}
+          </StatusPill>
+          {typeof collapsed === "boolean" && onToggleCollapsed ? (
+            <CollapseToggleButton
+              collapsed={collapsed}
+              label={
+                collapsed
+                  ? locale === "en"
+                    ? `Expand ${pickRoundLabel(locale, round)} submission`
+                    : `Mở khu vực nộp ${pickRoundLabel(locale, round)}`
+                  : locale === "en"
+                    ? `Collapse ${pickRoundLabel(locale, round)} submission`
+                    : `Thu gọn khu vực nộp ${pickRoundLabel(locale, round)}`
+              }
+              onToggle={onToggleCollapsed}
+            />
+          ) : null}
+        </div>
       </div>
 
+      <CollapsibleBlockContent collapsed={Boolean(collapsed)}>
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-4">
           {latestSubmission ? (
@@ -3479,8 +3599,8 @@ function SubmissionRoundCard({
                 </label>
                 <p className="text-xs leading-6 theme-text-faint">
                   {locale === "en"
-                    ? `Upload one PDF report only. Maximum file size: ${formatFileSize(MAX_SUBMISSION_FILE_BYTES)}.`
-                    : `Chỉ tải lên một tệp báo cáo PDF. Dung lượng tối đa: ${formatFileSize(MAX_SUBMISSION_FILE_BYTES)}.`}
+                    ? `Upload one PDF report only. Maximum file size: ${formatFileSize(maxSubmissionFileBytes)}.`
+                    : `Chỉ tải lên một tệp báo cáo PDF. Dung lượng tối đa: ${formatFileSize(maxSubmissionFileBytes)}.`}
                 </p>
                 {form.resourceFile ? (
                   <p className="text-xs theme-text-soft">
@@ -3557,6 +3677,7 @@ function SubmissionRoundCard({
           )}
         </div>
       </div>
+      </CollapsibleBlockContent>
       </Surface>
     </section>
   );

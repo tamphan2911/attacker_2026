@@ -24,6 +24,7 @@ import { getTimelineEndDateTime, getTimelineStartDateTime } from "@/lib/timeline
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
+import { isTeamRound2Finalist } from "@/server/round2-finalists";
 import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
@@ -1887,8 +1888,10 @@ export async function createTeamSubmission(
       payload.round === SubmissionRound.ROUND_3
         ? CompetitionStage.ROUND_3
         : CompetitionStage.ROUND_2;
+    const canSubmitRound3AsFinalist =
+      payload.round === SubmissionRound.ROUND_3 && (await isTeamRound2Finalist(membership.teamId));
 
-    if (membership.team.stage !== requiredStage) {
+    if (membership.team.stage !== requiredStage && !canSubmitRound3AsFinalist) {
       if (membership.team.stage === CompetitionStage.ROUND_1) {
         return fail(
           409,

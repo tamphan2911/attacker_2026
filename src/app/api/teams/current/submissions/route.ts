@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { SubmissionRound } from "@prisma/client";
 import { z } from "zod";
 
-import { getSubmissionValidationError } from "@/lib/submission-files";
+import { getMaxSubmissionFileBytes, getSubmissionValidationError } from "@/lib/submission-files";
 import { getCurrentDbUser } from "@/server/auth-helpers";
 import { unauthorizedResponse, serviceResultToResponse } from "@/server/route-utils";
 import { buildTeamSubmissionStorageKey, deleteTeamSubmissionFile, storeTeamSubmissionFile } from "@/server/team-submission-storage";
@@ -49,13 +49,21 @@ export async function POST(request: Request) {
     );
   }
 
-  const validationError = getSubmissionValidationError(resourceFile);
+  const round =
+    payload.data.round === "round-3"
+      ? SubmissionRound.ROUND_3
+      : SubmissionRound.ROUND_2;
+  const maxSubmissionFileBytes = getMaxSubmissionFileBytes(payload.data.round);
+  const validationError = getSubmissionValidationError(resourceFile, maxSubmissionFileBytes);
   if (validationError === "type") {
     return NextResponse.json({ error: "Only PDF files are allowed." }, { status: 400 });
   }
 
   if (validationError === "size") {
-    return NextResponse.json({ error: "The uploaded PDF must be 20MB or smaller." }, { status: 400 });
+    return NextResponse.json(
+      { error: `The uploaded PDF must be ${Math.round(maxSubmissionFileBytes / 1024 / 1024)}MB or smaller.` },
+      { status: 400 },
+    );
   }
 
   if (validationError === "missing") {
@@ -65,10 +73,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const round =
-    payload.data.round === "round-3"
-      ? SubmissionRound.ROUND_3
-      : SubmissionRound.ROUND_2;
   const storageKey = buildTeamSubmissionStorageKey(user.id, resourceFile.name);
   const fileBuffer = Buffer.from(await resourceFile.arrayBuffer());
 

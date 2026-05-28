@@ -2,7 +2,11 @@ const DB_NAME = "attacker-2026-submission-files";
 const STORE_NAME = "team-submission-files";
 const DB_VERSION = 1;
 
-export const MAX_SUBMISSION_FILE_BYTES = 20 * 1024 * 1024;
+import type { SubmissionRound } from "@/types/site";
+
+export const MAX_ROUND2_SUBMISSION_FILE_BYTES = 20 * 1024 * 1024;
+export const MAX_ROUND3_SUBMISSION_FILE_BYTES = 30 * 1024 * 1024;
+export const MAX_SUBMISSION_FILE_BYTES = MAX_ROUND2_SUBMISSION_FILE_BYTES;
 
 const allowedSubmissionExtensions = [".pdf"];
 const allowedSubmissionMimeTypes = new Set([
@@ -32,7 +36,11 @@ export function isAllowedSubmissionFile(file: File) {
   return true;
 }
 
-export function getSubmissionValidationError(file?: File | null) {
+export function getMaxSubmissionFileBytes(round: SubmissionRound) {
+  return round === "round-3" ? MAX_ROUND3_SUBMISSION_FILE_BYTES : MAX_ROUND2_SUBMISSION_FILE_BYTES;
+}
+
+export function getSubmissionValidationError(file?: File | null, maxBytes = MAX_SUBMISSION_FILE_BYTES) {
   if (!file) {
     return "missing";
   }
@@ -41,7 +49,7 @@ export function getSubmissionValidationError(file?: File | null) {
     return "type";
   }
 
-  if (file.size > MAX_SUBMISSION_FILE_BYTES) {
+  if (file.size > maxBytes) {
     return "size";
   }
 

@@ -47,6 +47,7 @@ import {
 } from "@/lib/competition";
 import { normalizeClassYearForRole } from "@/lib/class-year";
 import {
+  getMaxSubmissionFileBytes,
   getSubmissionValidationError,
 } from "@/lib/submission-files";
 import {
@@ -281,6 +282,7 @@ interface SiteStateValue {
     title: string;
     summary: string;
     resourceFile: File | null;
+    allowRound3FinalistSubmission?: boolean;
     onUploadStart?: () => void;
     onUploadProgress?: (progress: number) => void;
   }) => Promise<boolean>;
@@ -2930,6 +2932,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     title: string;
     summary: string;
     resourceFile: File | null;
+    allowRound3FinalistSubmission?: boolean;
     onUploadStart?: () => void;
     onUploadProgress?: (progress: number) => void;
   }) => {
@@ -2958,8 +2961,10 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
 
     const requiredStage = payload.round as CompetitionStage;
+    const isRound3FinalistSubmission =
+      payload.round === "round-3" && Boolean(payload.allowRound3FinalistSubmission);
 
-    if (team.stage !== requiredStage) {
+    if (team.stage !== requiredStage && !isRound3FinalistSubmission) {
       pushToast(
         {
           en:
@@ -2976,7 +2981,11 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    if (!canTeamSubmitForRound(team, payload.round, new Date(), timelineItems)) {
+    const submissionEligibilityTeam = isRound3FinalistSubmission
+      ? { ...team, stage: "round-3" as CompetitionStage }
+      : team;
+
+    if (!canTeamSubmitForRound(submissionEligibilityTeam, payload.round, new Date(), timelineItems)) {
       pushToast(
         {
           en: `${pickRoundLabel("en", requiredStage)} is finished. New submissions are closed.`,
@@ -2998,7 +3007,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    const validationError = getSubmissionValidationError(payload.resourceFile);
+    const maxSubmissionFileBytes = getMaxSubmissionFileBytes(payload.round);
+    const validationError = getSubmissionValidationError(payload.resourceFile, maxSubmissionFileBytes);
 
     if (validationError === "missing") {
       pushToast(
@@ -3025,8 +3035,8 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     if (validationError === "size") {
       pushToast(
         {
-          en: "The uploaded PDF must be 20MB or smaller.",
-          vi: "Tệp PDF tải lên phải nhỏ hơn hoặc bằng 20MB.",
+          en: `The uploaded PDF must be ${Math.round(maxSubmissionFileBytes / 1024 / 1024)}MB or smaller.`,
+          vi: `Tệp PDF tải lên phải nhỏ hơn hoặc bằng ${Math.round(maxSubmissionFileBytes / 1024 / 1024)}MB.`,
         },
         "warning",
       );
