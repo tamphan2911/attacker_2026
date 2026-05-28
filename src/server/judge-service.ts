@@ -639,7 +639,10 @@ export async function saveJudgeTeamSubmissionReview(
         criterionScore < 0 ||
         criterionScore > criterion.maxScore
       ) {
-        return fail(400, `Each Round 2 rubric score must be between 0 and its criterion maximum.`);
+        return fail(
+          400,
+          `Invalid Round 2 rubric score for "${criterion.label.en}". Enter a number from 0 to ${criterion.maxScore}.`,
+        );
       }
 
       rubricScores[criterion.id] = criterionScore;

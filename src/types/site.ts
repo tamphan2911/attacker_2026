@@ -398,6 +398,11 @@ export interface JudgeRubricCriterion {
   label: LocalizedText;
   description: LocalizedText;
   maxScore: number;
+  levels: Array<{
+    label: LocalizedText;
+    range: string;
+    guide: LocalizedText;
+  }>;
 }
 
 export interface JudgeTeamSubmissionDetail {

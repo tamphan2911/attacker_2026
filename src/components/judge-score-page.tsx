@@ -11,6 +11,7 @@ import {
   NotebookPen,
   Save,
   Scale,
+  TriangleAlert,
   UserRound,
 } from "lucide-react";
 
@@ -519,6 +520,7 @@ export function JudgeTeamSubmissionScorePage({
   const [note, setNote] = useState(detail.review.note);
   const [scoredAt, setScoredAt] = useState(detail.review.scoredAt);
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<"warning" | "error">("warning");
   const [isSaving, setIsSaving] = useState(false);
   const rubricTotal = useMemo(
     () =>
@@ -535,12 +537,36 @@ export function JudgeTeamSubmissionScorePage({
     if (isRound2) {
       const parsedRubricScores: Record<string, number> = {};
       for (const criterion of detail.rubric ?? []) {
-        const parsedScore = Number(rubricScores[criterion.id]);
-        if (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > criterion.maxScore) {
+        const rawScore = rubricScores[criterion.id]?.trim() ?? "";
+        const parsedScore = Number(rawScore);
+        const criterionLabel = pickLocalizedText(criterion.label, locale);
+
+        if (!rawScore) {
+          setMessageTone("warning");
           setMessage(
             locale === "en"
-              ? "Each rubric score must stay within its criterion maximum."
-              : "Điểm từng tiêu chí phải nằm trong mức tối đa của tiêu chí đó.",
+              ? `${criterionLabel} score is required. Enter a number from 0 to ${criterion.maxScore}.`
+              : `Tiêu chí ${criterionLabel} chưa có điểm. Hãy nhập một số từ 0 đến ${criterion.maxScore}.`,
+          );
+          return;
+        }
+
+        if (!Number.isFinite(parsedScore)) {
+          setMessageTone("warning");
+          setMessage(
+            locale === "en"
+              ? `${criterionLabel} score must be a number from 0 to ${criterion.maxScore}. Current value: "${rawScore}".`
+              : `Điểm tiêu chí ${criterionLabel} phải là một số từ 0 đến ${criterion.maxScore}. Giá trị hiện tại: "${rawScore}".`,
+          );
+          return;
+        }
+
+        if (parsedScore < 0 || parsedScore > criterion.maxScore) {
+          setMessageTone("warning");
+          setMessage(
+            locale === "en"
+              ? `${criterionLabel} score is ${formatScoreNumber(parsedScore)}, but the allowed range is 0 to ${criterion.maxScore}.`
+              : `Điểm tiêu chí ${criterionLabel} đang là ${formatScoreNumber(parsedScore)}, nhưng khoảng hợp lệ là 0 đến ${criterion.maxScore}.`,
           );
           return;
         }
@@ -555,6 +581,7 @@ export function JudgeTeamSubmissionScorePage({
     } else {
       const parsedScore = Number(score);
       if (!Number.isFinite(parsedScore)) {
+        setMessageTone("warning");
         setMessage(locale === "en" ? "Please enter a valid score." : "Hãy nhập một mức điểm hợp lệ.");
         return;
       }
@@ -579,6 +606,7 @@ export function JudgeTeamSubmissionScorePage({
 
     if (!response.ok) {
       const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      setMessageTone("warning");
       setMessage(payload?.error || (locale === "en" ? "Could not save the judge score." : "Không thể lưu điểm chấm."));
       setIsSaving(false);
       return;
@@ -637,191 +665,256 @@ export function JudgeTeamSubmissionScorePage({
         </div>
       </Surface>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-6">
           <Surface className="px-6 py-6 md:px-8 md:py-8">
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-5 w-5 text-sky-500" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Report title" : "Tên bài nộp"}
-                    </p>
-                    <p className="mt-2 text-sm font-semibold theme-text-strong">{detail.title}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <UserRound className="h-5 w-5 text-emerald-500" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Submitted by" : "Người nộp"}
-                    </p>
-                    <p className="mt-2 text-sm font-semibold theme-text-strong">{detail.submittedByName}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <Scale className="h-5 w-5 text-amber-500" />
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                      {locale === "en" ? "Version / file" : "Phiên bản / tệp"}
-                    </p>
-                    <p className="mt-2 text-sm font-semibold theme-text-strong">
-                      {`${detail.version} · ${formatBytes(detail.resourceSizeBytes) || detail.resourceLabel}`}
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                {locale === "en" ? "Submission summary" : "Tóm tắt bài nộp"}
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold theme-text-strong">{detail.title}</h2>
+              <p className="mt-4 text-sm leading-7 theme-text-muted">{detail.summary}</p>
             </div>
           </Surface>
 
-          <Surface className="px-6 py-6 md:px-8 md:py-8">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                  {locale === "en" ? "Submission summary" : "Tóm tắt bài nộp"}
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold theme-text-strong">{detail.title}</h2>
-                <p className="mt-4 text-sm leading-8 theme-text-muted">{detail.summary}</p>
-              </div>
-              {detail.resourceUrl ? (
-                <a
-                  href={detail.resourceUrl}
-                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-                >
-                  <Download className="h-4 w-4" />
-                  {locale === "en" ? "Download latest report" : "Tải báo cáo mới nhất"}
-                </a>
-              ) : null}
-            </div>
-
-            <div className="mt-6 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+          {isRound2 ? (
+            <Surface className="px-4 py-4 md:px-5 md:py-5">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Submission file" : "Tệp bài nộp"}
+                {locale === "en" ? "Round 2 rubric table" : "Bảng rubric Vòng 2"}
               </p>
-              <p className="mt-3 text-sm font-semibold theme-text-strong">{detail.resourceLabel}</p>
-              <p className="mt-2 text-sm theme-text-soft">
-                {locale === "en"
-                  ? `Submitted ${formatDateLabel(locale, detail.submittedAt)}`
-                  : `Nộp ngày ${formatDateLabel(locale, detail.submittedAt)}`}
-              </p>
-            </div>
-          </Surface>
+              <div className="mt-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold theme-text-strong">
+                    {locale === "en" ? "Report scoring" : "Chấm điểm báo cáo"}
+                  </h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 theme-text-muted">
+                    {locale === "en"
+                      ? "Use the guide bands from the official Round 2 rubric. Each score must stay within the maximum for its own criterion."
+                      : "Dùng các mức hướng dẫn từ rubric chính thức Vòng 2. Điểm từng tiêu chí phải nằm trong mức tối đa riêng của tiêu chí đó."}
+                  </p>
+                </div>
+                <div className="rounded-[1.2rem] border theme-border theme-panel-subtle px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] theme-text-soft">
+                    {locale === "en" ? "Auto total" : "Tổng tự động"}
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold theme-text-strong">
+                    {`${formatScoreNumber(rubricTotal)} / ${detail.maxScore}`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 overflow-x-auto rounded-[1.35rem] border theme-border">
+                <table className="min-w-[1120px] w-full text-left text-xs">
+                  <thead className="theme-panel-subtle">
+                    <tr className="border-b theme-border">
+                      <th className="w-[190px] px-4 py-3 font-semibold uppercase tracking-[0.16em] theme-text-soft">
+                        {locale === "en" ? "Criterion" : "Tiêu chí"}
+                      </th>
+                      {["weak", "average", "good", "excellent"].map((level, index) => (
+                        <th key={level} className="w-[190px] px-4 py-3 font-semibold uppercase tracking-[0.16em] theme-text-soft">
+                          {pickLocalizedText(
+                            (detail.rubric?.[0]?.levels[index]?.label ?? {
+                              en: level,
+                              vi: level,
+                            }),
+                            locale,
+                          )}
+                        </th>
+                      ))}
+                      <th className="w-[116px] px-4 py-3 text-right font-semibold uppercase tracking-[0.16em] theme-text-soft">
+                        {locale === "en" ? "Score" : "Điểm"}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(detail.rubric ?? []).map((criterion) => (
+                      <tr key={criterion.id} className="border-b theme-border align-top last:border-b-0">
+                        <td className="px-4 py-4">
+                          <p className="font-semibold theme-text-strong">
+                            {pickLocalizedText(criterion.label, locale)}
+                          </p>
+                          <p className="mt-2 text-[0.72rem] leading-5 theme-text-soft">
+                            {pickLocalizedText(criterion.description, locale)}
+                          </p>
+                          <StatusPill tone="default">{`Max ${criterion.maxScore}`}</StatusPill>
+                        </td>
+                        {Array.from({ length: 4 }, (_, levelIndex) => {
+                          const level = criterion.levels[levelIndex];
+
+                          return (
+                            <td key={`${criterion.id}-${levelIndex}`} className="px-4 py-4">
+                              {level ? (
+                                <>
+                                  <p className="font-semibold theme-text-strong">{level.range}</p>
+                                  <p className="mt-2 text-[0.72rem] leading-5 theme-text-muted">
+                                    {pickLocalizedText(level.guide, locale)}
+                                  </p>
+                                </>
+                              ) : (
+                                <span className="theme-text-faint">--</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                        <td className="px-4 py-4 text-right">
+                          <input
+                            type="number"
+                            min={0}
+                            max={criterion.maxScore}
+                            step={0.25}
+                            value={rubricScores[criterion.id] ?? ""}
+                            onChange={(event) =>
+                              setRubricScores((current) => ({
+                                ...current,
+                                [criterion.id]: event.target.value,
+                              }))
+                            }
+                            className="theme-placeholder h-10 w-20 rounded-2xl border theme-border theme-panel px-2 text-center text-sm font-semibold theme-text-strong outline-none"
+                            aria-label={`${pickLocalizedText(criterion.label, locale)} score, 0 to ${criterion.maxScore}`}
+                          />
+                          <p className="mt-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] theme-text-soft">
+                            {`0-${criterion.maxScore}`}
+                          </p>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Surface>
+          ) : null}
         </div>
 
         {isRound2 ? (
-          <Surface className="xl:sticky xl:top-24 px-5 py-5 md:px-6 md:py-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-              {locale === "en" ? "Round 2 rubric" : "Rubric Vòng 2"}
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold theme-text-strong">
-              {locale === "en" ? "Report score" : "Điểm báo cáo"}
-            </h2>
-            <p className="mt-3 text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "Score each criterion. The total is calculated automatically and cannot be edited directly."
-                : "Chấm từng tiêu chí. Tổng điểm được tự động cộng và không chỉnh sửa trực tiếp."}
-            </p>
-
-            <div className="mt-5 overflow-hidden rounded-[1.4rem] border theme-border">
-              <div className="grid grid-cols-[minmax(0,1fr)_88px] border-b theme-border theme-panel-subtle px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
-                <span>{locale === "en" ? "Criterion" : "Tiêu chí"}</span>
-                <span className="text-right">{locale === "en" ? "Score" : "Điểm"}</span>
-              </div>
-              {(detail.rubric ?? []).map((criterion) => (
-                <label
-                  key={criterion.id}
-                  className="grid grid-cols-[minmax(0,1fr)_88px] gap-3 border-b theme-border px-4 py-3 last:border-b-0"
-                >
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold theme-text-strong">
-                      {pickLocalizedText(criterion.label, locale)}
-                    </span>
-                    <span className="mt-1 block text-xs leading-5 theme-text-soft">
-                      {pickLocalizedText(criterion.description, locale)}
-                    </span>
-                  </span>
-                  <span className="flex items-center justify-end gap-2">
-                    <input
-                      type="number"
-                      min={0}
-                      max={criterion.maxScore}
-                      step={0.5}
-                      value={rubricScores[criterion.id] ?? ""}
-                      onChange={(event) =>
-                        setRubricScores((current) => ({
-                          ...current,
-                          [criterion.id]: event.target.value,
-                        }))
-                      }
-                      className="theme-placeholder h-10 w-16 rounded-2xl border theme-border theme-panel px-2 text-center text-sm font-semibold theme-text-strong outline-none"
-                    />
-                  </span>
-                </label>
-              ))}
-            </div>
-
-            <div className="mt-4 rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Auto total" : "Tổng tự động"}
+          <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+            <Surface className="px-5 py-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                {locale === "en" ? "Submission info" : "Thông tin bài nộp"}
               </p>
-              <p className="mt-2 text-3xl font-semibold theme-text-strong">
-                {`${formatScoreNumber(rubricTotal)} / ${detail.maxScore}`}
-              </p>
-            </div>
-
-            <label className="mt-4 block space-y-2">
-              <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Judge note" : "Ghi chú chấm"}
-              </span>
-              <textarea
-                rows={5}
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-                className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm leading-7 theme-text-strong outline-none"
-              />
-            </label>
-
-            {scoredAt ? (
-              <div className="mt-4 rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  <div>
-                    <p className="text-sm font-semibold theme-text-strong">
-                      {locale === "en" ? "Saved review" : "Bản chấm đã lưu"}
-                    </p>
-                    <p className="mt-1 text-xs theme-text-soft">{formatDateLabel(locale, scoredAt)}</p>
+              <div className="mt-4 space-y-3">
+                <div className="rounded-[1.25rem] border theme-border theme-panel-subtle px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                        {locale === "en" ? "Report title" : "Tên bài nộp"}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold leading-6 theme-text-strong">{detail.title}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-[1.25rem] border theme-border theme-panel-subtle px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                        {locale === "en" ? "Submitted by" : "Người nộp"}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold theme-text-strong">{detail.submittedByName}</p>
+                      <p className="mt-1 text-xs theme-text-soft">{formatDateLabel(locale, detail.submittedAt)}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-[1.25rem] border theme-border theme-panel-subtle px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    <Scale className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                        {locale === "en" ? "Version / file" : "Phiên bản / tệp"}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold theme-text-strong">{`Version ${detail.version}`}</p>
+                      <p className="mt-1 break-words text-xs leading-5 theme-text-soft">{detail.resourceLabel}</p>
+                      {detail.resourceSizeBytes ? (
+                        <p className="mt-1 text-xs theme-text-faint">{formatBytes(detail.resourceSizeBytes)}</p>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               </div>
-            ) : null}
 
-            {message ? (
-              <div className="mt-4 rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-sm theme-text-soft">{message}</p>
+              {detail.resourceUrl ? (
+                <a
+                  href={detail.resourceUrl}
+                  className="theme-button-primary mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-semibold"
+                >
+                  <Download className="h-4 w-4" />
+                  {locale === "en" ? "Download report" : "Tải báo cáo"}
+                </a>
+              ) : null}
+            </Surface>
+
+            <Surface className="px-5 py-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                {locale === "en" ? "Review controls" : "Điều khiển chấm"}
+              </p>
+              <div className="mt-4 rounded-[1.25rem] border theme-border theme-panel-subtle px-4 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                  {locale === "en" ? "Auto total" : "Tổng tự động"}
+                </p>
+                <p className="mt-2 text-3xl font-semibold theme-text-strong">
+                  {`${formatScoreNumber(rubricTotal)} / ${detail.maxScore}`}
+                </p>
               </div>
-            ) : null}
 
-            <button
-              type="button"
-              onClick={() => void handleSubmit()}
-              disabled={isSaving}
-              className="theme-button-primary mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-60"
-            >
-              <Save className="h-4 w-4" />
-              {isSaving
-                ? locale === "en"
-                  ? "Saving..."
-                  : "Đang lưu..."
-                : locale === "en"
-                  ? "Save rubric score"
-                  : "Lưu điểm rubric"}
-            </button>
-          </Surface>
+              <label className="mt-4 block space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                  {locale === "en" ? "Judge note" : "Ghi chú chấm"}
+                </span>
+                <textarea
+                  rows={5}
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder={locale === "en" ? "Explain bonus points or key scoring rationale." : "Nêu lý do điểm thưởng hoặc lập luận chấm chính."}
+                  className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm leading-7 theme-text-strong outline-none"
+                />
+              </label>
+
+              {scoredAt ? (
+                <div className="mt-4 rounded-[1.25rem] border theme-border theme-panel-subtle px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+                    <div>
+                      <p className="text-sm font-semibold theme-text-strong">
+                        {locale === "en" ? "Saved review" : "Bản chấm đã lưu"}
+                      </p>
+                      <p className="mt-1 text-xs theme-text-soft">{formatDateLabel(locale, scoredAt)}</p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {message ? (
+                <div
+                  className={`mt-4 rounded-[1.25rem] border px-4 py-4 ${
+                    messageTone === "warning"
+                      ? "border-amber-300/45 bg-amber-400/12 text-amber-900 dark:border-amber-200/25 dark:bg-amber-300/12 dark:text-amber-100"
+                      : "border-rose-300/45 bg-rose-500/10 text-rose-900 dark:border-rose-200/25 dark:bg-rose-300/12 dark:text-rose-100"
+                  }`}
+                >
+                  <div className="flex gap-3">
+                    <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p className="text-sm font-medium leading-6">{message}</p>
+                  </div>
+                </div>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={() => void handleSubmit()}
+                disabled={isSaving}
+                className="theme-button-primary mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-60"
+              >
+                <Save className="h-4 w-4" />
+                {locale === "en"
+                  ? isSaving
+                    ? "Saving..."
+                    : "Save rubric score"
+                  : isSaving
+                    ? "Đang lưu..."
+                    : "Lưu điểm rubric"}
+              </button>
+            </Surface>
+          </aside>
         ) : (
           <ReviewPanel
             locale={locale}
