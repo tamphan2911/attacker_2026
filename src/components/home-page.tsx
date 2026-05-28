@@ -174,7 +174,7 @@ export function HomePage() {
   return (
     <div className="space-y-24 pb-8">
       <section className="relative left-1/2 right-1/2 -mx-[50vw] -mt-6 w-screen overflow-hidden md:-mt-8">
-        <div className="relative min-h-[500px] md:min-h-[560px]">
+        <div className="relative min-h-[560px] md:min-h-[620px]">
           {heroDeck.map((slide, index) => (
             <div
               key={`${slide.title.en}-${index}`}
@@ -191,84 +191,84 @@ export function HomePage() {
                 unoptimized={slide.image.startsWith("/api/hero-slide-images/")}
                 className="hero-pan object-cover"
               />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.16),rgba(7,18,35,0.38))]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.04)_0%,rgba(7,18,35,0.18)_42%,rgba(7,18,35,0.64)_100%)]" />
             </div>
           ))}
 
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_9%,rgba(255,255,255,0.14),transparent_22%),linear-gradient(180deg,rgba(7,18,35,0.14)_0%,rgba(7,18,35,0.44)_62%,rgba(7,18,35,0.72)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(255,255,255,0.12),transparent_24%),linear-gradient(90deg,rgba(7,18,35,0.18)_0%,rgba(7,18,35,0.04)_38%,rgba(7,18,35,0.05)_62%,rgba(7,18,35,0.18)_100%),linear-gradient(180deg,rgba(7,18,35,0.02)_0%,rgba(7,18,35,0.12)_46%,rgba(7,18,35,0.72)_100%)]" />
 
-          <div className="relative z-10 mx-auto flex min-h-[500px] max-w-7xl items-center px-4 pb-14 pt-20 text-white md:min-h-[560px] md:px-8 md:pt-22">
-            <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,0.92fr)_296px] lg:items-end">
-              <div className="max-w-3xl md:pr-4">
+          <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl items-end px-4 pb-16 pt-24 text-white md:min-h-[620px] md:px-8 md:pb-20 md:pt-28">
+            <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,610px)_minmax(0,330px)] lg:items-end lg:justify-between">
+              <div className="max-w-[610px] rounded-[1.8rem] border border-white/12 bg-[linear-gradient(135deg,rgba(7,18,35,0.58),rgba(7,18,35,0.30))] px-4 py-4 shadow-[0_24px_70px_rgba(7,18,35,0.28)] backdrop-blur-sm md:px-5 md:py-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="inline-flex items-center rounded-full border border-white/12 bg-[rgba(255,255,255,0.08)] px-3 py-1.5 text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-white/82">
+                  <span className="inline-flex items-center rounded-full border border-white/12 bg-[rgba(255,255,255,0.10)] px-3 py-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/86">
                     {pickText(locale, currentHeroSlide.eyebrow)}
                   </span>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.07)] px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-white/70">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[rgba(255,255,255,0.08)] px-3 py-1.5 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-white/72">
                     <span>{String(activeSlide + 1).padStart(2, "0")}</span>
                     <span className="h-px w-4 bg-white/24" />
                     <span>{String(heroDeck.length).padStart(2, "0")}</span>
                   </div>
                 </div>
 
-                <h1 className="theme-heading mt-4 max-w-3xl text-[1.7rem] font-semibold leading-[1.14] text-white [text-shadow:0_14px_34px_rgba(7,18,35,0.38)] md:text-[2.78rem] md:leading-[1.1]">
+                <h1 className="theme-heading mt-4 max-w-[34rem] text-[1.65rem] font-semibold leading-[1.15] text-white [text-shadow:0_12px_28px_rgba(7,18,35,0.38)] md:text-[2.35rem] md:leading-[1.12]">
                   {pickText(locale, currentHeroSlide.title)}
                 </h1>
-                <p className="mt-3.5 max-w-2xl text-[0.9rem] leading-7 text-white/80 [text-shadow:0_10px_24px_rgba(7,18,35,0.32)] md:text-[0.95rem]">
+                <p className="mt-3 max-w-[33rem] text-[0.86rem] leading-6 text-white/82 [text-shadow:0_10px_24px_rgba(7,18,35,0.30)] md:text-[0.92rem]">
                   {pickText(locale, currentHeroSlide.description)}
                 </p>
 
-                <div className="mt-4.5 flex flex-wrap gap-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                   {currentHeroSlide.highlights.map((item) => (
                     <div
                       key={item.en}
-                      className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.06)] px-3 py-1.5 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-white/86 shadow-[0_10px_22px_rgba(7,18,35,0.1)] backdrop-blur-sm"
+                      className="rounded-full border border-white/10 bg-[rgba(255,255,255,0.08)] px-3 py-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/86 shadow-[0_10px_22px_rgba(7,18,35,0.10)] backdrop-blur-sm"
                     >
                       {pickText(locale, item)}
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                   <Link
                     href={currentHeroSlide.primaryCta.href}
-                    className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-[0.92rem] font-semibold transition hover:brightness-110"
+                    className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[0.88rem] font-semibold transition hover:brightness-110"
                   >
                     {pickText(locale, currentHeroSlide.primaryCta.label)}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
                     href={currentHeroSlide.secondaryCta.href}
-                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-[rgba(255,255,255,0.08)] px-5 py-3 text-[0.92rem] font-semibold text-white transition hover:bg-[rgba(255,255,255,0.16)]"
+                    className="inline-flex items-center justify-center gap-2 rounded-full border border-white/12 bg-[rgba(255,255,255,0.08)] px-5 py-2.5 text-[0.88rem] font-semibold text-white transition hover:bg-[rgba(255,255,255,0.16)]"
                   >
                     {pickText(locale, currentHeroSlide.secondaryCta.label)}
                   </Link>
                 </div>
               </div>
 
-              <div className="grid gap-2.5 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1 lg:self-end">
                 {currentHeroSlide.cards.map((item, index) => {
                   const Icon = heroCardIcons[activeSlide % heroCardIcons.length]?.[index] ?? Sparkles;
 
                   return (
                     <div
                       key={item.label.en}
-                      className="rounded-[1.45rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-3.5 py-3 shadow-[0_14px_30px_rgba(7,18,35,0.12)] backdrop-blur-md"
+                      className="rounded-[1.15rem] border border-white/10 bg-[linear-gradient(135deg,rgba(7,18,35,0.54),rgba(7,18,35,0.28))] px-3 py-2.5 shadow-[0_16px_36px_rgba(7,18,35,0.20)] backdrop-blur-sm"
                     >
                       <div className="flex items-start gap-3">
                         <div
-                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border border-white/12 ${heroCardIconClasses[index % heroCardIconClasses.length]}`}
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.9rem] border border-white/12 ${heroCardIconClasses[index % heroCardIconClasses.length]}`}
                         >
                           <Icon className="h-4.5 w-4.5" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-white/60">
+                          <p className="text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-white/60">
                             {pickText(locale, item.label)}
                           </p>
-                          <p className="mt-1 text-[0.9rem] font-semibold text-white">
+                          <p className="mt-0.5 text-[0.82rem] font-semibold text-white">
                             {pickText(locale, item.value)}
                           </p>
-                          <p className="mt-1.5 text-[0.78rem] leading-5.5 text-white/76">
+                          <p className="mt-1 line-clamp-2 text-[0.7rem] leading-5 text-white/76">
                             {pickText(locale, item.note)}
                           </p>
                         </div>
