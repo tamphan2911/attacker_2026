@@ -3290,10 +3290,10 @@ function SubmissionRoundCard({
     ? locale === "en"
       ? round === "round-3"
         ? "The final report deadline has passed. New finalist report versions are now closed."
-        : `${pickRoundLabel(locale, round)} is finished. You can no longer submit new versions for this round.`
+        : "The Round 2 report submission section is closed because the official Round 2 submission deadline has passed. Your latest valid version remains visible for review, and no new report versions can be uploaded."
       : round === "round-3"
         ? "Hạn nộp báo cáo chung kết đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
-        : `${pickRoundLabel(locale, round)} đã kết thúc. Bạn không còn thể nộp phiên bản mới cho vòng này.`
+        : "Khu vực nộp báo cáo Vòng 2 đã đóng vì hạn nộp chính thức của Vòng 2 đã kết thúc. Phiên bản hợp lệ mới nhất của đội vẫn được hiển thị để theo dõi, và đội không thể tải thêm phiên bản báo cáo mới."
     : hasPassedRound
       ? locale === "en"
         ? `This team has already advanced past ${pickRoundLabel(locale, round)}. Submission history stays visible, but this round is no longer active.`
@@ -3435,7 +3435,13 @@ function SubmissionRoundCard({
 
         <div className="rounded-[1.5rem] border theme-border theme-panel px-5 py-5">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200/80">
-            {locale === "en" ? "Submit new version" : "Nộp phiên bản mới"}
+            {submissionClosed && round === "round-2"
+              ? locale === "en"
+                ? "Round 2 submission closed"
+                : "Đã đóng nộp báo cáo Vòng 2"
+              : locale === "en"
+                ? "Submit new version"
+                : "Nộp phiên bản mới"}
           </p>
           {canSubmit ? (
             <div className="mt-5 space-y-4">
@@ -3530,8 +3536,23 @@ function SubmissionRoundCard({
               </button>
             </div>
           ) : (
-            <div className="mt-5 rounded-[1.25rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
-              {lockMessage}
+            <div
+              className={`mt-5 rounded-[1.25rem] border px-4 py-4 text-sm leading-7 ${
+                submissionClosed && round === "round-2"
+                  ? "border-amber-300/45 bg-amber-400/12 text-amber-900 dark:border-amber-200/25 dark:bg-amber-300/12 dark:text-amber-100"
+                  : "theme-border theme-panel-subtle theme-text-muted"
+              }`}
+            >
+              <p className="font-semibold">
+                {submissionClosed && round === "round-2"
+                  ? locale === "en"
+                    ? "Upload controls are hidden."
+                    : "Biểu mẫu tải lên đã được ẩn."
+                  : lockMessage}
+              </p>
+              {submissionClosed && round === "round-2" ? (
+                <p className="mt-2">{lockMessage}</p>
+              ) : null}
             </div>
           )}
         </div>
