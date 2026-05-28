@@ -2,6 +2,7 @@ import { SubmissionRound, TeamSubmissionResourceSource, UserRole } from "@prisma
 
 import { prisma } from "@/lib/db";
 import { getTimelineItemById } from "@/lib/competition";
+import { getTimelineEndDateTime } from "@/lib/timeline-dates";
 import { readAdminRound2JudgeOptions } from "@/server/admin-round2-submissions";
 import { ensureRound2JudgeAssignments } from "@/server/round2-judge-assignment";
 import { readTimelineItems } from "@/server/timeline-items";
@@ -24,10 +25,6 @@ function createStatus(scoredCount: number): AdminRound2ScoreStatus {
   return "not-scored";
 }
 
-function endOfVietnamDay(date: string) {
-  return new Date(`${date}T23:59:59.999+07:00`);
-}
-
 async function isRound2SubmissionClosed(now = new Date()) {
   const timelineItems = await readTimelineItems();
   const submissionDeadline = getTimelineItemById("round-2-report-submission", timelineItems);
@@ -36,7 +33,7 @@ async function isRound2SubmissionClosed(now = new Date()) {
     return false;
   }
 
-  return now.getTime() > endOfVietnamDay(submissionDeadline.endDate).getTime();
+  return now.getTime() > getTimelineEndDateTime(submissionDeadline).getTime();
 }
 
 export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]> {

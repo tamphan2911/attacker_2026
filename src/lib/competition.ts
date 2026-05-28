@@ -1,4 +1,9 @@
 import { competitionRoundWindows, TEAM_MIN_MEMBERS } from "@/data/site-content";
+import {
+  compareTimelineDateRanges,
+  getTimelineEndDateTime,
+  getTimelineStartDateTime,
+} from "@/lib/timeline-dates";
 import type {
   CompetitionRoundKey,
   CompetitionRoundWindow,
@@ -26,13 +31,7 @@ const primaryRoundTimelineItemIds: Record<CompetitionRoundKey, string> = {
 export const ROUND1_RESULT_ANNOUNCEMENT_TIMELINE_ID = "round-1-top-50-announcement";
 
 function sortTimelineItemsByDate(items: TimelineItem[]) {
-  return [...items].sort((left, right) => {
-    if (left.startDate !== right.startDate) {
-      return left.startDate.localeCompare(right.startDate);
-    }
-
-    return left.endDate.localeCompare(right.endDate);
-  });
+  return [...items].sort(compareTimelineDateRanges);
 }
 
 export function getTimelineItemById(itemId: string, timelineItems?: TimelineItem[]) {
@@ -68,15 +67,9 @@ export function getCompetitionRoundWindow(
     },
     startDate: phaseItems[0].startDate,
     endDate: phaseItems[phaseItems.length - 1].endDate,
+    startTime: phaseItems[0].startTime,
+    endTime: phaseItems[phaseItems.length - 1].endTime,
   };
-}
-
-function endOfDay(value: string) {
-  return new Date(`${value}T23:59:59.999`);
-}
-
-function startOfVietnamDay(value: string) {
-  return new Date(`${value}T00:00:00.000+07:00`);
 }
 
 function getSubmissionDeadlineItemId(round: SubmissionRound) {
@@ -104,7 +97,7 @@ export function isTimelineItemFinished(
     return false;
   }
 
-  return now.getTime() > endOfDay(item.endDate).getTime();
+  return now.getTime() > getTimelineEndDateTime(item).getTime();
 }
 
 export function isTimelineItemStarted(
@@ -117,7 +110,7 @@ export function isTimelineItemStarted(
     return false;
   }
 
-  return now.getTime() >= startOfVietnamDay(item.startDate).getTime();
+  return now.getTime() >= getTimelineStartDateTime(item).getTime();
 }
 
 export function isRound1ResultAnnouncementReleased(timelineItems?: TimelineItem[], now = new Date()) {
@@ -127,7 +120,7 @@ export function isRound1ResultAnnouncementReleased(timelineItems?: TimelineItem[
 export function isRound2Started(timelineItems?: TimelineItem[], now = new Date()) {
   const round2Item = getCompetitionRoundPrimaryTimelineItem("round-2", timelineItems);
   if (round2Item) {
-    return now.getTime() >= startOfVietnamDay(round2Item.startDate).getTime();
+    return now.getTime() >= getTimelineStartDateTime(round2Item).getTime();
   }
 
   const round2Window = getCompetitionRoundWindow("round-2", timelineItems);
@@ -135,7 +128,7 @@ export function isRound2Started(timelineItems?: TimelineItem[], now = new Date()
     return false;
   }
 
-  return now.getTime() >= startOfVietnamDay(round2Window.startDate).getTime();
+  return now.getTime() >= getTimelineStartDateTime(round2Window).getTime();
 }
 
 export function canApplyRound1Qualification(timelineItems?: TimelineItem[], now = new Date()) {
@@ -152,7 +145,7 @@ export function isRoundFinished(
     return false;
   }
 
-  return now.getTime() > endOfDay(window.endDate).getTime();
+  return now.getTime() > getTimelineEndDateTime(window).getTime();
 }
 
 export function getTeamCompetitionState(team: TeamProfile): CompetitionState {
@@ -203,7 +196,7 @@ export function canTeamSubmitForRound(
 ) {
   const submissionDeadlineItem = getSubmissionDeadlineTimelineItem(round, timelineItems);
   const isSubmissionWindowClosed = submissionDeadlineItem
-    ? now.getTime() > endOfDay(submissionDeadlineItem.endDate).getTime()
+    ? now.getTime() > getTimelineEndDateTime(submissionDeadlineItem).getTime()
     : isRoundFinished(round, now, timelineItems);
 
   return isTeamCurrentlyCompetingRound(team, round) && !isSubmissionWindowClosed;

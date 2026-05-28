@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   CircleDashed,
   Download,
   FileCheck2,
@@ -17,6 +18,7 @@ import {
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { PageIntro, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { isRound2Started } from "@/lib/competition";
 import { formatDateLabel, pickLocalizedText } from "@/lib/site";
 import type {
   CompetitionRoundKey,
@@ -255,21 +257,46 @@ function JudgeTeamSubmissionTable({
 }
 
 export function JudgeDashboardPage({ data }: { data: JudgeDashboardData }) {
-  const { locale } = useSiteState();
+  const { locale, timelineItems } = useSiteState();
   const searchParams = useSearchParams();
   const savedSubmissionId = searchParams.get("scored") ?? "";
+  const [collapsedRounds, setCollapsedRounds] = useState<Partial<Record<CompetitionRoundKey, boolean>>>(() => ({
+    "round-1": isRound2Started(timelineItems, new Date()),
+  }));
 
   useEffect(() => {
     if (!savedSubmissionId) {
       return;
     }
 
-    window.setTimeout(() => {
-      document
-        .getElementById(`judge-task-${savedSubmissionId}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const savedRound = data.rounds.find((group) =>
+      group.tasks.some((task) => task.submissionId === savedSubmissionId),
+    )?.round;
+
+    let scrollTimer: number | undefined;
+    const expandTimer = window.setTimeout(() => {
+      if (savedRound === "round-1") {
+        setCollapsedRounds((current) => ({ ...current, "round-1": false }));
+      }
+
+      scrollTimer = window.setTimeout(() => {
+        document
+          .getElementById(`judge-task-${savedSubmissionId}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 120);
     }, 80);
-  }, [savedSubmissionId]);
+
+    return () => {
+      window.clearTimeout(expandTimer);
+      if (scrollTimer) {
+        window.clearTimeout(scrollTimer);
+      }
+    };
+  }, [data.rounds, savedSubmissionId]);
+
+  const handleToggleRound = (round: CompetitionRoundKey) => {
+    setCollapsedRounds((current) => ({ ...current, [round]: !current[round] }));
+  };
 
   return (
     <div className="space-y-8">
@@ -332,6 +359,8 @@ export function JudgeDashboardPage({ data }: { data: JudgeDashboardData }) {
       {data.rounds.map((group) => {
         const meta = roundMeta[group.round];
         const Icon = meta.icon;
+        const canCollapse = group.round === "round-1";
+        const isCollapsed = Boolean(collapsedRounds[group.round]);
 
         return (
           <Surface key={group.round} className="overflow-hidden px-0 py-0">
@@ -347,29 +376,72 @@ export function JudgeDashboardPage({ data }: { data: JudgeDashboardData }) {
                     <p className="mt-3 max-w-3xl text-sm leading-7 theme-text-muted">{meta.description[locale]}</p>
                   </div>
                 </div>
-                <StatusPill tone={group.round === "round-1" ? "info" : group.round === "round-2" ? "success" : "warning"}>
-                  {`${group.tasks.length} ${locale === "en" ? "items" : "mục"}`}
-                </StatusPill>
+                <div className="flex items-center gap-3 self-start lg:self-center">
+                  <StatusPill tone={group.round === "round-1" ? "info" : group.round === "round-2" ? "success" : "warning"}>
+                    {`${group.tasks.length} ${locale === "en" ? "items" : "mục"}`}
+                  </StatusPill>
+                  {canCollapse ? (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleRound(group.round)}
+                      aria-label={
+                        isCollapsed
+                          ? locale === "en"
+                            ? "Expand Round 1 scoring queue"
+                            : "Mở hàng chờ chấm Vòng 1"
+                          : locale === "en"
+                            ? "Collapse Round 1 scoring queue"
+                            : "Thu gọn hàng chờ chấm Vòng 1"
+                      }
+                      className="theme-button-secondary group relative inline-flex h-11 w-11 items-center justify-center rounded-full transition duration-300 hover:-translate-y-0.5 active:translate-y-0"
+                    >
+                      <ChevronDown
+                        className={cn(
+                          "h-4.5 w-4.5 transition-transform duration-300",
+                          isCollapsed ? "rotate-0" : "rotate-180",
+                        )}
+                      />
+                      <span className="theme-header-tooltip pointer-events-none absolute right-0 top-full z-20 mt-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                        {isCollapsed
+                          ? locale === "en"
+                            ? "Expand"
+                            : "Mở rộng"
+                          : locale === "en"
+                            ? "Collapse"
+                            : "Thu gọn"}
+                      </span>
+                    </button>
+                  ) : null}
+                </div>
               </div>
             </div>
 
-            {group.tasks.length === 0 ? (
-              <div className="px-6 py-8 md:px-8">
-                <p className="text-sm theme-text-soft">
-                  {locale === "en"
-                    ? "No scoring items are waiting in this round right now."
-                    : "Hiện chưa có đầu việc chấm điểm nào trong vòng này."}
-                </p>
-              </div>
-            ) : (
-              <div className="px-2 py-2 md:px-4 md:py-4">
-                {group.round === "round-1" ? (
-                  <JudgeRound1Table locale={locale} tasks={group.tasks as JudgeDashboardRound1Task[]} />
+            <div
+              className={cn(
+                "grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                canCollapse && isCollapsed ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100",
+              )}
+            >
+              <div className="min-h-0 overflow-hidden">
+                {group.tasks.length === 0 ? (
+                  <div className="px-6 py-8 md:px-8">
+                    <p className="text-sm theme-text-soft">
+                      {locale === "en"
+                        ? "No scoring items are waiting in this round right now."
+                        : "Hiện chưa có đầu việc chấm điểm nào trong vòng này."}
+                    </p>
+                  </div>
                 ) : (
-                  <JudgeTeamSubmissionTable locale={locale} tasks={group.tasks as JudgeDashboardTeamTask[]} />
+                  <div className="px-2 py-2 md:px-4 md:py-4">
+                    {group.round === "round-1" ? (
+                      <JudgeRound1Table locale={locale} tasks={group.tasks as JudgeDashboardRound1Task[]} />
+                    ) : (
+                      <JudgeTeamSubmissionTable locale={locale} tasks={group.tasks as JudgeDashboardTeamTask[]} />
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
           </Surface>
         );
       })}

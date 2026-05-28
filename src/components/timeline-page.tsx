@@ -25,6 +25,11 @@ import {
   isTeamCurrentlyCompetingRound,
 } from "@/lib/competition";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
+import {
+  compareTimelineDateRanges,
+  getTimelineEndDateTime,
+  getTimelineStartDateTime,
+} from "@/lib/timeline-dates";
 import type {
   CompetitionRoundKey,
   LocalizedText,
@@ -204,7 +209,7 @@ function buildTimelineActionLinks({
         currentTeam.leaderId === activeUserId &&
         isTeamCurrentlyCompetingRound(currentTeam, "round-2")
       ) {
-        const round2Closed = now.getTime() > parseLocalDate(item.endDate, true).getTime();
+        const round2Closed = now.getTime() > getTimelineEndDateTime(item).getTime();
         actionLinks.push({
           key: `${item.id}-${supportLink.href}`,
           href: round2Closed ? undefined : "/dashboard#round-2-section",
@@ -226,7 +231,7 @@ function buildTimelineActionLinks({
         currentTeam.leaderId === activeUserId &&
         isTeamCurrentlyCompetingRound(currentTeam, "round-3")
       ) {
-        const finalReportClosed = now.getTime() > parseLocalDate(item.endDate, true).getTime();
+        const finalReportClosed = now.getTime() > getTimelineEndDateTime(item).getTime();
         actionLinks.push({
           key: `${item.id}-${supportLink.href}`,
           href: finalReportClosed ? undefined : "/dashboard#round-3-section",
@@ -264,13 +269,6 @@ function buildTimelineActionLinks({
   }
 
   return actionLinks;
-}
-
-function parseLocalDate(value: string, endOfDay = false) {
-  const [year, month, day] = value.split("-").map(Number);
-  return endOfDay
-    ? new Date(year, month - 1, day, 23, 59, 59, 999)
-    : new Date(year, month - 1, day, 0, 0, 0, 0);
 }
 
 function formatCountdown(locale: "en" | "vi", distanceMs: number, nowLabel: LocalizedText) {
@@ -332,8 +330,8 @@ function getTimelineCardStatusMeta(
   >,
 ) {
   const key = getTimelineItemKey(item);
-  const startAt = parseLocalDate(item.startDate);
-  const endAt = parseLocalDate(item.endDate, true);
+  const startAt = getTimelineStartDateTime(item);
+  const endAt = getTimelineEndDateTime(item);
 
   if (now > endAt) {
     return {
@@ -395,17 +393,9 @@ export function TimelinePage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const orderedTimelineItems = [...visibleTimelineItems].sort((left, right) => {
-    const leftStart = parseLocalDate(left.startDate).getTime();
-    const rightStart = parseLocalDate(right.startDate).getTime();
-    if (leftStart !== rightStart) {
-      return leftStart - rightStart;
-    }
+  const orderedTimelineItems = [...visibleTimelineItems].sort(compareTimelineDateRanges);
 
-    return parseLocalDate(left.endDate, true).getTime() - parseLocalDate(right.endDate, true).getTime();
-  });
-
-  const nextUpcomingItem = orderedTimelineItems.find((item) => parseLocalDate(item.startDate).getTime() > now.getTime());
+  const nextUpcomingItem = orderedTimelineItems.find((item) => getTimelineStartDateTime(item).getTime() > now.getTime());
   const nextUpcomingKey = nextUpcomingItem ? getTimelineItemKey(nextUpcomingItem) : null;
   const openEligibilityNotice = () => {
     if (!activeUserId) {
@@ -508,7 +498,7 @@ export function TimelinePage() {
     }
 
     const round1Item = timelineItems.find((item) => item.id === "round-1-individual-qualifier");
-    if (round1Item && now.getTime() > parseLocalDate(round1Item.endDate, true).getTime()) {
+    if (round1Item && now.getTime() > getTimelineEndDateTime(round1Item).getTime()) {
       reasons.push(locale === "en" ? "The Round 1 exam window has closed." : "Khung thi Vòng 1 đã kết thúc.");
     }
 
@@ -535,13 +525,7 @@ export function TimelinePage() {
             : pageContent.timelinePage.round3;
     const items = [...visibleTimelineItems]
       .filter((item) => item.phase === phase.phase)
-      .sort((left, right) => {
-        if (left.startDate !== right.startDate) {
-          return left.startDate.localeCompare(right.startDate);
-        }
-
-        return left.endDate.localeCompare(right.endDate);
-      });
+      .sort(compareTimelineDateRanges);
 
     return {
       ...phase,
@@ -549,6 +533,8 @@ export function TimelinePage() {
       items,
       startDate: items[0]?.startDate,
       endDate: items[items.length - 1]?.endDate,
+      startTime: items[0]?.startTime,
+      endTime: items[items.length - 1]?.endTime,
     };
   });
 
@@ -595,7 +581,7 @@ export function TimelinePage() {
                       </p>
                       <p className="mt-2 text-sm leading-7 theme-text-muted">
                         {phase.startDate && phase.endDate
-                          ? formatDateRangeLabel(locale, phase.startDate, phase.endDate)
+                          ? formatDateRangeLabel(locale, phase.startDate, phase.endDate, phase.startTime, phase.endTime)
                           : pickText(locale, pageContent.timelinePage.scheduleToBeUpdated)}
                       </p>
                       <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold theme-accent">
@@ -673,7 +659,7 @@ export function TimelinePage() {
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
-                            {formatDateRangeLabel(locale, item.startDate, item.endDate)}
+                            {formatDateRangeLabel(locale, item.startDate, item.endDate, item.startTime, item.endTime)}
                           </p>
                           <h3 className="theme-heading mt-3 text-xl font-semibold theme-text-strong">
                             {itemTitle}
@@ -700,7 +686,7 @@ export function TimelinePage() {
                             {pickText(locale, pageContent.timelinePage.timeLabel)}
                           </p>
                           <p className="mt-2 text-sm leading-7 theme-text-body">
-                            {formatDateRangeLabel(locale, item.startDate, item.endDate)}
+                            {formatDateRangeLabel(locale, item.startDate, item.endDate, item.startTime, item.endTime)}
                           </p>
                         </div>
                         <div className="theme-timeline-meta-card theme-timeline-meta-card--accent rounded-[1.25rem] border px-4 py-4">

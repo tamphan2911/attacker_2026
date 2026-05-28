@@ -201,7 +201,7 @@ export function CompetitionPage() {
                   </p>
                   <p className="mt-3 text-sm uppercase tracking-[0.24em] theme-text-soft">
                     {roundWindow
-                      ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate)
+                      ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate, roundWindow.startTime, roundWindow.endTime)
                       : pickText(locale, item.duration)}
                   </p>
                 </div>

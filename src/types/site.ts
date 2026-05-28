@@ -57,6 +57,8 @@ export interface TimelineItem {
   phase: "general" | CompetitionRoundKey;
   startDate: string;
   endDate: string;
+  startTime?: string;
+  endTime?: string;
   title: LocalizedText;
   description: LocalizedText;
   location: LocalizedText;
@@ -69,6 +71,8 @@ export interface CompetitionRoundWindow {
   title: LocalizedText;
   startDate: string;
   endDate: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 export interface FAQItem {

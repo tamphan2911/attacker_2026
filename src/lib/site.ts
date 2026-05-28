@@ -1,4 +1,5 @@
 import type { Locale, LocalizedText, TeamProfile, TeamInvitation } from "@/types/site";
+import { formatTimelineDateRangeLabel } from "@/lib/timeline-dates";
 
 export function pickText(locale: Locale, value: LocalizedText): string {
   return value[locale];
@@ -27,15 +28,14 @@ export function formatDateLabel(locale: Locale, value: string): string {
   }).format(new Date(value));
 }
 
-export function formatDateRangeLabel(locale: Locale, startDate: string, endDate: string): string {
-  const formattedStart = formatDateLabel(locale, startDate);
-  const formattedEnd = formatDateLabel(locale, endDate);
-
-  if (startDate === endDate) {
-    return formattedStart;
-  }
-
-  return `${formattedStart} - ${formattedEnd}`;
+export function formatDateRangeLabel(
+  locale: Locale,
+  startDate: string,
+  endDate: string,
+  startTime?: string,
+  endTime?: string,
+): string {
+  return formatTimelineDateRangeLabel(locale, startDate, endDate, startTime, endTime);
 }
 
 export function initials(value: string): string {

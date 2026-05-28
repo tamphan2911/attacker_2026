@@ -688,7 +688,13 @@ export function DashboardPage() {
       !canTeamSubmitForRound(currentTeam, "round-3", new Date(), timelineItems),
   );
   const round3SubmissionWindowLabel = round3SubmissionDeadlineItem
-    ? formatDateRangeLabel(locale, round3SubmissionDeadlineItem.startDate, round3SubmissionDeadlineItem.endDate)
+    ? formatDateRangeLabel(
+        locale,
+        round3SubmissionDeadlineItem.startDate,
+        round3SubmissionDeadlineItem.endDate,
+        round3SubmissionDeadlineItem.startTime,
+        round3SubmissionDeadlineItem.endTime,
+      )
     : undefined;
   const showRound2Submission = currentTeam ? hasTeamReachedRound(currentTeam, "round-2") : false;
   const showRound3Submission = currentTeam ? hasTeamReachedRound(currentTeam, "round-3") : false;
@@ -2138,7 +2144,9 @@ export function DashboardPage() {
                     {pickRound1LockStatusLabel(locale, currentTeam.round1LockStatus)}
                   </StatusPill>
                   {round1Window ? (
-                    <StatusPill>{formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate)}</StatusPill>
+                    <StatusPill>
+                      {formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate, round1Window.startTime, round1Window.endTime)}
+                    </StatusPill>
                   ) : null}
                   <CollapseToggleButton
                     collapsed={isRound1LockCollapsed}
@@ -3251,7 +3259,7 @@ function SubmissionRoundCard({
         : "Nộp báo cáo chung kết";
   const roundWindow = getSubmissionDeadlineTimelineItem(round, timelineItems) ?? getCompetitionRoundWindow(round, timelineItems);
   const roundWindowLabel = submissionWindowLabel ?? (roundWindow
-    ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate)
+    ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate, roundWindow.startTime, roundWindow.endTime)
     : undefined);
   const submissionClosed = isSubmissionClosed ?? isRoundFinished;
   const canSubmit = isLeader && isCurrentRound && !submissionClosed;

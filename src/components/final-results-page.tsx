@@ -320,7 +320,13 @@ export function FinalResultsPage() {
                 </p>
                 <p className="mt-1 text-sm font-semibold theme-text-strong">
                   {finalPresentationItem
-                    ? formatDateRangeLabel(locale, finalPresentationItem.startDate, finalPresentationItem.endDate)
+                    ? formatDateRangeLabel(
+                        locale,
+                        finalPresentationItem.startDate,
+                        finalPresentationItem.endDate,
+                        finalPresentationItem.startTime,
+                        finalPresentationItem.endTime,
+                      )
                     : pickText(locale, pageContent.finalResults.toBeAnnouncedLabel)}
                 </p>
               </div>

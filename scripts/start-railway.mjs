@@ -5,6 +5,8 @@ import process from "node:process";
 
 import { PrismaClient } from "@prisma/client";
 
+process.env.TZ ??= "Asia/Ho_Chi_Minh";
+
 function resolveAppStorageRoot() {
   const configuredRoot = process.env.APP_STORAGE_ROOT?.trim();
 

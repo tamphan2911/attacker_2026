@@ -119,7 +119,13 @@ export function FinalistsPage() {
                         </p>
                         <p className="mt-2 text-sm font-semibold theme-text-strong">
                           {finalPresentationItem
-                            ? formatDateRangeLabel(locale, finalPresentationItem.startDate, finalPresentationItem.endDate)
+                            ? formatDateRangeLabel(
+                                locale,
+                                finalPresentationItem.startDate,
+                                finalPresentationItem.endDate,
+                                finalPresentationItem.startTime,
+                                finalPresentationItem.endTime,
+                              )
                             : pickText(locale, pageContent.finalists.toBeAnnouncedLabel)}
                         </p>
                       </div>
@@ -178,7 +184,13 @@ export function FinalistsPage() {
                       </p>
                       <p className="mt-2 text-sm font-semibold theme-text-strong">
                         {finalPresentationItem
-                          ? formatDateRangeLabel(locale, finalPresentationItem.startDate, finalPresentationItem.endDate)
+                          ? formatDateRangeLabel(
+                              locale,
+                              finalPresentationItem.startDate,
+                              finalPresentationItem.endDate,
+                              finalPresentationItem.startTime,
+                              finalPresentationItem.endTime,
+                            )
                           : pickText(locale, pageContent.finalists.toBeAnnouncedLabel)}
                       </p>
                       <p className="mt-1 text-xs leading-6 theme-text-soft">

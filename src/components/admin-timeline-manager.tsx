@@ -7,6 +7,7 @@ import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-sc
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface, StatusPill } from "@/components/site-ui";
 import { timelineItems as defaultTimelineItems } from "@/data/site-content";
+import { compareTimelineDateRanges } from "@/lib/timeline-dates";
 import { pickText } from "@/lib/site";
 import type { CompetitionRoundKey, TimelineItem } from "@/types/site";
 
@@ -25,13 +26,7 @@ function cloneTimeline(value: TimelineItem[]) {
 }
 
 function sortTimelineItems(items: TimelineItem[]) {
-  return [...items].sort((left, right) => {
-    if (left.startDate !== right.startDate) {
-      return left.startDate.localeCompare(right.startDate);
-    }
-
-    return left.endDate.localeCompare(right.endDate);
-  });
+  return [...items].sort(compareTimelineDateRanges);
 }
 
 export function AdminTimelineManager() {
@@ -100,7 +95,7 @@ export function AdminTimelineManager() {
     }));
   }, [timelineItems]);
 
-  const handleDateChange = (itemId: string, field: "startDate" | "endDate", value: string) => {
+  const handleScheduleChange = (itemId: string, field: "startDate" | "endDate" | "startTime" | "endTime", value: string) => {
     setTimelineItems((current) =>
       current.map((item) => (item.id === itemId ? { ...item, [field]: value } : item)),
     );
@@ -150,13 +145,13 @@ export function AdminTimelineManager() {
             eyebrow={locale === "en" ? "System / Timeline" : "Hệ thống / Lịch trình"}
             title={
               locale === "en"
-                ? "Edit the official dates for every timeline step."
-                : "Chỉnh các mốc thời gian chính thức cho từng bước trong lịch trình."
+                ? "Edit the official dates and times for every timeline step."
+                : "Chỉnh ngày và giờ chính thức cho từng bước trong lịch trình."
             }
             description={
               locale === "en"
-                ? "This screen is admin-only. Update the start and end dates here, then the public timeline page and live status badges will reflect the new schedule."
-                : "Màn hình này chỉ dành cho admin. Hãy cập nhật ngày bắt đầu và kết thúc tại đây, sau đó trang lịch trình công khai và các nhãn trạng thái trực tiếp sẽ phản ánh lịch mới."
+                ? "This screen is admin-only. Update the start and end schedule here, then the public timeline page and live status badges will reflect the new schedule."
+                : "Màn hình này chỉ dành cho admin. Hãy cập nhật mốc bắt đầu và kết thúc tại đây, sau đó trang lịch trình công khai và các nhãn trạng thái trực tiếp sẽ phản ánh lịch mới."
             }
           />
 
@@ -214,8 +209,8 @@ export function AdminTimelineManager() {
                     <p className="text-lg font-semibold theme-text-strong">{pickText(locale, { en: meta.en, vi: meta.vi })}</p>
                     <p className="mt-2 text-sm leading-7 theme-text-soft">
                       {locale === "en"
-                        ? "Edit only the dates here. Titles, places, methods, and links stay under the main content structure."
-                        : "Tại đây chỉ chỉnh ngày tháng. Tiêu đề, địa điểm, hình thức và liên kết vẫn thuộc cấu trúc nội dung chính."}
+                        ? "Edit only the schedule here. Titles, places, methods, and links stay under the main content structure."
+                        : "Tại đây chỉ chỉnh lịch ngày giờ. Tiêu đề, địa điểm, hình thức và liên kết vẫn thuộc cấu trúc nội dung chính."}
                     </p>
                   </div>
                   <StatusPill tone={meta.tone}>{items.length} {locale === "en" ? "steps" : "bước"}</StatusPill>
@@ -224,7 +219,7 @@ export function AdminTimelineManager() {
                 <div className="mt-5 space-y-4">
                   {items.map((item) => (
                     <div key={item.id} className="rounded-[1.5rem] border theme-border theme-panel px-4 py-4">
-                      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1.7fr)_180px_180px] lg:items-end">
+                      <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1.7fr)_170px_140px_170px_140px] lg:items-end">
                         <div className="min-w-0">
                           <div className="inline-flex items-center gap-2">
                             <div className="flex h-10 w-10 items-center justify-center rounded-2xl border theme-border theme-panel-subtle theme-text-strong">
@@ -241,7 +236,20 @@ export function AdminTimelineManager() {
                           <input
                             type="date"
                             value={item.startDate}
-                            onChange={(event) => handleDateChange(item.id, "startDate", event.target.value)}
+                            onChange={(event) => handleScheduleChange(item.id, "startDate", event.target.value)}
+                            className={fieldClassName}
+                          />
+                        </label>
+
+                        <label className="space-y-2">
+                          <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                            {locale === "en" ? "Start time" : "Giờ bắt đầu"}
+                          </span>
+                          <input
+                            type="time"
+                            step={60}
+                            value={item.startTime ?? ""}
+                            onChange={(event) => handleScheduleChange(item.id, "startTime", event.target.value)}
                             className={fieldClassName}
                           />
                         </label>
@@ -253,7 +261,20 @@ export function AdminTimelineManager() {
                           <input
                             type="date"
                             value={item.endDate}
-                            onChange={(event) => handleDateChange(item.id, "endDate", event.target.value)}
+                            onChange={(event) => handleScheduleChange(item.id, "endDate", event.target.value)}
+                            className={fieldClassName}
+                          />
+                        </label>
+
+                        <label className="space-y-2">
+                          <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                            {locale === "en" ? "End time" : "Giờ kết thúc"}
+                          </span>
+                          <input
+                            type="time"
+                            step={60}
+                            value={item.endTime ?? ""}
+                            onChange={(event) => handleScheduleChange(item.id, "endTime", event.target.value)}
                             className={fieldClassName}
                           />
                         </label>

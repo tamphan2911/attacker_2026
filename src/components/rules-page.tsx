@@ -410,7 +410,7 @@ export function RulesPage() {
                     <span className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium ${meta.chipClass}`}>
                       <CalendarDays className="h-4 w-4" />
                       {roundWindow
-                        ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate)
+                        ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate, roundWindow.startTime, roundWindow.endTime)
                         : pickText(locale, round.duration)}
                     </span>
                     <span className={`inline-flex max-w-xl items-start gap-2 rounded-[1.15rem] border px-4 py-3 text-sm font-medium leading-6 ${meta.chipClass}`}>

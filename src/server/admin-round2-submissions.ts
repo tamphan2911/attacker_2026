@@ -2,6 +2,7 @@ import { SubmissionRound, TeamSubmissionResourceSource, UserRole } from "@prisma
 
 import { prisma } from "@/lib/db";
 import { getTimelineItemById } from "@/lib/competition";
+import { getTimelineEndDateTime } from "@/lib/timeline-dates";
 import { syncJudgeAccounts } from "@/server/judge-accounts";
 import { readStoredJudges } from "@/server/admin-service";
 import { ensureRound2JudgeAssignments } from "@/server/round2-judge-assignment";
@@ -34,10 +35,6 @@ function ok<T>(data: T, status = 200): ServiceSuccess<T> {
 
 function fail(status: number, error: string): ServiceFailure {
   return { ok: false, status, error };
-}
-
-function endOfVietnamDay(date: string) {
-  return new Date(`${date}T23:59:59.999+07:00`);
 }
 
 function createAssignmentStatus(count: number): AdminRound2AssignmentStatus {
@@ -101,7 +98,7 @@ export async function readAdminRound2SubmissionRows(): Promise<{
   const timelineItems = await readTimelineItems();
   const round2DeadlineItem = getTimelineItemById("round-2-report-submission", timelineItems);
   const round2Closed = round2DeadlineItem
-    ? new Date().getTime() > endOfVietnamDay(round2DeadlineItem.endDate).getTime()
+    ? new Date().getTime() > getTimelineEndDateTime(round2DeadlineItem).getTime()
     : false;
 
   if (round2Closed) {

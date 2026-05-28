@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getTimelineEndDateTime, getTimelineStartDateTime, timelineTimePattern } from "@/lib/timeline-dates";
 import { getCurrentDbUser, hasAdminRole } from "@/server/auth-helpers";
 import { readTimelineItems, saveTimelineItems } from "@/server/timeline-items";
 import type { TimelineItem } from "@/types/site";
@@ -34,9 +35,22 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Every timeline step needs valid start and end dates." }, { status: 400 });
   }
 
-  const hasReversedDate = payload.timelineItems.some((item) => item.startDate > item.endDate);
-  if (hasReversedDate) {
-    return NextResponse.json({ error: "Start date cannot be after end date." }, { status: 400 });
+  const hasInvalidTime = payload.timelineItems.some((item) => {
+    const startTime = item.startTime?.trim();
+    const endTime = item.endTime?.trim();
+    return Boolean((startTime && !timelineTimePattern.test(startTime)) || (endTime && !timelineTimePattern.test(endTime)));
+  });
+
+  if (hasInvalidTime) {
+    return NextResponse.json({ error: "Timeline times must use HH:mm format." }, { status: 400 });
+  }
+
+  const hasReversedDateTime = payload.timelineItems.some((item) => {
+    return getTimelineStartDateTime(item).getTime() > getTimelineEndDateTime(item).getTime();
+  });
+
+  if (hasReversedDateTime) {
+    return NextResponse.json({ error: "Start date and time cannot be after end date and time." }, { status: 400 });
   }
 
   await saveTimelineItems(payload.timelineItems);

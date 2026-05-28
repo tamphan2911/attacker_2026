@@ -6,6 +6,7 @@ import {
 } from "@prisma/client";
 
 import { getTimelineItemById } from "@/lib/competition";
+import { getTimelineEndDateTime } from "@/lib/timeline-dates";
 import { judgeProfiles } from "@/data/site-content";
 import { syncJudgeAccounts } from "@/server/judge-accounts";
 import { readTimelineItems } from "@/server/timeline-items";
@@ -22,10 +23,6 @@ type AssignmentDb = Pick<
 >;
 
 const JUDGES_SCOPE = "site-judges";
-
-function endOfVietnamDay(date: string) {
-  return new Date(`${date}T23:59:59.999+07:00`);
-}
 
 function parseStoredJudges(payload: string | null | undefined): JudgeProfile[] {
   if (!payload) {
@@ -48,7 +45,7 @@ export async function isRound2SubmissionClosed(now = new Date()) {
     return false;
   }
 
-  return now.getTime() > endOfVietnamDay(submissionDeadline.endDate).getTime();
+  return now.getTime() > getTimelineEndDateTime(submissionDeadline).getTime();
 }
 
 async function readRound2TeamIds(db: AssignmentDb, teamIds?: string[]) {
@@ -224,30 +221,58 @@ export async function ensureRound2JudgeAssignments(db: AssignmentDb) {
   }
 
   let created = 0;
+  const latestSubmissions = Array.from(latestByTeam.values());
 
-  for (const submission of latestByTeam.values()) {
-    created += await ensureRound2TeamJudgeAssignments(db, {
-      teamIds: [submission.teamId],
-    });
-
+  for (const submission of latestSubmissions) {
     const existingJudgeIds = submission.judgeReviews
       .filter((review) => review.judgeUser.role === UserRole.JUDGE)
       .map((review) => review.judgeUserId);
 
-    if (existingJudgeIds.length >= 2) {
-      continue;
+    for (const judgeUserId of existingJudgeIds.slice(0, 2)) {
+      await db.round2TeamJudgeAssignment.upsert({
+        where: {
+          teamId_judgeUserId: {
+            teamId: submission.teamId,
+            judgeUserId,
+          },
+        },
+        update: {},
+        create: {
+          teamId: submission.teamId,
+          judgeUserId,
+        },
+      });
     }
+  }
 
-    const teamAssignments = await db.round2TeamJudgeAssignment.findMany({
-      where: { teamId: submission.teamId },
-      select: { judgeUserId: true },
-      orderBy: { createdAt: "asc" },
-      take: 2,
-    });
-    const selectedJudgeIds = teamAssignments
-      .map((assignment) => assignment.judgeUserId)
+  created += await ensureRound2TeamJudgeAssignments(db, {
+    teamIds: latestSubmissions.map((submission) => submission.teamId),
+  });
+
+  const teamAssignments = await db.round2TeamJudgeAssignment.findMany({
+    where: { teamId: { in: latestSubmissions.map((submission) => submission.teamId) } },
+    select: { teamId: true, judgeUserId: true },
+    orderBy: [{ teamId: "asc" }, { createdAt: "asc" }],
+  });
+
+  const assignmentJudgeIdsByTeamId = new Map<string, string[]>();
+  for (const assignment of teamAssignments) {
+    const current = assignmentJudgeIdsByTeamId.get(assignment.teamId) ?? [];
+    if (current.length < 2) {
+      current.push(assignment.judgeUserId);
+      assignmentJudgeIdsByTeamId.set(assignment.teamId, current);
+    }
+  }
+
+  for (const submission of latestSubmissions) {
+    const existingJudgeIds = submission.judgeReviews
+      .filter((review) => review.judgeUser.role === UserRole.JUDGE)
+      .map((review) => review.judgeUserId);
+    const assignedJudgeIds = assignmentJudgeIdsByTeamId.get(submission.teamId) ?? [];
+    const requiredReviewCount = Math.max(0, 2 - existingJudgeIds.length);
+    const selectedJudgeIds = assignedJudgeIds
       .filter((judgeUserId) => !existingJudgeIds.includes(judgeUserId))
-      .slice(0, 2 - existingJudgeIds.length);
+      .slice(0, requiredReviewCount);
 
     for (const judgeUserId of selectedJudgeIds) {
       await db.teamSubmissionJudgeReview.upsert({

@@ -40,6 +40,8 @@ type Round1QualifiedTeamsPayload = {
   adminPreview?: boolean;
   announcementStartDate?: string;
   announcementEndDate?: string;
+  announcementStartTime?: string;
+  announcementEndTime?: string;
   qualifiedTeams: QualifiedTeam[];
   maxScores: {
     objective: number;
@@ -100,8 +102,20 @@ export function Round1QualifiedTeamsPage() {
       return locale === "en" ? "To be announced" : "Sẽ cập nhật";
     }
 
-    return formatDateRangeLabel(locale, payload.announcementStartDate, payload.announcementEndDate ?? payload.announcementStartDate);
-  }, [locale, payload?.announcementEndDate, payload?.announcementStartDate]);
+    return formatDateRangeLabel(
+      locale,
+      payload.announcementStartDate,
+      payload.announcementEndDate ?? payload.announcementStartDate,
+      payload.announcementStartTime,
+      payload.announcementEndTime,
+    );
+  }, [
+    locale,
+    payload?.announcementEndDate,
+    payload?.announcementEndTime,
+    payload?.announcementStartDate,
+    payload?.announcementStartTime,
+  ]);
 
   const qualifiedTeams = useMemo(() => payload?.qualifiedTeams ?? [], [payload?.qualifiedTeams]);
   const normalizedSearchTerm = searchTerm.trim().toLowerCase();

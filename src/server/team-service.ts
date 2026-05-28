@@ -20,6 +20,7 @@ import {
 import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import { prisma } from "@/lib/db";
 import { getCompetitionRoundWindow, getTimelineItemById } from "@/lib/competition";
+import { getTimelineEndDateTime, getTimelineStartDateTime } from "@/lib/timeline-dates";
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
@@ -68,14 +69,6 @@ function fail(status: number, error: string): ServiceFailure {
   return { ok: false, status, error };
 }
 
-function endOfVietnamDay(date: string) {
-  return new Date(`${date}T23:59:59.999+07:00`);
-}
-
-function startOfVietnamDay(date: string) {
-  return new Date(`${date}T00:00:00.000+07:00`);
-}
-
 async function getRound1ExamWindowStatus(now = new Date()) {
   const timelineItems = await readTimelineItems();
   const round1Window =
@@ -87,11 +80,11 @@ async function getRound1ExamWindowStatus(now = new Date()) {
     return "open";
   }
 
-  if (now.getTime() < startOfVietnamDay(round1Window.startDate).getTime()) {
+  if (now.getTime() < getTimelineStartDateTime(round1Window).getTime()) {
     return "not-started";
   }
 
-  if (now.getTime() > endOfVietnamDay(round1Window.endDate).getTime()) {
+  if (now.getTime() > getTimelineEndDateTime(round1Window).getTime()) {
     return "closed";
   }
 
@@ -109,7 +102,7 @@ async function isSubmissionRoundFinished(round: SubmissionRound, now = new Date(
   const deadlineItem = timelineItems.find((item) => item.id === deadlineItemId);
 
   if (deadlineItem) {
-    return now.getTime() > endOfVietnamDay(deadlineItem.endDate).getTime();
+    return now.getTime() > getTimelineEndDateTime(deadlineItem).getTime();
   }
 
   const roundKey = round === SubmissionRound.ROUND_3 ? "round-3" : "round-2";
@@ -118,7 +111,7 @@ async function isSubmissionRoundFinished(round: SubmissionRound, now = new Date(
     return false;
   }
 
-  return now.getTime() > endOfVietnamDay(roundWindow.endDate).getTime();
+  return now.getTime() > getTimelineEndDateTime(roundWindow).getTime();
 }
 
 function isTeamRosterLocked(team: { stage: CompetitionStage; round1LockStatus: TeamRound1LockStatus }) {

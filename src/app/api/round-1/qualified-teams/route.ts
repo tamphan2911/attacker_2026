@@ -39,6 +39,8 @@ export async function GET() {
         adminPreview: false,
         announcementStartDate: announcementItem?.startDate,
         announcementEndDate: announcementItem?.endDate,
+        announcementStartTime: announcementItem?.startTime,
+        announcementEndTime: announcementItem?.endTime,
         qualifiedTeams: [],
         maxScores: {
           objective: ROUND1_OBJECTIVE_MAX_SCORE,
@@ -157,6 +159,8 @@ export async function GET() {
       adminPreview: !released && canPreviewBeforeRelease,
       announcementStartDate: announcementItem?.startDate,
       announcementEndDate: announcementItem?.endDate,
+      announcementStartTime: announcementItem?.startTime,
+      announcementEndTime: announcementItem?.endTime,
       qualifiedTeams,
       maxScores: {
         objective: ROUND1_OBJECTIVE_MAX_SCORE,

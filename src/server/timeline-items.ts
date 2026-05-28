@@ -1,5 +1,6 @@
 import { timelineItems as defaultTimelineItems } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import { normalizeTimelineTime } from "@/lib/timeline-dates";
 import type { TimelineItem } from "@/types/site";
 
 const TIMELINE_ITEMS_SCOPE = "site-timeline-items";
@@ -24,12 +25,12 @@ function normalizeTimelineItems(items: TimelineItem[]) {
 
     return {
       ...defaultItem,
-      ...storedItem,
       id: storedItem.id || defaultItem.id,
       phase: storedItem.phase || defaultItem.phase,
       startDate: storedItem.startDate || defaultItem.startDate,
       endDate: storedItem.endDate || defaultItem.endDate,
-      supportLinks: storedItem.supportLinks ?? defaultItem.supportLinks,
+      startTime: normalizeTimelineTime(storedItem.startTime) ?? defaultItem.startTime,
+      endTime: normalizeTimelineTime(storedItem.endTime) ?? defaultItem.endTime,
     };
   });
 }

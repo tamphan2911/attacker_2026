@@ -3181,8 +3181,8 @@ export const timelineItems: TimelineItem[] = [
       vi: "Các đội chung kết thuyết trình trực tiếp, trả lời câu hỏi của giám khảo và nhận công bố xếp hạng cuối cùng tại sân khấu.",
     },
     location: {
-      en: "UEL main hall, Ho Chi Minh City",
-      vi: "Hội trường chính UEL, TP.HCM",
+      en: "Rex Hotel Saigon, 141 Nguyen Hue, Sai Gon Ward, Ho Chi Minh City",
+      vi: "Rex Hotel Saigon, 141 Nguyễn Huệ, Phường Sài Gòn, Tp. Hồ Chí Minh",
     },
     method: {
       en: "On-site presentation, judge Q&A, and final award announcement",

@@ -50,6 +50,7 @@ import {
 } from "@/lib/round1";
 import { estimateEssayAiLikelihood } from "@/lib/essay-ai-guard";
 import { formatDateRangeLabel } from "@/lib/site";
+import { getTimelineEndDateTime, getTimelineStartDateTime, type TimelineDateRange } from "@/lib/timeline-dates";
 import type { Round1Submission } from "@/types/site";
 
 interface Round1ExamSession {
@@ -75,24 +76,16 @@ type Round1WindowAvailability = "not-started" | "open" | "closed";
 
 const ROUND1_SUBMITTED_DASHBOARD_URL = "/dashboard?round1=submitted";
 
-function startOfVietnamDay(value: string) {
-  return new Date(`${value}T00:00:00.000+07:00`);
-}
-
-function endOfVietnamDay(value: string) {
-  return new Date(`${value}T23:59:59.999+07:00`);
-}
-
 function getRound1WindowAvailability(
-  round1Window: { startDate: string; endDate: string } | undefined,
+  round1Window: TimelineDateRange | undefined,
   nowMs: number,
 ): Round1WindowAvailability {
   if (!round1Window) {
     return "open";
   }
 
-  const startsAt = startOfVietnamDay(round1Window.startDate).getTime();
-  const endsAt = endOfVietnamDay(round1Window.endDate).getTime();
+  const startsAt = getTimelineStartDateTime(round1Window).getTime();
+  const endsAt = getTimelineEndDateTime(round1Window).getTime();
 
   if (nowMs < startsAt) {
     return "not-started";
@@ -480,7 +473,7 @@ export function Round1ExamPage() {
     getCompetitionRoundPrimaryTimelineItem("round-1", timelineItems) ??
     getCompetitionRoundWindow("round-1", timelineItems);
   const round1WindowDateRangeLabel = round1Window
-    ? formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate)
+    ? formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate, round1Window.startTime, round1Window.endTime)
     : null;
   const round1WindowAvailability = getRound1WindowAvailability(round1Window, nowMs);
   const round1StartWarning = getRound1WindowWarning(
@@ -1333,7 +1326,7 @@ export function Round1ExamPage() {
           <div className="mt-6 flex flex-wrap gap-3">
             {round1Window ? (
               <StatusPill tone="warning">
-                {formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate)}
+                {formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate, round1Window.startTime, round1Window.endTime)}
               </StatusPill>
             ) : null}
             <Link href="/dashboard" className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong">
@@ -1438,7 +1431,11 @@ export function Round1ExamPage() {
                 <StatusPill>{`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
                 <StatusPill>{`${activeObjectiveBank!.durationMinutes} ${locale === "en" ? "minutes" : "phút"}`}</StatusPill>
                 <StatusPill>{locale === "en" ? "One official attempt" : "1 lượt thi chính thức"}</StatusPill>
-                {round1Window ? <StatusPill>{formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate)}</StatusPill> : null}
+                {round1Window ? (
+                  <StatusPill>
+                    {formatDateRangeLabel(locale, round1Window.startDate, round1Window.endDate, round1Window.startTime, round1Window.endTime)}
+                  </StatusPill>
+                ) : null}
               </div>
             </div>
 
