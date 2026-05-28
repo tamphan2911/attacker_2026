@@ -1214,6 +1214,50 @@ button:disabled,
   animation: hero-pan 14s ease-in-out infinite;
 }
 
+.hero-soft-glass {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-soft-glass::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 28% 18%, rgba(255, 255, 255, 0.13), transparent 48%),
+    linear-gradient(135deg, rgba(7, 18, 35, 0.54), rgba(7, 18, 35, 0.2));
+  box-shadow: 0 24px 62px rgba(7, 18, 35, 0.24);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.98) 0%,
+    rgba(0, 0, 0, 0.9) 52%,
+    rgba(0, 0, 0, 0.48) 78%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.98) 0%,
+    rgba(0, 0, 0, 0.9) 52%,
+    rgba(0, 0, 0, 0.48) 78%,
+    transparent 100%
+  );
+}
+
+.hero-soft-glass--compact::before {
+  inset: -10px;
+  background:
+    radial-gradient(circle at 24% 20%, rgba(255, 255, 255, 0.12), transparent 46%),
+    linear-gradient(135deg, rgba(7, 18, 35, 0.52), rgba(7, 18, 35, 0.18));
+  box-shadow: 0 18px 46px rgba(7, 18, 35, 0.22);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
 .marquee-track {
   animation: marquee-slide 22s linear infinite;
 }
