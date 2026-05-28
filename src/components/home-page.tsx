@@ -198,40 +198,17 @@ export function HomePage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(255,255,255,0.12),transparent_24%),linear-gradient(90deg,rgba(7,18,35,0.18)_0%,rgba(7,18,35,0.04)_38%,rgba(7,18,35,0.05)_62%,rgba(7,18,35,0.18)_100%),linear-gradient(180deg,rgba(7,18,35,0.02)_0%,rgba(7,18,35,0.12)_46%,rgba(7,18,35,0.72)_100%)]" />
 
           <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl items-end px-4 pb-16 pt-24 text-white md:min-h-[620px] md:px-8 md:pb-20 md:pt-28">
-            <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,500px)_390px] lg:items-end lg:justify-between">
-              <div className="max-w-[500px] rounded-[1.45rem] border border-white/12 bg-[linear-gradient(135deg,rgba(7,18,35,0.56),rgba(7,18,35,0.28))] px-4 py-4 shadow-[0_20px_54px_rgba(7,18,35,0.24)] backdrop-blur-sm lg:-translate-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <span className="inline-flex items-center text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-white/82 [text-shadow:0_8px_18px_rgba(7,18,35,0.34)]">
-                    {pickText(locale, currentHeroSlide.eyebrow)}
-                  </span>
-                  <div className="inline-flex items-center gap-2 text-[0.64rem] font-semibold uppercase tracking-[0.16em] text-white/68 [text-shadow:0_8px_18px_rgba(7,18,35,0.34)]">
-                    <span>{String(activeSlide + 1).padStart(2, "0")}</span>
-                    <span className="h-px w-4 bg-white/24" />
-                    <span>{String(heroDeck.length).padStart(2, "0")}</span>
-                  </div>
-                </div>
-
-                <h1 className="theme-heading mt-3.5 max-w-[28rem] text-[1.38rem] font-semibold leading-[1.16] text-white [text-shadow:0_12px_28px_rgba(7,18,35,0.38)] md:text-[1.82rem] md:leading-[1.13]">
+            <div className="grid w-full gap-4 lg:grid-cols-[390px_390px] lg:items-end lg:justify-between">
+              <div className="max-w-[390px] rounded-[1.25rem] border border-white/12 bg-[linear-gradient(135deg,rgba(7,18,35,0.56),rgba(7,18,35,0.28))] px-4 py-4 shadow-[0_20px_54px_rgba(7,18,35,0.24)] backdrop-blur-sm lg:translate-y-6">
+                <h1 className="theme-heading max-w-[22rem] text-[1.24rem] font-semibold leading-[1.17] text-white [text-shadow:0_12px_28px_rgba(7,18,35,0.38)] md:text-[1.58rem] md:leading-[1.14]">
                   {pickText(locale, currentHeroSlide.title)}
                 </h1>
-                <p className="mt-2.5 max-w-[27rem] text-[0.72rem] leading-5 text-white/76 [text-shadow:0_10px_24px_rgba(7,18,35,0.30)] md:text-[0.76rem]">
+                <p className="mt-2.5 max-w-[22rem] text-[0.7rem] leading-5 text-white/76 [text-shadow:0_10px_24px_rgba(7,18,35,0.30)] md:text-[0.74rem]">
                   {pickText(locale, currentHeroSlide.description)}
                 </p>
-
-                <div className="mt-3.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-                  {currentHeroSlide.highlights.map((item, index) => (
-                    <span
-                      key={item.en}
-                      className="inline-flex items-center gap-2 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-white/82 [text-shadow:0_8px_18px_rgba(7,18,35,0.34)]"
-                    >
-                      {index > 0 ? <span className="h-1 w-1 rounded-full bg-white/42" /> : null}
-                      {pickText(locale, item)}
-                    </span>
-                  ))}
-                </div>
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-3 lg:w-[390px] lg:-translate-x-8 lg:translate-y-10 lg:grid-cols-1 lg:self-end lg:justify-self-end">
+              <div className="grid gap-2 sm:grid-cols-3 lg:w-[390px] lg:-translate-x-14 lg:translate-y-16 lg:grid-cols-1 lg:self-end lg:justify-self-end">
                 {currentHeroSlide.cards.map((item, index) => {
                   const Icon = heroCardIcons[activeSlide % heroCardIcons.length]?.[index] ?? Sparkles;
 
