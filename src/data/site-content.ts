@@ -2138,7 +2138,7 @@ export const defaultPageContent: SitePageContent = {
     eligibilityAdvancedTitle: { en: "Your team has already advanced beyond Round 1", vi: "Đội của bạn đã đi qua Vòng 1" },
     eligibilityAdvancedDescription: {
       en: "This team is no longer in the Round 1 eligibility checkpoint because it has progressed to a later stage.",
-      vi: "Đội này không còn ở bước kiểm tra điều kiện Vòng 1 vì đã đi tiếp sang giai đoạn sau.",
+      vi: "Đội đã đủ điều kiện dự thi Vòng 1",
     },
     eligibilityEligibleTitle: { en: "Eligible for Round 1", vi: "Đủ điều kiện Vòng 1" },
     eligibilityEligibleDescription: {
