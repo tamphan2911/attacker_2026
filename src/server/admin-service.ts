@@ -31,6 +31,7 @@ import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/new
 import { ensureRound1SubmissionArchive } from "@/server/round1-submission-archive";
 import type {
   JudgeProfile,
+  LocalizedText,
   NewsPost,
   Round1Question,
   SitePageContent,
@@ -1206,6 +1207,37 @@ export async function deleteRound1QuestionByAdmin(
   });
 
   return ok({ bankId, questionId });
+}
+
+export async function updateRound1FixedEssayPromptByAdmin(
+  bankId: string,
+  payload: LocalizedText,
+): Promise<ServiceResult<{ bankId: string }>> {
+  const promptEn = payload.en.trim();
+  const promptVi = payload.vi.trim();
+
+  const bank = await prisma.round1TestBank.findUnique({
+    where: { id: bankId },
+    select: { id: true, bankType: true },
+  });
+
+  if (!bank) {
+    return fail(404, "Round 1 bank not found.");
+  }
+
+  if (bank.bankType !== "ESSAY") {
+    return fail(400, "The fixed Round 1 essay question can only be configured on the essay bank.");
+  }
+
+  await prisma.round1TestBank.update({
+    where: { id: bankId },
+    data: {
+      fixedEssayPromptEn: promptEn,
+      fixedEssayPromptVi: promptVi,
+    },
+  });
+
+  return ok({ bankId });
 }
 
 export async function updateRound1EssayScoreByAdmin(

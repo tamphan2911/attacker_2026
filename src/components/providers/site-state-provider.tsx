@@ -139,6 +139,7 @@ const seedRound1TestBanks: Round1TestBank[] = [
     shuffleOptions: false,
     durationMinutes: ROUND1_DURATION_MINUTES,
     wordLimit: ROUND1_ESSAY_WORD_LIMIT,
+    fixedEssayPrompt: { en: "", vi: "" },
     publishedAt: "2026-05-02T00:00:00.000Z",
     questions: [],
   },
@@ -259,6 +260,7 @@ interface SiteStateValue {
   createRound1QuestionByAdmin: (bankId: string, payload: Round1Question) => Promise<string | null>;
   updateRound1QuestionByAdmin: (bankId: string, questionId: string, payload: Round1Question) => Promise<string | null>;
   deleteRound1QuestionByAdmin: (bankId: string, questionId: string) => Promise<boolean>;
+  updateRound1FixedEssayPromptByAdmin: (bankId: string, payload: LocalizedText) => Promise<boolean>;
   updateRound1TopicsByAdmin: (
     topics: string[],
     options?: { rename?: { from: string; to: string } },
@@ -1915,6 +1917,55 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateRound1FixedEssayPromptByAdmin = async (bankId: string, payload: LocalizedText) => {
+    if (!canAccessAdminMode) {
+      pushToast(
+        {
+          en: "Only admin and moderator accounts can edit the fixed Round 1 essay question here.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể sửa câu tự luận cố định Vòng 1 tại đây.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/round-1/banks/${bankId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ fixedEssayPrompt: payload }),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not update the fixed Round 1 essay question.");
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await Promise.all([syncSiteData(), syncAdminRound1Banks()]);
+      pushToast(
+        {
+          en: "Fixed Round 1 essay question updated.",
+          vi: "Câu tự luận cố định Vòng 1 đã được cập nhật.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not update the fixed Round 1 essay question right now.",
+          vi: "Hiện không thể cập nhật câu tự luận cố định Vòng 1.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
   const updateRound1TopicsByAdmin = async (
     topics: string[],
     options?: { rename?: { from: string; to: string } },
@@ -3174,6 +3225,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     createRound1QuestionByAdmin,
     updateRound1QuestionByAdmin,
     deleteRound1QuestionByAdmin,
+    updateRound1FixedEssayPromptByAdmin,
     updateRound1TopicsByAdmin,
     updateRound1EssayScoreByAdmin,
     inviteUser,

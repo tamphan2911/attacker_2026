@@ -254,8 +254,8 @@ export function JudgeRound1ScorePage({
       if (!Number.isFinite(parsedScore) || !Number.isInteger(parsedScore) || parsedScore < 0 || parsedScore > ROUND1_ESSAY_POINT_VALUE) {
         setMessage(
           locale === "en"
-            ? "Each essay question score must be a whole number from 0 to 14."
-            : "Mỗi câu tự luận cần có điểm nguyên từ 0 đến 14.",
+            ? `Each essay question score must be a whole number from 0 to ${ROUND1_ESSAY_POINT_VALUE}. Please adjust the highlighted score field before saving.`
+            : `Mỗi câu tự luận cần có điểm nguyên từ 0 đến ${ROUND1_ESSAY_POINT_VALUE}. Vui lòng chỉnh lại ô điểm trước khi lưu.`,
         );
         return;
       }
@@ -419,7 +419,9 @@ export function JudgeRound1ScorePage({
                       {pickRound1QuestionText(essay.prompt)}
                     </span>
                     <span className="mt-1 block text-xs font-medium theme-text-soft">
-                      {locale === "en" ? "Maximum 14 points" : "Tối đa 14 điểm"}
+                      {locale === "en"
+                        ? `Maximum ${ROUND1_ESSAY_POINT_VALUE} points`
+                        : `Tối đa ${ROUND1_ESSAY_POINT_VALUE} điểm`}
                     </span>
                   </span>
                   <input
@@ -471,8 +473,11 @@ export function JudgeRound1ScorePage({
             ) : null}
 
             {message ? (
-              <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-sm theme-text-soft">{message}</p>
+              <div className="rounded-[1.4rem] border border-amber-300/60 bg-amber-50 px-4 py-4 text-amber-900 dark:border-amber-300/30 dark:bg-amber-400/10 dark:text-amber-100">
+                <div className="flex items-start gap-3">
+                  <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0" />
+                  <p className="text-sm font-medium">{message}</p>
+                </div>
               </div>
             ) : null}
 

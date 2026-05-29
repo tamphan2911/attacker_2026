@@ -41,7 +41,9 @@ export const ROUND1_OBJECTIVE_DIFFICULTY_MIX: Record<Round1QuestionDifficulty, n
 export const ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC = Object.values(
   ROUND1_OBJECTIVE_DIFFICULTY_MIX,
 ).reduce((total, count) => total + count, 0);
-export const ROUND1_OBJECTIVE_TOTAL = ROUND1_TOPIC_COUNT * ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC;
+export const ROUND1_OBJECTIVE_TOPIC_TOTAL = ROUND1_TOPIC_COUNT * ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC;
+export const ROUND1_OBJECTIVE_EXTRA_RANDOM_TOTAL = 4;
+export const ROUND1_OBJECTIVE_TOTAL = ROUND1_OBJECTIVE_TOPIC_TOTAL + ROUND1_OBJECTIVE_EXTRA_RANDOM_TOTAL;
 export const ROUND1_ESSAY_TOTAL = 2;
 export const ROUND1_TOTAL_QUESTIONS = ROUND1_OBJECTIVE_TOTAL + ROUND1_ESSAY_TOTAL;
 export const ROUND1_ESSAY_MIN_WORDS = 301;
@@ -49,7 +51,7 @@ export const ROUND1_ESSAY_WORD_LIMIT = 500;
 export const ROUND1_DURATION_MINUTES = 60;
 export const ROUND1_OBJECTIVE_POINT_VALUE = 2;
 export const ROUND1_OBJECTIVE_MAX_SCORE = ROUND1_OBJECTIVE_TOTAL * ROUND1_OBJECTIVE_POINT_VALUE;
-export const ROUND1_ESSAY_POINT_VALUE = 14;
+export const ROUND1_ESSAY_POINT_VALUE = 10;
 export const ROUND1_ESSAY_MAX_SCORE = ROUND1_ESSAY_TOTAL * ROUND1_ESSAY_POINT_VALUE;
 export const ROUND1_TOTAL_MAX_SCORE = ROUND1_OBJECTIVE_MAX_SCORE + ROUND1_ESSAY_MAX_SCORE;
 
@@ -247,6 +249,10 @@ function cloneQuestionVariant(
   };
 }
 
+function getRound1QuestionSourceId(questionId: string) {
+  return questionId.replace(/-pool-\d+$/i, "");
+}
+
 function expandQuestionPool(questions: Round1Question[], targetSize: number, random: () => number = Math.random) {
   if (!questions.length || targetSize <= 0) {
     return [];
@@ -341,6 +347,49 @@ function pickEssayQuestions(bank: Round1TestBank, count: number, random: () => n
   return shuffleArray(expandQuestionPool(essayQuestions, count, random), random).slice(0, count);
 }
 
+function pickExtraObjectiveQuestions(
+  bank: Round1TestBank,
+  selectedQuestions: Round1Question[],
+  count: number,
+  random: () => number = Math.random,
+) {
+  const selectedQuestionIds = new Set(
+    selectedQuestions.map((question) => getRound1QuestionSourceId(question.id)),
+  );
+  const source = bank.questions.filter(
+    (question) => question.type !== "essay" && !selectedQuestionIds.has(getRound1QuestionSourceId(question.id)),
+  );
+
+  return shuffleArray(expandQuestionPool(source, count, random), random).slice(0, count);
+}
+
+function createFixedEssayQuestion(essayBank: Round1TestBank): Round1Question {
+  const prompt = essayBank.fixedEssayPrompt ?? { en: "", vi: "" };
+  const fallbackPrompt = {
+    en: "Fixed essay question 2 has not been configured yet.",
+    vi: "Câu tự luận cố định số 2 chưa được cấu hình.",
+  };
+
+  return {
+    id: "round1-fixed-essay-2",
+    prompt: {
+      en: prompt.en.trim() || fallbackPrompt.en,
+      vi: prompt.vi.trim() || prompt.en.trim() || fallbackPrompt.vi,
+    },
+    topic: "Fixed essay",
+    difficulty: "hard",
+    type: "essay",
+    rubricNote: {
+      en: "",
+      vi: "",
+    },
+    placeholder: {
+      en: `Write your answer here. Maximum ${ROUND1_ESSAY_WORD_LIMIT} words.`,
+      vi: `Nhập câu trả lời tại đây. Tối đa ${ROUND1_ESSAY_WORD_LIMIT} từ.`,
+    },
+  };
+}
+
 export function createRound1EssayPaperQuestions({
   essayBank,
   count,
@@ -353,7 +402,11 @@ export function createRound1EssayPaperQuestions({
   random?: () => number;
 }) {
   const pickRandom = random ?? Math.random;
-  return pickEssayQuestions(essayBank, count, pickRandom).map((question, index) =>
+  const randomEssayCount = Math.max(0, count - 1);
+  const randomEssayQuestions = pickEssayQuestions(essayBank, randomEssayCount, pickRandom);
+  const fixedEssayQuestion = createFixedEssayQuestion(essayBank);
+
+  return [...randomEssayQuestions, fixedEssayQuestion].slice(0, count).map((question, index) =>
     createPaperQuestion(question, startIndex + index, false),
   );
 }
@@ -370,13 +423,20 @@ export function createRound1ExamPaper({
   random?: () => number;
 }): Round1PaperQuestion[] {
   const pickRandom = random ?? Math.random;
-  const objectiveQuestions = getRound1Topics(objectiveBank, topics).flatMap((topic) =>
+  const topicObjectiveQuestions = getRound1Topics(objectiveBank, topics).flatMap((topic) =>
     (Object.entries(ROUND1_OBJECTIVE_DIFFICULTY_MIX) as Array<
       [Round1QuestionDifficulty, number]
     >).flatMap(([difficulty, count]) =>
       pickObjectiveQuestions(objectiveBank, topic, difficulty, count, pickRandom),
     ),
   );
+  const extraObjectiveQuestions = pickExtraObjectiveQuestions(
+    objectiveBank,
+    topicObjectiveQuestions,
+    ROUND1_OBJECTIVE_EXTRA_RANDOM_TOTAL,
+    pickRandom,
+  );
+  const objectiveQuestions = [...topicObjectiveQuestions, ...extraObjectiveQuestions];
 
   const orderedObjectiveQuestions = objectiveBank.shuffleQuestions
     ? shuffleArray(objectiveQuestions, pickRandom)

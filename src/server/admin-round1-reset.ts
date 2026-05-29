@@ -123,6 +123,8 @@ export async function resetRound1SubmissionsToCanonicalSeed(): Promise<Round1Res
           shuffleOptions: bank.shuffleOptions,
           durationMinutes: bank.durationMinutes,
           wordLimit: bank.wordLimit ?? null,
+          fixedEssayPromptEn: bank.fixedEssayPrompt?.en ?? "",
+          fixedEssayPromptVi: bank.fixedEssayPrompt?.vi ?? "",
           publishedAt: bank.publishedAt ? new Date(bank.publishedAt) : null,
           questions: JSON.stringify(
             bank.questions.map((question) => ({
@@ -146,6 +148,8 @@ export async function resetRound1SubmissionsToCanonicalSeed(): Promise<Round1Res
           shuffleOptions: bank.shuffleOptions,
           durationMinutes: bank.durationMinutes,
           wordLimit: bank.wordLimit ?? null,
+          fixedEssayPromptEn: bank.fixedEssayPrompt?.en ?? "",
+          fixedEssayPromptVi: bank.fixedEssayPrompt?.vi ?? "",
           publishedAt: bank.publishedAt ? new Date(bank.publishedAt) : null,
           questions: JSON.stringify(
             bank.questions.map((question) => ({

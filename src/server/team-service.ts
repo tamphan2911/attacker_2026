@@ -405,6 +405,10 @@ function mapStoredBankToAppBank(
     shuffleOptions: bank.shuffleOptions,
     durationMinutes: bank.durationMinutes,
     wordLimit: bank.bankType === Round1TestBankType.ESSAY ? ROUND1_ESSAY_WORD_LIMIT : bank.wordLimit ?? undefined,
+    fixedEssayPrompt: {
+      en: bank.fixedEssayPromptEn,
+      vi: bank.fixedEssayPromptVi,
+    },
     publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
     questions: parseStoredRound1Questions(bank.questions),
   };
@@ -1642,7 +1646,7 @@ export async function startRound1Attempt(
     });
 
     if (!hasCompleteRound1Paper(questions)) {
-      return fail(409, "Round 1 test bank must generate 36 multiple-choice questions and 2 essay questions.");
+      return fail(409, "Round 1 test bank must generate 40 multiple-choice questions and 2 essay questions.");
     }
 
     const attempt = await tx.round1ExamAttempt.create({

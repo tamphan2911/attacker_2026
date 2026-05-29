@@ -249,6 +249,7 @@ export interface Round1TestBank {
   shuffleOptions: boolean;
   durationMinutes: number;
   wordLimit?: number;
+  fixedEssayPrompt?: LocalizedText;
   publishedAt: string;
   questions: Round1Question[];
 }

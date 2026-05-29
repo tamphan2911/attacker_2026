@@ -1424,8 +1424,8 @@ export function Round1ExamPage() {
               </h1>
               <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted md:text-base">
                 {locale === "en"
-                  ? "Each student receives 36 objective questions generated from 6 topics and 2 essay questions placed at the end. The timer runs for 60 minutes, the exam cannot be paused, and the result returns to Team Workspace after submission."
-                  : "Mỗi thí sinh nhận 36 câu trắc nghiệm được tạo từ 6 chủ đề và 2 câu tự luận luôn đặt ở cuối đề. Đồng hồ chạy trong 60 phút, bài thi không thể tạm dừng và kết quả sẽ quay về Đội thi sau khi nộp."}
+                  ? "Each student receives 40 objective questions generated from the topic mix plus 4 extra random bank questions, and 2 essay questions placed at the end. The timer runs for 60 minutes, the exam cannot be paused, and the result returns to Team Workspace after submission."
+                  : "Mỗi thí sinh nhận 40 câu trắc nghiệm gồm phần theo chủ đề và 4 câu ngẫu nhiên bổ sung từ ngân hàng, cùng 2 câu tự luận luôn đặt ở cuối đề. Đồng hồ chạy trong 60 phút, bài thi không thể tạm dừng và kết quả sẽ quay về Đội thi sau khi nộp."}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 <StatusPill>{`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
@@ -1450,8 +1450,8 @@ export function Round1ExamPage() {
                         : "Khối trắc nghiệm",
                     body:
                       locale === "en"
-                        ? `${ROUND1_OBJECTIVE_TOTAL} questions: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} per topic across ${ROUND1_TOPIC_COUNT} topics, with 2 easy, 2 medium, and 2 hard questions in each topic.`
-                        : `${ROUND1_OBJECTIVE_TOTAL} câu, chia thành ${ROUND1_TOPIC_COUNT} chủ đề. Mỗi chủ đề có ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu gồm: 2 câu dễ, 2 câu trung bình, 2 câu khó.`,
+                        ? `${ROUND1_OBJECTIVE_TOTAL} questions: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} per topic across ${ROUND1_TOPIC_COUNT} topics, with 2 easy, 2 medium, and 2 hard questions in each topic, plus 4 extra random questions from the full bank.`
+                        : `${ROUND1_OBJECTIVE_TOTAL} câu: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} câu trên mỗi chủ đề trong ${ROUND1_TOPIC_COUNT} chủ đề, gồm 2 câu dễ, 2 câu trung bình, 2 câu khó, cộng thêm 4 câu ngẫu nhiên từ toàn bộ ngân hàng.`,
                   },
                   {
                     icon: <BookText className="h-5 w-5 text-emerald-300" />,
@@ -2136,8 +2136,8 @@ export function Round1ExamPage() {
                 </p>
                 <p className="mt-3 text-sm leading-7 theme-text-muted">
                   {locale === "en"
-                    ? `${ROUND1_OBJECTIVE_TOTAL} objective questions x 2 points, plus ${ROUND1_ESSAY_TOTAL} essay questions reviewed later.`
-                    : `${ROUND1_OBJECTIVE_TOTAL} câu trắc nghiệm x 2 điểm, cộng với ${ROUND1_ESSAY_TOTAL} câu tự luận được chấm sau.`}
+                    ? `${ROUND1_OBJECTIVE_TOTAL} objective questions x 2 points, plus ${ROUND1_ESSAY_TOTAL} essay questions x ${Math.round(ROUND1_ESSAY_MAX_SCORE / ROUND1_ESSAY_TOTAL)} points reviewed later.`
+                    : `${ROUND1_OBJECTIVE_TOTAL} câu trắc nghiệm x 2 điểm, cộng với ${ROUND1_ESSAY_TOTAL} câu tự luận x ${Math.round(ROUND1_ESSAY_MAX_SCORE / ROUND1_ESSAY_TOTAL)} điểm được chấm sau.`}
                 </p>
               </div>
             </div>

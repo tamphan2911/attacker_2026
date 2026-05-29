@@ -129,6 +129,10 @@ export function mapStoredBankToAppBank(bank: DbRound1TestBank, bankType: AppRoun
     shuffleOptions: bank.shuffleOptions,
     durationMinutes: bank.durationMinutes,
     wordLimit: bankType === "essay" ? ROUND1_ESSAY_WORD_LIMIT : bank.wordLimit ?? undefined,
+    fixedEssayPrompt: {
+      en: bank.fixedEssayPromptEn,
+      vi: bank.fixedEssayPromptVi,
+    },
     publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
     questions: parseStoredBankQuestions(bank.questions),
   };

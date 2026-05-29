@@ -319,6 +319,8 @@ model Round1TestBank {
   shuffleOptions      Boolean             @default(true)
   durationMinutes     Int
   wordLimit           Int?
+  fixedEssayPromptEn  String              @default("")
+  fixedEssayPromptVi  String              @default("")
   publishedAt         DateTime?
   questions           String
   createdAt           DateTime            @default(now())

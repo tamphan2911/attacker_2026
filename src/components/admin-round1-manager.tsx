@@ -1153,7 +1153,7 @@ export function AdminRound1Manager() {
             icon={<Shuffle className="h-5 w-5 text-orange-300" />}
             label={locale === "en" ? "Exam structure" : "Cấu trúc bài thi"}
             value={`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL}`}
-            note={locale === "en" ? "36 multiple-choice + 2 essay" : "36 trắc nghiệm + 2 tự luận"}
+            note={locale === "en" ? "40 multiple-choice + 2 essay" : "40 trắc nghiệm + 2 tự luận"}
           />
         </section>
       ) : null}
@@ -1192,8 +1192,8 @@ export function AdminRound1Manager() {
                 rows: essayTopicRows,
                 note:
                   locale === "en"
-                    ? `${ROUND1_ESSAY_TOTAL} prompts are drawn for each official attempt.`
-                    : `${ROUND1_ESSAY_TOTAL} câu được rút cho mỗi lượt thi chính thức.`,
+                    ? "1 prompt is drawn from this bank; essay 2 uses the fixed question."
+                    : "1 câu được rút từ ngân hàng này; câu tự luận 2 dùng câu cố định.",
               },
             ].map(({ bank, title, rows, note }) => {
               const isEssayBank = bank.bankType === "essay";
@@ -1861,7 +1861,7 @@ export function AdminRound1ScoresManager() {
 }
 
 export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
-  const { locale, round1TestBanks, deleteRound1QuestionByAdmin } = useSiteState();
+  const { locale, round1TestBanks, deleteRound1QuestionByAdmin, updateRound1FixedEssayPromptByAdmin } = useSiteState();
   useAdminTitleScroll();
   const bank = round1TestBanks.find((item) => item.id === bankId);
   const questionList = useMemo(() => bank?.questions ?? [], [bank]);
@@ -1887,6 +1887,12 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
   const [deletePendingQuestionId, setDeletePendingQuestionId] = useState<string | null>(null);
   const [pendingDeleteQuestion, setPendingDeleteQuestion] = useState<Round1Question | null>(null);
   const [deleteQuestionError, setDeleteQuestionError] = useState("");
+  const [fixedEssayPromptDraft, setFixedEssayPromptDraft] = useState<LocalizedText>({
+    en: bank?.fixedEssayPrompt?.en ?? "",
+    vi: bank?.fixedEssayPrompt?.vi ?? "",
+  });
+  const [isSavingFixedEssayPrompt, setIsSavingFixedEssayPrompt] = useState(false);
+  const [fixedEssayPromptError, setFixedEssayPromptError] = useState("");
   const didMountFilterStateRef = useRef(false);
 
   const bankExportRows = bank ? buildBankExportRows([bank]) : [];
@@ -2075,6 +2081,17 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [deletePendingQuestionId, pendingDeleteQuestion]);
 
+  useEffect(() => {
+    if (!bank || !isEssayBank || isSavingFixedEssayPrompt) {
+      return;
+    }
+
+    setFixedEssayPromptDraft({
+      en: bank.fixedEssayPrompt?.en ?? "",
+      vi: bank.fixedEssayPrompt?.vi ?? "",
+    });
+  }, [bank, isEssayBank, isSavingFixedEssayPrompt]);
+
   const toggleSort = (nextSortKey: BankPreviewSortKey) => {
     if (sortKey === nextSortKey) {
       setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
@@ -2112,6 +2129,33 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
         current === questionId ? null : current,
       );
     }
+  };
+
+  const handleSaveFixedEssayPrompt = async () => {
+    if (!bank || !isEssayBank) {
+      return;
+    }
+
+    if (!fixedEssayPromptDraft.en.trim() && !fixedEssayPromptDraft.vi.trim()) {
+      setFixedEssayPromptError(
+        locale === "en"
+          ? "Enter the fixed second essay question content before saving."
+          : "Vui lòng nhập nội dung câu tự luận cố định số 2 trước khi lưu.",
+      );
+      return;
+    }
+
+    setIsSavingFixedEssayPrompt(true);
+    setFixedEssayPromptError("");
+    const saved = await updateRound1FixedEssayPromptByAdmin(bank.id, fixedEssayPromptDraft);
+    if (!saved) {
+      setFixedEssayPromptError(
+        locale === "en"
+          ? "Could not save the fixed second essay question. Please check the latest admin data and try again."
+          : "Không thể lưu câu tự luận cố định số 2. Vui lòng kiểm tra dữ liệu admin mới nhất và thử lại.",
+      );
+    }
+    setIsSavingFixedEssayPrompt(false);
   };
 
   if (!bank) {
@@ -2174,6 +2218,78 @@ export function AdminRound1BankDetail({ bankId }: { bankId: string }) {
           </button>
         </div>
       </div>
+
+      {isEssayBank ? (
+        <Surface className="px-6 py-6 md:px-8 md:py-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                {locale === "en" ? "Fixed essay question" : "Câu tự luận cố định"}
+              </p>
+              <h2 className="mt-2 text-xl font-semibold theme-text-strong">
+                {locale === "en" ? "Second essay question for every Round 1 test" : "Câu tự luận số 2 cho mọi bài thi Vòng 1"}
+              </h2>
+              <p className="mt-2 max-w-3xl text-sm leading-7 theme-text-muted">
+                {locale === "en"
+                  ? "The first essay is still randomized from the essay bank below. The second essay always uses this fixed content."
+                  : "Câu tự luận đầu tiên vẫn được rút ngẫu nhiên từ ngân hàng bên dưới. Câu tự luận thứ hai luôn dùng nội dung cố định này."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void handleSaveFixedEssayPrompt()}
+              disabled={isSavingFixedEssayPrompt}
+              className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-60"
+            >
+              <Save className="h-4 w-4" />
+              {isSavingFixedEssayPrompt
+                ? locale === "en"
+                  ? "Saving..."
+                  : "Đang lưu..."
+                : locale === "en"
+                  ? "Save fixed question"
+                  : "Lưu câu cố định"}
+            </button>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Question content (English)" : "Nội dung câu hỏi (English)"}
+              </span>
+              <textarea
+                rows={6}
+                value={fixedEssayPromptDraft.en}
+                onChange={(event) =>
+                  setFixedEssayPromptDraft((current) => ({ ...current, en: event.target.value }))
+                }
+                className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm leading-7 theme-text-strong outline-none"
+                placeholder={locale === "en" ? "Enter the fixed second essay question..." : "Nhập câu tự luận cố định số 2..."}
+              />
+            </label>
+            <label className="space-y-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Question content (Vietnamese)" : "Nội dung câu hỏi (Tiếng Việt)"}
+              </span>
+              <textarea
+                rows={6}
+                value={fixedEssayPromptDraft.vi}
+                onChange={(event) =>
+                  setFixedEssayPromptDraft((current) => ({ ...current, vi: event.target.value }))
+                }
+                className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm leading-7 theme-text-strong outline-none"
+                placeholder={locale === "en" ? "Enter the Vietnamese version..." : "Nhập phiên bản tiếng Việt..."}
+              />
+            </label>
+          </div>
+
+          {fixedEssayPromptError ? (
+            <div className="mt-5 rounded-[1.25rem] border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 dark:border-amber-300/30 dark:bg-amber-400/10 dark:text-amber-100">
+              {fixedEssayPromptError}
+            </div>
+          ) : null}
+        </Surface>
+      ) : null}
 
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <div

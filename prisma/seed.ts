@@ -448,6 +448,8 @@ async function main() {
         shuffleOptions: bank.shuffleOptions,
         durationMinutes: bank.durationMinutes,
         wordLimit: bank.wordLimit,
+        fixedEssayPromptEn: bank.fixedEssayPrompt?.en ?? "",
+        fixedEssayPromptVi: bank.fixedEssayPrompt?.vi ?? "",
         publishedAt: parseDate(bank.publishedAt),
         questions: JSON.stringify(
           bank.questions.map((question) => ({

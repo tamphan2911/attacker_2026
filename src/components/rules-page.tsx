@@ -113,8 +113,8 @@ const roundRuleMeta = {
         vi: "Chỉ các đội đã khóa đội và có từ 3 đến 5 thành viên mới được vào bài thi chính thức.",
       },
       {
-        en: "Every member takes one timed paper consisting of 36 objective questions and 2 essay questions.",
-        vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 36 câu trắc nghiệm và 2 câu tự luận.",
+        en: "Every member takes one timed paper consisting of 40 objective questions and 2 essay questions.",
+        vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 40 câu trắc nghiệm và 2 câu tự luận.",
       },
       {
         en: "Top 50 teams are selected by the average score of eligible team members.",

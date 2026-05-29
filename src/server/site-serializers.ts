@@ -471,6 +471,10 @@ export function serializeRound1TestBank(bank: Round1TestBank): AppRound1TestBank
     shuffleOptions: bank.shuffleOptions,
     durationMinutes: bank.durationMinutes,
     wordLimit: mapRound1WordLimit(bank.bankType, bank.wordLimit),
+    fixedEssayPrompt: {
+      en: bank.fixedEssayPromptEn,
+      vi: bank.fixedEssayPromptVi,
+    },
     publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
     questions: normalizeRound1QuestionsForApp(parsedQuestions),
   };
@@ -497,6 +501,10 @@ export function serializeRound1TestBankMetadata(
     shuffleOptions: bank.shuffleOptions,
     durationMinutes: bank.durationMinutes,
     wordLimit: mapRound1WordLimit(bank.bankType, bank.wordLimit),
+    fixedEssayPrompt: {
+      en: bank.fixedEssayPromptEn,
+      vi: bank.fixedEssayPromptVi,
+    },
     publishedAt: bank.publishedAt?.toISOString() ?? bank.createdAt.toISOString(),
     questions: [],
   };

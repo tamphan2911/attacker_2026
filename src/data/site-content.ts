@@ -1051,13 +1051,13 @@ export const defaultPageContent: SitePageContent = {
         vi: "Cấu trúc cuộc thi được xây dựng theo cách một ý tưởng fintech trưởng thành trong thực tế.",
       },
       description: {
-        en: "Attacker 2026 starts with an individual qualifier built from 36 objective questions across 6 topics plus 2 essay questions, then moves the best teams into judge-scored project evaluation and a live final defense. Progression is determined by team results, not solo participation alone.",
-        vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 36 câu hỏi trắc nghiệm trải đều trên 6 chủ đề và 2 câu tự luận, sau đó đưa các đội tốt nhất vào giai đoạn đánh giá dự án bởi giám khảo và vòng chung kết bảo vệ trực tiếp. Việc đi tiếp được quyết định bởi kết quả của đội, không chỉ bởi từng cá nhân riêng lẻ.",
+        en: "Attacker 2026 starts with an individual qualifier built from 40 objective questions plus 2 essay questions, then moves the best teams into judge-scored project evaluation and a live final defense. Progression is determined by team results, not solo participation alone.",
+        vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 40 câu hỏi trắc nghiệm và 2 câu tự luận, sau đó đưa các đội tốt nhất vào giai đoạn đánh giá dự án bởi giám khảo và vòng chung kết bảo vệ trực tiếp. Việc đi tiếp được quyết định bởi kết quả của đội, không chỉ bởi từng cá nhân riêng lẻ.",
       },
     },
     pillarsTitle: { en: "Competition pillars", vi: "Trụ cột cuộc thi" },
     pillars: [
-      { en: "36 objective + 2 essay questions", vi: "36 câu trắc nghiệm + 2 câu tự luận" },
+      { en: "40 objective + 2 essay questions", vi: "40 câu trắc nghiệm + 2 câu tự luận" },
       { en: "Team-average progression", vi: "Đi tiếp theo điểm trung bình đội" },
       { en: "Final report deadline + live final judging", vi: "Hạn nộp báo cáo chung kết + chấm trực tiếp" },
     ],
@@ -1091,8 +1091,8 @@ export const defaultPageContent: SitePageContent = {
         vi: "Từ vòng loại cá nhân đến năng lực thực thi của đội được giám khảo chấm điểm.",
       },
       description: {
-        en: "Members first complete an individual paper with 36 objective questions and 2 essays, then qualified teams submit reports, and finalists defend their project live in front of the judges.",
-        vi: "Thí sinh trước tiên hoàn thành một bài thi cá nhân gồm 36 câu trắc nghiệm và 2 câu tự luận, sau đó các đội đủ điều kiện nộp báo cáo, và các đội vào sâu sẽ bảo vệ dự án trực tiếp trước hội đồng giám khảo.",
+        en: "Members first complete an individual paper with 40 objective questions and 2 essays, then qualified teams submit reports, and finalists defend their project live in front of the judges.",
+        vi: "Thí sinh trước tiên hoàn thành một bài thi cá nhân gồm 40 câu trắc nghiệm và 2 câu tự luận, sau đó các đội đủ điều kiện nộp báo cáo, và các đội vào sâu sẽ bảo vệ dự án trực tiếp trước hội đồng giám khảo.",
       },
     },
     roundCards: [
@@ -1101,15 +1101,15 @@ export const defaultPageContent: SitePageContent = {
         label: { en: "Round 01", vi: "Vòng 01" },
         title: { en: "Individual Qualifier", vi: "Vòng loại cá nhân" },
         duration: {
-          en: "36 objective questions + 2 essay questions online",
-          vi: "36 câu trắc nghiệm + 2 câu tự luận trực tuyến",
+          en: "40 objective questions + 2 essay questions online",
+          vi: "40 câu trắc nghiệm + 2 câu tự luận trực tuyến",
         },
         description: {
-          en: "Each eligible member receives a personalized paper with 36 objective questions drawn by topic and difficulty, followed by 2 essay questions. The average score of the team is used for ranking, and the top 50 teams proceed to Round 2.",
-          vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 36 câu hỏi trắc nghiệm được rút theo chủ đề và độ khó, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
+          en: "Each eligible member receives a personalized paper with 40 objective questions drawn by topic, difficulty, and extra random selection, followed by 2 essay questions. The average score of the team is used for ranking, and the top 50 teams proceed to Round 2.",
+          vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 40 câu hỏi trắc nghiệm được rút theo chủ đề, độ khó và phần ngẫu nhiên bổ sung, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
         },
         deliverables: [
-          { en: "36 objective questions across 6 topics", vi: "36 câu trắc nghiệm trên 6 chủ đề" },
+          { en: "40 objective questions", vi: "40 câu trắc nghiệm" },
           { en: "2 essay responses with 500-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 500 từ" },
           { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
         ],
@@ -1355,15 +1355,15 @@ export const defaultPageContent: SitePageContent = {
         label: { en: "Round 01", vi: "Vòng 01" },
         title: { en: "Individual Qualifier", vi: "Vòng loại cá nhân" },
         duration: {
-          en: "36 objective questions + 2 essay questions online",
-          vi: "36 câu trắc nghiệm + 2 câu tự luận trực tuyến",
+          en: "40 objective questions + 2 essay questions online",
+          vi: "40 câu trắc nghiệm + 2 câu tự luận trực tuyến",
         },
         description: {
-          en: "Each eligible member receives a personalized paper with 36 objective questions drawn by topic and difficulty, followed by 2 essay questions. The average score of the team is used for ranking, and the top 50 teams proceed to Round 2.",
-          vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 36 câu hỏi trắc nghiệm được rút theo chủ đề và độ khó, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
+          en: "Each eligible member receives a personalized paper with 40 objective questions drawn by topic, difficulty, and extra random selection, followed by 2 essay questions. The average score of the team is used for ranking, and the top 50 teams proceed to Round 2.",
+          vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 40 câu hỏi trắc nghiệm được rút theo chủ đề, độ khó và phần ngẫu nhiên bổ sung, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
         },
         deliverables: [
-          { en: "36 objective questions across 6 topics", vi: "36 câu trắc nghiệm trên 6 chủ đề" },
+          { en: "40 objective questions", vi: "40 câu trắc nghiệm" },
           { en: "2 essay responses with 500-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 500 từ" },
           { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
         ],
@@ -1377,8 +1377,8 @@ export const defaultPageContent: SitePageContent = {
             vi: "Chỉ các đội đã khóa đội và có từ 3 đến 5 thành viên mới được vào bài thi chính thức.",
           },
           {
-            en: "Every member takes one timed paper consisting of 36 objective questions and 2 essay questions.",
-            vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 36 câu trắc nghiệm và 2 câu tự luận.",
+            en: "Every member takes one timed paper consisting of 40 objective questions and 2 essay questions.",
+            vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 40 câu trắc nghiệm và 2 câu tự luận.",
           },
           {
             en: "Top 50 teams are selected by the average score of eligible team members.",
@@ -2475,8 +2475,8 @@ export const competitionOverview = {
     vi: "Kiến trúc cuộc thi",
   },
   description: {
-    en: "Attacker 2026 starts with an individual qualifier built from 36 objective questions across 6 topics plus 2 essay questions, then moves the strongest teams into a judge-scored report round and a live final presentation. Advancement is calculated at the team level, even when the first test is taken individually.",
-    vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 36 câu hỏi trắc nghiệm trải đều trên 6 chủ đề và 2 câu tự luận, sau đó đưa các đội mạnh nhất vào vòng nộp báo cáo được giám khảo chấm điểm và một buổi thuyết trình chung kết trực tiếp. Việc đi tiếp được tính ở cấp độ đội, dù cho bài thi đầu tiên được làm theo từng cá nhân.",
+    en: "Attacker 2026 starts with an individual qualifier built from 40 objective questions plus 2 essay questions, then moves the strongest teams into a judge-scored report round and a live final presentation. Advancement is calculated at the team level, even when the first test is taken individually.",
+    vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 40 câu hỏi trắc nghiệm và 2 câu tự luận, sau đó đưa các đội mạnh nhất vào vòng nộp báo cáo được giám khảo chấm điểm và một buổi thuyết trình chung kết trực tiếp. Việc đi tiếp được tính ở cấp độ đội, dù cho bài thi đầu tiên được làm theo từng cá nhân.",
   },
 };
 
@@ -2522,17 +2522,17 @@ export const roundItems: RoundItem[] = [
       vi: "Vòng loại cá nhân",
     },
     duration: {
-      en: "36 objective questions + 2 essay questions online",
-      vi: "36 câu trắc nghiệm + 2 câu tự luận trực tuyến",
+      en: "40 objective questions + 2 essay questions online",
+      vi: "40 câu trắc nghiệm + 2 câu tự luận trực tuyến",
     },
     description: {
-      en: "Each eligible member receives a personalized paper with 36 objective questions drawn by topic and difficulty, followed by 2 essay questions. The average score of the team is used for ranking, and the top 50 teams proceed to Round 2.",
-      vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 36 câu hỏi trắc nghiệm được rút theo chủ đề và độ khó, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
+      en: "Each eligible member receives a personalized paper with 40 objective questions drawn by topic, difficulty, and extra random selection, followed by 2 essay questions. The average score of the team is used for ranking, and the top 50 teams proceed to Round 2.",
+      vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 40 câu hỏi trắc nghiệm được rút theo chủ đề, độ khó và phần ngẫu nhiên bổ sung, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
     },
     deliverables: [
       {
-        en: "36 objective questions across 6 topics",
-        vi: "36 câu trắc nghiệm trên 6 chủ đề",
+        en: "40 objective questions",
+        vi: "40 câu trắc nghiệm",
       },
       {
         en: "2 essay responses with 500-word limit each",
@@ -3036,8 +3036,8 @@ export const ruleItems: RuleItem[] = [
   {
     title: { en: "Round 1 eligibility", vi: "Điều kiện vào Vòng 1" },
     description: {
-      en: "Teams can be created by one student, but only teams with 3 to 5 members may enter Round 1. Every member, including the leader, takes an individual paper with 36 objective questions and 2 essay questions.",
-      vi: "Đội có thể được tạo bởi một sinh viên, nhưng chỉ những đội có từ 3 đến 5 thành viên mới được vào Vòng 1. Mỗi thành viên, kể cả đội trưởng, đều làm một đề cá nhân gồm 36 câu trắc nghiệm và 2 câu tự luận.",
+      en: "Teams can be created by one student, but only teams with 3 to 5 members may enter Round 1. Every member, including the leader, takes an individual paper with 40 objective questions and 2 essay questions.",
+      vi: "Đội có thể được tạo bởi một sinh viên, nhưng chỉ những đội có từ 3 đến 5 thành viên mới được vào Vòng 1. Mỗi thành viên, kể cả đội trưởng, đều làm một đề cá nhân gồm 40 câu trắc nghiệm và 2 câu tự luận.",
     },
   },
   {
@@ -3127,8 +3127,8 @@ export const timelineItems: TimelineItem[] = [
     endDate: round1Window.endDate,
     title: { en: "Round 01 individual qualifier", vi: "Vòng 01 bài thi cá nhân" },
     description: {
-      en: "Eligible members complete an online paper with 36 objective questions distributed across 6 topics and 2 essay questions at the end.",
-      vi: "Các thành viên đủ điều kiện hoàn thành một bài thi trực tuyến gồm 36 câu trắc nghiệm trải trên 6 chủ đề và 2 câu tự luận ở cuối đề.",
+      en: "Eligible members complete an online paper with 40 objective questions and 2 essay questions at the end.",
+      vi: "Các thành viên đủ điều kiện hoàn thành một bài thi trực tuyến gồm 40 câu trắc nghiệm và 2 câu tự luận ở cuối đề.",
     },
     location: {
       en: "Official Attacker Round 1 exam portal",
@@ -4631,12 +4631,12 @@ export const round1TestBanks: Round1TestBank[] = [
       vi: "Ngân hàng đề trắc nghiệm",
     },
     description: {
-      en: "Primary official bank for the 36 objective questions in each paper. The system randomizes 6 questions per topic across 6 topics with a 2 easy / 2 medium / 2 hard mix.",
-      vi: "Ngân hàng chính thức cho 36 câu hỏi trắc nghiệm trong mỗi đề. Hệ thống rút ngẫu nhiên 6 câu trên mỗi chủ đề trong 6 chủ đề, theo cơ cấu 2 dễ / 2 trung bình / 2 khó.",
+      en: "Primary official bank for the 40 objective questions in each paper. The system randomizes 6 questions per topic across 6 topics with a 2 easy / 2 medium / 2 hard mix, then adds 4 more random objective questions from the full bank.",
+      vi: "Ngân hàng chính thức cho 40 câu hỏi trắc nghiệm trong mỗi đề. Hệ thống rút ngẫu nhiên 6 câu trên mỗi chủ đề trong 6 chủ đề theo cơ cấu 2 dễ / 2 trung bình / 2 khó, rồi thêm 4 câu trắc nghiệm ngẫu nhiên từ toàn bộ ngân hàng.",
     },
     status: "active",
     questionPoolSize: round1ObjectivePreviewQuestions.length,
-    questionsPerAttempt: 36,
+    questionsPerAttempt: 40,
     shuffleQuestions: true,
     shuffleOptions: true,
     durationMinutes: 60,
@@ -4651,8 +4651,8 @@ export const round1TestBanks: Round1TestBank[] = [
       vi: "Ngân hàng đề tự luận",
     },
     description: {
-      en: "Separate essay bank used for the last 2 questions in each paper. The system randomizes 2 essay prompts from a 30-question pool, with a 500-word limit for each response.",
-      vi: "Ngân hàng tự luận tách riêng dùng cho 2 câu cuối của mỗi đề. Hệ thống rút ngẫu nhiên 2 câu tự luận từ một kho 30 câu, với giới hạn 500 từ cho mỗi câu trả lời.",
+      en: "Separate essay bank used for the last 2 questions in each paper. The system randomizes the first essay prompt from this pool, then uses the configured fixed prompt for the second essay question.",
+      vi: "Ngân hàng tự luận tách riêng dùng cho 2 câu cuối của mỗi đề. Hệ thống rút ngẫu nhiên câu tự luận đầu tiên từ ngân hàng này, sau đó dùng prompt cố định đã cấu hình cho câu tự luận thứ hai.",
     },
     status: "active",
     questionPoolSize: round1EssayPreviewQuestions.length,
@@ -4661,6 +4661,10 @@ export const round1TestBanks: Round1TestBank[] = [
     shuffleOptions: false,
     durationMinutes: 60,
     wordLimit: 500,
+    fixedEssayPrompt: {
+      en: "",
+      vi: "",
+    },
     publishedAt: "2026-05-02",
     questions: round1EssayPreviewQuestions,
   },

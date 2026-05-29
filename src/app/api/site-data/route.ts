@@ -36,6 +36,8 @@ export async function GET() {
         shuffleOptions: true,
         durationMinutes: true,
         wordLimit: true,
+        fixedEssayPromptEn: true,
+        fixedEssayPromptVi: true,
         publishedAt: true,
         createdAt: true,
         updatedAt: true,
