@@ -3227,7 +3227,7 @@ export const timelineItems: TimelineItem[] = [
     },
     method: {
       en: "Team leader uploads the final or Emerging round report before the submission deadline",
-      vi: "Đội trưởng nộp báo cáo chung kết hoặc báo cáo Vòng Đội ươm mầm trước hạn chót",
+      vi: "Đội trưởng đại diện đội thi nộp bài.",
     },
     supportLinks: [
       { href: "/dashboard", label: { en: "Submit final/Emerging report", vi: "Nộp báo cáo chung kết/Đội ươm mầm" } },
