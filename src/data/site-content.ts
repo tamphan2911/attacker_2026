@@ -2198,7 +2198,7 @@ export const defaultPageContent: SitePageContent = {
       title: { en: "Final report, presentation, and awards", vi: "Báo cáo cuối, thuyết trình và trao giải" },
       description: {
         en: "The final stage starts with the finalist report deadline, then moves into live presentation, judge Q&A, and the final award decision.",
-        vi: "Giai đoạn chung kết bắt đầu bằng hạn nộp báo cáo của top 5, sau đó chuyển sang thuyết trình trực tiếp, hỏi đáp cùng giám khảo và quyết định giải thưởng cuối cùng.",
+        vi: "5 đội điểm cao nhất vòng 2 thi chung kết, 20 đội tiếp theo vào thi bảng Ươm mầm, chọn ra 10 đội trao giải Ươm mầm dựa theo điểm báo cáo đã chỉnh sửa hoàn thiện.",
       },
     },
   },
