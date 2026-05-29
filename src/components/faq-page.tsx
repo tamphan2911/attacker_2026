@@ -167,7 +167,7 @@ export function FaqPage() {
 	                </div>
 	              </div>
 	              <span className={`inline-flex min-h-9 items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${group.palette.badge}`}>
-	                {group.items.length} FAQ
+	                FAQ
 	              </span>
 	            </div>
 
