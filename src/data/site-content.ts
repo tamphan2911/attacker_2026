@@ -2105,6 +2105,70 @@ export const defaultPageContent: SitePageContent = {
     notStartedLabel: { en: "Not started", vi: "Chưa diễn ra" },
     endsInPrefix: { en: "Ends in", vi: "Kết thúc trong" },
     startsInPrefix: { en: "Starts in", vi: "Bắt đầu trong" },
+    countdownDayUnit: { en: "d", vi: "ngày" },
+    createAccountActionLabel: { en: "Create account", vi: "Tạo tài khoản" },
+    registrationTeamLockTitle: { en: "Registration and team lock", vi: "Đăng ký và chốt đội" },
+    eligibilityCheckLabel: { en: "Eligibility check", vi: "Kiểm tra điều kiện" },
+    closeEligibilityMessageLabel: { en: "Close eligibility message", vi: "Đóng thông báo điều kiện" },
+    gotItLabel: { en: "Got it", vi: "Đã hiểu" },
+    eligibilitySignInTitle: { en: "Sign in before checking eligibility", vi: "Cần đăng nhập để kiểm tra điều kiện" },
+    eligibilitySignInDescription: {
+      en: "The system needs your student account and team status before it can confirm Round 1 eligibility.",
+      vi: "Hệ thống cần tài khoản sinh viên và trạng thái đội của bạn trước khi xác nhận điều kiện Vòng 1.",
+    },
+    eligibilitySignInReason: {
+      en: "Create an account or sign in with your student account first.",
+      vi: "Hãy tạo tài khoản hoặc đăng nhập bằng tài khoản sinh viên trước.",
+    },
+    eligibilityWrongRoleTitle: { en: "This account is not eligible for Round 1", vi: "Tài khoản này chưa đủ điều kiện Vòng 1" },
+    eligibilityWrongRoleDescription: {
+      en: "Round 1 is only available to student participant accounts.",
+      vi: "Vòng 1 chỉ mở cho tài khoản sinh viên tham gia cuộc thi.",
+    },
+    eligibilityWrongRoleReason: {
+      en: "Use a student participant account instead of an organizer, moderator, admin, or judge account.",
+      vi: "Hãy dùng tài khoản sinh viên thay vì tài khoản ban tổ chức, moderator, admin hoặc giám khảo.",
+    },
+    eligibilityNoTeamTitle: { en: "Not eligible for Round 1 yet", vi: "Chưa đủ điều kiện Vòng 1" },
+    eligibilityNoTeamDescription: {
+      en: "You need to belong to an eligible team before Round 1 opens.",
+      vi: "Bạn cần thuộc một đội đủ điều kiện trước khi Vòng 1 mở.",
+    },
+    eligibilityNoTeamReason: { en: "Create or join a team first.", vi: "Hãy tạo đội hoặc tham gia một đội trước." },
+    eligibilityAdvancedTitle: { en: "Your team has already advanced beyond Round 1", vi: "Đội của bạn đã đi qua Vòng 1" },
+    eligibilityAdvancedDescription: {
+      en: "This team is no longer in the Round 1 eligibility checkpoint because it has progressed to a later stage.",
+      vi: "Đội này không còn ở bước kiểm tra điều kiện Vòng 1 vì đã đi tiếp sang giai đoạn sau.",
+    },
+    eligibilityEligibleTitle: { en: "Eligible for Round 1", vi: "Đủ điều kiện Vòng 1" },
+    eligibilityEligibleDescription: {
+      en: "Your team meets the current Round 1 entry conditions.",
+      vi: "Đội của bạn đáp ứng điều kiện hiện tại để vào Vòng 1.",
+    },
+    eligibilityMinMembersMetReason: {
+      en: "Team has {minMembers} or more members.",
+      vi: "Đội có từ {minMembers} thành viên trở lên.",
+    },
+    eligibilityTeamLockCompletedReason: { en: "Team lock is completed.", vi: "Đội đã hoàn tất khóa đội." },
+    eligibilityRound1AvailableReason: { en: "Round 1 is still available.", vi: "Vòng 1 vẫn còn khả dụng." },
+    eligibilityMinMembersMissingReason: {
+      en: "Team needs at least {minMembers} members; it currently has {currentMembers}.",
+      vi: "Đội cần tối thiểu {minMembers} thành viên; hiện có {currentMembers}.",
+    },
+    eligibilityTeamLockMissingReason: {
+      en: "Team lock has not been completed by all current members.",
+      vi: "Đội chưa hoàn tất bước khóa đội với toàn bộ thành viên hiện tại.",
+    },
+    eligibilityRound1ClosedReason: { en: "The Round 1 exam window has closed.", vi: "Khung thi Vòng 1 đã kết thúc." },
+    eligibilityNotReadyTitle: { en: "Not eligible for Round 1 yet", vi: "Chưa đủ điều kiện Vòng 1" },
+    eligibilityNotReadyDescription: {
+      en: "The team needs to resolve the items below before Round 1 can be opened.",
+      vi: "Đội cần xử lý các mục bên dưới trước khi có thể mở Vòng 1.",
+    },
+    eligibilityRound1UnavailableReason: {
+      en: "Round 1 is not currently available for this team.",
+      vi: "Vòng 1 hiện chưa khả dụng với đội này.",
+    },
     general: {
       eyebrow: { en: "Preparation", vi: "Chuẩn bị" },
       title: { en: "Registration and team lock", vi: "Đăng ký và chốt đội" },

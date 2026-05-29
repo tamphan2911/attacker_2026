@@ -49,6 +49,7 @@ import type {
   LocalizedText,
   SitePageContent,
   TestimonialItem,
+  TimelineItem,
 } from "@/types/site";
 import type { SponsorProfile } from "@/types/site";
 
@@ -116,6 +117,10 @@ function createTestimonialDraft(index: number): TestimonialItem {
 
 function cloneSponsors(sponsors: SponsorProfile[]): SponsorProfile[] {
   return JSON.parse(JSON.stringify(sponsors)) as SponsorProfile[];
+}
+
+function cloneTimelineItems(items: TimelineItem[]): TimelineItem[] {
+  return JSON.parse(JSON.stringify(items)) as TimelineItem[];
 }
 
 function createSponsorDraft(index: number): SponsorProfile {
@@ -822,9 +827,10 @@ export function ContentHeaderEditor() {
 }
 
 export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
-  const { locale, pageContent, savePageContent } = useSiteState();
+  const { locale, pageContent, savePageContent, timelineItems, updateTimelineItemsByAdmin } = useSiteState();
   useAdminTitleScroll();
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
+  const [timelineDraft, setTimelineDraft] = useState<TimelineItem[]>(() => cloneTimelineItems(timelineItems));
   const [faqEditorTab, setFaqEditorTab] = useState<"questions" | "topics" | "page">("questions");
   const [expandedFaqItems, setExpandedFaqItems] = useState<Set<string>>(() => new Set());
   const [faqSaveMessage, setFaqSaveMessage] = useState<{ key: string; text: string } | null>(null);
@@ -838,10 +844,19 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
     setDraft(clonePageContent(pageContent));
   }, [pageContent]);
 
-  const isDirty = useMemo(
+  useEffect(() => {
+    setTimelineDraft(cloneTimelineItems(timelineItems));
+  }, [timelineItems]);
+
+  const pageContentDirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(pageContent),
     [draft, pageContent],
   );
+  const timelineDirty = useMemo(
+    () => pageId === "timeline" && JSON.stringify(timelineDraft) !== JSON.stringify(timelineItems),
+    [pageId, timelineDraft, timelineItems],
+  );
+  const isDirty = pageContentDirty || timelineDirty;
 
   const config = contentPageConfigs.find((item) => item.id === pageId)!;
   const seasonYear = pageId.startsWith("season-") ? pageId.replace("season-", "") : null;
@@ -897,6 +912,80 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
     setFaqSaveMessage(null);
     setPendingFaqDelete(null);
   };
+  const resetDrafts = () => {
+    setDraft(clonePageContent(pageContent));
+    setTimelineDraft(cloneTimelineItems(timelineItems));
+  };
+  const saveDrafts = async () => {
+    const savedContent = pageContentDirty ? await savePageContent(draft) : true;
+    if (!savedContent) {
+      return;
+    }
+
+    if (!timelineDirty) {
+      return;
+    }
+
+    const response = await fetch("/api/admin/timeline", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "same-origin",
+      body: JSON.stringify({ timelineItems: timelineDraft }),
+    });
+
+    if (response.ok) {
+      updateTimelineItemsByAdmin(cloneTimelineItems(timelineDraft));
+    }
+  };
+  const updateTimelineItemText = (
+    itemId: string,
+    field: "title" | "description" | "location" | "method",
+    language: Locale,
+    value: string,
+  ) => {
+    setTimelineDraft((current) =>
+      current.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              [field]: {
+                ...item[field],
+                [language]: value,
+              },
+            }
+          : item,
+      ),
+    );
+  };
+  const updateTimelineSupportLinkLabel = (
+    itemId: string,
+    linkIndex: number,
+    language: Locale,
+    value: string,
+  ) => {
+    setTimelineDraft((current) =>
+      current.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              supportLinks: (item.supportLinks ?? []).map((link, currentIndex) =>
+                currentIndex === linkIndex
+                  ? {
+                      ...link,
+                      label: {
+                        ...link.label,
+                        [language]: value,
+                      },
+                    }
+                  : link,
+              ),
+            }
+          : item,
+      ),
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -905,9 +994,9 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
         title={pickText(locale, config.label)}
         description={pickText(locale, config.description)}
         isDirty={isDirty}
-        onReset={() => setDraft(clonePageContent(pageContent))}
+        onReset={resetDrafts}
         onSave={() => {
-          void savePageContent(draft);
+          void saveDrafts();
         }}
       />
 
@@ -3486,11 +3575,64 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                   ["Timeline / Not started label", draft.timelinePage.notStartedLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.notStartedLabel[language] = value; }],
                   ["Timeline / Ends in prefix", draft.timelinePage.endsInPrefix, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.endsInPrefix[language] = value; }],
                   ["Timeline / Starts in prefix", draft.timelinePage.startsInPrefix, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.startsInPrefix[language] = value; }],
+                  ["Timeline / Countdown day unit", draft.timelinePage.countdownDayUnit, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.countdownDayUnit[language] = value; }],
+                  ["Timeline / Create account action", draft.timelinePage.createAccountActionLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.createAccountActionLabel[language] = value; }],
+                  ["Timeline / Registration team lock title override", draft.timelinePage.registrationTeamLockTitle, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.registrationTeamLockTitle[language] = value; }],
+                  ["Timeline / Eligibility modal eyebrow", draft.timelinePage.eligibilityCheckLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityCheckLabel[language] = value; }],
+                  ["Timeline / Close eligibility modal label", draft.timelinePage.closeEligibilityMessageLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.closeEligibilityMessageLabel[language] = value; }],
+                  ["Timeline / Eligibility modal confirm button", draft.timelinePage.gotItLabel, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.gotItLabel[language] = value; }],
                 ].map(([title, value, updater]) => (
                   <LocalizedTextEditorCard
                     key={title as string}
                     title={title as string}
                     value={value as LocalizedText}
+                    onChange={(language, nextValue) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
+                        }),
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Timeline / Eligibility check messages"
+                description="These messages appear in the eligibility-check modal opened from the preparation timeline step. Dynamic placeholders use {minMembers} and {currentMembers}."
+              />
+              <div className="space-y-4">
+                {[
+                  ["Sign-in required title", draft.timelinePage.eligibilitySignInTitle, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilitySignInTitle[language] = value; }],
+                  ["Sign-in required description", draft.timelinePage.eligibilitySignInDescription, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilitySignInDescription[language] = value; }],
+                  ["Sign-in required reason", draft.timelinePage.eligibilitySignInReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilitySignInReason[language] = value; }],
+                  ["Wrong account role title", draft.timelinePage.eligibilityWrongRoleTitle, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityWrongRoleTitle[language] = value; }],
+                  ["Wrong account role description", draft.timelinePage.eligibilityWrongRoleDescription, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityWrongRoleDescription[language] = value; }],
+                  ["Wrong account role reason", draft.timelinePage.eligibilityWrongRoleReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityWrongRoleReason[language] = value; }],
+                  ["No team title", draft.timelinePage.eligibilityNoTeamTitle, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityNoTeamTitle[language] = value; }],
+                  ["No team description", draft.timelinePage.eligibilityNoTeamDescription, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityNoTeamDescription[language] = value; }],
+                  ["No team reason", draft.timelinePage.eligibilityNoTeamReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityNoTeamReason[language] = value; }],
+                  ["Already advanced title", draft.timelinePage.eligibilityAdvancedTitle, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityAdvancedTitle[language] = value; }],
+                  ["Already advanced description", draft.timelinePage.eligibilityAdvancedDescription, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityAdvancedDescription[language] = value; }],
+                  ["Eligible title", draft.timelinePage.eligibilityEligibleTitle, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityEligibleTitle[language] = value; }],
+                  ["Eligible description", draft.timelinePage.eligibilityEligibleDescription, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityEligibleDescription[language] = value; }],
+                  ["Minimum members met reason", draft.timelinePage.eligibilityMinMembersMetReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityMinMembersMetReason[language] = value; }],
+                  ["Team lock completed reason", draft.timelinePage.eligibilityTeamLockCompletedReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityTeamLockCompletedReason[language] = value; }],
+                  ["Round 1 available reason", draft.timelinePage.eligibilityRound1AvailableReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityRound1AvailableReason[language] = value; }],
+                  ["Minimum members missing reason", draft.timelinePage.eligibilityMinMembersMissingReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityMinMembersMissingReason[language] = value; }],
+                  ["Team lock missing reason", draft.timelinePage.eligibilityTeamLockMissingReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityTeamLockMissingReason[language] = value; }],
+                  ["Round 1 closed reason", draft.timelinePage.eligibilityRound1ClosedReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityRound1ClosedReason[language] = value; }],
+                  ["Not ready title", draft.timelinePage.eligibilityNotReadyTitle, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityNotReadyTitle[language] = value; }],
+                  ["Not ready description", draft.timelinePage.eligibilityNotReadyDescription, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityNotReadyDescription[language] = value; }],
+                  ["Round 1 unavailable fallback reason", draft.timelinePage.eligibilityRound1UnavailableReason, (language: Locale, value: string, next: SitePageContent) => { next.timelinePage.eligibilityRound1UnavailableReason[language] = value; }],
+                ].map(([title, value, updater]) => (
+                  <LocalizedTextEditorCard
+                    key={title as string}
+                    title={`Timeline / Eligibility / ${title as string}`}
+                    value={value as LocalizedText}
+                    rows={2}
                     onChange={(language, nextValue) =>
                       setDraft((current) =>
                         updateDraftContent(current, (next) => {
@@ -3547,6 +3689,66 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Timeline / Step cards"
+                description="Edit every public text on each timeline step card: title, description, place, method, and action-link labels. Dates and times stay in Admin / Timeline."
+              />
+              <div className="space-y-5">
+                {timelineDraft.map((item) => (
+                  <div key={item.id} className="space-y-4 rounded-[1.5rem] border theme-border px-4 py-4">
+                    <div>
+                      <p className="text-sm font-semibold theme-text-strong">
+                        {pickText(locale, item.title)}
+                      </p>
+                      <p className="mt-1 text-xs theme-text-soft">{item.id}</p>
+                    </div>
+                    <LocalizedFieldEditor
+                      label="Title"
+                      value={item.title}
+                      rows={2}
+                      onChange={(language, value) => updateTimelineItemText(item.id, "title", language, value)}
+                    />
+                    <LocalizedFieldEditor
+                      label="Description"
+                      value={item.description}
+                      rows={3}
+                      onChange={(language, value) => updateTimelineItemText(item.id, "description", language, value)}
+                    />
+                    <LocalizedFieldEditor
+                      label="Place"
+                      value={item.location}
+                      rows={2}
+                      onChange={(language, value) => updateTimelineItemText(item.id, "location", language, value)}
+                    />
+                    <LocalizedFieldEditor
+                      label="Method"
+                      value={item.method}
+                      rows={2}
+                      onChange={(language, value) => updateTimelineItemText(item.id, "method", language, value)}
+                    />
+                    {(item.supportLinks ?? []).length > 0 ? (
+                      <div className="space-y-3">
+                        <p className="text-sm font-semibold theme-text-strong">Action link labels</p>
+                        {(item.supportLinks ?? []).map((link, linkIndex) => (
+                          <div key={`${item.id}-link-${linkIndex}`} className="rounded-[1.25rem] border theme-border px-3 py-3">
+                            <p className="mb-3 text-xs theme-text-soft">{link.href}</p>
+                            <LocalizedFieldEditor
+                              label={`Action link ${linkIndex + 1}`}
+                              value={link.label}
+                              rows={1}
+                              onChange={(language, value) =>
+                                updateTimelineSupportLinkLabel(item.id, linkIndex, language, value)
+                              }
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </Surface>
           </>
         ) : null}
 

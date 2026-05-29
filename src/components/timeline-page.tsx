@@ -136,6 +136,7 @@ function buildTimelineActionLinks({
   labels: Pick<
     ReturnType<typeof useSiteState>["pageContent"]["timelinePage"],
     "readResultUpdateLabel" | "round2SubmissionClosedTitle" | "finalReportClosedTitle"
+    | "createAccountActionLabel"
   >;
 }): TimelineActionLink[] {
   const actionLinks: TimelineActionLink[] = [];
@@ -144,7 +145,7 @@ function buildTimelineActionLinks({
     actionLinks.push({
       key: `${item.id}-create-account`,
       href: "/auth",
-      label: { en: "Create account", vi: "Tạo tài khoản" },
+      label: labels.createAccountActionLabel,
       icon: UserRound,
     });
   }
@@ -271,7 +272,19 @@ function buildTimelineActionLinks({
   return actionLinks;
 }
 
-function formatCountdown(locale: "en" | "vi", distanceMs: number, nowLabel: LocalizedText) {
+function formatLocalizedTemplate(template: string, values: Record<string, string | number>) {
+  return Object.entries(values).reduce(
+    (current, [key, value]) => current.replaceAll(`{${key}}`, String(value)),
+    template,
+  );
+}
+
+function formatCountdown(
+  locale: "en" | "vi",
+  distanceMs: number,
+  nowLabel: LocalizedText,
+  dayUnit: LocalizedText,
+) {
   if (distanceMs <= 0) {
     return pickText(locale, nowLabel);
   }
@@ -287,9 +300,7 @@ function formatCountdown(locale: "en" | "vi", distanceMs: number, nowLabel: Loca
   const paddedSeconds = String(seconds).padStart(2, "0");
 
   if (days > 0) {
-    return locale === "en"
-      ? `${days}d ${paddedHours}:${paddedMinutes}:${paddedSeconds}`
-      : `${days} ngày ${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+    return `${days}${locale === "en" ? "" : " "}${pickText(locale, dayUnit)} ${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
   }
 
   return `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
@@ -327,6 +338,7 @@ function getTimelineCardStatusMeta(
     | "notStartedLabel"
     | "endsInPrefix"
     | "startsInPrefix"
+    | "countdownDayUnit"
   >,
 ) {
   const key = getTimelineItemKey(item);
@@ -348,7 +360,7 @@ function getTimelineCardStatusMeta(
       key,
       status: "ongoing" as const,
       label: pickText(locale, labels.ongoingLabel),
-      countdown: `${pickText(locale, labels.endsInPrefix)} ${formatCountdown(locale, endAt.getTime() - now.getTime(), labels.nowLabel)}`,
+      countdown: `${pickText(locale, labels.endsInPrefix)} ${formatCountdown(locale, endAt.getTime() - now.getTime(), labels.nowLabel, labels.countdownDayUnit)}`,
       icon: Clock3,
     };
   }
@@ -358,7 +370,7 @@ function getTimelineCardStatusMeta(
       key,
       status: "upcoming" as const,
       label: pickText(locale, labels.startingSoonLabel),
-      countdown: `${pickText(locale, labels.startsInPrefix)} ${formatCountdown(locale, startAt.getTime() - now.getTime(), labels.nowLabel)}`,
+      countdown: `${pickText(locale, labels.startsInPrefix)} ${formatCountdown(locale, startAt.getTime() - now.getTime(), labels.nowLabel, labels.countdownDayUnit)}`,
       icon: Clock3,
     };
   }
@@ -374,6 +386,7 @@ function getTimelineCardStatusMeta(
 
 export function TimelinePage() {
   const { locale, timelineItems, currentUser, currentTeam, activeUserId, pageContent } = useSiteState();
+  const timelineCopy = pageContent.timelinePage;
   const [now, setNow] = useState(() => new Date());
   const [eligibilityNotice, setEligibilityNotice] = useState<{
     tone: "success" | "warning";
@@ -401,16 +414,9 @@ export function TimelinePage() {
     if (!activeUserId) {
       setEligibilityNotice({
         tone: "warning",
-        title: locale === "en" ? "Sign in before checking eligibility" : "Cần đăng nhập để kiểm tra điều kiện",
-        description:
-          locale === "en"
-            ? "The system needs your student account and team status before it can confirm Round 1 eligibility."
-            : "Hệ thống cần tài khoản sinh viên và trạng thái đội của bạn trước khi xác nhận điều kiện Vòng 1.",
-        reasons: [
-          locale === "en"
-            ? "Create an account or sign in with your student account first."
-            : "Hãy tạo tài khoản hoặc đăng nhập bằng tài khoản sinh viên trước.",
-        ],
+        title: pickText(locale, timelineCopy.eligibilitySignInTitle),
+        description: pickText(locale, timelineCopy.eligibilitySignInDescription),
+        reasons: [pickText(locale, timelineCopy.eligibilitySignInReason)],
       });
       return;
     }
@@ -418,16 +424,9 @@ export function TimelinePage() {
     if (currentUser.role !== "student") {
       setEligibilityNotice({
         tone: "warning",
-        title: locale === "en" ? "This account is not eligible for Round 1" : "Tài khoản này chưa đủ điều kiện Vòng 1",
-        description:
-          locale === "en"
-            ? "Round 1 is only available to student participant accounts."
-            : "Vòng 1 chỉ mở cho tài khoản sinh viên tham gia cuộc thi.",
-        reasons: [
-          locale === "en"
-            ? "Use a student participant account instead of an organizer, moderator, admin, or judge account."
-            : "Hãy dùng tài khoản sinh viên thay vì tài khoản ban tổ chức, moderator, admin hoặc giám khảo.",
-        ],
+        title: pickText(locale, timelineCopy.eligibilityWrongRoleTitle),
+        description: pickText(locale, timelineCopy.eligibilityWrongRoleDescription),
+        reasons: [pickText(locale, timelineCopy.eligibilityWrongRoleReason)],
       });
       return;
     }
@@ -435,16 +434,9 @@ export function TimelinePage() {
     if (!currentTeam) {
       setEligibilityNotice({
         tone: "warning",
-        title: locale === "en" ? "Not eligible for Round 1 yet" : "Chưa đủ điều kiện Vòng 1",
-        description:
-          locale === "en"
-            ? "You need to belong to an eligible team before Round 1 opens."
-            : "Bạn cần thuộc một đội đủ điều kiện trước khi Vòng 1 mở.",
-        reasons: [
-          locale === "en"
-            ? "Create or join a team first."
-            : "Hãy tạo đội hoặc tham gia một đội trước.",
-        ],
+        title: pickText(locale, timelineCopy.eligibilityNoTeamTitle),
+        description: pickText(locale, timelineCopy.eligibilityNoTeamDescription),
+        reasons: [pickText(locale, timelineCopy.eligibilityNoTeamReason)],
       });
       return;
     }
@@ -452,11 +444,8 @@ export function TimelinePage() {
     if (currentTeam.stage !== "round-1") {
       setEligibilityNotice({
         tone: "success",
-        title: locale === "en" ? "Your team has already advanced beyond Round 1" : "Đội của bạn đã đi qua Vòng 1",
-        description:
-          locale === "en"
-            ? "This team is no longer in the Round 1 eligibility checkpoint because it has progressed to a later stage."
-            : "Đội này không còn ở bước kiểm tra điều kiện Vòng 1 vì đã đi tiếp sang giai đoạn sau.",
+        title: pickText(locale, timelineCopy.eligibilityAdvancedTitle),
+        description: pickText(locale, timelineCopy.eligibilityAdvancedDescription),
         reasons: [],
       });
       return;
@@ -465,17 +454,14 @@ export function TimelinePage() {
     if (canTeamTakeRound1(currentTeam, now, timelineItems)) {
       setEligibilityNotice({
         tone: "success",
-        title: locale === "en" ? "Eligible for Round 1" : "Đủ điều kiện Vòng 1",
-        description:
-          locale === "en"
-            ? "Your team meets the current Round 1 entry conditions."
-            : "Đội của bạn đáp ứng điều kiện hiện tại để vào Vòng 1.",
+        title: pickText(locale, timelineCopy.eligibilityEligibleTitle),
+        description: pickText(locale, timelineCopy.eligibilityEligibleDescription),
         reasons: [
-          locale === "en"
-            ? `Team has ${TEAM_MIN_MEMBERS} or more members.`
-            : `Đội có từ ${TEAM_MIN_MEMBERS} thành viên trở lên.`,
-          locale === "en" ? "Team lock is completed." : "Đội đã hoàn tất khóa đội.",
-          locale === "en" ? "Round 1 is still available." : "Vòng 1 vẫn còn khả dụng.",
+          formatLocalizedTemplate(pickText(locale, timelineCopy.eligibilityMinMembersMetReason), {
+            minMembers: TEAM_MIN_MEMBERS,
+          }),
+          pickText(locale, timelineCopy.eligibilityTeamLockCompletedReason),
+          pickText(locale, timelineCopy.eligibilityRound1AvailableReason),
         ],
       });
       return;
@@ -484,34 +470,28 @@ export function TimelinePage() {
     const reasons: string[] = [];
     if (currentTeam.memberIds.length < TEAM_MIN_MEMBERS) {
       reasons.push(
-        locale === "en"
-          ? `Team needs at least ${TEAM_MIN_MEMBERS} members; it currently has ${currentTeam.memberIds.length}.`
-          : `Đội cần tối thiểu ${TEAM_MIN_MEMBERS} thành viên; hiện có ${currentTeam.memberIds.length}.`,
+        formatLocalizedTemplate(pickText(locale, timelineCopy.eligibilityMinMembersMissingReason), {
+          minMembers: TEAM_MIN_MEMBERS,
+          currentMembers: currentTeam.memberIds.length,
+        }),
       );
     }
     if (currentTeam.round1LockStatus !== "locked") {
-      reasons.push(
-        locale === "en"
-          ? "Team lock has not been completed by all current members."
-          : "Đội chưa hoàn tất bước khóa đội với toàn bộ thành viên hiện tại.",
-      );
+      reasons.push(pickText(locale, timelineCopy.eligibilityTeamLockMissingReason));
     }
 
     const round1Item = timelineItems.find((item) => item.id === "round-1-individual-qualifier");
     if (round1Item && now.getTime() > getTimelineEndDateTime(round1Item).getTime()) {
-      reasons.push(locale === "en" ? "The Round 1 exam window has closed." : "Khung thi Vòng 1 đã kết thúc.");
+      reasons.push(pickText(locale, timelineCopy.eligibilityRound1ClosedReason));
     }
 
     setEligibilityNotice({
       tone: "warning",
-      title: locale === "en" ? "Not eligible for Round 1 yet" : "Chưa đủ điều kiện Vòng 1",
-      description:
-        locale === "en"
-          ? "The team needs to resolve the items below before Round 1 can be opened."
-          : "Đội cần xử lý các mục bên dưới trước khi có thể mở Vòng 1.",
+      title: pickText(locale, timelineCopy.eligibilityNotReadyTitle),
+      description: pickText(locale, timelineCopy.eligibilityNotReadyDescription),
       reasons: reasons.length
         ? reasons
-        : [locale === "en" ? "Round 1 is not currently available for this team." : "Vòng 1 hiện chưa khả dụng với đội này."],
+        : [pickText(locale, timelineCopy.eligibilityRound1UnavailableReason)],
     });
   };
   const phaseSummaries = timelinePhaseMeta.map((phase) => {
@@ -629,7 +609,7 @@ export function TimelinePage() {
                     href={phase.ruleHref}
                     className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-[0.98] ${phase.buttonClass}`}
                   >
-                    {locale === "en" ? "View rules" : "Xem thể lệ"}
+                    {pickText(locale, pageContent.timelinePage.openRuleBlockLabel)}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -640,9 +620,7 @@ export function TimelinePage() {
                     const StatusIcon = statusMeta.icon;
                     const itemTitle =
                       item.id === "registration-deadline-team-lock"
-                        ? locale === "en"
-                          ? "Registration and team lock"
-                          : "Đăng ký và chốt đội"
+                        ? pickText(locale, pageContent.timelinePage.registrationTeamLockTitle)
                         : pickText(locale, item.title);
                     const actionLinks = buildTimelineActionLinks({
                       item,
@@ -770,7 +748,7 @@ export function TimelinePage() {
                       : "text-amber-700 dark:text-amber-200"
                   }`}
                 >
-                  {locale === "en" ? "Eligibility check" : "Kiểm tra điều kiện"}
+                  {pickText(locale, pageContent.timelinePage.eligibilityCheckLabel)}
                 </p>
                 <h2 id="timeline-eligibility-title" className="mt-2 theme-heading text-2xl font-semibold theme-text-strong">
                   {eligibilityNotice.title}
@@ -781,7 +759,7 @@ export function TimelinePage() {
                 type="button"
                 onClick={() => setEligibilityNotice(null)}
                 className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border theme-border theme-panel-subtle theme-text-soft transition hover:bg-white/75 dark:hover:bg-white/8"
-                aria-label={locale === "en" ? "Close eligibility message" : "Đóng thông báo điều kiện"}
+                aria-label={pickText(locale, pageContent.timelinePage.closeEligibilityMessageLabel)}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -818,7 +796,7 @@ export function TimelinePage() {
                 onClick={() => setEligibilityNotice(null)}
                 className="theme-button-primary inline-flex items-center justify-center rounded-2xl px-5 py-3 text-sm font-semibold"
               >
-                {locale === "en" ? "Got it" : "Đã hiểu"}
+                {pickText(locale, pageContent.timelinePage.gotItLabel)}
               </button>
             </div>
           </div>
