@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
+import { contactInfo } from "@/data/site-content";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
@@ -28,6 +30,85 @@ interface Round2FinalistsPayload {
 
 function createEmptySlots<T>(items: T[], count: number) {
   return Array.from({ length: count }, (_, index) => items[index] ?? null);
+}
+
+function GuidancePanel({
+  locale,
+  kind,
+}: {
+  locale: "en" | "vi";
+  kind: "finalist" | "emerging";
+}) {
+  const isFinalist = kind === "finalist";
+  const title = isFinalist
+    ? locale === "en"
+      ? "Next steps for finalist teams"
+      : "Việc cần làm cho 5 đội vào chung kết"
+    : locale === "en"
+      ? "Next steps for Emerging round qualifiers"
+      : "Việc cần làm cho 20 đội vào Vòng Đội ươm mầm";
+  const reportLabel = isFinalist
+    ? locale === "en"
+      ? "Submit final round report"
+      : "Nộp báo cáo chung kết"
+    : locale === "en"
+      ? "Submit Emerging round report"
+      : "Nộp báo cáo Vòng Đội ươm mầm";
+  const items = isFinalist
+    ? locale === "en"
+      ? [
+          "Submit the final version of the report in your Team Workspace.",
+          "Submit the final presentation slide file via email to the organizer, or contact the organizer for support.",
+          "Submit the poster/standee design file via email to the organizer, or contact the organizer for support.",
+        ]
+      : [
+          "Nộp phiên bản báo cáo cuối cùng trong trang Đội thi.",
+          "Gửi file slide thuyết trình chung kết qua email cho ban tổ chức, hoặc liên hệ ban tổ chức để được hỗ trợ.",
+          "Gửi file thiết kế poster/standee qua email cho ban tổ chức, hoặc liên hệ ban tổ chức để được hỗ trợ.",
+        ]
+    : locale === "en"
+      ? [
+          "Submit the final version of the report in your Team Workspace for Emerging round rescoring.",
+          "Submit the poster/standee design file via email to the organizer, or contact the organizer for support.",
+        ]
+      : [
+          "Nộp phiên bản báo cáo cuối cùng trong trang Đội thi để được chấm lại ở Vòng Đội ươm mầm.",
+          "Gửi file thiết kế poster/standee qua email cho ban tổ chức, hoặc liên hệ ban tổ chức để được hỗ trợ.",
+        ];
+
+  return (
+    <Surface className="px-5 py-5 md:px-6">
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold theme-text-strong">{title}</p>
+          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-7 theme-text-muted">
+            {items.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs leading-6 theme-text-soft">
+            {locale === "en"
+              ? `Organizer email: ${contactInfo.email}`
+              : `Email ban tổ chức: ${contactInfo.email}`}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-3">
+          <Link
+            href="/dashboard#round-3-section"
+            className="theme-button-primary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold"
+          >
+            {reportLabel}
+          </Link>
+          <a
+            href={`mailto:${contactInfo.email}`}
+            className="inline-flex items-center justify-center rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+          >
+            {locale === "en" ? "Email organizer" : "Email ban tổ chức"}
+          </a>
+        </div>
+      </div>
+    </Surface>
+  );
 }
 
 export function FinalistsPage() {
@@ -87,6 +168,8 @@ export function FinalistsPage() {
           title={pickText(locale, pageContent.finalists.finalistsHeader.title)}
           description={pickText(locale, pageContent.finalists.finalistsHeader.description)}
         />
+
+        <GuidancePanel locale={locale} kind="finalist" />
 
         <div className="grid gap-4 xl:grid-cols-2">
             {finalistSlots.map((team, index) => {
@@ -212,6 +295,8 @@ export function FinalistsPage() {
           title={pickText(locale, pageContent.finalists.emergingHeader.title)}
           description={pickText(locale, pageContent.finalists.emergingHeader.description)}
         />
+
+        <GuidancePanel locale={locale} kind="emerging" />
 
         <Surface className="overflow-hidden px-0 py-0">
           <div className="overflow-x-auto">

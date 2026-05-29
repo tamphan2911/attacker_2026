@@ -2141,7 +2141,7 @@ export const defaultPageContent: SitePageContent = {
   finalists: {
     finalistsHeader: {
       eyebrow: { en: "Finalist teams", vi: "Đội vào thuyết trình" },
-      title: { en: "Top 5 finalist teams", vi: "Top 5 đội vào chung kết" },
+      title: { en: "5 finalist teams", vi: "5 đội vào chung kết" },
       description: {
         en: "The five teams below are the finalist list only. This section does not indicate ranking order.",
         vi: "Năm đội dưới đây là danh sách đội vào chung kết. Phần này chỉ mang tính liệt kê, không thể hiện thứ hạng.",
@@ -2151,8 +2151,8 @@ export const defaultPageContent: SitePageContent = {
       eyebrow: { en: "Emerging round", vi: "Vòng Đội ươm mầm" },
       title: { en: "20 Emerging round qualifiers", vi: "20 đội vào Vòng Đội ươm mầm" },
       description: {
-        en: "The twenty teams below qualify for the Emerging round. Final Emerging Team recognition is awarded later to the best 10 teams after Emerging round scoring.",
-        vi: "Hai mươi đội dưới đây vào Vòng Đội ươm mầm. Danh hiệu Đội ươm mầm chính thức sẽ được trao sau cho 10 đội tốt nhất theo điểm Vòng Đội ươm mầm.",
+        en: "The twenty teams below qualify for the Emerging round and must submit an updated report for rescoring. The best 10 teams after Emerging round scoring receive official Emerging Team recognition.",
+        vi: "Hai mươi đội dưới đây vào Vòng Đội ươm mầm và cần nộp báo cáo cập nhật để được chấm lại. Danh hiệu Đội ươm mầm chính thức sẽ được trao cho 10 đội tốt nhất sau khi chấm Vòng Đội ươm mầm.",
       },
     },
     finalistSlotLabel: { en: "Finalist slot", vi: "Vị trí chung kết" },
