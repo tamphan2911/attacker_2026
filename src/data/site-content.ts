@@ -3181,7 +3181,7 @@ export const timelineItems: TimelineItem[] = [
     },
     method: {
       en: "Team leader uploads versioned report files through the submission center",
-      vi: "Đội trưởng nộp báo cáo theo phiên bản qua trung tâm nộp bài",
+      vi: "Đội trưởng đại diện đội thi nộp bài.",
     },
     supportLinks: [
       { href: "/dashboard", label: { en: "Submit Round 2 file", vi: "Nộp file Vòng 2" } },
