@@ -23,6 +23,8 @@ export interface Round2RankedTeam {
   submittedAt: string;
 }
 
+export type Round2AdvancementBracket = "finalist" | "emerging";
+
 export async function readRound2FinalistResults(now = new Date()) {
   const timelineItems = await readTimelineItems();
   const resultAnnouncement = getTimelineItemById("round-2-top-5-announcement", timelineItems);
@@ -127,11 +129,35 @@ export async function readRound2FinalistResults(now = new Date()) {
     released: true,
     announcementStartDate: resultAnnouncement?.startDate,
     finalists: rankedTeams.slice(0, 5),
-    emergingTeams: rankedTeams.slice(5, 15),
+    emergingTeams: rankedTeams.slice(5, 25),
   };
 }
 
 export async function isTeamRound2Finalist(teamId: string, now = new Date()) {
   const results = await readRound2FinalistResults(now);
   return results.released && results.finalists.some((team) => team.id === teamId);
+}
+
+export async function getTeamRound2AdvancementBracket(
+  teamId: string,
+  now = new Date(),
+): Promise<Round2AdvancementBracket | null> {
+  const results = await readRound2FinalistResults(now);
+  if (!results.released) {
+    return null;
+  }
+
+  if (results.finalists.some((team) => team.id === teamId)) {
+    return "finalist";
+  }
+
+  if (results.emergingTeams.some((team) => team.id === teamId)) {
+    return "emerging";
+  }
+
+  return null;
+}
+
+export async function canTeamSubmitRound3ReportByRound2Ranking(teamId: string, now = new Date()) {
+  return (await getTeamRound2AdvancementBracket(teamId, now)) !== null;
 }

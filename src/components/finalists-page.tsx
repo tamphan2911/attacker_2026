@@ -39,7 +39,7 @@ export function FinalistsPage() {
   });
   const finalPresentationItem = timelineItems.find((item) => item.id === "round-3-final-presentation");
   const finalistSlots = createEmptySlots(round2Results.released ? round2Results.finalists : [], 5);
-  const emergingSlots = createEmptySlots(round2Results.released ? round2Results.emergingTeams : [], 10);
+  const emergingSlots = createEmptySlots(round2Results.released ? round2Results.emergingTeams : [], 20);
 
   useEffect(() => {
     let cancelled = false;

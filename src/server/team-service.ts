@@ -24,7 +24,7 @@ import { getTimelineEndDateTime, getTimelineStartDateTime } from "@/lib/timeline
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
-import { isTeamRound2Finalist } from "@/server/round2-finalists";
+import { canTeamSubmitRound3ReportByRound2Ranking } from "@/server/round2-finalists";
 import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
@@ -1858,7 +1858,7 @@ export async function createTeamSubmission(
 ): Promise<ServiceResult<{ submissionId: string; teamId: string; teamName: string; version: number }>> {
   await syncRound1QualificationStages();
 
-  const archivedRound2Files: Array<{ id: string; storageKey: string }> = [];
+  const archivedSubmissionFiles: Array<{ id: string; storageKey: string }> = [];
   const result = await prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: actorId } });
     if (!user) {
@@ -1889,14 +1889,15 @@ export async function createTeamSubmission(
         ? CompetitionStage.ROUND_3
         : CompetitionStage.ROUND_2;
     const canSubmitRound3AsFinalist =
-      payload.round === SubmissionRound.ROUND_3 && (await isTeamRound2Finalist(membership.teamId));
+      payload.round === SubmissionRound.ROUND_3 &&
+      (await canTeamSubmitRound3ReportByRound2Ranking(membership.teamId));
 
     if (membership.team.stage !== requiredStage && !canSubmitRound3AsFinalist) {
       if (membership.team.stage === CompetitionStage.ROUND_1) {
         return fail(
           409,
           `This team has not advanced to ${
-            payload.round === SubmissionRound.ROUND_3 ? "Round 3" : "Round 2"
+            payload.round === SubmissionRound.ROUND_3 ? "Final/Emerging round" : "Round 2"
           } yet.`,
         );
       }
@@ -1904,7 +1905,7 @@ export async function createTeamSubmission(
       return fail(
         409,
         `This team is currently in ${
-          membership.team.stage === CompetitionStage.ROUND_3 ? "Round 3" : "Round 2"
+          membership.team.stage === CompetitionStage.ROUND_3 ? "Final round" : "Round 2"
         }. This submission round is no longer active.`,
       );
     }
@@ -1950,16 +1951,14 @@ export async function createTeamSubmission(
       },
     });
 
-    if (payload.round === SubmissionRound.ROUND_2) {
-      archivedRound2Files.push(
-        ...existingSubmissions
-          .filter((existingSubmission) => Boolean(existingSubmission.resourceStorageKey))
-          .map((existingSubmission) => ({
-            id: existingSubmission.id,
-            storageKey: existingSubmission.resourceStorageKey!,
-          })),
-      );
-    }
+    archivedSubmissionFiles.push(
+      ...existingSubmissions
+        .filter((existingSubmission) => Boolean(existingSubmission.resourceStorageKey))
+        .map((existingSubmission) => ({
+          id: existingSubmission.id,
+          storageKey: existingSubmission.resourceStorageKey!,
+        })),
+    );
 
     return ok(
       {
@@ -1972,9 +1971,9 @@ export async function createTeamSubmission(
     );
   });
 
-  if (result.ok && archivedRound2Files.length > 0) {
+  if (result.ok && archivedSubmissionFiles.length > 0) {
     await Promise.all(
-      archivedRound2Files.map(async ({ id, storageKey }) => {
+      archivedSubmissionFiles.map(async ({ id, storageKey }) => {
         try {
           await deleteTeamSubmissionFile(storageKey);
           await prisma.teamSubmission.update({
@@ -1982,7 +1981,7 @@ export async function createTeamSubmission(
             data: { resourceStorageKey: null },
           });
         } catch (error) {
-          console.warn("[team-submission] Could not archive stale Round 2 report file.", {
+          console.warn("[team-submission] Could not archive stale team report file.", {
             submissionId: id,
             storageKey,
             error: error instanceof Error ? error.message : "Unknown error",

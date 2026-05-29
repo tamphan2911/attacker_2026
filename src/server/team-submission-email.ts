@@ -11,10 +11,11 @@ function escapeHtml(value: string) {
     .replaceAll("'", "&#39;");
 }
 
-export async function sendRound2SubmissionUploadConfirmation({
+export async function sendTeamSubmissionUploadConfirmation({
   teamLeadEmail,
   teamLeadName,
   teamName,
+  roundLabel,
   version,
   fileName,
   fileBuffer,
@@ -23,17 +24,18 @@ export async function sendRound2SubmissionUploadConfirmation({
   teamLeadEmail: string;
   teamLeadName: string;
   teamName: string;
+  roundLabel: string;
   version: number;
   fileName: string;
   fileBuffer: Buffer;
   mimeType?: string;
 }) {
   const safeName = teamLeadName.trim() || "team leader";
-  const subject = `Attacker 2026 - Round 2 report uploaded`;
+  const subject = `Attacker 2026 - ${roundLabel} report uploaded`;
   const text = [
     `Hi ${safeName},`,
     "",
-    `Your Round 2 report for ${teamName} was uploaded successfully.`,
+    `Your ${roundLabel} report for ${teamName} was uploaded successfully.`,
     `Version: ${version}`,
     `File: ${fileName}`,
     "",
@@ -52,12 +54,12 @@ export async function sendRound2SubmissionUploadConfirmation({
             <tr>
               <td style="padding:26px 30px;background:linear-gradient(135deg,#0b3158 0%,#1772d0 100%);color:#ffffff;">
                 <div style="display:inline-block;padding:7px 12px;border-radius:999px;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.12);font-size:11px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;">Attacker 2026</div>
-                <h1 style="margin:18px 0 0;font-size:28px;line-height:1.2;font-weight:700;">Round 2 report uploaded</h1>
+                <h1 style="margin:18px 0 0;font-size:28px;line-height:1.2;font-weight:700;">${escapeHtml(roundLabel)} report uploaded</h1>
               </td>
             </tr>
             <tr>
               <td style="padding:28px 30px 10px;">
-                <p style="margin:0;font-size:16px;line-height:1.8;color:#334155;">Hi ${escapeHtml(safeName)}, your Round 2 report for <strong>${escapeHtml(teamName)}</strong> was uploaded successfully.</p>
+                <p style="margin:0;font-size:16px;line-height:1.8;color:#334155;">Hi ${escapeHtml(safeName)}, your ${escapeHtml(roundLabel)} report for <strong>${escapeHtml(teamName)}</strong> was uploaded successfully.</p>
               </td>
             </tr>
             <tr>
@@ -99,5 +101,14 @@ export async function sendRound2SubmissionUploadConfirmation({
         contentType: mimeType || "application/octet-stream",
       },
     ],
+  });
+}
+
+export async function sendRound2SubmissionUploadConfirmation(
+  payload: Omit<Parameters<typeof sendTeamSubmissionUploadConfirmation>[0], "roundLabel">,
+) {
+  return sendTeamSubmissionUploadConfirmation({
+    ...payload,
+    roundLabel: "Round 2",
   });
 }

@@ -149,7 +149,7 @@ const adminNavGroups: Array<{
         children: [
           { href: "/admin/submissions", label: { en: "Round 2 submissions", vi: "Bài nộp Vòng 2" } },
           { href: "/admin/submissions/scores", label: { en: "Round 2 scores", vi: "Điểm Vòng 2" } },
-          { href: "/admin/submissions/round-3", label: { en: "Round 3 submissions", vi: "Bài nộp Vòng 3" } },
+          { href: "/admin/submissions/round-3", label: { en: "Final/Emerging submissions", vi: "Bài nộp chung kết/Đội ươm mầm" } },
         ],
       },
       {

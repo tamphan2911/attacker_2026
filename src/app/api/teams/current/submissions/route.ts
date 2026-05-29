@@ -6,8 +6,9 @@ import { getMaxSubmissionFileBytes, getSubmissionValidationError } from "@/lib/s
 import { getCurrentDbUser } from "@/server/auth-helpers";
 import { unauthorizedResponse, serviceResultToResponse } from "@/server/route-utils";
 import { buildTeamSubmissionStorageKey, deleteTeamSubmissionFile, storeTeamSubmissionFile } from "@/server/team-submission-storage";
-import { sendRound2SubmissionUploadConfirmation } from "@/server/team-submission-email";
+import { sendTeamSubmissionUploadConfirmation } from "@/server/team-submission-email";
 import { createTeamSubmission } from "@/server/team-service";
+import { getTeamRound2AdvancementBracket } from "@/server/round2-finalists";
 
 export const runtime = "nodejs";
 
@@ -97,11 +98,21 @@ export async function POST(request: Request) {
 
   if (!result.ok) {
     await deleteTeamSubmissionFile(storageKey).catch(() => {});
-  } else if (round === SubmissionRound.ROUND_2) {
-    await sendRound2SubmissionUploadConfirmation({
+  } else {
+    const round3Bracket =
+      round === SubmissionRound.ROUND_3
+        ? await getTeamRound2AdvancementBracket(result.data.teamId).catch(() => null)
+        : null;
+    await sendTeamSubmissionUploadConfirmation({
       teamLeadEmail: user.email,
       teamLeadName: user.name,
       teamName: result.data.teamName,
+      roundLabel:
+        round === SubmissionRound.ROUND_2
+          ? "Round 2"
+          : round3Bracket === "emerging"
+            ? "Emerging round"
+            : "Final round",
       version: result.data.version,
       fileName: resourceFile.name,
       fileBuffer,

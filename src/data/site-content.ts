@@ -525,7 +525,7 @@ const homepageTestimonialsSeed: TestimonialItem[] = [
     name: "Phạm Nguyễn Khánh Huy",
     competitionRole: {
       en: "Attacker 2025 Emerging Team · Product lead",
-      vi: "Đội tiềm năng Attacker 2025 · Trưởng nhóm sản phẩm",
+      vi: "Đội ươm mầm Attacker 2025 · Trưởng nhóm sản phẩm",
     },
     university: "Đại học Kinh tế TP. Hồ Chí Minh",
     avatarImageSrc: "/testimonials/pham-nguyen-khanh-huy.svg",
@@ -778,7 +778,7 @@ export const defaultPageContent: SitePageContent = {
         },
         highlights: [
           { en: "30M champion prize", vi: "30 triệu cho quán quân" },
-          { en: "Top 10 Emerging Teams", vi: "Top 10 đội tiềm năng" },
+          { en: "Top 20 Emerging round qualifiers", vi: "Top 20 đội vào Vòng Đội ươm mầm" },
           { en: "Gifts and scholarships", vi: "Quà tặng và học bổng" },
         ],
         primaryCta: {
@@ -799,8 +799,8 @@ export const defaultPageContent: SitePageContent = {
             },
           },
           {
-            label: { en: "Emerging Teams", vi: "Đội tiềm năng" },
-            value: { en: "Next 10 teams", vi: "10 đội tiếp theo" },
+            label: { en: "Emerging Teams", vi: "Đội ươm mầm" },
+            value: { en: "Next 20 teams", vi: "20 đội tiếp theo" },
             note: {
               en: "Recognized after Round 2 with certificates and partner-side opportunities.",
               vi: "Được ghi nhận sau Vòng 2 cùng giấy chứng nhận và các cơ hội từ đối tác.",
@@ -902,8 +902,8 @@ export const defaultPageContent: SitePageContent = {
         value: "05",
         label: { en: "finalist teams", vi: "đội chung kết" },
         note: {
-          en: "Round 2 also recognizes the next 10 teams as Emerging Teams",
-          vi: "Vòng 2 đồng thời ghi nhận 10 đội tiếp theo là Đội tiềm năng",
+          en: "Round 2 also qualifies the next 20 teams for the Emerging round",
+          vi: "Vòng 2 đồng thời ghi nhận 20 đội tiếp theo là Đội ươm mầm",
         },
       },
     ],
@@ -958,7 +958,7 @@ export const defaultPageContent: SitePageContent = {
     ],
     emergingReward: {
       eyebrow: { en: "Side recognition", vi: "Danh hiệu bổ sung" },
-      title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
+      title: { en: "Emerging Teams", vi: "Đội ươm mầm" },
       amount: { en: "Top 10 teams", vi: "Top 10 đội" },
       note: {
         en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities. Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.",
@@ -1123,13 +1123,13 @@ export const defaultPageContent: SitePageContent = {
           vi: "giai đoạn nộp báo cáo đội được giám khảo chấm điểm",
         },
         description: {
-          en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 10 teams are recognized as Emerging Teams.",
-          vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 10 đội tiếp theo được ghi nhận là Đội tiềm năng.",
+          en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 20 teams qualify for the Emerging round.",
+          vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 20 đội tiếp theo được ghi nhận là Đội ươm mầm.",
         },
         deliverables: [
           { en: "Project report submission", vi: "Báo cáo dự án" },
           { en: "Judge scoring and feedback", vi: "Điểm và nhận xét từ giám khảo" },
-          { en: "Top 5 finalists + next 10 Emerging Teams", vi: "Top 5 chung kết + 10 Đội tiềm năng tiếp theo" },
+          { en: "Top 5 finalists + next 20 Emerging round qualifiers", vi: "Top 5 chung kết + 20 đội vào Vòng Đội ươm mầm" },
         ],
       },
       {
@@ -1202,7 +1202,7 @@ export const defaultPageContent: SitePageContent = {
     ],
     emergingReward: {
       eyebrow: { en: "Side recognition", vi: "Danh hiệu bổ sung" },
-      title: { en: "Emerging Teams", vi: "Đội tiềm năng" },
+      title: { en: "Emerging Teams", vi: "Đội ươm mầm" },
       amount: { en: "Top 10 teams", vi: "Top 10 đội" },
       note: {
         en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities. Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.",
@@ -1405,13 +1405,13 @@ export const defaultPageContent: SitePageContent = {
           vi: "giai đoạn nộp báo cáo đội được giám khảo chấm điểm",
         },
         description: {
-          en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 10 teams are recognized as Emerging Teams.",
-          vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 10 đội tiếp theo được ghi nhận là Đội tiềm năng.",
+          en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 20 teams qualify for the Emerging round.",
+          vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 20 đội tiếp theo được ghi nhận là Đội ươm mầm.",
         },
         deliverables: [
           { en: "Project report submission", vi: "Báo cáo dự án" },
           { en: "Judge scoring and feedback", vi: "Điểm và nhận xét từ giám khảo" },
-          { en: "Top 5 finalists + next 10 Emerging Teams", vi: "Top 5 chung kết + 10 Đội tiềm năng tiếp theo" },
+          { en: "Top 5 finalists + next 20 Emerging round qualifiers", vi: "Top 5 chung kết + 20 đội vào Vòng Đội ươm mầm" },
         ],
         focus: {
           en: "Round 2 is a judged report stage with versioned file submission.",
@@ -1427,8 +1427,8 @@ export const defaultPageContent: SitePageContent = {
             vi: "Đội trưởng nộp tệp báo cáo chính thức, còn các phiên bản trước vẫn được lưu để theo dõi.",
           },
           {
-            en: "Judge scoring selects the top 5 teams for the final and recognizes the next 10 as Emerging Teams.",
-            vi: "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và ghi nhận 10 đội tiếp theo là Đội tiềm năng.",
+            en: "Judge scoring selects the top 5 teams for the final and qualifies the next 20 teams for the Emerging round.",
+            vi: "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và ghi nhận 20 đội tiếp theo là Đội ươm mầm.",
           },
         ],
         roundNotes: [
@@ -2148,11 +2148,11 @@ export const defaultPageContent: SitePageContent = {
       },
     },
     emergingHeader: {
-      eyebrow: { en: "Recognition", vi: "Ghi nhận nổi bật" },
-      title: { en: "10 Emerging Teams", vi: "10 Đội tiềm năng" },
+      eyebrow: { en: "Emerging round", vi: "Vòng Đội ươm mầm" },
+      title: { en: "20 Emerging round qualifiers", vi: "20 đội vào Vòng Đội ươm mầm" },
       description: {
-        en: "The ten teams below are recognized as Emerging Teams only. This section is also a plain listing without ranking meaning.",
-        vi: "Mười đội dưới đây được ghi nhận là Đội tiềm năng. Phần này cũng chỉ là danh sách liệt kê, không mang ý nghĩa xếp hạng.",
+        en: "The twenty teams below qualify for the Emerging round. Final Emerging Team recognition is awarded later to the best 10 teams after Emerging round scoring.",
+        vi: "Hai mươi đội dưới đây vào Vòng Đội ươm mầm. Danh hiệu Đội ươm mầm chính thức sẽ được trao sau cho 10 đội tốt nhất theo điểm Vòng Đội ươm mầm.",
       },
     },
     finalistSlotLabel: { en: "Finalist slot", vi: "Vị trí chung kết" },
@@ -2175,11 +2175,11 @@ export const defaultPageContent: SitePageContent = {
     teamColumnLabel: { en: "Team", vi: "Đội" },
     leaderColumnLabel: { en: "Leader", vi: "Đội trưởng" },
     keywordColumnLabel: { en: "Keyword", vi: "Từ khóa" },
-    recognitionColumnLabel: { en: "Recognition", vi: "Ghi nhận" },
-    emergingTeamSlotLabel: { en: "Emerging Team slot", vi: "Vị trí Đội tiềm năng" },
+    recognitionColumnLabel: { en: "Bracket", vi: "Nhánh thi" },
+    emergingTeamSlotLabel: { en: "Emerging round qualifier slot", vi: "Vị trí vào Vòng Đội ươm mầm" },
     awaitingOfficialUpdate: { en: "Awaiting official update", vi: "Chờ cập nhật chính thức" },
     reservedLabel: { en: "Reserved", vi: "Giữ chỗ" },
-    emergingTeamLabel: { en: "Emerging Team", vi: "Đội tiềm năng" },
+    emergingTeamLabel: { en: "Emerging round qualifier", vi: "Vào Vòng Đội ươm mầm" },
   },
   finalResults: {
     champion: {
@@ -2363,8 +2363,8 @@ export const homeMetrics: MetricItem[] = [
     value: "05",
     label: { en: "finalist teams", vi: "đội chung kết" },
     note: {
-      en: "Round 2 also recognizes the next 10 teams as Emerging Teams",
-      vi: "Vòng 2 đồng thời ghi nhận 10 đội tiếp theo là Đội tiềm năng",
+      en: "Round 2 also qualifies the next 20 teams for the Emerging round",
+      vi: "Vòng 2 đồng thời ghi nhận 20 đội tiếp theo là Đội ươm mầm",
     },
   },
 ];
@@ -2492,8 +2492,8 @@ export const roundItems: RoundItem[] = [
       vi: "giai đoạn nộp báo cáo đội được giám khảo chấm điểm",
     },
     description: {
-      en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 10 teams are recognized as Emerging Teams.",
-      vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 10 đội tiếp theo được ghi nhận là Đội tiềm năng.",
+      en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 20 teams qualify for the Emerging round.",
+      vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 20 đội tiếp theo được ghi nhận là Đội ươm mầm.",
     },
     deliverables: [
       {
@@ -2505,8 +2505,8 @@ export const roundItems: RoundItem[] = [
         vi: "Điểm và nhận xét từ giám khảo",
       },
       {
-        en: "Top 5 finalists + next 10 Emerging Teams",
-        vi: "Top 5 chung kết + 10 Đội tiềm năng tiếp theo",
+        en: "Top 5 finalists + next 20 Emerging round qualifiers",
+        vi: "Top 5 chung kết + 20 đội vào Vòng Đội ươm mầm",
       },
     ],
   },
@@ -2568,11 +2568,11 @@ export const rewardItems: RewardItem[] = [
     },
   },
   {
-    title: { en: "Emerging teams", vi: "Đội tiềm năng" },
+    title: { en: "Emerging teams", vi: "Đội ươm mầm" },
     amount: { en: "Top 10 teams", vi: "Top 10 đội" },
     note: {
-      en: "Teams ranked immediately after the top 5 in Round 2 receive Emerging Team recognition.",
-      vi: "Các đội xếp ngay sau top 5 của Vòng 2 sẽ nhận danh hiệu Đội tiềm năng.",
+      en: "Teams ranked immediately after the top 5 in Round 2 qualify for the Emerging round; the best 10 after Emerging round scoring receive Emerging Team recognition.",
+      vi: "Các đội xếp ngay sau top 5 của Vòng 2 sẽ nhận danh hiệu Đội ươm mầm.",
     },
   },
 ];
@@ -2979,8 +2979,8 @@ export const ruleItems: RuleItem[] = [
   {
     title: { en: "Stage progression", vi: "Cách đi tiếp qua từng vòng" },
     description: {
-      en: "Round 1 ranks teams by the average score of their members and sends the top 50 teams to Round 2. Round 2 judge scoring sends the top 5 teams to the final and recognizes the next 10 teams as Emerging Teams.",
-      vi: "Vòng 1 xếp hạng đội theo điểm trung bình của các thành viên và đưa top 50 đội vào Vòng 2. Điểm chấm của giám khảo ở Vòng 2 sẽ đưa top 5 đội vào chung kết và ghi nhận 10 đội tiếp theo là Đội tiềm năng.",
+      en: "Round 1 ranks teams by the average score of their members and sends the top 50 teams to Round 2. Round 2 judge scoring sends the top 5 teams to the final and qualifies the next 20 teams for the Emerging round.",
+      vi: "Vòng 1 xếp hạng đội theo điểm trung bình của các thành viên và đưa top 50 đội vào Vòng 2. Điểm chấm của giám khảo ở Vòng 2 sẽ đưa top 5 đội vào chung kết và ghi nhận 20 đội tiếp theo là Đội ươm mầm.",
     },
   },
 ];
@@ -3131,16 +3131,16 @@ export const timelineItems: TimelineItem[] = [
     endDate: "2026-06-20",
     title: { en: "Round 02 results", vi: "Kết quả Vòng 02" },
     description: {
-      en: "The top 5 teams advance to the final round and the next 10 teams receive Emerging Team recognition.",
-      vi: "Top 5 đội vào chung kết và 10 đội tiếp theo nhận ghi nhận Đội tiềm năng.",
+      en: "The top 5 teams advance to the final round and the next 20 teams qualify for the Emerging round.",
+      vi: "Top 5 đội vào chung kết và 20 đội tiếp theo vào Vòng Đội ươm mầm.",
     },
     location: {
       en: "Newsroom, email, and official social channels",
       vi: "Newsroom, email và các kênh mạng xã hội chính thức",
     },
     method: {
-      en: "Judge result release with finalist shortlist and Emerging Team recognition",
-      vi: "Công bố kết quả giám khảo với danh sách chung kết và ghi nhận Đội tiềm năng",
+      en: "Judge result release with finalist shortlist and Emerging round qualifier list",
+      vi: "Công bố kết quả giám khảo với danh sách chung kết và danh sách vào Vòng Đội ươm mầm",
     },
     supportLinks: [
       { href: "/news", label: { en: "Read result update", vi: "Đọc cập nhật kết quả" } },
@@ -3152,21 +3152,21 @@ export const timelineItems: TimelineItem[] = [
     phase: "round-3",
     startDate: round3FinalReportWindow.startDate,
     endDate: round3FinalReportWindow.endDate,
-    title: { en: "Final report deadline", vi: "Hạn nộp báo cáo chung kết" },
+    title: { en: "Final and Emerging round report deadline", vi: "Hạn nộp báo cáo chung kết và Vòng Đội ươm mầm" },
     description: {
-      en: "The Top 5 finalist teams submit the updated final report and presentation deck before the live defense day.",
-      vi: "Top 5 đội chung kết nộp báo cáo hoàn chỉnh và bộ slide thuyết trình trước ngày bảo vệ trực tiếp.",
+      en: "The Top 5 finalist teams submit final reports, while the 20 Emerging round qualifiers submit their updated Emerging round reports for rescoring.",
+      vi: "Top 5 đội chung kết nộp báo cáo chung kết, còn 20 đội vào Vòng Đội ươm mầm nộp báo cáo cập nhật để được chấm lại.",
     },
     location: {
       en: "Team workspace submission center",
       vi: "Trung tâm nộp bài trong Đội thi",
     },
     method: {
-      en: "Team leader uploads the final report package before the submission deadline",
-      vi: "Đội trưởng nộp gói báo cáo cuối cùng trước hạn chót",
+      en: "Team leader uploads the final or Emerging round report before the submission deadline",
+      vi: "Đội trưởng nộp báo cáo chung kết hoặc báo cáo Vòng Đội ươm mầm trước hạn chót",
     },
     supportLinks: [
-      { href: "/dashboard", label: { en: "Submit final report", vi: "Nộp báo cáo chung kết" } },
+      { href: "/dashboard", label: { en: "Submit final/Emerging report", vi: "Nộp báo cáo chung kết/Đội ươm mầm" } },
       { href: "/competition/judges", label: { en: "See judging panel", vi: "Xem hội đồng giám khảo" } },
     ],
   },
@@ -3224,8 +3224,8 @@ export const faqItems: FAQItem[] = [
       vi: "Sau khi Vòng 2 được giám khảo chấm điểm thì sao?",
     },
     answer: {
-      en: "The top 5 teams move to the final round. The next 10 teams are recognized as Emerging Teams.",
-      vi: "Top 5 đội sẽ vào vòng chung kết. 10 đội tiếp theo được ghi nhận là Đội tiềm năng.",
+      en: "The top 5 teams move to the final round. The next 20 teams qualify for the Emerging round.",
+      vi: "Top 5 đội sẽ vào vòng chung kết. 20 đội tiếp theo được ghi nhận là Đội ươm mầm.",
     },
   },
   {

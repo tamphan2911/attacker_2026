@@ -104,6 +104,7 @@ interface ActiveRound1AttemptSummary {
 interface Round2FinalistResultsPayload {
   released: boolean;
   finalists: Array<{ id: string }>;
+  emergingTeams: Array<{ id: string }>;
 }
 
 function createTeamFormState(team?: TeamProfile): TeamFormState {
@@ -310,6 +311,7 @@ export function DashboardPage() {
   const [round2FinalistResults, setRound2FinalistResults] = useState<Round2FinalistResultsPayload>({
     released: false,
     finalists: [],
+    emergingTeams: [],
   });
   const [submissionForms, setSubmissionForms] = useState<Record<SubmissionRound, SubmissionFormState>>({
     "round-2": createSubmissionFormState(),
@@ -339,11 +341,14 @@ export function DashboardPage() {
   const shouldAutoCollapseTeamLock = currentTeam?.round1LockStatus === "locked";
   const teamReachedRound2 = currentTeam ? hasTeamReachedRound(currentTeam, "round-2") : false;
   const round2ResultsReleased = round2FinalistResults.released;
-  const currentTeamIsRound2Finalist = Boolean(
-    currentTeamId &&
-      round2ResultsReleased &&
-      round2FinalistResults.finalists.some((team) => team.id === currentTeamId),
-  );
+  const currentTeamRound2Advancement = !currentTeamId || !round2ResultsReleased
+    ? null
+    : round2FinalistResults.finalists.some((team) => team.id === currentTeamId)
+      ? "finalist"
+      : round2FinalistResults.emergingTeams.some((team) => team.id === currentTeamId)
+        ? "emerging"
+        : null;
+  const currentTeamCanSubmitRound3Report = currentTeamRound2Advancement !== null;
 
   useEffect(() => {
     setTeamForm(createTeamFormState(currentTeam));
@@ -378,9 +383,9 @@ export function DashboardPage() {
   }, [currentTeamId, teamReachedRound2]);
 
   useEffect(() => {
-    setIsRound2SubmissionCollapsed(currentTeamIsRound2Finalist);
+    setIsRound2SubmissionCollapsed(currentTeamCanSubmitRound3Report);
     setIsRound3SubmissionCollapsed(false);
-  }, [currentTeamId, currentTeamIsRound2Finalist]);
+  }, [currentTeamId, currentTeamCanSubmitRound3Report]);
 
   useEffect(() => {
     let active = true;
@@ -402,10 +407,11 @@ export function DashboardPage() {
         setRound2FinalistResults({
           released: Boolean(payload.released),
           finalists: Array.isArray(payload.finalists) ? payload.finalists : [],
+          emergingTeams: Array.isArray(payload.emergingTeams) ? payload.emergingTeams : [],
         });
       } catch {
         if (active) {
-          setRound2FinalistResults({ released: false, finalists: [] });
+          setRound2FinalistResults({ released: false, finalists: [], emergingTeams: [] });
         }
       }
     })();
@@ -759,9 +765,7 @@ export function DashboardPage() {
       )
     : undefined;
   const showRound2Submission = teamReachedRound2;
-  const showRound3Submission = Boolean(
-    currentTeam && (hasTeamReachedRound(currentTeam, "round-3") || currentTeamIsRound2Finalist),
-  );
+  const showRound3Submission = Boolean(currentTeam && currentTeamCanSubmitRound3Report);
 
   const teamSubmissions = currentTeam
     ? submissions.filter((submission) => submission.teamId === currentTeam.id)
@@ -929,7 +933,7 @@ export function DashboardPage() {
             ]
           : []),
         ...(hasTeamReachedRound(currentTeam, "round-3")
-        || currentTeamIsRound2Finalist
+        || currentTeamCanSubmitRound3Report
           ? [
               {
                 round: "round-3" as const,
@@ -1045,7 +1049,7 @@ export function DashboardPage() {
         title: form.title,
         summary: form.summary,
         resourceFile: form.resourceFile,
-        allowRound3FinalistSubmission: round === "round-3" && currentTeamIsRound2Finalist,
+        allowRound3FinalistSubmission: round === "round-3" && currentTeamCanSubmitRound3Report,
         onUploadStart: () => setRoundUploadState({ isUploading: true, progress: 4 }),
         onUploadProgress: (progress) =>
           setRoundUploadState({
@@ -2697,11 +2701,12 @@ export function DashboardPage() {
                   round="round-3"
                   timelineItems={timelineItems}
                   isLeader={Boolean(isLeader)}
-                  isCurrentRound={isTeamCurrentlyCompetingRound(currentTeam, "round-3") || currentTeamIsRound2Finalist}
+                  isCurrentRound={isTeamCurrentlyCompetingRound(currentTeam, "round-3") || currentTeamCanSubmitRound3Report}
                   hasPassedRound={hasTeamPassedRound(currentTeam, "round-3")}
                   isRoundFinished={round3Finished}
                   isSubmissionClosed={round3SubmissionClosed || round3Finished}
                   submissionWindowLabel={round3SubmissionWindowLabel}
+                  round3Bracket={currentTeamRound2Advancement}
                   collapsed={isRound3SubmissionCollapsed}
                   onToggleCollapsed={() => setIsRound3SubmissionCollapsed((current) => !current)}
                   submissions={teamSubmissions.filter((submission) => submission.round === "round-3")}
@@ -3311,6 +3316,7 @@ function SubmissionRoundCard({
   isRoundFinished,
   isSubmissionClosed,
   submissionWindowLabel,
+  round3Bracket,
   collapsed,
   onToggleCollapsed,
   submissions,
@@ -3329,6 +3335,7 @@ function SubmissionRoundCard({
   isRoundFinished: boolean;
   isSubmissionClosed?: boolean;
   submissionWindowLabel?: string;
+  round3Bracket?: "finalist" | "emerging" | null;
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
   submissions: TeamSubmission[];
@@ -3344,11 +3351,25 @@ function SubmissionRoundCard({
   const historicalSubmissions = sortedSubmissions.slice(1);
   const uploadProgress = Math.max(4, Math.min(100, uploadState.progress));
   const isUploading = uploadState.isUploading;
+  const activeRoundLabel =
+    round === "round-3" && round3Bracket === "emerging"
+      ? locale === "en"
+        ? "Emerging round"
+        : "Vòng Đội ươm mầm"
+      : round === "round-3"
+        ? locale === "en"
+          ? "Final round"
+          : "Chung kết"
+        : pickRoundLabel(locale, round);
   const roundLabel =
     round === "round-2"
       ? locale === "en"
         ? "Round 2 report submission"
         : "Nộp báo cáo Vòng 2"
+      : round3Bracket === "emerging"
+        ? locale === "en"
+          ? "Emerging round report submission"
+          : "Nộp báo cáo Vòng Đội ươm mầm"
       : locale === "en"
         ? "Final report submission"
         : "Nộp báo cáo chung kết";
@@ -3360,12 +3381,16 @@ function SubmissionRoundCard({
   const submissionClosed = isSubmissionClosed ?? isRoundFinished;
   const canSubmit = isLeader && isCurrentRound && !submissionClosed;
   const statusPill = submissionClosed
-    ? locale === "en"
+      ? locale === "en"
       ? round === "round-3"
-        ? "Final report deadline closed"
+        ? round3Bracket === "emerging"
+          ? "Emerging round report deadline closed"
+          : "Final report deadline closed"
         : `${pickRoundLabel(locale, round)} finished`
       : round === "round-3"
-        ? "Đã đóng hạn báo cáo chung kết"
+        ? round3Bracket === "emerging"
+          ? "Đã đóng hạn báo cáo Vòng Đội ươm mầm"
+          : "Đã đóng hạn báo cáo chung kết"
         : `${pickRoundLabel(locale, round)} da ket thuc`
     : hasPassedRound
       ? locale === "en"
@@ -3373,8 +3398,8 @@ function SubmissionRoundCard({
         : `Da qua ${pickRoundLabel(locale, round)}`
       : isCurrentRound
         ? locale === "en"
-          ? `Currently competing in ${pickRoundLabel(locale, round)}`
-          : `Đang thi đấu ${pickRoundLabel(locale, round)}`
+          ? `Currently competing in ${activeRoundLabel}`
+          : `Đang thi đấu ${activeRoundLabel}`
         : latestSubmission
           ? locale === "en"
             ? `Latest v${latestSubmission.version} valid`
@@ -3385,10 +3410,14 @@ function SubmissionRoundCard({
   const lockMessage = submissionClosed
     ? locale === "en"
       ? round === "round-3"
-        ? "The final report deadline has passed. New finalist report versions are now closed."
+        ? round3Bracket === "emerging"
+          ? "The Emerging round report deadline has passed. New Emerging round report versions are now closed."
+          : "The final report deadline has passed. New finalist report versions are now closed."
         : "The Round 2 report submission section is closed because the official Round 2 submission deadline has passed. Your latest valid version remains visible for review, and no new report versions can be uploaded."
       : round === "round-3"
-        ? "Hạn nộp báo cáo chung kết đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
+        ? round3Bracket === "emerging"
+          ? "Hạn nộp báo cáo Vòng Đội ươm mầm đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
+          : "Hạn nộp báo cáo chung kết đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
         : "Khu vực nộp báo cáo Vòng 2 đã đóng vì hạn nộp chính thức của Vòng 2 đã kết thúc. Phiên bản hợp lệ mới nhất của đội vẫn được hiển thị để theo dõi, và đội không thể tải thêm phiên bản báo cáo mới."
     : hasPassedRound
       ? locale === "en"
@@ -3405,7 +3434,7 @@ function SubmissionRoundCard({
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <StatusPill tone={submissionClosed ? "warning" : "success"}>
-              {pickRoundLabel(locale, round)}
+              {activeRoundLabel}
             </StatusPill>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
               {locale === "en"
@@ -3430,11 +3459,11 @@ function SubmissionRoundCard({
               label={
                 collapsed
                   ? locale === "en"
-                    ? `Expand ${pickRoundLabel(locale, round)} submission`
-                    : `Mở khu vực nộp ${pickRoundLabel(locale, round)}`
+                    ? `Expand ${activeRoundLabel} submission`
+                    : `Mở khu vực nộp ${activeRoundLabel}`
                   : locale === "en"
-                    ? `Collapse ${pickRoundLabel(locale, round)} submission`
-                    : `Thu gọn khu vực nộp ${pickRoundLabel(locale, round)}`
+                    ? `Collapse ${activeRoundLabel} submission`
+                    : `Thu gọn khu vực nộp ${activeRoundLabel}`
               }
               onToggle={onToggleCollapsed}
             />
@@ -3549,25 +3578,35 @@ function SubmissionRoundCard({
 
         <div
           className={
-            submissionClosed && round === "round-2"
+            submissionClosed
               ? "rounded-[1.5rem] border border-amber-300/55 bg-[linear-gradient(135deg,rgba(251,191,36,0.18),rgba(245,158,11,0.1))] px-5 py-5 text-amber-950 shadow-[0_18px_42px_rgba(245,158,11,0.12)] dark:border-amber-200/25 dark:bg-amber-300/12 dark:text-amber-100"
               : "rounded-[1.5rem] border theme-border theme-panel px-5 py-5"
           }
         >
-          {submissionClosed && round === "round-2" ? (
+          {submissionClosed ? (
             <div className="space-y-3 text-sm leading-7">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-1 h-5 w-5 shrink-0" />
                 <div>
                   <p className="font-semibold">
-                    {locale === "en"
-                      ? "Round 2 submission is finished."
-                      : "Đã kết thúc nộp báo cáo Vòng 2."}
+                    {round === "round-2"
+                      ? locale === "en"
+                        ? "Round 2 submission is finished."
+                        : "Đã kết thúc nộp báo cáo Vòng 2."
+                      : round3Bracket === "emerging"
+                        ? locale === "en"
+                          ? "Emerging round report submission is finished."
+                          : "Đã kết thúc nộp báo cáo Vòng Đội ươm mầm."
+                        : locale === "en"
+                          ? "Final report submission is finished."
+                          : "Đã kết thúc nộp báo cáo chung kết."}
                   </p>
                   <p className="mt-2">
-                    {locale === "en"
-                      ? "The function to submit a new Round 2 report version is now locked. Your latest valid version and version history remain visible on this page."
-                      : "Chức năng nộp phiên bản mới cho báo cáo Vòng 2 hiện đã bị khóa. Phiên bản hợp lệ mới nhất và lịch sử phiên bản vẫn được hiển thị trên trang này."}
+                    {round === "round-2"
+                      ? locale === "en"
+                        ? "The function to submit a new Round 2 report version is now locked. Your latest valid version and version history remain visible on this page."
+                        : "Chức năng nộp phiên bản mới cho báo cáo Vòng 2 hiện đã bị khóa. Phiên bản hợp lệ mới nhất và lịch sử phiên bản vẫn được hiển thị trên trang này."
+                      : lockMessage}
                   </p>
                 </div>
               </div>

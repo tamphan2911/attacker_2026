@@ -159,8 +159,8 @@ const roundRuleMeta = {
         vi: "Đội trưởng nộp tệp báo cáo chính thức, còn các phiên bản trước vẫn được lưu để theo dõi.",
       },
       {
-        en: "Judge scoring selects the top 5 teams for the final and recognizes the next 10 as Emerging Teams.",
-        vi: "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và ghi nhận 10 đội tiếp theo là Đội tiềm năng.",
+        en: "Judge scoring selects the top 5 teams for the final and qualifies the next 20 teams for the Emerging round.",
+        vi: "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và đưa 20 đội tiếp theo vào Vòng Đội ươm mầm.",
       },
     ],
     roundNotes: [

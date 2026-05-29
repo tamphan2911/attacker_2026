@@ -30,7 +30,7 @@ const teamFinalOutcomeOptions: Array<{ value: TeamFinalOutcome; label: { en: str
   { value: "runner-up", label: { en: "Runner-up", vi: "Á quân" } },
   { value: "third-place", label: { en: "Third place", vi: "Quý quân" } },
   { value: "fourth-place", label: { en: "4th place", vi: "Hạng 4" } },
-  { value: "emerging-team", label: { en: "Emerging Team", vi: "Đội Tiềm năng" } },
+  { value: "emerging-team", label: { en: "Emerging Team", vi: "Đội ươm mầm" } },
 ];
 
 function NotFoundState({
@@ -585,7 +585,7 @@ export function AdminTeamEditor({ teamId }: { teamId: string }) {
               >
                 <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
                 <option value="round-2">{locale === "en" ? "Round 2" : "Vòng 2"}</option>
-                <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
+                <option value="round-3">{locale === "en" ? "Final round" : "Chung kết"}</option>
               </select>
             </label>
             <label className="space-y-2">

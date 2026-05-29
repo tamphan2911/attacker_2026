@@ -400,7 +400,9 @@ export function serializeRound1Submission(
       };
     }>;
   },
+  options?: { revealEssayAndTotalScores?: boolean },
 ): AppRound1Submission {
+  const revealEssayAndTotalScores = options?.revealEssayAndTotalScores ?? true;
   return {
     id: submission.id,
     bankId: submission.bankId,
@@ -411,8 +413,8 @@ export function serializeRound1Submission(
     wrongCount: submission.wrongCount,
     score: submission.score,
     objectiveScore: submission.objectiveScore,
-    essayScore: submission.essayScore,
-    totalScore: submission.totalScore,
+    essayScore: revealEssayAndTotalScores ? submission.essayScore : null,
+    totalScore: revealEssayAndTotalScores ? submission.totalScore : null,
     durationMinutes: submission.durationMinutes,
     judgeReviews: submission.judgeReviews?.map((review) => ({
       judgeUserId: review.judgeUserId,

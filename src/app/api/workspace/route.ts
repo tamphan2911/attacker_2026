@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import { isRound1ResultAnnouncementReleased } from "@/lib/competition";
 import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
 import {
   serializeInvitation,
@@ -15,6 +16,7 @@ import {
 import { ensureRound1SubmissionArchives } from "@/server/round1-submission-archive";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
 import { getRound1ExamState } from "@/server/team-service";
+import { readTimelineItems } from "@/server/timeline-items";
 
 function addIfPresent(target: Set<string>, value: string | null | undefined) {
   if (value) {
@@ -40,6 +42,9 @@ export async function GET() {
   });
   const currentTeamId = membership?.teamId;
   const elevated = hasElevatedRole(currentDbUser.role);
+  const timelineItems = await readTimelineItems();
+  const revealRound1EssayAndTotalScores =
+    elevated || isRound1ResultAnnouncementReleased(timelineItems, new Date());
 
   if (!elevated) {
     const [invitations, leadershipTransferRequests, teamLockRequests, round1Submissions, teamSubmissions] =
@@ -191,7 +196,11 @@ export async function GET() {
         invitations: invitations.map(serializeInvitation),
         leadershipTransferRequests: leadershipTransferRequests.map(serializeLeadershipTransferRequest),
         teamLockRequests: teamLockRequests.map(serializeRound1LockRequest),
-        round1Submissions: round1Submissions.map(serializeRound1Submission),
+        round1Submissions: round1Submissions.map((submission) =>
+          serializeRound1Submission(submission, {
+            revealEssayAndTotalScores: revealRound1EssayAndTotalScores,
+          }),
+        ),
         submissions: teamSubmissions.map(serializeTeamSubmission),
       },
       { status: 200 },
@@ -308,7 +317,11 @@ export async function GET() {
       invitations: invitations.map(serializeInvitation),
       leadershipTransferRequests: leadershipTransferRequests.map(serializeLeadershipTransferRequest),
       teamLockRequests: teamLockRequests.map(serializeRound1LockRequest),
-      round1Submissions: round1Submissions.map(serializeRound1Submission),
+      round1Submissions: round1Submissions.map((submission) =>
+        serializeRound1Submission(submission, {
+          revealEssayAndTotalScores: revealRound1EssayAndTotalScores,
+        }),
+      ),
       submissions: teamSubmissions.map(serializeTeamSubmission),
     },
     { status: 200 },

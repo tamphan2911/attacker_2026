@@ -1,8 +1,10 @@
 import { z } from "zod";
 
+import { isRound1ResultAnnouncementReleased } from "@/lib/competition";
 import { getCurrentDbUser } from "@/server/auth-helpers";
 import { unauthorizedResponse } from "@/server/route-utils";
 import { serializeRound1Submission } from "@/server/site-serializers";
+import { readTimelineItems } from "@/server/timeline-items";
 import {
   getRound1ExamState,
   saveRound1AttemptProgress,
@@ -23,6 +25,10 @@ const round1AttemptProgressSchema = z.object({
     .default({}),
 });
 
+async function shouldRevealRound1EssayAndTotalScores() {
+  return isRound1ResultAnnouncementReleased(await readTimelineItems(), new Date());
+}
+
 export async function GET() {
   const user = await getCurrentDbUser();
   if (!user) {
@@ -37,7 +43,11 @@ export async function GET() {
   return Response.json(
     {
       attempt: result.data.attempt,
-      submission: result.data.submission ? serializeRound1Submission(result.data.submission) : null,
+      submission: result.data.submission
+        ? serializeRound1Submission(result.data.submission, {
+            revealEssayAndTotalScores: await shouldRevealRound1EssayAndTotalScores(),
+          })
+        : null,
       autoSubmitted: Boolean(result.data.autoSubmitted),
     },
     { status: result.status },
@@ -58,7 +68,11 @@ export async function POST() {
   return Response.json(
     {
       attempt: result.data.attempt,
-      submission: result.data.submission ? serializeRound1Submission(result.data.submission) : null,
+      submission: result.data.submission
+        ? serializeRound1Submission(result.data.submission, {
+            revealEssayAndTotalScores: await shouldRevealRound1EssayAndTotalScores(),
+          })
+        : null,
       autoSubmitted: Boolean(result.data.autoSubmitted),
     },
     { status: result.status },
@@ -87,7 +101,11 @@ export async function PATCH(request: Request) {
   return Response.json(
     {
       attempt: result.data.attempt,
-      submission: result.data.submission ? serializeRound1Submission(result.data.submission) : null,
+      submission: result.data.submission
+        ? serializeRound1Submission(result.data.submission, {
+            revealEssayAndTotalScores: await shouldRevealRound1EssayAndTotalScores(),
+          })
+        : null,
       autoSubmitted: Boolean(result.data.autoSubmitted),
     },
     { status: result.status },

@@ -66,7 +66,7 @@ export function AdminRound3SubmissionsManager() {
           | null;
 
         if (!response.ok || !payload?.rows) {
-          throw new Error(payload?.error ?? (locale === "en" ? "Could not load Round 3 submissions." : "Không thể tải bài nộp Vòng 3."));
+          throw new Error(payload?.error ?? (locale === "en" ? "Could not load Final/Emerging submissions." : "Không thể tải bài nộp chung kết/Đội ươm mầm."));
         }
 
         if (active) {
@@ -97,7 +97,7 @@ export function AdminRound3SubmissionsManager() {
   if (loading) {
     return (
       <Surface className="px-6 py-8 text-sm theme-text-muted">
-        {locale === "en" ? "Loading Round 3 submissions..." : "Đang tải bài nộp Vòng 3..."}
+        {locale === "en" ? "Loading Final/Emerging submissions..." : "Đang tải bài nộp chung kết/Đội ươm mầm..."}
       </Surface>
     );
   }
@@ -115,12 +115,12 @@ export function AdminRound3SubmissionsManager() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl">
           <p className="theme-heading text-3xl font-semibold theme-text-strong">
-            {locale === "en" ? "Round 3 submissions" : "Bài nộp Vòng 3"}
+            {locale === "en" ? "Final/Emerging submissions" : "Bài nộp chung kết/Đội ươm mầm"}
           </p>
           <p className="mt-3 text-sm leading-7 theme-text-muted">
             {locale === "en"
-              ? "Review finalist report versions, submitted file details, team information, and direct downloads. Round 3 does not use judge assignment."
-              : "Rà soát các phiên bản báo cáo chung kết, thông tin tệp, đội nộp bài và tải trực tiếp. Vòng 3 không cần phân công giám khảo."}
+              ? "Review final and Emerging round report versions, submitted file details, team information, and direct downloads."
+              : "Rà soát các phiên bản báo cáo chung kết và Vòng Đội ươm mầm, thông tin tệp, đội nộp bài và tải trực tiếp."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -236,7 +236,7 @@ export function AdminRound3SubmissionsManager() {
               {filteredRows.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-10 text-center text-sm theme-text-muted">
-                    {locale === "en" ? "No Round 3 submissions match this view." : "Không có bài nộp Vòng 3 phù hợp."}
+                    {locale === "en" ? "No Final/Emerging submissions match this view." : "Không có bài nộp chung kết/Đội ươm mầm phù hợp."}
                   </td>
                 </tr>
               ) : null}

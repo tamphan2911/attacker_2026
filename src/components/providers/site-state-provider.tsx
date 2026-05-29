@@ -3109,10 +3109,12 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     payload.onUploadProgress?.(100);
     const result = uploadResult.payload;
     await syncWorkspace();
+    const uploadedRoundLabelEn = payload.round === "round-2" ? "Round 2" : "Final/Emerging round";
+    const uploadedRoundLabelVi = payload.round === "round-2" ? "Vòng 2" : "chung kết/Vòng Đội ươm mầm";
     pushToast(
       {
-        en: `The report uploaded successfully. Version ${result?.version ?? "new"} is now the final valid version for ${payload.round === "round-2" ? "Round 2" : "Round 3"}.`,
-        vi: `Báo cáo đã tải lên thành công. Phiên bản ${result?.version ?? "mới"} hiện là phiên bản hợp lệ cuối cùng cho ${payload.round === "round-2" ? "Vòng 2" : "Vòng 3"}.`,
+        en: `The report uploaded successfully. Version ${result?.version ?? "new"} is now the final valid version for ${uploadedRoundLabelEn}.`,
+        vi: `Báo cáo đã tải lên thành công. Phiên bản ${result?.version ?? "mới"} hiện là phiên bản hợp lệ cuối cùng cho ${uploadedRoundLabelVi}.`,
       },
       "success",
     );

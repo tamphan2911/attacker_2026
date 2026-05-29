@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+import { isRound1ResultAnnouncementReleased } from "@/lib/competition";
 import { getCurrentDbUser } from "@/server/auth-helpers";
 import { unauthorizedResponse } from "@/server/route-utils";
 import { serializeRound1Submission } from "@/server/site-serializers";
 import { completeRound1Attempt } from "@/server/team-service";
+import { readTimelineItems } from "@/server/timeline-items";
 
 const round1AttemptSubmitSchema = z.object({
   currentQuestionIndex: z.number().int().min(0).optional(),
@@ -40,7 +42,12 @@ export async function POST(request: Request) {
 
   return Response.json(
     {
-      submission: serializeRound1Submission(result.data.submission),
+      submission: serializeRound1Submission(result.data.submission, {
+        revealEssayAndTotalScores: isRound1ResultAnnouncementReleased(
+          await readTimelineItems(),
+          new Date(),
+        ),
+      }),
     },
     { status: result.status },
   );

@@ -464,7 +464,7 @@ function UsersTableSection() {
                     <option value="all">{locale === "en" ? "All statuses" : "Tất cả trạng thái"}</option>
                     <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
                     <option value="round-2">{locale === "en" ? "Round 2" : "Vòng 2"}</option>
-                    <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
+                    <option value="round-3">{locale === "en" ? "Final round" : "Chung kết"}</option>
                     <option value="finished">{locale === "en" ? "Finished" : "Hoàn thành"}</option>
                     <option value="stopped">{locale === "en" ? "Stopped" : "Dừng"}</option>
                   </select>
@@ -807,7 +807,7 @@ function TeamsTableSection() {
               <option value="all">{locale === "en" ? "All stages" : "Tất cả vòng"}</option>
               <option value="round-1">{locale === "en" ? "Round 1" : "Vòng 1"}</option>
               <option value="round-2">{locale === "en" ? "Round 2" : "Vòng 2"}</option>
-              <option value="round-3">{locale === "en" ? "Round 3" : "Vòng 3"}</option>
+              <option value="round-3">{locale === "en" ? "Final round" : "Chung kết"}</option>
             </select>
           </label>
 

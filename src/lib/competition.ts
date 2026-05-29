@@ -62,8 +62,8 @@ export function getCompetitionRoundWindow(
   return {
     round,
     title: fallbackWindow?.title ?? {
-      en: round === "round-1" ? "Round 1" : round === "round-2" ? "Round 2" : "Round 3",
-      vi: round === "round-1" ? "Vòng 1" : round === "round-2" ? "Vòng 2" : "Vòng 3",
+      en: round === "round-1" ? "Round 1" : round === "round-2" ? "Round 2" : "Final round",
+      vi: round === "round-1" ? "Vòng 1" : round === "round-2" ? "Vòng 2" : "Chung kết",
     },
     startDate: phaseItems[0].startDate,
     endDate: phaseItems[phaseItems.length - 1].endDate,
@@ -211,7 +211,7 @@ export function pickCompetitionStateLabel(locale: Locale, state: CompetitionStat
     case "round-2":
       return locale === "en" ? "Currently in Round 2" : "Đang thi đấu Vòng 2";
     case "round-3":
-      return locale === "en" ? "Currently in Round 3" : "Đang thi đấu Vòng 3";
+      return locale === "en" ? "Currently in Final round" : "Đang thi đấu chung kết";
   }
 }
 
@@ -247,7 +247,7 @@ export function pickTeamFinalOutcomeLabel(locale: Locale, outcome: TeamFinalOutc
     case "fourth-place":
       return locale === "en" ? "4th place" : "Hạng 4";
     case "emerging-team":
-      return locale === "en" ? "Emerging Team" : "Đội Tiềm năng";
+      return locale === "en" ? "Emerging Team" : "Đội ươm mầm";
   }
 }
 
@@ -279,7 +279,7 @@ export function pickTeamDisplayStatusLabel(
   }
 
   if (team.stage === "round-3" && isRoundFinished("round-3", now, timelineItems)) {
-    return locale === "en" ? "Stop at Round 3" : "Dừng chân tại Vòng 3";
+    return locale === "en" ? "Stop at Final round" : "Dừng chân tại chung kết";
   }
 
   if (team.stage === "round-2" && isRoundFinished("round-2", now, timelineItems)) {
@@ -325,7 +325,7 @@ export function pickTeamDisplayStatusDescription(
       case "emerging-team":
         return locale === "en"
           ? "This team completed the season as an Emerging Team after Round 2."
-          : "Đội này khép lại mùa giải với danh hiệu Đội Tiềm năng sau Vòng 2.";
+          : "Đội này khép lại mùa giải với danh hiệu Đội ươm mầm sau Vòng 2.";
     }
   }
 
@@ -382,7 +382,7 @@ export function pickRoundLabel(locale: Locale, round: CompetitionRoundKey) {
     case "round-2":
       return locale === "en" ? "Round 2" : "Vòng 2";
     case "round-3":
-      return locale === "en" ? "Round 3" : "Vòng 3";
+      return locale === "en" ? "Final round" : "Chung kết";
   }
 }
 
