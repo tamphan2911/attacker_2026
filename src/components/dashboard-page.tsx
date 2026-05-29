@@ -2186,10 +2186,7 @@ export function DashboardPage() {
               <CollapsibleBlockContent collapsed={isRound1LockCollapsed}>
                 <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                   <div className="max-w-3xl">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                    {locale === "en" ? "Round 1 team lock" : "Khóa đội cho Vòng 1"}
-                  </p>
-                  <p className="theme-heading mt-4 text-3xl font-semibold theme-text-strong">
+                  <p className="theme-heading text-3xl font-semibold theme-text-strong">
                     {locale === "en"
                       ? "Freeze the roster before anyone enters the individual exam."
                       : "Hoàn tất, chốt đội hình trước khi bước vào vòng thi cá nhân."}
@@ -2487,10 +2484,7 @@ export function DashboardPage() {
                 <CollapsibleBlockContent collapsed={isRound1ResultCollapsed}>
                   <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-3xl">
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-                        {locale === "en" ? "Round 1 result" : "Kết quả Vòng 1"}
-                      </p>
-                    <p className="theme-heading mt-4 text-3xl font-semibold theme-text-strong">
+                    <p className="theme-heading text-3xl font-semibold theme-text-strong">
                       {locale === "en"
                         ? "Team average result is recorded."
                         : "Kết quả trung bình của đội đã được ghi nhận."}
@@ -3553,18 +3547,36 @@ function SubmissionRoundCard({
           </div>
         </div>
 
-        <div className="rounded-[1.5rem] border theme-border theme-panel px-5 py-5">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200/80">
-            {submissionClosed && round === "round-2"
-              ? locale === "en"
-                ? "Round 2 submission closed"
-                : "Đã đóng nộp báo cáo Vòng 2"
-              : locale === "en"
-                ? "Submit new version"
-                : "Nộp phiên bản mới"}
-          </p>
-          {canSubmit ? (
+        <div
+          className={
+            submissionClosed && round === "round-2"
+              ? "rounded-[1.5rem] border border-amber-300/55 bg-[linear-gradient(135deg,rgba(251,191,36,0.18),rgba(245,158,11,0.1))] px-5 py-5 text-amber-950 shadow-[0_18px_42px_rgba(245,158,11,0.12)] dark:border-amber-200/25 dark:bg-amber-300/12 dark:text-amber-100"
+              : "rounded-[1.5rem] border theme-border theme-panel px-5 py-5"
+          }
+        >
+          {submissionClosed && round === "round-2" ? (
+            <div className="space-y-3 text-sm leading-7">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-1 h-5 w-5 shrink-0" />
+                <div>
+                  <p className="font-semibold">
+                    {locale === "en"
+                      ? "Round 2 submission is finished."
+                      : "Đã kết thúc nộp báo cáo Vòng 2."}
+                  </p>
+                  <p className="mt-2">
+                    {locale === "en"
+                      ? "The function to submit a new Round 2 report version is now locked. Your latest valid version and version history remain visible on this page."
+                      : "Chức năng nộp phiên bản mới cho báo cáo Vòng 2 hiện đã bị khóa. Phiên bản hợp lệ mới nhất và lịch sử phiên bản vẫn được hiển thị trên trang này."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : canSubmit ? (
             <div className="mt-5 space-y-4">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-sky-200/80">
+                {locale === "en" ? "Submit new version" : "Nộp phiên bản mới"}
+              </p>
               <label className="space-y-2">
                 <span className="text-sm theme-text-muted">{locale === "en" ? "Submission title" : "Tiêu đề báo cáo"}</span>
                 <input
@@ -3657,22 +3669,9 @@ function SubmissionRoundCard({
             </div>
           ) : (
             <div
-              className={`mt-5 rounded-[1.25rem] border px-4 py-4 text-sm leading-7 ${
-                submissionClosed && round === "round-2"
-                  ? "border-amber-300/45 bg-amber-400/12 text-amber-900 dark:border-amber-200/25 dark:bg-amber-300/12 dark:text-amber-100"
-                  : "theme-border theme-panel-subtle theme-text-muted"
-              }`}
+              className="rounded-[1.25rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted"
             >
-              <p className="font-semibold">
-                {submissionClosed && round === "round-2"
-                  ? locale === "en"
-                    ? "Upload controls are hidden."
-                    : "Biểu mẫu tải lên đã được ẩn."
-                  : lockMessage}
-              </p>
-              {submissionClosed && round === "round-2" ? (
-                <p className="mt-2">{lockMessage}</p>
-              ) : null}
+              <p className="font-semibold">{lockMessage}</p>
             </div>
           )}
         </div>
