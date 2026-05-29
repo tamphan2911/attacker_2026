@@ -1109,8 +1109,8 @@ export const defaultPageContent: SitePageContent = {
           vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 40 câu hỏi trắc nghiệm được rút theo chủ đề, độ khó và phần ngẫu nhiên bổ sung, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
         },
         deliverables: [
-          { en: "40 objective questions", vi: "40 câu trắc nghiệm" },
-          { en: "2 essay responses with 500-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 500 từ" },
+          { en: "40 objective questions", vi: "40 câu trắc nghiệm trên 6 chủ đề" },
+          { en: "2 essay responses with 500-word limit each", vi: "2 câu tự luận, mỗi câu trả lời 300-500 từ" },
           { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
         ],
       },
@@ -1124,12 +1124,12 @@ export const defaultPageContent: SitePageContent = {
         },
         description: {
           en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 20 teams qualify for the Emerging round.",
-          vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 20 đội tiếp theo được ghi nhận là Đội ươm mầm.",
+          vi: "5 đội điểm cao nhất vào chung kết, 20 đội tiếp theo vào bảng Ươm mầm.",
         },
         deliverables: [
-          { en: "Project report submission", vi: "Báo cáo dự án" },
-          { en: "Judge scoring and feedback", vi: "Điểm và nhận xét từ giám khảo" },
-          { en: "Top 5 finalists + next 20 Emerging round qualifiers", vi: "Top 5 chung kết + 20 đội vào Vòng Đội ươm mầm" },
+          { en: "Project report submission", vi: "Nộp báo cáo dự án theo quy định" },
+          { en: "Judge scoring and feedback", vi: "Ban giám khảo chấm điểm" },
+          { en: "Top 5 finalists + next 20 Emerging round qualifiers", vi: "Top 5 chung kết + 20 tiếp theo vào bảng Ươm mầm" },
         ],
       },
       {
@@ -1363,8 +1363,8 @@ export const defaultPageContent: SitePageContent = {
           vi: "Mỗi thành viên đủ điều kiện sẽ nhận một đề thi cá nhân gồm 40 câu hỏi trắc nghiệm được rút theo chủ đề, độ khó và phần ngẫu nhiên bổ sung, sau đó là 2 câu tự luận. Điểm trung bình của đội được dùng để xếp hạng, và top 50 đội sẽ vào Vòng 2.",
         },
         deliverables: [
-          { en: "40 objective questions", vi: "40 câu trắc nghiệm" },
-          { en: "2 essay responses with 500-word limit each", vi: "2 bài tự luận, mỗi bài tối đa 500 từ" },
+          { en: "40 objective questions", vi: "40 câu trắc nghiệm trên 6 chủ đề" },
+          { en: "2 essay responses with 500-word limit each", vi: "2 câu tự luận, mỗi câu trả lời 300-500 từ" },
           { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
         ],
         focus: {
@@ -1378,7 +1378,7 @@ export const defaultPageContent: SitePageContent = {
           },
           {
             en: "Every member takes one timed paper consisting of 40 objective questions and 2 essay questions.",
-            vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 40 câu trắc nghiệm và 2 câu tự luận.",
+            vi: "Mỗi thành viên làm bài vòng 1 gồm 40 câu trắc nghiệm và 2 câu tự luận.",
           },
           {
             en: "Top 50 teams are selected by the average score of eligible team members.",
@@ -1392,7 +1392,7 @@ export const defaultPageContent: SitePageContent = {
           },
           {
             en: "Objective score is available first, while essay score stays pending until admin or moderator review is completed.",
-            vi: "Điểm phần trắc nghiệm có trước, còn điểm tự luận vẫn ở trạng thái chờ cho đến khi admin hoặc moderator chấm xong.",
+            vi: "Điểm trắc nghiệm được chấm tự động, điểm tự luận sẽ được công bố sau khi có kết quả từ Ban giám khảo.",
           },
         ],
       },
@@ -1406,16 +1406,16 @@ export const defaultPageContent: SitePageContent = {
         },
         description: {
           en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 20 teams qualify for the Emerging round.",
-          vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 20 đội tiếp theo được ghi nhận là Đội ươm mầm.",
+          vi: "5 đội điểm cao nhất vào chung kết, 20 đội tiếp theo vào bảng Ươm mầm.",
         },
         deliverables: [
-          { en: "Project report submission", vi: "Báo cáo dự án" },
-          { en: "Judge scoring and feedback", vi: "Điểm và nhận xét từ giám khảo" },
-          { en: "Top 5 finalists + next 20 Emerging round qualifiers", vi: "Top 5 chung kết + 20 đội vào Vòng Đội ươm mầm" },
+          { en: "Project report submission", vi: "Nộp báo cáo dự án theo quy định" },
+          { en: "Judge scoring and feedback", vi: "Ban giám khảo chấm điểm" },
+          { en: "Top 5 finalists + next 20 Emerging round qualifiers", vi: "Top 5 chung kết + 20 tiếp theo vào bảng Ươm mầm" },
         ],
         focus: {
           en: "Round 2 is a judged report stage with versioned file submission.",
-          vi: "Vòng 2 là giai đoạn chấm báo cáo với cơ chế nộp tệp theo phiên bản.",
+          vi: "Các đội thi nộp báo cáo mô tả dự án.",
         },
         specificRules: [
           {
@@ -1424,11 +1424,11 @@ export const defaultPageContent: SitePageContent = {
           },
           {
             en: "Team leaders submit the official report file, while all previous versions remain visible for tracking.",
-            vi: "Đội trưởng nộp tệp báo cáo chính thức, còn các phiên bản trước vẫn được lưu để theo dõi.",
+            vi: "Báo cáo vòng 2 được nộp bởi đội trưởng.",
           },
           {
             en: "Judge scoring selects the top 5 teams for the final and qualifies the next 20 teams for the Emerging round.",
-            vi: "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và ghi nhận 20 đội tiếp theo là Đội ươm mầm.",
+            vi: "Bài thi vòng 2 của mỗi đội được chấm bởi 02 giám khảo theo phân bổ của Ban tổ chức.",
           },
         ],
         roundNotes: [
@@ -1466,11 +1466,11 @@ export const defaultPageContent: SitePageContent = {
         specificRules: [
           {
             en: "Finalist teams must submit the updated final report and pitch deck before the final-report deadline closes.",
-            vi: "Các đội chung kết phải nộp báo cáo hoàn chỉnh và bộ slide thuyết trình trước khi hạn nộp báo cáo chung kết khép lại.",
+            vi: "Các đội thi chung kết cần nộp lại báo cáo cuối cùng cho Ban tổ chức.",
           },
           {
             en: "After the report deadline, teams move into the live presentation and judge Q&A stage on final event day.",
-            vi: "Sau hạn nộp báo cáo, các đội chuyển sang giai đoạn thuyết trình trực tiếp và hỏi đáp cùng giám khảo trong ngày chung kết.",
+            vi: "20 đội thi bảng Ươm mầm chỉnh sửa báo cáo và nộp lại cho Ban tổ chức. 10 đội đạt giải Ươm mầm được công bố theo lịch trình của Ban tổ chức.",
           },
           {
             en: "Final podium awards are determined only after the live final defense is completed.",
@@ -1480,17 +1480,17 @@ export const defaultPageContent: SitePageContent = {
         roundNotes: [
           {
             en: "The final report deadline closes before presentation day, so teams should freeze the submitted deck and report early enough for rehearsal.",
-            vi: "Hạn nộp báo cáo chung kết kết thúc trước ngày trình bày, vì vậy đội nên chốt bộ tài liệu và slide đủ sớm để còn thời gian tập dượt.",
+            vi: "5 đội thi chung kết cần nộp slide trình bày qua email cho Ban tổ chức, hoặc liên hệ Ban tổ chức để được hỗ trợ.",
           },
           {
             en: "Final-stage logistics, presentation order, and check-in instructions should be reviewed carefully after the report deadline and before defense day.",
-            vi: "Thông tin hậu cần, thứ tự trình bày và hướng dẫn check-in của vòng chung kết cần được xem kỹ sau hạn nộp báo cáo và trước ngày bảo vệ.",
+            vi: "Thứ tự trình bày tại chung kết được bốc thăm bởi đại diện các đội thi chung kết.",
           },
         ],
       },
     ],
     openRoundOnTimelineLabel: { en: "Open this round on timeline page", vi: "Mở giai đoạn này trên trang lịch trình" },
-    deliverablePrefix: { en: "Deliverable", vi: "Đầu việc" },
+    deliverablePrefix: { en: "Deliverable", vi: "Lưu ý" },
     specificRoundRulesLabel: { en: "Specific round rules", vi: "Quy định riêng của vòng" },
     roundNotesLabel: { en: "Round notes", vi: "Lưu ý của vòng" },
     faqQuickAnswersLabel: { en: "Quick answers", vi: "Trả lời nhanh" },
@@ -2532,11 +2532,11 @@ export const roundItems: RoundItem[] = [
     deliverables: [
       {
         en: "40 objective questions",
-        vi: "40 câu trắc nghiệm",
+        vi: "40 câu trắc nghiệm trên 6 chủ đề",
       },
       {
         en: "2 essay responses with 500-word limit each",
-        vi: "2 bài tự luận, mỗi bài tối đa 500 từ",
+        vi: "2 câu tự luận, mỗi câu trả lời 300-500 từ",
       },
       {
         en: "Team average score ranking for Top 50",
@@ -2557,20 +2557,20 @@ export const roundItems: RoundItem[] = [
     },
     description: {
       en: "Qualified teams submit a report for their project and receive judge scoring. The top 5 teams proceed to the final round, while the next 20 teams qualify for the Emerging round.",
-      vi: "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 20 đội tiếp theo được ghi nhận là Đội ươm mầm.",
+      vi: "5 đội điểm cao nhất vào chung kết, 20 đội tiếp theo vào bảng Ươm mầm.",
     },
     deliverables: [
       {
         en: "Project report submission",
-        vi: "Báo cáo dự án",
+        vi: "Nộp báo cáo dự án theo quy định",
       },
       {
         en: "Judge scoring and feedback",
-        vi: "Điểm và nhận xét từ giám khảo",
+        vi: "Ban giám khảo chấm điểm",
       },
       {
         en: "Top 5 finalists + next 20 Emerging round qualifiers",
-        vi: "Top 5 chung kết + 20 đội vào Vòng Đội ươm mầm",
+        vi: "Top 5 chung kết + 20 tiếp theo vào bảng Ươm mầm",
       },
     ],
   },
@@ -3372,10 +3372,71 @@ function isLegacyOrganizerAddress(value: string) {
   );
 }
 
+const legacyVietnameseRulesCopyReplacements: Record<string, string> = {
+  "Đầu việc": "Lưu ý",
+  "2 bài tự luận, mỗi bài tối đa 200 từ": "2 câu tự luận, mỗi câu trả lời 300-500 từ",
+  "2 bài tự luận, mỗi bài tối đa 500 từ": "2 câu tự luận, mỗi câu trả lời 300-500 từ",
+  "36 câu trắc nghiệm trên 6 chủ đề": "40 câu trắc nghiệm trên 6 chủ đề",
+  "40 câu trắc nghiệm": "40 câu trắc nghiệm trên 6 chủ đề",
+  "Điểm phần trắc nghiệm có trước, còn điểm tự luận vẫn ở trạng thái chờ cho đến khi admin hoặc moderator chấm xong.":
+    "Điểm trắc nghiệm được chấm tự động, điểm tự luận sẽ được công bố sau khi có kết quả từ Ban giám khảo.",
+  "Vòng 2 là giai đoạn chấm báo cáo với cơ chế nộp tệp theo phiên bản.": "Các đội thi nộp báo cáo mô tả dự án.",
+  "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 10 đội tiếp theo được ghi nhận là Đội tiềm năng.":
+    "5 đội điểm cao nhất vào chung kết, 20 đội tiếp theo vào bảng Ươm mầm.",
+  "Các đội đủ điều kiện nộp báo cáo cho dự án của mình và nhận điểm từ giám khảo. Top 5 đội sẽ vào chung kết, trong khi 20 đội tiếp theo được ghi nhận là Đội ươm mầm.":
+    "5 đội điểm cao nhất vào chung kết, 20 đội tiếp theo vào bảng Ươm mầm.",
+  "Top 5 chung kết + 10 Đội tiềm năng tiếp theo": "Top 5 chung kết + 20 tiếp theo vào bảng Ươm mầm",
+  "Top 5 chung kết + 20 đội vào Vòng Đội ươm mầm": "Top 5 chung kết + 20 tiếp theo vào bảng Ươm mầm",
+  "Mỗi thành viên làm một đề có giới hạn thời gian gồm 36 câu trắc nghiệm và 2 câu tự luận.":
+    "Mỗi thành viên làm bài vòng 1 gồm 40 câu trắc nghiệm và 2 câu tự luận.",
+  "Mỗi thành viên làm một đề có giới hạn thời gian gồm 40 câu trắc nghiệm và 2 câu tự luận.":
+    "Mỗi thành viên làm bài vòng 1 gồm 40 câu trắc nghiệm và 2 câu tự luận.",
+  "Báo cáo dự án": "Nộp báo cáo dự án theo quy định",
+  "Điểm và nhận xét từ giám khảo": "Ban giám khảo chấm điểm",
+  "Đội trưởng nộp tệp báo cáo chính thức, còn các phiên bản trước vẫn được lưu để theo dõi.":
+    "Báo cáo vòng 2 được nộp bởi đội trưởng.",
+  "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và ghi nhận 10 đội tiếp theo là Đội tiềm năng.":
+    "Bài thi vòng 2 của mỗi đội được chấm bởi 02 giám khảo theo phân bổ của Ban tổ chức.",
+  "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và ghi nhận 20 đội tiếp theo là Đội ươm mầm.":
+    "Bài thi vòng 2 của mỗi đội được chấm bởi 02 giám khảo theo phân bổ của Ban tổ chức.",
+  "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và đưa 20 đội tiếp theo vào Vòng Đội ươm mầm.":
+    "Bài thi vòng 2 của mỗi đội được chấm bởi 02 giám khảo theo phân bổ của Ban tổ chức.",
+  "Hạn nộp báo cáo chung kết kết thúc trước ngày trình bày, vì vậy đội nên chốt bộ tài liệu và slide đủ sớm để còn thời gian tập dượt.":
+    "5 đội thi chung kết cần nộp slide trình bày qua email cho Ban tổ chức, hoặc liên hệ Ban tổ chức để được hỗ trợ.",
+  "Thông tin hậu cần, thứ tự trình bày và hướng dẫn check-in của vòng chung kết cần được xem kỹ sau hạn nộp báo cáo và trước ngày bảo vệ.":
+    "Thứ tự trình bày tại chung kết được bốc thăm bởi đại diện các đội thi chung kết.",
+  "Các đội chung kết phải nộp báo cáo hoàn chỉnh và bộ slide thuyết trình trước khi hạn nộp báo cáo chung kết khép lại.":
+    "Các đội thi chung kết cần nộp lại báo cáo cuối cùng cho Ban tổ chức.",
+  "Sau hạn nộp báo cáo, các đội chuyển sang giai đoạn thuyết trình trực tiếp và hỏi đáp cùng giám khảo trong ngày chung kết.":
+    "20 đội thi bảng Ươm mầm chỉnh sửa báo cáo và nộp lại cho Ban tổ chức. 10 đội đạt giải Ươm mầm được công bố theo lịch trình của Ban tổ chức.",
+};
+
+function applyLegacyVietnameseRulesCopyReplacements<T>(value: T): T {
+  if (typeof value === "string") {
+    return (legacyVietnameseRulesCopyReplacements[value] ?? value) as T;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => applyLegacyVietnameseRulesCopyReplacements(item)) as T;
+  }
+
+  if (isPlainObject(value)) {
+    const next: Record<string, unknown> = {};
+
+    for (const [key, entry] of Object.entries(value)) {
+      next[key] = applyLegacyVietnameseRulesCopyReplacements(entry);
+    }
+
+    return next as T;
+  }
+
+  return value;
+}
+
 export function mergePageContentWithDefaults(
   content?: Partial<SitePageContent> | null,
 ): SitePageContent {
-  const nextContent = mergeJsonShape(cloneDefaultPageContent(), content);
+  const nextContent = applyLegacyVietnameseRulesCopyReplacements(mergeJsonShape(cloneDefaultPageContent(), content));
 
   if (
     isLegacyOrganizerAddress(nextContent.contact.organizerAddress.en) ||

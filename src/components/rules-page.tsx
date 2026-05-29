@@ -114,7 +114,7 @@ const roundRuleMeta = {
       },
       {
         en: "Every member takes one timed paper consisting of 40 objective questions and 2 essay questions.",
-        vi: "Mỗi thành viên làm một đề có giới hạn thời gian gồm 40 câu trắc nghiệm và 2 câu tự luận.",
+        vi: "Mỗi thành viên làm bài vòng 1 gồm 40 câu trắc nghiệm và 2 câu tự luận.",
       },
       {
         en: "Top 50 teams are selected by the average score of eligible team members.",
@@ -128,7 +128,7 @@ const roundRuleMeta = {
       },
       {
         en: "Objective score is available first, while essay score stays pending until admin or moderator review is completed.",
-        vi: "Điểm phần trắc nghiệm có trước, còn điểm tự luận vẫn ở trạng thái chờ cho đến khi admin hoặc moderator chấm xong.",
+        vi: "Điểm trắc nghiệm được chấm tự động, điểm tự luận sẽ được công bố sau khi có kết quả từ Ban giám khảo.",
       },
     ],
   },
@@ -147,7 +147,7 @@ const roundRuleMeta = {
       "border-emerald-700/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.24),rgba(52,211,153,0.16))] text-emerald-950 dark:text-emerald-100",
     focus: {
       en: "Round 2 is a judged report stage with versioned file submission.",
-      vi: "Vòng 2 là giai đoạn chấm báo cáo với cơ chế nộp tệp theo phiên bản.",
+      vi: "Các đội thi nộp báo cáo mô tả dự án.",
     },
     notes: [
       {
@@ -156,11 +156,11 @@ const roundRuleMeta = {
       },
       {
         en: "Team leaders submit the official report file, while all previous versions remain visible for tracking.",
-        vi: "Đội trưởng nộp tệp báo cáo chính thức, còn các phiên bản trước vẫn được lưu để theo dõi.",
+        vi: "Báo cáo vòng 2 được nộp bởi đội trưởng.",
       },
       {
         en: "Judge scoring selects the top 5 teams for the final and qualifies the next 20 teams for the Emerging round.",
-        vi: "Điểm chấm của giám khảo chọn top 5 đội vào chung kết và đưa 20 đội tiếp theo vào Vòng Đội ươm mầm.",
+        vi: "Bài thi vòng 2 của mỗi đội được chấm bởi 02 giám khảo theo phân bổ của Ban tổ chức.",
       },
     ],
     roundNotes: [
@@ -194,11 +194,11 @@ const roundRuleMeta = {
     notes: [
       {
         en: "Finalist teams must submit the updated final report and pitch deck before the final-report deadline closes.",
-        vi: "Các đội chung kết phải nộp báo cáo hoàn chỉnh và bộ slide thuyết trình trước khi hạn nộp báo cáo chung kết khép lại.",
+        vi: "Các đội thi chung kết cần nộp lại báo cáo cuối cùng cho Ban tổ chức.",
       },
       {
         en: "After the report deadline, teams move into the live presentation and judge Q&A stage on final event day.",
-        vi: "Sau hạn nộp báo cáo, các đội chuyển sang giai đoạn thuyết trình trực tiếp và hỏi đáp cùng giám khảo trong ngày chung kết.",
+        vi: "20 đội thi bảng Ươm mầm chỉnh sửa báo cáo và nộp lại cho Ban tổ chức. 10 đội đạt giải Ươm mầm được công bố theo lịch trình của Ban tổ chức.",
       },
       {
         en: "Final podium awards are determined only after the live final defense is completed.",
@@ -208,11 +208,11 @@ const roundRuleMeta = {
     roundNotes: [
       {
         en: "The final report deadline closes before presentation day, so teams should freeze the submitted deck and report early enough for rehearsal.",
-        vi: "Hạn nộp báo cáo chung kết kết thúc trước ngày trình bày, vì vậy đội nên chốt bộ tài liệu và slide đủ sớm để còn thời gian tập dượt.",
+        vi: "5 đội thi chung kết cần nộp slide trình bày qua email cho Ban tổ chức, hoặc liên hệ Ban tổ chức để được hỗ trợ.",
       },
       {
         en: "Final-stage logistics, presentation order, and check-in instructions should be reviewed carefully after the report deadline and before defense day.",
-        vi: "Thông tin hậu cần, thứ tự trình bày và hướng dẫn check-in của vòng chung kết cần được xem kỹ sau hạn nộp báo cáo và trước ngày bảo vệ.",
+        vi: "Thứ tự trình bày tại chung kết được bốc thăm bởi đại diện các đội thi chung kết.",
       },
     ],
   },
