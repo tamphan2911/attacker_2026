@@ -1585,6 +1585,20 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    if (payload.leaderId) {
+      const selectedLeader = users.find((user) => user.id === payload.leaderId);
+      if (!selectedLeader || selectedLeader.role !== "student") {
+        pushToast(
+          {
+            en: "Organizing team members cannot be assigned as team leader.",
+            vi: "Thành viên ban tổ chức không thể được gán làm đội trưởng.",
+          },
+          "warning",
+        );
+        return;
+      }
+    }
+
     void (async () => {
       const response = await fetch(`/api/admin/teams/${teamId}`, {
         method: "PATCH",

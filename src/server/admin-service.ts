@@ -695,6 +695,35 @@ export async function updateUserByAdmin(
     return fail(403, "Only admin can change a participant into a supporter.");
   }
 
+  if (payload.role === "supporter" && user.role !== UserRole.SUPPORTER) {
+    const existingMembership = await prisma.teamMember.findUnique({
+      where: { userId },
+      include: {
+        team: {
+          select: {
+            id: true,
+            name: true,
+            leaderId: true,
+          },
+        },
+      },
+    });
+
+    if (existingMembership?.team.leaderId === userId) {
+      return fail(
+        409,
+        `This user is currently the team leader of ${existingMembership.team.name}. Transfer leadership or remove the team membership before changing this user to supporter.`,
+      );
+    }
+
+    if (existingMembership) {
+      return fail(
+        409,
+        `This user is currently a member of ${existingMembership.team.name}. Remove the team membership before changing this user to supporter.`,
+      );
+    }
+  }
+
   const nextEmail = payload.email?.trim().toLowerCase();
   const nextStudentId = payload.studentId?.trim().toLowerCase();
   const nextPhoneNumber = payload.phoneNumber?.trim();
@@ -982,6 +1011,17 @@ export async function updateTeamByAdmin(
 
   if (payload.leaderId && !team.members.some((member) => member.userId === payload.leaderId)) {
     return fail(400, "The selected leader must already be a member of the team.");
+  }
+
+  if (payload.leaderId) {
+    const leader = await prisma.user.findUnique({
+      where: { id: payload.leaderId },
+      select: { role: true },
+    });
+
+    if (!leader || leader.role !== UserRole.STUDENT) {
+      return fail(409, "Organizing team members cannot be assigned as team leader.");
+    }
   }
 
   const nextTag = payload.tag?.trim().toUpperCase();

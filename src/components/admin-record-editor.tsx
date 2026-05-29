@@ -72,6 +72,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
   );
 
   const isLocked = user?.id === DEMO_ADMIN_LOGIN_ID;
+  const supporterRoleBlockedByTeam = draft?.role === "supporter" && user?.role !== "supporter" && Boolean(team);
   const isDirty = useMemo(() => {
     if (!user || !draft) {
       return false;
@@ -143,7 +144,7 @@ export function AdminUserEditor({ userId }: { userId: string }) {
           </button>
           <button
             type="button"
-            disabled={!isDirty || isLocked}
+            disabled={!isDirty || isLocked || supporterRoleBlockedByTeam}
             onClick={() => updateUserByAdmin(user.id, draft)}
             className="theme-button-primary rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -266,6 +267,13 @@ export function AdminUserEditor({ userId }: { userId: string }) {
                   ? "Changing a participant to supporter will create a unique referal code after saving."
                   : "Khi đổi thí sinh sang supporter, hệ thống sẽ tạo referal code duy nhất sau khi lưu."}
               </p>
+              {supporterRoleBlockedByTeam ? (
+                <p className="rounded-xl border border-amber-300/50 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-900 dark:border-amber-300/30 dark:bg-amber-400/10 dark:text-amber-100">
+                  {locale === "en"
+                    ? "This user is still in a team. Remove them from the team or transfer leadership before changing the role to supporter."
+                    : "Người dùng này vẫn đang ở trong một đội. Hãy xóa khỏi đội hoặc chuyển đội trưởng trước khi đổi vai trò sang supporter."}
+                </p>
+              ) : null}
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
