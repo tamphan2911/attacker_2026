@@ -1117,7 +1117,7 @@ export const defaultPageContent: SitePageContent = {
       {
         id: "02",
         label: { en: "Round 02", vi: "Vòng 02" },
-        title: { en: "Project Report Review", vi: "Chấm báo cáo dự án" },
+        title: { en: "Project Report Review", vi: "Đánh giá dự án" },
         duration: {
           en: "judge-scored team report stage",
           vi: "giai đoạn nộp báo cáo đội được giám khảo chấm điểm",
@@ -1399,7 +1399,7 @@ export const defaultPageContent: SitePageContent = {
       {
         id: "02",
         label: { en: "Round 02", vi: "Vòng 02" },
-        title: { en: "Project Report Review", vi: "Chấm báo cáo dự án" },
+        title: { en: "Project Report Review", vi: "Đánh giá dự án" },
         duration: {
           en: "judge-scored team report stage",
           vi: "giai đoạn nộp báo cáo đội được giám khảo chấm điểm",
@@ -2549,7 +2549,7 @@ export const roundItems: RoundItem[] = [
     label: { en: "Round 02", vi: "Vòng 02" },
     title: {
       en: "Project Report Review",
-      vi: "Chấm báo cáo dự án",
+      vi: "Đánh giá dự án",
     },
     duration: {
       en: "judge-scored team report stage",
