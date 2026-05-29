@@ -317,7 +317,7 @@ function getTimelineCardStatusClass(
     case "upcoming":
       return `${phaseStatusClass} shadow-[0_12px_26px_rgba(15,23,42,0.06)] dark:shadow-none`;
     case "finished":
-      return "border-slate-300/28 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(241,245,249,0.96))] text-slate-700 dark:border-white/14 dark:bg-white/[0.06] dark:text-slate-200";
+      return "border-slate-300/28 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(241,245,249,0.96))] text-slate-700 dark:border-sky-200/18 dark:bg-none dark:bg-sky-300/[0.08] dark:text-sky-100 dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
     case "not-started":
     default:
       return `border-slate-300/24 bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(248,250,252,0.96))] text-slate-700 dark:bg-none ${phaseDarkStatusClass} dark:shadow-none`;
