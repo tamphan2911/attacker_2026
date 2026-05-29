@@ -2182,7 +2182,7 @@ export const defaultPageContent: SitePageContent = {
       title: { en: "Individual qualifier", vi: "Bài thi cá nhân" },
       description: {
         en: "The first competition stage is an online individual exam, but qualification is decided by team-average ranking.",
-        vi: "Giai đoạn thi đầu tiên là bài thi trực tuyến theo cá nhân, nhưng điều kiện đi tiếp được quyết định bằng xếp hạng điểm trung bình đội.",
+        vi: "Vòng 1 diễn ra dưới hình thức thi cá nhân, kết quả xét tuyển vào vòng trong được tính dựa trên điểm trung bình của tất cả các thành viên trong đội.",
       },
     },
     round2: {
@@ -3159,7 +3159,7 @@ export const timelineItems: TimelineItem[] = [
     },
     method: {
       en: "Public result release with team ranking and qualification notice",
-      vi: "Công bố kết quả công khai kèm xếp hạng đội và thông báo đủ điều kiện",
+      vi: "Công bố kết quả tại website cuộc thi.",
     },
     supportLinks: [
       { href: "/competition/round-1-results", label: { en: "Check announcements", vi: "Xem thông báo" } },
