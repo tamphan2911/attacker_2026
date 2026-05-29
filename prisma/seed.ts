@@ -145,6 +145,8 @@ function mapUserRole(role: (typeof mockUsers)[number]["role"]) {
       return UserRole.ADMIN;
     case "moderator":
       return UserRole.MODERATOR;
+    case "supporter":
+      return UserRole.SUPPORTER;
     case "student":
     default:
       return UserRole.STUDENT;

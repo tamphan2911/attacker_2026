@@ -68,12 +68,34 @@ function mapUserRole(role: UserProfile["role"]) {
       return UserRole.ADMIN;
     case "moderator":
       return UserRole.MODERATOR;
+    case "supporter":
+      return UserRole.SUPPORTER;
     case "judge":
       return UserRole.JUDGE;
     case "student":
     default:
       return UserRole.STUDENT;
   }
+}
+
+function createSupporterReferralCode() {
+  return `SUP${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
+async function createUniqueSupporterReferralCode() {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const code = createSupporterReferralCode();
+    const existing = await prisma.user.findUnique({
+      where: { supporterReferralCode: code },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return code;
+    }
+  }
+
+  throw new Error("Unable to create a unique supporter referal code.");
 }
 
 function mapStage(stage: TeamProfile["stage"]) {
@@ -638,7 +660,15 @@ export async function updateUserByAdmin(
 ): Promise<ServiceResult<{ userId: string }>> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, role: true, studentId: true, loginId: true, email: true, emailVerifiedAt: true },
+    select: {
+      id: true,
+      role: true,
+      studentId: true,
+      loginId: true,
+      email: true,
+      emailVerifiedAt: true,
+      supporterReferralCode: true,
+    },
   });
 
   if (!user) {
@@ -649,7 +679,7 @@ export async function updateUserByAdmin(
     return fail(403, "The fixed admin account cannot be edited.");
   }
 
-  if (user.role !== UserRole.STUDENT) {
+  if (user.role !== UserRole.STUDENT && user.role !== UserRole.SUPPORTER) {
     if (actorRole !== UserRole.ADMIN) {
       return fail(403, "Only admin can manage organizer accounts.");
     }
@@ -657,8 +687,12 @@ export async function updateUserByAdmin(
     return fail(403, "Organizer accounts are managed from Organizer team.");
   }
 
-  if (payload.role && payload.role !== "student") {
-    return fail(403, "Participant records cannot change to organizer roles from this screen.");
+  if (payload.role && payload.role !== "student" && payload.role !== "supporter") {
+    return fail(403, "Participant records can only change between participant and supporter from this screen.");
+  }
+
+  if (payload.role === "supporter" && actorRole !== UserRole.ADMIN) {
+    return fail(403, "Only admin can change a participant into a supporter.");
   }
 
   const nextEmail = payload.email?.trim().toLowerCase();
@@ -683,11 +717,20 @@ export async function updateUserByAdmin(
     }
   }
 
+  const nextRole = payload.role ? mapUserRole(payload.role) : undefined;
+  const nextSupporterReferralCode =
+    nextRole === UserRole.SUPPORTER
+      ? user.supporterReferralCode ?? await createUniqueSupporterReferralCode()
+      : nextRole === UserRole.STUDENT
+        ? null
+        : undefined;
+
   await prisma.user.update({
     where: { id: userId },
     data: {
       name: payload.name?.trim(),
-      role: payload.role ? mapUserRole(payload.role) : undefined,
+      role: nextRole,
+      supporterReferralCode: nextSupporterReferralCode,
       studentId: nextStudentId === undefined ? undefined : nextStudentId || null,
       loginId: nextStudentId || undefined,
       phoneNumber: nextPhoneNumber === undefined ? undefined : nextPhoneNumber || null,

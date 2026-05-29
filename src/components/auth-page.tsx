@@ -15,6 +15,7 @@ import {
   LockKeyhole,
   Mail,
   ShieldCheck,
+  Ticket,
   UserRound,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -171,6 +172,7 @@ type RegistrationFormState = {
   bio: string;
   password: string;
   confirmPassword: string;
+  referralCode: string;
 };
 
 type RegisterErrorPayload = {
@@ -219,6 +221,10 @@ function getRegistrationFieldGuidance(field: keyof RegistrationFormState | "turn
     confirmPassword: {
       en: "Re-enter the same password so we can confirm it was typed correctly.",
       vi: "Nhập lại đúng mật khẩu để hệ thống xác nhận bạn đã gõ chính xác.",
+    },
+    referralCode: {
+      en: "Enter the supporter referal code exactly as provided, or leave this field blank.",
+      vi: "Nhập đúng mã referal code của supporter nếu có, hoặc để trống trường này.",
     },
     turnstileToken: {
       en: "Complete the security check before creating the account.",
@@ -318,6 +324,13 @@ function getRegistrationServerMessage(payload: RegisterErrorPayload) {
     );
   }
 
+  if (payload.error === "INVALID_REFERRAL_CODE") {
+    return createAuthMessage(
+      "The referal code does not match an active supporter. Please check the code or leave it blank.",
+      "Referal code không khớp với supporter đang hoạt động. Vui lòng kiểm tra lại mã hoặc để trống.",
+    );
+  }
+
   if (payload.error === "ACCOUNT_ALREADY_EXISTS") {
     return createAuthMessage(
       "An account already exists with the email or student ID you entered. Please review those two fields.",
@@ -390,6 +403,7 @@ export function AuthPage() {
     bio: "",
     password: "",
     confirmPassword: "",
+    referralCode: "",
   });
   const [isUniversityMenuOpen, setIsUniversityMenuOpen] = useState(false);
   const [isClassYearMenuOpen, setIsClassYearMenuOpen] = useState(false);
@@ -1200,6 +1214,22 @@ export function AuthPage() {
                               ? "Show confirm password"
                               : "Hiện xác nhận mật khẩu"
                         }
+                      />
+                    </div>
+                  </label>
+
+                  <label className="space-y-2 xl:col-span-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Referal code (optional)" : "Referal code (không bắt buộc)"}
+                    </span>
+                    <div className="flex items-center rounded-2xl border theme-border theme-panel px-4 py-3.5">
+                      <Ticket className="mr-3 h-4 w-4 theme-text-faint" />
+                      <input
+                        value={registerForm.referralCode}
+                        onChange={handleRegisterFieldChange("referralCode")}
+                        autoComplete="off"
+                        placeholder={locale === "en" ? "Supporter referal code" : "Referal code của supporter"}
+                        className={authFieldClassName}
                       />
                     </div>
                   </label>

@@ -72,6 +72,8 @@ function mapRole(role: UserRole) {
       return "admin";
     case UserRole.MODERATOR:
       return "moderator";
+    case UserRole.SUPPORTER:
+      return "supporter";
     case UserRole.JUDGE:
       return "judge";
     case UserRole.STUDENT:

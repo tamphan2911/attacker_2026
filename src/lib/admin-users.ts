@@ -13,6 +13,8 @@ export function pickAdminUserRoleLabel(locale: Locale, role: UserProfile["role"]
       return locale === "en" ? "Judge" : "Giám khảo";
     case "moderator":
       return locale === "en" ? "Moderator" : "Điều phối viên";
+    case "supporter":
+      return locale === "en" ? "Supporter" : "Supporter";
     case "student":
     default:
       return locale === "en" ? "Participant" : "Thí sinh";
@@ -55,6 +57,14 @@ export function getAdminUserCompetitionStatus(
     return {
       key: "moderator",
       label: locale === "en" ? "Moderation" : "Điều phối vận hành",
+      tone: "default",
+    };
+  }
+
+  if (user.role === "supporter") {
+    return {
+      key: "supporter",
+      label: locale === "en" ? "Registration support" : "Hỗ trợ đăng ký",
       tone: "default",
     };
   }

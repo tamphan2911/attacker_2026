@@ -303,10 +303,16 @@ export function AdminOrganizerManager() {
   useAdminTitleScroll();
 
   const canManage = currentUser.role === "admin";
+  const [activeTab, setActiveTab] = useState<"team" | "referees">("team");
   const [filters, setFilters] = useState({
     name: "",
     loginId: "",
     role: "all",
+  });
+  const [refereeFilters, setRefereeFilters] = useState({
+    search: "",
+    referralCode: "",
+    activation: "all",
   });
   const [modalMode, setModalMode] = useState<"create" | "edit" | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -314,33 +320,54 @@ export function AdminOrganizerManager() {
   const [avatarError, setAvatarError] = useState("");
 
   const organizerRows = useMemo(
-    () =>
-      users
-        .filter((user) => user.role === "admin" || user.role === "moderator")
+    () => {
+      const activatedReferralCountBySupporterId = new Map<string, number>();
+      for (const user of users) {
+        if (user.referredBySupporterId && user.emailVerified) {
+          activatedReferralCountBySupporterId.set(
+            user.referredBySupporterId,
+            (activatedReferralCountBySupporterId.get(user.referredBySupporterId) ?? 0) + 1,
+          );
+        }
+      }
+
+      return users
+        .filter((user) => user.role === "admin" || user.role === "moderator" || user.role === "supporter")
         .map((user) => ({
           id: user.id,
           loginId: user.loginId ?? user.studentId ?? user.email,
           name: user.name,
-          role: user.role === "admin" ? "admin" : "moderator",
+          role: user.role,
           roleLabel:
             user.role === "admin"
               ? locale === "en"
                 ? "Administrator"
                 : "Quản trị viên"
-              : locale === "en"
-                ? "Moderator"
-                : "Điều phối viên",
+              : user.role === "moderator"
+                ? locale === "en"
+                  ? "Moderator"
+                  : "Điều phối viên"
+                : locale === "en"
+                  ? "Supporter"
+                  : "Supporter",
           accessLabel:
             user.role === "admin"
               ? locale === "en"
                 ? "Full control"
                 : "Toàn quyền"
-              : locale === "en"
-                ? "Admin mode access"
-                : "Truy cập admin mode",
+              : user.role === "moderator"
+                ? locale === "en"
+                  ? "Admin mode access"
+                  : "Truy cập admin mode"
+                : locale === "en"
+                  ? "Referral support"
+                  : "Hỗ trợ đăng ký",
+          supporterReferralCode: user.supporterReferralCode ?? "",
+          activatedReferralCount: user.role === "supporter" ? activatedReferralCountBySupporterId.get(user.id) ?? 0 : 0,
           avatarImageSrc: user.avatarImageSrc,
           avatarTone: user.avatarTone,
-        })),
+        }));
+    },
     [locale, users],
   );
 
@@ -377,10 +404,76 @@ export function AdminOrganizerManager() {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
+  const refereeRows = useMemo(
+    () =>
+      users
+        .filter((user) => user.referredByCode || user.referredBySupporterId)
+        .map((user) => {
+          const supporter = users.find((item) => item.id === user.referredBySupporterId);
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            studentId: user.studentId,
+            university: user.university,
+            major: user.major,
+            referralCode: user.referredByCode ?? supporter?.supporterReferralCode ?? "",
+            supporterName: supporter?.name ?? "",
+            supporterLoginId: supporter?.loginId ?? "",
+            emailVerified: Boolean(user.emailVerified),
+            activationKey: user.emailVerified ? "verified" : "unverified",
+          };
+        }),
+    [users],
+  );
+  const filteredRefereeRows = useMemo(
+    () =>
+      refereeRows.filter((row) => {
+        const searchSource = [
+          row.name,
+          row.email,
+          row.studentId,
+          row.university,
+          row.major,
+          row.supporterName,
+          row.supporterLoginId,
+        ].join(" ");
+
+        if (refereeFilters.search && !searchSource.toLowerCase().includes(refereeFilters.search.trim().toLowerCase())) {
+          return false;
+        }
+
+        if (
+          refereeFilters.referralCode &&
+          !row.referralCode.toLowerCase().includes(refereeFilters.referralCode.trim().toLowerCase())
+        ) {
+          return false;
+        }
+
+        if (refereeFilters.activation !== "all" && row.activationKey !== refereeFilters.activation) {
+          return false;
+        }
+
+        return true;
+      }),
+    [refereeFilters, refereeRows],
+  );
+  const {
+    page: refereePage,
+    setPage: setRefereePage,
+    pageCount: refereePageCount,
+    startIndex: refereeStartIndex,
+    paginatedRows: paginatedRefereeRows,
+  } = useAdminTablePagination(filteredRefereeRows, ADMIN_TABLE_PAGE_SIZE);
 
   useEffect(() => {
     setPage(1);
   }, [filters, setPage]);
+
+  useEffect(() => {
+    setRefereePage(1);
+  }, [refereeFilters, setRefereePage]);
 
   const openCreateModal = () => {
     setDraft(createEmptyDraft());
@@ -537,6 +630,27 @@ export function AdminOrganizerManager() {
         </Surface>
       ) : null}
 
+      <div className="flex flex-wrap gap-2 rounded-full border theme-border theme-panel-subtle p-1">
+        {[
+          { id: "team", label: locale === "en" ? "Organizer team" : "Ban tổ chức" },
+          { id: "referees", label: locale === "en" ? "Referees" : "Người được giới thiệu" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id as typeof activeTab)}
+            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+              activeTab === tab.id
+                ? "theme-button-primary"
+                : "theme-text-soft hover:theme-text-strong"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "team" ? (
       <Surface className="overflow-hidden px-5 py-5 md:px-6">
         <div className="flex flex-col gap-4 border-b theme-border pb-5 md:flex-row md:items-end md:justify-between">
           <div>
@@ -578,6 +692,12 @@ export function AdminOrganizerManager() {
                 <th className="min-w-[14rem] px-4 py-3 font-medium">
                   {locale === "en" ? "Access" : "Quyền truy cập"}
                 </th>
+                <th className="min-w-[10rem] px-4 py-3 font-medium">
+                  {locale === "en" ? "Referal code" : "Referal code"}
+                </th>
+                <th className="min-w-[12rem] px-4 py-3 text-center font-medium">
+                  {locale === "en" ? "Activated referrals" : "Đã kích hoạt"}
+                </th>
                 <th className="px-4 py-3 text-right font-medium">
                   {locale === "en" ? "Actions" : "Tác vụ"}
                 </th>
@@ -607,8 +727,11 @@ export function AdminOrganizerManager() {
                     <option value="all">{locale === "en" ? "All roles" : "Tất cả vai trò"}</option>
                     <option value="admin">{locale === "en" ? "Administrator" : "Quản trị viên"}</option>
                     <option value="moderator">{locale === "en" ? "Moderator" : "Điều phối viên"}</option>
+                    <option value="supporter">{locale === "en" ? "Supporter" : "Supporter"}</option>
                   </select>
                 </th>
+                <th className="px-4 py-3" />
+                <th className="px-4 py-3" />
                 <th className="px-4 py-3" />
                 <th className="px-4 py-3" />
               </tr>
@@ -635,16 +758,22 @@ export function AdminOrganizerManager() {
                   </td>
                   <td className="px-4 py-4 theme-text-body">{row.loginId}</td>
                   <td className="px-4 py-4 text-center">
-                    <StatusPill tone={row.role === "admin" ? "warning" : "success"}>
+                    <StatusPill tone={row.role === "admin" ? "warning" : row.role === "supporter" ? "info" : "success"}>
                       {row.roleLabel}
                     </StatusPill>
                   </td>
                   <td className="px-4 py-4 text-center">
                     <StatusPill>{row.accessLabel}</StatusPill>
                   </td>
+                  <td className="px-4 py-4 theme-text-body">{row.supporterReferralCode || "-"}</td>
+                  <td className="px-4 py-4 text-center">
+                    <StatusPill tone={row.activatedReferralCount > 0 ? "success" : "default"}>
+                      {row.activatedReferralCount}
+                    </StatusPill>
+                  </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      {canManage && row.loginId !== DEMO_ADMIN_LOGIN_ID ? (
+                      {canManage && row.loginId !== DEMO_ADMIN_LOGIN_ID && row.role !== "supporter" ? (
                         <>
                           <button
                             type="button"
@@ -714,6 +843,99 @@ export function AdminOrganizerManager() {
           onPageChange={setPage}
         />
       </Surface>
+      ) : (
+        <Surface className="overflow-hidden px-5 py-5 md:px-6">
+          <div className="flex flex-col gap-4 border-b theme-border pb-5 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="theme-heading text-2xl font-semibold theme-text-strong">
+                {locale === "en" ? "Referees" : "Người được giới thiệu"}
+              </p>
+              <p className="mt-2 text-sm leading-7 theme-text-muted">
+                {locale === "en"
+                  ? "Users who entered a supporter referal code during registration."
+                  : "Các người dùng đã nhập referal code của supporter khi đăng ký."}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_220px_180px]">
+            <TableFilterField
+              value={refereeFilters.search}
+              onChange={(value) => setRefereeFilters((current) => ({ ...current, search: value }))}
+              placeholder={locale === "en" ? "Search name, email, supporter..." : "Tìm tên, email, supporter..."}
+            />
+            <TableFilterField
+              value={refereeFilters.referralCode}
+              onChange={(value) => setRefereeFilters((current) => ({ ...current, referralCode: value }))}
+              placeholder={locale === "en" ? "Search referal code" : "Tìm referal code"}
+            />
+            <select
+              value={refereeFilters.activation}
+              onChange={(event) => setRefereeFilters((current) => ({ ...current, activation: event.target.value }))}
+              className="theme-admin-select w-full rounded-xl border px-3 py-2 text-xs font-semibold outline-none"
+            >
+              <option value="all">{locale === "en" ? "All activation" : "Tất cả kích hoạt"}</option>
+              <option value="verified">{locale === "en" ? "Email activated" : "Đã kích hoạt email"}</option>
+              <option value="unverified">{locale === "en" ? "Not activated" : "Chưa kích hoạt"}</option>
+            </select>
+          </div>
+
+          <div className="mt-5 overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
+                <tr>
+                  <th className="px-4 py-3 font-medium">#</th>
+                  <th className="min-w-[18rem] px-4 py-3 font-medium">{locale === "en" ? "User" : "Người dùng"}</th>
+                  <th className="min-w-[16rem] px-4 py-3 font-medium">Email</th>
+                  <th className="min-w-[11rem] px-4 py-3 font-medium">{locale === "en" ? "Student ID" : "MSSV"}</th>
+                  <th className="min-w-[13rem] px-4 py-3 font-medium">{locale === "en" ? "Referal code" : "Referal code"}</th>
+                  <th className="min-w-[16rem] px-4 py-3 font-medium">Supporter</th>
+                  <th className="min-w-[12rem] px-4 py-3 text-center font-medium">{locale === "en" ? "Email activation" : "Kích hoạt email"}</th>
+                  <th className="min-w-[16rem] px-4 py-3 font-medium">{locale === "en" ? "University" : "Trường"}</th>
+                  <th className="min-w-[14rem] px-4 py-3 font-medium">{locale === "en" ? "Major" : "Chuyên ngành"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedRefereeRows.map((row, index) => (
+                  <tr key={row.id} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4 text-xs font-semibold theme-text-soft">
+                      {refereeStartIndex + index + 1}
+                    </td>
+                    <td className="px-4 py-4">
+                      <p className="font-semibold theme-text-strong">{row.name}</p>
+                      <p className="mt-1 text-xs theme-text-soft">{row.id}</p>
+                    </td>
+                    <td className="px-4 py-4 theme-text-body">{row.email}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.studentId || "-"}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.referralCode || "-"}</td>
+                    <td className="px-4 py-4 theme-text-body">
+                      {row.supporterName ? `${row.supporterName} (${row.supporterLoginId})` : "-"}
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <StatusPill tone={row.emailVerified ? "success" : "warning"}>
+                        {row.emailVerified
+                          ? locale === "en" ? "Activated" : "Đã kích hoạt"
+                          : locale === "en" ? "Not activated" : "Chưa kích hoạt"}
+                      </StatusPill>
+                    </td>
+                    <td className="px-4 py-4 theme-text-body">{row.university}</td>
+                    <td className="px-4 py-4 theme-text-body">{row.major}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <AdminTablePagination
+            locale={locale}
+            page={refereePage}
+            pageCount={refereePageCount}
+            pageSize={ADMIN_TABLE_PAGE_SIZE}
+            totalRows={filteredRefereeRows.length}
+            onPageChange={setRefereePage}
+          />
+        </Surface>
+      )}
 
       {modalMode ? (
         <OrganizerAccountModal

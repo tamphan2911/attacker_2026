@@ -17,6 +17,7 @@ const registerSchema = z.object({
   classYear: z.string().trim().min(1),
   bio: z.string().trim().max(600).optional().default(""),
   password: z.string().min(8),
+  referralCode: z.string().trim().max(40).optional().default(""),
   turnstileToken: z.string().trim().min(1),
   locale: z.enum(["en", "vi"]).optional().default("vi"),
 });
@@ -89,6 +90,21 @@ export async function POST(request: Request) {
     );
   }
 
+  const referralCode = payload.data.referralCode.trim().toUpperCase();
+  const supporter = referralCode
+    ? await prisma.user.findUnique({
+        where: { supporterReferralCode: referralCode },
+        select: { id: true, supporterReferralCode: true, role: true },
+      })
+    : null;
+
+  if (referralCode && (!supporter || supporter.role !== UserRole.SUPPORTER)) {
+    return NextResponse.json(
+      { error: "INVALID_REFERRAL_CODE" },
+      { status: 400 },
+    );
+  }
+
   const passwordHash = await hash(payload.data.password, 12);
   const user = await prisma.user.create({
     data: {
@@ -103,6 +119,8 @@ export async function POST(request: Request) {
       classYear: normalizeStudentClassYear(payload.data.classYear),
       bio: payload.data.bio.trim(),
       avatarTone: "from-sky-500 via-cyan-400 to-emerald-400",
+      referredByCode: supporter?.supporterReferralCode ?? (referralCode || null),
+      referredBySupporterId: supporter?.id,
     },
     select: {
       id: true,

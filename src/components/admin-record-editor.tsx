@@ -63,7 +63,7 @@ function NotFoundState({
 
 export function AdminUserEditor({ userId }: { userId: string }) {
   const router = useRouter();
-  const { locale, users, teams, updateUserByAdmin, deleteUserByAdmin } = useSiteState();
+  const { locale, currentUser, users, teams, updateUserByAdmin, deleteUserByAdmin } = useSiteState();
   useAdminTitleScroll();
   const user = users.find((item) => item.id === userId);
   const team = user ? getTeamForUser(user.id, teams) : undefined;
@@ -257,9 +257,15 @@ export function AdminUserEditor({ userId }: { userId: string }) {
                 className={`${fieldClassName} theme-admin-select`}
               >
                 <option value="student">student</option>
-                <option value="moderator">moderator</option>
-                <option value="admin">admin</option>
+                {currentUser.role === "admin" || draft.role === "supporter" ? (
+                  <option value="supporter">supporter</option>
+                ) : null}
               </select>
+              <p className="text-xs theme-text-soft">
+                {locale === "en"
+                  ? "Changing a participant to supporter will create a unique referal code after saving."
+                  : "Khi đổi thí sinh sang supporter, hệ thống sẽ tạo referal code duy nhất sau khi lưu."}
+              </p>
             </label>
             <label className="space-y-2">
               <span className="text-sm theme-text-muted">
@@ -364,6 +370,14 @@ export function AdminUserEditor({ userId }: { userId: string }) {
                 {locale === "en" ? "Providers" : "Nhà cung cấp"}
               </p>
               <p className="mt-2 text-sm font-semibold theme-text-strong">{user.providers.join(", ")}</p>
+            </div>
+            <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+              <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
+                {locale === "en" ? "Referal code" : "Referal code"}
+              </p>
+              <p className="mt-2 text-sm font-semibold theme-text-strong">
+                {draft.supporterReferralCode || (draft.role === "supporter" ? (locale === "en" ? "Generated after saving" : "Tạo sau khi lưu") : "-")}
+              </p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
