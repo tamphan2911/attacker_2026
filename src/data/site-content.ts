@@ -1491,7 +1491,7 @@ export const defaultPageContent: SitePageContent = {
     ],
     openRoundOnTimelineLabel: { en: "Open this round on timeline page", vi: "Mở giai đoạn này trên trang lịch trình" },
     deliverablePrefix: { en: "Deliverable", vi: "Lưu ý" },
-    specificRoundRulesLabel: { en: "Specific round rules", vi: "Quy định riêng của vòng" },
+    specificRoundRulesLabel: { en: "Specific round rules", vi: "Quy định vòng thi" },
     roundNotesLabel: { en: "Round notes", vi: "Lưu ý của vòng" },
     faqQuickAnswersLabel: { en: "Quick answers", vi: "Trả lời nhanh" },
     faqQuickAnswers: [
@@ -3374,6 +3374,7 @@ function isLegacyOrganizerAddress(value: string) {
 
 const legacyVietnameseRulesCopyReplacements: Record<string, string> = {
   "Đầu việc": "Lưu ý",
+  "Quy định riêng của vòng": "Quy định vòng thi",
   "2 bài tự luận, mỗi bài tối đa 200 từ": "2 câu tự luận, mỗi câu trả lời 300-500 từ",
   "2 bài tự luận, mỗi bài tối đa 500 từ": "2 câu tự luận, mỗi câu trả lời 300-500 từ",
   "36 câu trắc nghiệm trên 6 chủ đề": "40 câu trắc nghiệm trên 6 chủ đề",
