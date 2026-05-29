@@ -9,14 +9,14 @@ import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { serializeUser } from "@/server/site-serializers";
 
 const updateProfileSchema = z.object({
-  name: z.string().trim().min(1),
-  email: z.string().trim().email(),
-  studentId: z.string().trim().optional().default(""),
-  phoneNumber: z.string().trim().max(20).optional().default(""),
-  university: z.string().trim().min(1),
-  major: z.string().trim().min(1),
-  classYear: z.string().trim().min(1),
-  bio: z.string().trim().min(1).max(600),
+  name: z.string().trim().min(1).optional(),
+  email: z.string().trim().email().optional(),
+  studentId: z.string().trim().optional(),
+  phoneNumber: z.string().trim().max(20).optional(),
+  university: z.string().trim().optional(),
+  major: z.string().trim().optional(),
+  classYear: z.string().trim().optional(),
+  bio: z.string().trim().max(600).optional(),
   avatarImageSrc: z.string().trim().nullable().optional(),
 });
 
@@ -47,6 +47,15 @@ export async function PATCH(request: Request) {
   const existingUser = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: {
+      name: true,
+      email: true,
+      studentId: true,
+      loginId: true,
+      phoneNumber: true,
+      university: true,
+      major: true,
+      classYear: true,
+      bio: true,
       role: true,
       avatarImageSrc: true,
     },
@@ -64,16 +73,24 @@ export async function PATCH(request: Request) {
     );
   }
 
-  const normalizedStudentId = payload.data.studentId.trim().toLowerCase();
-  const normalizedEmail = payload.data.email.trim().toLowerCase();
-  const normalizedPhoneNumber = payload.data.phoneNumber.trim();
+  const normalizedStudentId = payload.data.studentId?.trim().toLowerCase() ?? existingUser.studentId ?? "";
+  const normalizedEmail = payload.data.email?.trim().toLowerCase() ?? existingUser.email;
+  const normalizedPhoneNumber = payload.data.phoneNumber?.trim() ?? existingUser.phoneNumber ?? "";
+  const nextUniversity = payload.data.university?.trim() ?? existingUser.university;
+  const nextMajor = payload.data.major?.trim() ?? existingUser.major;
+  const nextClassYear = payload.data.classYear?.trim() ?? existingUser.classYear;
+  const nextBio = payload.data.bio?.trim() ?? existingUser.bio;
+  const nextAvatarImageSrc =
+    payload.data.avatarImageSrc === undefined ? existingUser.avatarImageSrc : payload.data.avatarImageSrc;
 
   const duplicate = await prisma.user.findFirst({
     where: {
       id: { not: session.user.id },
       OR: [
         { email: normalizedEmail },
-        ...(normalizedStudentId ? [{ studentId: normalizedStudentId }, { loginId: normalizedStudentId }] : []),
+        ...(existingUser.role === UserRole.STUDENT && normalizedStudentId
+          ? [{ studentId: normalizedStudentId }, { loginId: normalizedStudentId }]
+          : []),
       ],
     },
     select: { id: true },
@@ -92,7 +109,7 @@ export async function PATCH(request: Request) {
       ownerKind: "user",
       ownerId: session.user.id,
       previousImageSrc: existingUser.avatarImageSrc,
-      nextImageSrc: payload.data.avatarImageSrc,
+      nextImageSrc: nextAvatarImageSrc,
     });
   } catch (error) {
     return NextResponse.json(
@@ -106,15 +123,15 @@ export async function PATCH(request: Request) {
     updated = await prisma.user.update({
       where: { id: session.user.id },
       data: {
-        name: payload.data.name.trim(),
+        name: payload.data.name?.trim() ?? existingUser.name,
         email: normalizedEmail,
         studentId: existingUser.role === UserRole.STUDENT ? normalizedStudentId || null : undefined,
         loginId: existingUser.role === UserRole.STUDENT ? normalizedStudentId || undefined : undefined,
         phoneNumber: normalizedPhoneNumber || null,
-        university: payload.data.university.trim(),
-        major: payload.data.major.trim(),
-        classYear: normalizeClassYearForRole(payload.data.classYear, existingUser.role),
-        bio: payload.data.bio.trim(),
+        university: nextUniversity,
+        major: nextMajor,
+        classYear: normalizeClassYearForRole(nextClassYear, existingUser.role),
+        bio: nextBio,
         avatarImageSrc: avatarReplacement.imageSrc,
       },
       include: {
