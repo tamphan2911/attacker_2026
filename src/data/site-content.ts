@@ -2190,7 +2190,7 @@ export const defaultPageContent: SitePageContent = {
       title: { en: "Report submission and judge review", vi: "Nộp báo cáo và chấm bởi giám khảo" },
       description: {
         en: "Round 2 focuses on report submission, version tracking, and the judged shortlist for the final.",
-        vi: "Vòng 2 tập trung vào nộp báo cáo, theo dõi phiên bản và chấm chọn danh sách vào chung kết.",
+        vi: "Đội thi nộp báo cáo mô tả dự án.",
       },
     },
     round3: {
