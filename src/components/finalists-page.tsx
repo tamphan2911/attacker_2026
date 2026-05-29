@@ -99,12 +99,6 @@ function GuidancePanel({
           >
             {reportLabel}
           </Link>
-          <a
-            href={`mailto:${contactInfo.email}`}
-            className="inline-flex items-center justify-center rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
-          >
-            {locale === "en" ? "Email organizer" : "Email ban tổ chức"}
-          </a>
         </div>
       </div>
     </Surface>
@@ -169,7 +163,7 @@ export function FinalistsPage() {
           description={pickText(locale, pageContent.finalists.finalistsHeader.description)}
         />
 
-        <GuidancePanel locale={locale} kind="finalist" />
+        {round2Results.released ? <GuidancePanel locale={locale} kind="finalist" /> : null}
 
         <div className="grid gap-4 xl:grid-cols-2">
             {finalistSlots.map((team, index) => {
@@ -296,7 +290,7 @@ export function FinalistsPage() {
           description={pickText(locale, pageContent.finalists.emergingHeader.description)}
         />
 
-        <GuidancePanel locale={locale} kind="emerging" />
+        {round2Results.released ? <GuidancePanel locale={locale} kind="emerging" /> : null}
 
         <Surface className="overflow-hidden px-0 py-0">
           <div className="overflow-x-auto">
