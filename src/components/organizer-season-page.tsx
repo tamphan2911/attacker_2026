@@ -154,6 +154,7 @@ function SeasonDetailContent({
   const [isPhotoLightboxOpen, setIsPhotoLightboxOpen] = useState(false);
   const safeActivePhotoIndex = activePhotoIndex % photoSlides.length;
   const activePhoto = photoSlides[safeActivePhotoIndex] ?? photoSlides[0];
+  const shouldShowTeamMembers = story.year !== "2019";
   const shiftPhoto = (direction: number) => {
     setActivePhotoIndex((current) => (current + direction + photoSlides.length) % photoSlides.length);
   };
@@ -328,7 +329,11 @@ function SeasonDetailContent({
                       key={`${team.name.en}-${team.rank.en}-${index}`}
                       className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 shadow-[0_18px_46px_rgba(15,23,42,0.05)]"
                     >
-                      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)] lg:items-start">
+                      <div
+                        className={`grid gap-4 lg:items-start ${
+                          shouldShowTeamMembers ? "lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)]" : ""
+                        }`}
+                      >
                         <div className="space-y-3">
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="inline-flex items-center gap-2 rounded-full border border-amber-300/32 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-amber-700 dark:text-amber-200">
@@ -355,28 +360,30 @@ function SeasonDetailContent({
                           </div>
                         </div>
 
-                        <div className="rounded-[1.25rem] border theme-border bg-white/58 px-3 py-3 dark:bg-white/5">
-                          <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
-                            <BookOpenText className="h-4 w-4" />
-                            {locale === "en" ? "Members" : "Thành viên"}
+                        {shouldShowTeamMembers ? (
+                          <div className="rounded-[1.25rem] border theme-border bg-white/58 px-3 py-3 dark:bg-white/5">
+                            <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
+                              <BookOpenText className="h-4 w-4" />
+                              {locale === "en" ? "Members" : "Thành viên"}
+                            </div>
+                            <div className="space-y-2">
+                              {(team.members ?? []).map((member) => (
+                                <div
+                                  key={`${member.name}-${member.major}`}
+                                  className="grid gap-2 rounded-2xl border theme-border bg-white/72 px-3 py-2 text-sm dark:bg-slate-950/20"
+                                >
+                                  <p className="inline-flex items-center gap-2 font-semibold theme-text-strong">
+                                    <UserRound className="h-4 w-4 text-sky-500 dark:text-cyan-200" />
+                                    {member.name}
+                                  </p>
+                                  <p className="pl-6 text-xs leading-5 theme-text-muted">
+                                    {member.university} · {member.major}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <div className="space-y-2">
-                            {(team.members ?? []).map((member) => (
-                              <div
-                                key={`${member.name}-${member.major}`}
-                                className="grid gap-2 rounded-2xl border theme-border bg-white/72 px-3 py-2 text-sm dark:bg-slate-950/20"
-                              >
-                                <p className="inline-flex items-center gap-2 font-semibold theme-text-strong">
-                                  <UserRound className="h-4 w-4 text-sky-500 dark:text-cyan-200" />
-                                  {member.name}
-                                </p>
-                                <p className="pl-6 text-xs leading-5 theme-text-muted">
-                                  {member.university} · {member.major}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                        ) : null}
                       </div>
                     </div>
                   ))
