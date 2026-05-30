@@ -39,7 +39,12 @@ import {
 } from "@/data/admin-content";
 import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
-import { SeasonArchiveContentEditor, SeasonLinksContentEditor } from "@/components/admin-season-content-editor";
+import {
+  getSeasonSlotDisplayYear,
+  SeasonArchiveContentEditor,
+  SeasonLinksContentEditor,
+  seasonContentYears,
+} from "@/components/admin-season-content-editor";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import type {
@@ -188,8 +193,6 @@ function createOrganizerGallerySlideDraft(index: number) {
     description: createBlankLocalizedText(),
   };
 }
-
-const seasonContentYears = ["2023", "2024", "2025", "2026"] as const;
 
 function LocalizedFieldEditor({
   label,
@@ -463,6 +466,32 @@ const contentPageTree: Array<{
   { id: "contact" },
 ];
 
+function getSeasonYearFromContentPageId(pageId: ContentPageId) {
+  return pageId.startsWith("season-") ? pageId.replace("season-", "") : null;
+}
+
+function getContentPageLabel(locale: Locale, pageId: ContentPageId, content: SitePageContent) {
+  const seasonYear = getSeasonYearFromContentPageId(pageId);
+  if (seasonYear) {
+    const displayYear = getSeasonSlotDisplayYear(content, seasonYear);
+    return locale === "en" ? `Season ${displayYear}` : `Mùa ${displayYear}`;
+  }
+
+  return pickText(locale, contentPageMap[pageId].label);
+}
+
+function getContentPageDescription(locale: Locale, pageId: ContentPageId, content: SitePageContent) {
+  const seasonYear = getSeasonYearFromContentPageId(pageId);
+  if (seasonYear) {
+    const displayYear = getSeasonSlotDisplayYear(content, seasonYear);
+    return locale === "en"
+      ? `Edit every public text block and slider image for the ${displayYear} season detail page.`
+      : `Chỉnh toàn bộ nội dung chữ và ảnh slider của trang chi tiết mùa ${displayYear}.`;
+  }
+
+  return pickText(locale, contentPageMap[pageId].description);
+}
+
 function LocalizedTextEditorCard({
   title,
   value,
@@ -540,7 +569,7 @@ function EditorTopBar({
 }
 
 export function ContentIndexSection() {
-  const { locale } = useSiteState();
+  const { locale, pageContent } = useSiteState();
   useAdminTitleScroll();
 
   return (
@@ -566,10 +595,10 @@ export function ContentIndexSection() {
                     </div>
                     <div className="min-w-0">
                       <p className="theme-heading text-xl font-semibold theme-text-strong">
-                        {pickText(locale, item.label)}
+                        {getContentPageLabel(locale, item.id, pageContent)}
                       </p>
                       <p className="mt-1 text-sm leading-7 theme-text-muted">
-                        {pickText(locale, item.description)}
+                        {getContentPageDescription(locale, item.id, pageContent)}
                       </p>
                     </div>
                   </div>
@@ -596,7 +625,9 @@ export function ContentIndexSection() {
                             <div className="min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="text-base font-semibold theme-text-strong">
-                                  {pickText(locale, child.label)}
+                                  {childEntry.kind === "page"
+                                    ? getContentPageLabel(locale, childEntry.id, pageContent)
+                                    : pickText(locale, child.label)}
                                 </p>
                                 {childEntry.kind === "type" ? (
                                   <span className="rounded-full border theme-border bg-white/70 px-2.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.18em] theme-text-soft dark:bg-white/8">
@@ -605,7 +636,9 @@ export function ContentIndexSection() {
                                 ) : null}
                               </div>
                               <p className="mt-1 text-sm leading-6 theme-text-soft">
-                                {pickText(locale, child.description)}
+                                {childEntry.kind === "page"
+                                  ? getContentPageDescription(locale, childEntry.id, pageContent)
+                                  : pickText(locale, child.description)}
                               </p>
                             </div>
                           </div>
@@ -858,7 +891,6 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   );
   const isDirty = pageContentDirty || timelineDirty;
 
-  const config = contentPageConfigs.find((item) => item.id === pageId)!;
   const seasonYear = pageId.startsWith("season-") ? pageId.replace("season-", "") : null;
   const faqTopics = draft.rules.faqTopics;
   const firstFaqTopicId = faqTopics[0]?.id ?? "";
@@ -991,8 +1023,8 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
     <div className="space-y-8">
       <EditorTopBar
         eyebrow={locale === "en" ? "Admin / Content / Page" : "Admin / Nội dung / Trang"}
-        title={pickText(locale, config.label)}
-        description={pickText(locale, config.description)}
+        title={getContentPageLabel(locale, pageId, draft)}
+        description={getContentPageDescription(locale, pageId, draft)}
         isDirty={isDirty}
         onReset={resetDrafts}
         onSave={() => {

@@ -19,7 +19,7 @@ import type {
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
 const MAX_SEASON_IMAGE_BYTES = 2 * 1024 * 1024;
-const seasonContentYears = ["2023", "2024", "2025", "2026"] as const;
+export const seasonContentYears = ["2023", "2024", "2025", "2026"] as const;
 
 function formatFileSize(bytes: number) {
   if (bytes >= 1024 * 1024) {
@@ -113,7 +113,7 @@ function ensureSeasonDraftRecords(draft: SitePageContent, year: string) {
   }
 }
 
-function findSeasonRecordIndex(records: Array<{ year: string }>, slotYear: string) {
+export function findSeasonRecordIndex(records: Array<{ year: string }>, slotYear: string) {
   const directIndex = records.findIndex((item) => item.year === slotYear);
 
   if (directIndex >= 0) {
@@ -122,6 +122,11 @@ function findSeasonRecordIndex(records: Array<{ year: string }>, slotYear: strin
 
   const slotIndex = seasonContentYears.findIndex((item) => item === slotYear);
   return slotIndex >= 0 && slotIndex < records.length ? slotIndex : -1;
+}
+
+export function getSeasonSlotDisplayYear(content: SitePageContent, slotYear: string) {
+  const storyIndex = findSeasonRecordIndex(content.organizer.seasonStories, slotYear);
+  return content.organizer.seasonStories[storyIndex]?.year ?? slotYear;
 }
 
 function unoptimizedImage(src: string) {
@@ -234,8 +239,7 @@ export function SeasonLinksContentEditor({ locale, draft }: { locale: Locale; dr
       />
       <div className="grid gap-3 md:grid-cols-2">
         {seasonContentYears.map((slotYear) => {
-          const storyIndex = findSeasonRecordIndex(draft.organizer.seasonStories, slotYear);
-          const displayYear = draft.organizer.seasonStories[storyIndex]?.year ?? slotYear;
+          const displayYear = getSeasonSlotDisplayYear(draft, slotYear);
 
           return (
           <Link key={slotYear} href={`/admin/content/pages/season-${slotYear}`} className="block">
@@ -868,9 +872,7 @@ export function SeasonArchiveContentEditor({
                           event.target.value = "";
                           if (!file) return;
                           void uploadSeasonImage(file, `slide-${slideIndex}`, (next, imageUrl) => {
-                            const nextArchiveIndex = next.organizer.seasonArchives.findIndex(
-                              (item) => item.year === year,
-                            );
+                            const nextArchiveIndex = findSeasonRecordIndex(next.organizer.seasonArchives, year);
                             if (nextArchiveIndex >= 0) {
                               next.organizer.seasonArchives[nextArchiveIndex].photoSlides[slideIndex].image =
                                 imageUrl;
