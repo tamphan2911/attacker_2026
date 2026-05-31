@@ -73,15 +73,6 @@ export function SponsorsPage() {
                 <p className="mt-2 text-sm theme-text-soft">{pickText(locale, sponsor.category)}</p>
                 <p className="mt-5 text-sm leading-7 theme-text-muted">{pickText(locale, sponsor.description)}</p>
               </div>
-
-              <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                  {locale === "en" ? "Contribution" : "Đồng hành"}
-                </p>
-                <p className="mt-3 text-sm leading-7 theme-text-muted">
-                  {pickText(locale, sponsor.contribution)}
-                </p>
-              </div>
             </div>
           </Surface>
         ))}
