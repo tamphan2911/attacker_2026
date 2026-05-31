@@ -2204,19 +2204,19 @@ export const defaultPageContent: SitePageContent = {
   },
   finalists: {
     finalistsHeader: {
-      eyebrow: { en: "Finalist teams", vi: "Đội vào thuyết trình" },
+      eyebrow: { en: "Finalist teams", vi: "Đội vào chung kết" },
       title: { en: "5 finalist teams", vi: "5 đội vào chung kết" },
       description: {
         en: "The five teams below are the finalist list only. This section does not indicate ranking order.",
-        vi: "Năm đội dưới đây là danh sách đội vào chung kết. Phần này chỉ mang tính liệt kê, không thể hiện thứ hạng.",
+        vi: "Danh sách chỉ mang tính liệt kê, không mang ý nghĩa xếp hạng.",
       },
     },
     emergingHeader: {
       eyebrow: { en: "Emerging round", vi: "Vòng Đội ươm mầm" },
-      title: { en: "20 Emerging round qualifiers", vi: "20 đội vào Vòng Đội ươm mầm" },
+      title: { en: "20 Emerging round qualifiers", vi: "20 đội lọt vào bảng Tiềm năng" },
       description: {
         en: "The twenty teams below qualify for the Emerging round and must submit an updated report for rescoring. The best 10 teams after Emerging round scoring receive official Emerging Team recognition.",
-        vi: "Hai mươi đội dưới đây vào Vòng Đội ươm mầm và cần nộp báo cáo cập nhật để được chấm lại. Danh hiệu Đội ươm mầm chính thức sẽ được trao cho 10 đội tốt nhất sau khi chấm Vòng Đội ươm mầm.",
+        vi: "Danh sách chỉ mang tính liệt kê, không mang ý nghĩa xếp hạng.",
       },
     },
     finalistSlotLabel: { en: "Finalist slot", vi: "Vị trí chung kết" },
@@ -2239,11 +2239,11 @@ export const defaultPageContent: SitePageContent = {
     teamColumnLabel: { en: "Team", vi: "Đội" },
     leaderColumnLabel: { en: "Leader", vi: "Đội trưởng" },
     keywordColumnLabel: { en: "Keyword", vi: "Từ khóa" },
-    recognitionColumnLabel: { en: "Bracket", vi: "Nhánh thi" },
+    recognitionColumnLabel: { en: "Bracket", vi: "Bảng ươm mầm" },
     emergingTeamSlotLabel: { en: "Emerging round qualifier slot", vi: "Vị trí vào Vòng Đội ươm mầm" },
     awaitingOfficialUpdate: { en: "Awaiting official update", vi: "Chờ cập nhật chính thức" },
     reservedLabel: { en: "Reserved", vi: "Giữ chỗ" },
-    emergingTeamLabel: { en: "Emerging round qualifier", vi: "Vào Vòng Đội ươm mầm" },
+    emergingTeamLabel: { en: "Emerging round qualifier", vi: "Bảng ươm mầm" },
   },
   finalResults: {
     champion: {
@@ -3373,6 +3373,25 @@ function isLegacyOrganizerAddress(value: string) {
 }
 
 const legacyVietnameseRulesCopyReplacements: Record<string, string> = {
+  "10 Đội tiềm năng": "20 đội lọt vào bảng Tiềm năng",
+  "10 đội tiềm năng": "20 đội lọt vào bảng Tiềm năng",
+  "10 đội vào Vòng Đội ươm mầm": "20 đội lọt vào bảng Tiềm năng",
+  "10 đội vào Vòng Đội Ươm mầm": "20 đội lọt vào bảng Tiềm năng",
+  "20 đội vào Vòng Đội ươm mầm": "20 đội lọt vào bảng Tiềm năng",
+  "20 đội vào Vòng Đội Ươm mầm": "20 đội lọt vào bảng Tiềm năng",
+  "Mười đội dưới đây được ghi nhận là Đội tiềm năng. Phần này cũng chỉ là danh sách liệt kê, không mang ý nghĩa xếp hạng.":
+    "Danh sách chỉ mang tính liệt kê, không mang ý nghĩa xếp hạng.",
+  "Mười đội dưới đây được ghi nhận là Đội ươm mầm. Phần này cũng chỉ là danh sách liệt kê, không mang ý nghĩa xếp hạng.":
+    "Danh sách chỉ mang tính liệt kê, không mang ý nghĩa xếp hạng.",
+  "Hai mươi đội dưới đây vào Vòng Đội ươm mầm và cần nộp báo cáo cập nhật để được chấm lại. Danh hiệu Đội ươm mầm chính thức sẽ được trao cho 10 đội tốt nhất sau khi chấm Vòng Đội ươm mầm.":
+    "Danh sách chỉ mang tính liệt kê, không mang ý nghĩa xếp hạng.",
+  "Đội vào thuyết trình": "Đội vào chung kết",
+  "Năm đội dưới đây là danh sách đội vào chung kết. Phần này chỉ mang tính liệt kê, không thể hiện thứ hạng.":
+    "Danh sách chỉ mang tính liệt kê, không mang ý nghĩa xếp hạng.",
+  "Top 5 đội vào chung kết": "5 đội vào chung kết",
+  "Ghi nhận nổi bật": "Bảng ươm mầm",
+  "Nhánh thi": "Bảng ươm mầm",
+  "Vào Vòng Đội ươm mầm": "Bảng ươm mầm",
   "Đầu việc": "Lưu ý",
   "Quy định riêng của vòng": "Quy định vòng thi",
   "2 bài tự luận, mỗi bài tối đa 200 từ": "2 câu tự luận, mỗi câu trả lời 300-500 từ",
