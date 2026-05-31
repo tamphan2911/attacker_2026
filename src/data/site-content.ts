@@ -2207,15 +2207,15 @@ export const defaultPageContent: SitePageContent = {
       eyebrow: { en: "Finalist teams", vi: "Đội vào chung kết" },
       title: { en: "5 finalist teams", vi: "5 đội vào chung kết" },
       description: {
-        en: "The five teams below are the finalist list only. This section does not indicate ranking order.",
+        en: "This list is for reference only and does not indicate ranking.",
         vi: "Danh sách chỉ mang tính liệt kê, không mang ý nghĩa xếp hạng.",
       },
     },
     emergingHeader: {
-      eyebrow: { en: "Emerging round", vi: "Vòng Đội ươm mầm" },
-      title: { en: "20 Emerging round qualifiers", vi: "20 đội lọt vào bảng Tiềm năng" },
+      eyebrow: { en: "Incubation bracket", vi: "Vòng Đội ươm mầm" },
+      title: { en: "20 teams shortlisted for the Potential bracket", vi: "20 đội lọt vào bảng Tiềm năng" },
       description: {
-        en: "The twenty teams below qualify for the Emerging round and must submit an updated report for rescoring. The best 10 teams after Emerging round scoring receive official Emerging Team recognition.",
+        en: "This list is for reference only and does not indicate ranking.",
         vi: "Danh sách chỉ mang tính liệt kê, không mang ý nghĩa xếp hạng.",
       },
     },
@@ -2239,11 +2239,11 @@ export const defaultPageContent: SitePageContent = {
     teamColumnLabel: { en: "Team", vi: "Đội" },
     leaderColumnLabel: { en: "Leader", vi: "Đội trưởng" },
     keywordColumnLabel: { en: "Keyword", vi: "Từ khóa" },
-    recognitionColumnLabel: { en: "Bracket", vi: "Bảng ươm mầm" },
-    emergingTeamSlotLabel: { en: "Emerging round qualifier slot", vi: "Vị trí vào Vòng Đội ươm mầm" },
+    recognitionColumnLabel: { en: "Incubation bracket", vi: "Bảng ươm mầm" },
+    emergingTeamSlotLabel: { en: "Potential bracket slot", vi: "Vị trí vào Vòng Đội ươm mầm" },
     awaitingOfficialUpdate: { en: "Awaiting official update", vi: "Chờ cập nhật chính thức" },
     reservedLabel: { en: "Reserved", vi: "Giữ chỗ" },
-    emergingTeamLabel: { en: "Emerging round qualifier", vi: "Bảng ươm mầm" },
+    emergingTeamLabel: { en: "Incubation bracket", vi: "Bảng ươm mầm" },
   },
   finalResults: {
     champion: {
@@ -3373,6 +3373,29 @@ function isLegacyOrganizerAddress(value: string) {
 }
 
 const legacyVietnameseRulesCopyReplacements: Record<string, string> = {
+  "10 Emerging Teams": "20 teams shortlisted for the Potential bracket",
+  "10 Emerging teams": "20 teams shortlisted for the Potential bracket",
+  "10 Potential Teams": "20 teams shortlisted for the Potential bracket",
+  "10 Potential teams": "20 teams shortlisted for the Potential bracket",
+  "10 Emerging round qualifiers": "20 teams shortlisted for the Potential bracket",
+  "20 Emerging round qualifiers": "20 teams shortlisted for the Potential bracket",
+  "20 teams in the Emerging round": "20 teams shortlisted for the Potential bracket",
+  "The ten teams below are recognized as Emerging Teams. This section is also a list only and does not indicate ranking order.":
+    "This list is for reference only and does not indicate ranking.",
+  "The ten teams below are recognized as Potential Teams. This section is also a list only and does not indicate ranking order.":
+    "This list is for reference only and does not indicate ranking.",
+  "The twenty teams below qualify for the Emerging round and must submit an updated report for rescoring. The best 10 teams after Emerging round scoring receive official Emerging Team recognition.":
+    "This list is for reference only and does not indicate ranking.",
+  "Presentation teams": "Finalist teams",
+  "Teams for presentation": "Finalist teams",
+  "The five teams below are the finalist list only. This section does not indicate ranking order.":
+    "This list is for reference only and does not indicate ranking.",
+  "Top 5 finalist teams": "5 finalist teams",
+  "Top 5 teams for the final": "5 finalist teams",
+  "Featured recognition": "Incubation bracket",
+  "Bracket": "Incubation bracket",
+  "Emerging round qualifier": "Incubation bracket",
+  "Emerging round qualifier slot": "Potential bracket slot",
   "10 Đội tiềm năng": "20 đội lọt vào bảng Tiềm năng",
   "10 đội tiềm năng": "20 đội lọt vào bảng Tiềm năng",
   "10 đội vào Vòng Đội ươm mầm": "20 đội lọt vào bảng Tiềm năng",
