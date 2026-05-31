@@ -7,15 +7,11 @@ import {
   ArrowRight,
   Award,
   Badge,
+  CalendarRange,
   BriefcaseBusiness,
-  CheckCircle2,
-  ClipboardCheck,
-  Clock3,
   Crown,
-  FileText,
   GraduationCap,
   Medal,
-  MessageCircle,
   Quote,
   ShieldCheck,
   Sparkles,
@@ -80,60 +76,22 @@ const homepageRewardItems = [
   },
 ] as const;
 
+const heroCardIcons = [
+  [Users2, ShieldCheck, TrendingUp],
+  [Crown, Star, Award],
+  [CalendarRange, TrendingUp, Medal],
+] as const;
+
+const heroCardIconClasses = [
+  "bg-[linear-gradient(135deg,rgba(56,189,248,0.95),rgba(14,165,233,0.95))] text-white shadow-[0_14px_32px_rgba(56,189,248,0.3)]",
+  "bg-[linear-gradient(135deg,rgba(52,211,153,0.95),rgba(16,185,129,0.95))] text-slate-950 shadow-[0_14px_32px_rgba(16,185,129,0.24)]",
+  "bg-[linear-gradient(135deg,rgba(251,191,36,0.98),rgba(249,115,22,0.96))] text-slate-950 shadow-[0_14px_32px_rgba(249,115,22,0.24)]",
+] as const;
+
 const testimonialQuoteClasses = [
   "text-[#7c3aed] bg-[rgba(124,58,237,0.1)]",
   "text-[#ec4899] bg-[rgba(236,72,153,0.1)]",
   "text-[#2563eb] bg-[rgba(37,99,235,0.1)]",
-] as const;
-
-const homepageFactIcons = [Users2, ClipboardCheck, TrendingUp, Medal] as const;
-
-const homepageJourneySteps = [
-  {
-    icon: ClipboardCheck,
-    title: {
-      en: "Round 1: individual test",
-      vi: "Vòng 1: bài thi cá nhân",
-    },
-    description: {
-      en: "Each qualified member completes the online test. Team ranking is based on the team average after scoring is complete.",
-      vi: "Mỗi thành viên đủ điều kiện làm bài thi trực tuyến. Xếp hạng đội dựa trên điểm trung bình sau khi hoàn tất chấm điểm.",
-    },
-    meta: {
-      en: "36 multiple-choice questions + 2 essays",
-      vi: "36 câu trắc nghiệm + 2 câu tự luận",
-    },
-  },
-  {
-    icon: FileText,
-    title: {
-      en: "Round 2: project report",
-      vi: "Vòng 2: báo cáo dự án",
-    },
-    description: {
-      en: "Top teams submit a fintech idea report focused on problem fit, product logic, execution, and market relevance.",
-      vi: "Các đội đi tiếp nộp báo cáo ý tưởng fintech, tập trung vào vấn đề, logic sản phẩm, khả năng triển khai và tính thị trường.",
-    },
-    meta: {
-      en: "Top 50 teams continue",
-      vi: "Top 50 đội đi tiếp",
-    },
-  },
-  {
-    icon: Medal,
-    title: {
-      en: "Final: live defense",
-      vi: "Chung kết: bảo vệ trực tiếp",
-    },
-    description: {
-      en: "Finalists present to judges, answer questions, and compete for the final ranking and sponsor-side opportunities.",
-      vi: "Các đội chung kết thuyết trình trước giám khảo, trả lời phản biện và tranh thứ hạng cuối cùng cùng các cơ hội từ đối tác.",
-    },
-    meta: {
-      en: "5 finalist teams",
-      vi: "5 đội chung kết",
-    },
-  },
 ] as const;
 
 function pickRewardAmount(locale: "en" | "vi", amount: { en: string; vi: string }, index: number) {
@@ -151,7 +109,17 @@ export function HomePage() {
     pageContent.home.heroSlides.length > 0
       ? pageContent.home.heroSlides
       : defaultPageContent.home.heroSlides;
-  const heroDeck = heroSlides;
+  const heroDeck = heroSlides.map((slide, index) =>
+    index === 0
+      ? {
+          ...slide,
+          secondaryCta: {
+            ...slide.secondaryCta,
+            href: "/competition#competition-journey",
+          },
+        }
+      : slide,
+  );
   const metricItems =
     pageContent.home.metrics.length > 0 ? pageContent.home.metrics : defaultPageContent.home.metrics;
   const visibleMetricItems = metricItems.filter((item) => {
@@ -184,41 +152,10 @@ export function HomePage() {
   const testimonialsSection = pageContent.home.testimonialsSection;
   const testimonialsTitle =
     locale === "vi" ? "Cảm nhận từ các mùa trước" : "Voices from earlier seasons";
+  const currentHeroSlide = heroDeck[activeSlide] ?? heroDeck[0];
   const sponsorMarqueeItems = [...sponsors, ...sponsors];
   const testimonialItems = pageContent.home.testimonials;
   const testimonialMarqueeItems = [...testimonialItems, ...testimonialItems];
-  const heroIntro =
-    locale === "vi"
-      ? "Cuộc thi ý tưởng fintech dành cho sinh viên Việt Nam, tập trung vào tư duy tài chính, sản phẩm, dữ liệu và khả năng trình bày."
-      : "A student fintech idea competition in Vietnam, focused on finance, product thinking, data, and presentation quality.";
-  const heroEyebrow = locale === "vi" ? "Mùa thi 2026" : "2026 season";
-  const heroPrimaryCta = locale === "vi" ? "Xem hành trình cuộc thi" : "View competition journey";
-  const heroSecondaryCta = locale === "vi" ? "Mở Đội thi" : "Open team workspace";
-  const statusTitle = locale === "vi" ? "Thông tin mùa thi" : "Season information";
-  const statusDescription =
-    locale === "vi"
-      ? "Theo dõi các mốc chính, danh sách đội đi tiếp và kênh hỗ trợ chính thức từ ban tổ chức."
-      : "Track key dates, qualified teams, and the official organizer support channel.";
-  const statusItems = [
-    {
-      icon: Clock3,
-      href: "/competition/timeline",
-      label: locale === "vi" ? "Mốc chính" : "Key dates",
-      value: locale === "vi" ? "Tháng 5 - tháng 7/2026" : "May - July 2026",
-    },
-    {
-      icon: CheckCircle2,
-      href: "/competition/round-1-results",
-      label: locale === "vi" ? "Đội đi tiếp" : "Qualified teams",
-      value: locale === "vi" ? "Top 50 vào Vòng 2" : "Top 50 enter Round 2",
-    },
-    {
-      icon: MessageCircle,
-      href: "/messages?organizer=1",
-      label: locale === "vi" ? "Hỗ trợ" : "Support",
-      value: locale === "vi" ? "Nhắn ban tổ chức" : "Message organizer",
-    },
-  ];
 
   useEffect(() => {
     if (heroDeck.length <= 1) {
@@ -235,9 +172,9 @@ export function HomePage() {
   }, [heroDeck.length]);
 
   return (
-    <div className="space-y-20 pb-8">
+    <div className="space-y-24 pb-8">
       <section className="relative left-1/2 right-1/2 -mx-[50vw] -mt-6 w-screen overflow-hidden md:-mt-8">
-        <div className="relative min-h-[600px] md:min-h-[640px]">
+        <div className="relative min-h-[560px] md:min-h-[620px]">
           {heroDeck.map((slide, index) => (
             <div
               key={`${slide.title.en}-${index}`}
@@ -254,75 +191,53 @@ export function HomePage() {
                 unoptimized={slide.image.startsWith("/api/hero-slide-images/")}
                 className="hero-pan object-cover"
               />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.16)_0%,rgba(7,18,35,0.3)_44%,rgba(7,18,35,0.74)_100%)]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.04)_0%,rgba(7,18,35,0.18)_42%,rgba(7,18,35,0.64)_100%)]" />
             </div>
           ))}
 
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.12),transparent_22%),linear-gradient(90deg,rgba(7,18,35,0.42)_0%,rgba(7,18,35,0.16)_44%,rgba(7,18,35,0.38)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(255,255,255,0.12),transparent_24%),linear-gradient(90deg,rgba(7,18,35,0.18)_0%,rgba(7,18,35,0.04)_38%,rgba(7,18,35,0.05)_62%,rgba(7,18,35,0.18)_100%),linear-gradient(180deg,rgba(7,18,35,0.02)_0%,rgba(7,18,35,0.12)_46%,rgba(7,18,35,0.72)_100%)]" />
 
-          <div className="relative z-10 mx-auto flex min-h-[600px] max-w-7xl items-end px-4 pb-16 pt-28 text-white md:min-h-[640px] md:px-8 md:pb-20">
-            <div className="grid w-full gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-              <div className="max-w-3xl">
-                <p className="text-xs font-semibold uppercase tracking-[0.34em] text-sky-100/80">
-                  {heroEyebrow}
-                </p>
-                <h1 className="theme-heading mt-4 max-w-[620px] text-[3rem] font-semibold leading-[0.98] text-white [text-shadow:0_18px_44px_rgba(7,18,35,0.46)] md:text-[5rem]">
-                  Attacker 2026
+          <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl items-end px-4 pb-16 pt-24 text-white md:min-h-[620px] md:px-8 md:pb-20 md:pt-28">
+            <div className="grid w-full gap-4 lg:grid-cols-[390px_390px] lg:items-end lg:justify-between">
+              <div className="hero-soft-glass max-w-[390px] rounded-[1.25rem] px-4 py-4 lg:translate-y-6">
+                <h1 className="theme-heading max-w-[22rem] text-[1.24rem] font-semibold leading-[1.17] text-white [text-shadow:0_12px_28px_rgba(7,18,35,0.38)] md:text-[1.58rem] md:leading-[1.14]">
+                  {pickText(locale, currentHeroSlide.title)}
                 </h1>
-                <p className="mt-5 max-w-[610px] text-base leading-8 text-white/84 [text-shadow:0_12px_30px_rgba(7,18,35,0.36)] md:text-lg">
-                  {heroIntro}
+                <p className="mt-2.5 max-w-[22rem] text-[0.7rem] leading-5 text-white/76 [text-shadow:0_10px_24px_rgba(7,18,35,0.30)] md:text-[0.74rem]">
+                  {pickText(locale, currentHeroSlide.description)}
                 </p>
-                <div className="mt-7 flex flex-wrap gap-3">
-                  <Link
-                    href="/competition#competition-journey"
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-950 shadow-[0_22px_52px_rgba(7,18,35,0.24)]"
-                  >
-                    {heroPrimaryCta}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    href="/dashboard"
-                    className="inline-flex items-center justify-center gap-2 rounded-full bg-white/12 px-5 py-3 text-sm font-semibold text-white ring-1 ring-white/22 backdrop-blur-md"
-                  >
-                    {heroSecondaryCta}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
               </div>
 
-              <div className="theme-home-hero-status rounded-[1.8rem] px-5 py-5 backdrop-blur-xl">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-300 text-slate-950">
-                    <ShieldCheck className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.26em] text-white/58">
-                      {statusTitle}
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-white/78">{statusDescription}</p>
-                  </div>
-                </div>
-                <div className="mt-5 space-y-3">
-                  {statusItems.map((item) => {
-                    const Icon = item.icon;
+              <div className="grid gap-2 sm:grid-cols-3 lg:w-[390px] lg:-translate-x-14 lg:translate-y-16 lg:grid-cols-1 lg:self-end lg:justify-self-end">
+                {currentHeroSlide.cards.map((item, index) => {
+                  const Icon = heroCardIcons[activeSlide % heroCardIcons.length]?.[index] ?? Sparkles;
 
-                    return (
-                      <Link
-                        key={item.label}
-                        href={item.href}
-                        className="flex items-center gap-3 rounded-2xl bg-white/10 px-3.5 py-3 text-left ring-1 ring-white/10"
-                      >
-                        <Icon className="h-4 w-4 shrink-0 text-sky-200" />
-                        <span className="min-w-0">
-                          <span className="block text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-white/52">
-                            {item.label}
-                          </span>
-                          <span className="block truncate text-sm font-semibold text-white">{item.value}</span>
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
+                  return (
+                    <div
+                      key={item.label.en}
+                      className="hero-soft-glass hero-soft-glass--compact rounded-[1.1rem] px-3.5 py-2"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.8rem] ${heroCardIconClasses[index % heroCardIconClasses.length]}`}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-white/60">
+                            {pickText(locale, item.label)}
+                          </p>
+                          <p className="mt-0.5 truncate text-[0.82rem] font-semibold text-white">
+                            {pickText(locale, item.value)}
+                          </p>
+                          <p className="mt-0.5 line-clamp-1 text-[0.68rem] leading-4 text-white/74">
+                            {pickText(locale, item.note)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -344,91 +259,23 @@ export function HomePage() {
       </section>
 
       {visibleMetricItems.length > 0 ? (
-        <section className="theme-home-fact-strip -mt-8 grid gap-3 rounded-[2rem] border px-4 py-4 md:grid-cols-2 md:px-5 lg:grid-cols-4">
-          {visibleMetricItems.map((item, index) => {
-            const Icon = homepageFactIcons[index % homepageFactIcons.length] ?? Users2;
-
-            return (
-              <div key={item.value + item.label.en} className="flex items-center gap-4 px-2 py-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="theme-heading text-2xl font-semibold theme-text-strong">{item.value}</p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow">
-                    {pickText(locale, item.label)}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 theme-text-muted">{pickText(locale, item.note)}</p>
-                </div>
-              </div>
-            );
-          })}
-        </section>
-      ) : null}
-
-      <section className="grid gap-5 lg:grid-cols-[0.84fr_1.16fr] lg:items-start">
-        <div className="lg:sticky lg:top-28">
-          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.32em]">
-            {locale === "vi" ? "Hành trình cuộc thi" : "Competition Journey"}
-          </p>
-          <h2 className="theme-heading mt-4 text-3xl font-semibold leading-[1.08] theme-text-strong md:text-[2.75rem]">
-            {locale === "vi" ? "Rõ từng vòng, rõ việc cần làm." : "Clear rounds, clear next steps."}
-          </h2>
-          <p className="mt-4 max-w-xl text-sm leading-7 theme-text-muted">
-            {locale === "vi"
-              ? "Trang chủ chỉ giữ những thông tin cần quyết định nhanh: điều kiện đội, cách đi tiếp, giải thưởng và nơi nhận hỗ trợ."
-              : "The homepage keeps the decision-critical information visible: team rules, progression, rewards, and support."}
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/competition"
-              className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-            >
-              {locale === "vi" ? "Xem trang cuộc thi" : "Open competition page"}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/competition/round-1-results"
-              className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold"
-            >
-              {locale === "vi" ? "Kết quả Vòng 1" : "Round 1 results"}
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {visibleMetricItems.map((item) => {
+          return (
+          <div
+            key={item.value + item.label.en}
+            className="theme-home-metric-card rounded-[1.7rem] border px-5 py-5 text-center"
+          >
+            <p className="theme-heading text-4xl font-semibold theme-text-strong">{item.value}</p>
+            <p className="mt-3 text-sm font-medium uppercase tracking-[0.22em] theme-eyebrow">
+              {pickText(locale, item.label)}
+            </p>
+            <p className="mt-3 text-sm leading-6 theme-text-soft">{pickText(locale, item.note)}</p>
           </div>
-        </div>
-
-        <div className="grid gap-4">
-          {homepageJourneySteps.map((step, index) => {
-            const Icon = step.icon;
-
-            return (
-              <div key={step.title.en} className="theme-home-journey-card rounded-[1.6rem] border p-5 md:p-6">
-                <div className="flex flex-col gap-5 md:flex-row md:items-start">
-                  <div className="flex items-center gap-4 md:w-56 md:shrink-0">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#dff4ff,#9bdcff)] text-sky-800">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-                        {locale === "vi" ? `Bước ${index + 1}` : `Step ${index + 1}`}
-                      </p>
-                      <p className="theme-heading mt-1 text-lg font-semibold leading-6 theme-text-strong">
-                        {pickText(locale, step.title)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm leading-7 theme-text-body">{pickText(locale, step.description)}</p>
-                    <div className="mt-4 inline-flex rounded-full border border-sky-200/70 bg-sky-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-sky-800 dark:border-sky-300/18 dark:bg-sky-300/10 dark:text-sky-100">
-                      {pickText(locale, step.meta)}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+          );
+        })}
       </section>
+      ) : null}
 
       <section className="theme-home-rewards-shell relative overflow-hidden rounded-[2.4rem] border px-6 py-8 md:px-8 md:py-10">
         <div className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-cyan-300/14 blur-3xl" />
