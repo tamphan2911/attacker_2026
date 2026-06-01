@@ -1151,18 +1151,6 @@ button:disabled,
   }
 }
 
-@keyframes hero-pan {
-  0% {
-    transform: scale(1.04) translate3d(0, 0, 0);
-  }
-  50% {
-    transform: scale(1.08) translate3d(-1.2%, -1%, 0);
-  }
-  100% {
-    transform: scale(1.04) translate3d(0, 0, 0);
-  }
-}
-
 @keyframes marquee-slide {
   0% {
     transform: translate3d(0, 0, 0);
@@ -1208,10 +1196,6 @@ button:disabled,
 
 .pulse-ring {
   animation: pulse-ring 4.4s ease-in-out infinite;
-}
-
-.hero-pan {
-  animation: hero-pan 14s ease-in-out infinite;
 }
 
 .hero-soft-glass {

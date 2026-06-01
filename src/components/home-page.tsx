@@ -155,13 +155,15 @@ export function HomePage() {
 
   return (
     <div className="space-y-24 pb-8">
-      <section className="relative left-1/2 right-1/2 hidden -mx-[50vw] -mt-6 w-screen overflow-hidden md:block md:-mt-8">
-        <div className="relative min-h-[560px] md:min-h-[620px]">
+      <section className="relative left-1/2 hidden w-screen max-w-[1600px] -translate-x-1/2 overflow-hidden md:block md:-mt-8">
+        <div className="relative aspect-[1600/1050] w-full bg-slate-950">
           {heroDeck.map((slide, index) => (
             <div
               key={`${slide.title.en}-${index}`}
-              className={`absolute inset-0 transition-opacity duration-700 ${
-                index === activeSlide ? "opacity-100" : "pointer-events-none opacity-0"
+              className={`absolute inset-0 transition-[opacity,filter] duration-1000 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                index === activeSlide
+                  ? "opacity-100 blur-0"
+                  : "pointer-events-none opacity-0 blur-md"
               }`}
             >
               <Image
@@ -169,15 +171,15 @@ export function HomePage() {
                 alt={pickText(locale, slide.title)}
                 fill
                 priority={index === 0}
-                sizes="100vw"
+                sizes="(min-width: 1600px) 1600px, 100vw"
                 unoptimized={slide.image.startsWith("/api/hero-slide-images/")}
-                className="hero-pan object-cover"
+                className="object-contain"
               />
             </div>
           ))}
 
-          <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl items-end px-4 pb-16 pt-24 md:min-h-[620px] md:px-8 md:pb-20 md:pt-28">
-            <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-2">
+          <div className="pointer-events-none absolute inset-x-0 bottom-6 z-10 flex justify-center">
+            <div className="pointer-events-auto flex gap-2 rounded-full border border-white/20 bg-slate-950/34 px-3 py-2 shadow-[0_14px_42px_rgba(2,6,23,0.24)] backdrop-blur-md">
               {heroDeck.map((slide, index) => (
                 <button
                   key={`${slide.title.en}-${index}`}
@@ -185,7 +187,7 @@ export function HomePage() {
                   onClick={() => setActiveSlide(index)}
                   aria-label={pickText(locale, slide.title)}
                   className={`h-2.5 rounded-full transition ${
-                    index === activeSlide ? "w-10 bg-white" : "w-2.5 bg-white/38"
+                    index === activeSlide ? "w-10 bg-white" : "w-2.5 bg-white/42 hover:bg-white/70"
                   }`}
                 />
               ))}
