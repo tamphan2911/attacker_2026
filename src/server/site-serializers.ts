@@ -340,6 +340,8 @@ export function serializeTeam(team: TeamWithMembers): TeamProfile {
     memberIds: team.members.map((member) => member.userId),
     stage: mapStage(team.stage),
     finalOutcome: mapTeamFinalOutcome(team.finalOutcome),
+    finalScore: team.finalScore ?? undefined,
+    finalScoreUpdatedAt: team.finalScoreUpdatedAt?.toISOString(),
     round1LockStatus: mapTeamLockStatus(team.round1LockStatus),
     round1LockProtocolId: team.round1LockProtocolId ?? undefined,
     round1LockRequestedAt: team.round1LockRequestedAt?.toISOString(),

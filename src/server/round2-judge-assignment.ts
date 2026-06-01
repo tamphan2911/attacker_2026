@@ -38,14 +38,28 @@ function parseStoredJudges(payload: string | null | undefined): JudgeProfile[] {
 }
 
 export async function isRound2SubmissionClosed(now = new Date()) {
+  const { closed } = await readRound2SubmissionLockState(now);
+
+  return closed;
+}
+
+export async function readRound2SubmissionLockState(now = new Date()) {
   const timelineItems = await readTimelineItems();
   const submissionDeadline = getTimelineItemById("round-2-report-submission", timelineItems);
 
   if (!submissionDeadline) {
-    return false;
+    return {
+      closed: false,
+      deadlineAt: undefined as Date | undefined,
+    };
   }
 
-  return now.getTime() > getTimelineEndDateTime(submissionDeadline).getTime();
+  const deadlineAt = getTimelineEndDateTime(submissionDeadline);
+
+  return {
+    closed: now.getTime() > deadlineAt.getTime(),
+    deadlineAt,
+  };
 }
 
 async function readRound2TeamIds(db: AssignmentDb, teamIds?: string[]) {
@@ -172,12 +186,17 @@ async function ensureRound2TeamJudgeAssignments(
 }
 
 export async function ensureRound2JudgeAssignments(db: AssignmentDb) {
-  if (!(await isRound2SubmissionClosed())) {
+  const { closed, deadlineAt } = await readRound2SubmissionLockState();
+
+  if (!closed) {
     return 0;
   }
 
   const submissions = await db.teamSubmission.findMany({
-    where: { round: SubmissionRound.ROUND_2 },
+    where: {
+      round: SubmissionRound.ROUND_2,
+      ...(deadlineAt ? { submittedAt: { lte: deadlineAt } } : {}),
+    },
     orderBy: [{ submittedAt: "desc" }, { version: "desc" }],
     include: {
       judgeReviews: {
@@ -205,19 +224,6 @@ export async function ensureRound2JudgeAssignments(db: AssignmentDb) {
     ) {
       latestByTeam.set(submission.teamId, submission);
     }
-  }
-
-  const latestSubmissionIds = new Set(Array.from(latestByTeam.values()).map((submission) => submission.id));
-  const historySubmissionIds = submissions
-    .filter((submission) => !latestSubmissionIds.has(submission.id))
-    .map((submission) => submission.id);
-
-  if (historySubmissionIds.length > 0) {
-    await db.teamSubmissionJudgeReview.deleteMany({
-      where: {
-        submissionId: { in: historySubmissionIds },
-      },
-    });
   }
 
   let created = 0;

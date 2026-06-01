@@ -859,6 +859,8 @@ export interface TeamProfile {
   memberIds: string[];
   stage: CompetitionStage;
   finalOutcome?: TeamFinalOutcome;
+  finalScore?: number;
+  finalScoreUpdatedAt?: string;
   round1LockStatus: TeamRound1LockStatus;
   round1LockProtocolId?: string;
   round1LockRequestedAt?: string;

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Download, FileText, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Download, FileText, Save, Search } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { StatusPill, Surface } from "@/components/site-ui";
@@ -52,11 +52,11 @@ export function AdminRound3SubmissionsManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [scoreDrafts, setScoreDrafts] = useState<Record<string, string>>({});
+  const [savingTeamId, setSavingTeamId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
-
-    void (async () => {
+  const loadRows = useCallback(
+    async (active = true) => {
       try {
         setLoading(true);
         setError("");
@@ -71,6 +71,13 @@ export function AdminRound3SubmissionsManager() {
 
         if (active) {
           setRows(payload.rows);
+          setScoreDrafts(
+            Object.fromEntries(
+              payload.rows
+                .filter((row) => row.isLatest === "valid latest")
+                .map((row) => [row.teamId, typeof row.finalScore === "number" ? String(row.finalScore) : ""]),
+            ),
+          );
         }
       } catch (nextError) {
         if (active) {
@@ -81,18 +88,61 @@ export function AdminRound3SubmissionsManager() {
           setLoading(false);
         }
       }
-    })();
+    },
+    [locale],
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    void loadRows(active);
 
     return () => {
       active = false;
     };
-  }, [locale]);
+  }, [loadRows]);
+
+  async function saveFinalScore(teamId: string) {
+    const draft = scoreDrafts[teamId]?.trim() ?? "";
+    let finalScore: number | null = null;
+
+    if (draft !== "") {
+      const parsedScore = Number(draft);
+      if (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > 100) {
+        setError(locale === "en" ? "Final score must be between 0 and 100." : "Điểm chung kết phải từ 0 đến 100.");
+        return;
+      }
+      finalScore = parsedScore;
+    }
+
+    try {
+      setSavingTeamId(teamId);
+      setError("");
+      const response = await fetch("/api/admin/round-3/submissions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ teamId, finalScore }),
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? (locale === "en" ? "Could not save final score." : "Không thể lưu điểm chung kết."));
+      }
+
+      await loadRows();
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected error." : "Có lỗi bất ngờ.");
+    } finally {
+      setSavingTeamId(null);
+    }
+  }
 
   const filteredRows = useMemo(
     () => rows.filter((row) => matchesSearch(row, search)),
     [rows, search],
   );
   const latestCount = rows.filter((row) => row.isLatest === "valid latest").length;
+  const scoredCount = rows.filter((row) => row.isLatest === "valid latest" && typeof row.finalScore === "number").length;
 
   if (loading) {
     return (
@@ -130,6 +180,9 @@ export function AdminRound3SubmissionsManager() {
           <StatusPill>
             {locale === "en" ? `${rows.length} total versions` : `${rows.length} phiên bản`}
           </StatusPill>
+          <StatusPill tone="info">
+            {locale === "en" ? `${scoredCount} scored teams` : `${scoredCount} đội đã nhập điểm`}
+          </StatusPill>
         </div>
       </div>
 
@@ -153,7 +206,7 @@ export function AdminRound3SubmissionsManager() {
 
       <Surface className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-[1040px] text-left text-sm">
+          <table className="min-w-[1240px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
                 {[
@@ -164,6 +217,8 @@ export function AdminRound3SubmissionsManager() {
                   locale === "en" ? "File" : "Tệp",
                   locale === "en" ? "Submitted by" : "Người nộp",
                   locale === "en" ? "Submitted at" : "Nộp lúc",
+                  locale === "en" ? "Final score" : "Điểm chung kết",
+                  locale === "en" ? "Rank" : "Xếp hạng",
                   locale === "en" ? "Download" : "Tải xuống",
                 ].map((label) => (
                   <th key={label} className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
@@ -215,6 +270,52 @@ export function AdminRound3SubmissionsManager() {
                   </td>
                   <td className="px-4 py-4 theme-text-muted">{formatDateTime(locale, row.submittedAt)}</td>
                   <td className="px-4 py-4">
+                    {row.isLatest === "valid latest" ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          step={0.01}
+                          value={scoreDrafts[row.teamId] ?? ""}
+                          onChange={(event) =>
+                            setScoreDrafts((current) => ({
+                              ...current,
+                              [row.teamId]: event.target.value,
+                            }))
+                          }
+                          placeholder="0-100"
+                          className="theme-field h-10 w-24 rounded-[0.8rem] border px-3 text-sm outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => void saveFinalScore(row.teamId)}
+                          disabled={savingTeamId === row.teamId}
+                          className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full disabled:opacity-60"
+                          aria-label={locale === "en" ? "Save final score" : "Lưu điểm chung kết"}
+                          title={locale === "en" ? "Save final score" : "Lưu điểm chung kết"}
+                        >
+                          <Save className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-xs theme-text-soft">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-4">
+                    {row.finalRank ? (
+                      <StatusPill tone={row.finalRank <= 5 ? "success" : row.finalRank <= 15 ? "info" : "default"}>
+                        {row.finalRank <= 5
+                          ? `Final #${row.finalRank}`
+                          : row.finalRank <= 15
+                            ? `Emerging #${row.finalRank - 5}`
+                            : `#${row.finalRank}`}
+                      </StatusPill>
+                    ) : (
+                      <span className="text-xs theme-text-soft">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-4">
                     {row.resourceUrl ? (
                       <a
                         href={row.resourceUrl}
@@ -235,7 +336,7 @@ export function AdminRound3SubmissionsManager() {
               ))}
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm theme-text-muted">
+                  <td colSpan={10} className="px-4 py-10 text-center text-sm theme-text-muted">
                     {locale === "en" ? "No Final/Emerging submissions match this view." : "Không có bài nộp chung kết/Đội ươm mầm phù hợp."}
                   </td>
                 </tr>

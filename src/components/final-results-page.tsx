@@ -100,10 +100,77 @@ function getTeamMembers(team: TeamProfile, users: UserProfile[]) {
     .slice(0, MEMBER_SLOT_COUNT);
 }
 
-function getTeamsForOutcome(teams: TeamProfile[], outcome: TeamFinalOutcome, slots: number) {
-  return [...teams]
-    .filter((team) => team.finalOutcome === outcome)
+function getComputedFinalOutcomes(teams: TeamProfile[]) {
+  const remainingSlots: Record<TeamFinalOutcome, number> = {
+    champion: 1,
+    "runner-up": 1,
+    "third-place": 1,
+    "fourth-place": 2,
+    "emerging-team": 10,
+  };
+
+  for (const team of teams) {
+    if (team.finalOutcome) {
+      remainingSlots[team.finalOutcome] = Math.max(0, remainingSlots[team.finalOutcome] - 1);
+    }
+  }
+
+  const fillOrder: TeamFinalOutcome[] = [
+    "champion",
+    "runner-up",
+    "third-place",
+    "fourth-place",
+    "emerging-team",
+  ];
+  const scoredTeams = [...teams]
+    .filter((team) => !team.finalOutcome && typeof team.finalScore === "number")
     .sort((left, right) => {
+      const scoreDelta = (right.finalScore ?? 0) - (left.finalScore ?? 0);
+      if (scoreDelta !== 0) {
+        return scoreDelta;
+      }
+
+      return left.createdAt.localeCompare(right.createdAt);
+    });
+
+  const outcomes = new Map<string, TeamFinalOutcome>();
+  let nextOutcomeIndex = 0;
+
+  for (const team of scoredTeams) {
+    while (nextOutcomeIndex < fillOrder.length && remainingSlots[fillOrder[nextOutcomeIndex]] <= 0) {
+      nextOutcomeIndex += 1;
+    }
+
+    const outcome = fillOrder[nextOutcomeIndex];
+    if (!outcome) {
+      break;
+    }
+
+    outcomes.set(team.id, outcome);
+    remainingSlots[outcome] -= 1;
+  }
+
+  return outcomes;
+}
+
+function getTeamFinalOutcome(team: TeamProfile, computedOutcomes: Map<string, TeamFinalOutcome>) {
+  return team.finalOutcome ?? computedOutcomes.get(team.id);
+}
+
+function getTeamsForOutcome(
+  teams: TeamProfile[],
+  outcome: TeamFinalOutcome,
+  slots: number,
+  computedOutcomes: Map<string, TeamFinalOutcome>,
+) {
+  return [...teams]
+    .filter((team) => getTeamFinalOutcome(team, computedOutcomes) === outcome)
+    .sort((left, right) => {
+      const scoreDelta = (right.finalScore ?? Number.NEGATIVE_INFINITY) - (left.finalScore ?? Number.NEGATIVE_INFINITY);
+      if (scoreDelta !== 0) {
+        return scoreDelta;
+      }
+
       if (left.createdAt !== right.createdAt) {
         return left.createdAt.localeCompare(right.createdAt);
       }
@@ -291,13 +358,14 @@ export function FinalResultsPage() {
   const runnerUpMeta = outcomeMeta.find((meta) => meta.outcome === "runner-up")!;
   const thirdPlaceMeta = outcomeMeta.find((meta) => meta.outcome === "third-place")!;
   const fourthPlaceMeta = outcomeMeta.find((meta) => meta.outcome === "fourth-place")!;
+  const computedFinalOutcomes = getComputedFinalOutcomes(teams);
 
-  const championTeam = getTeamsForOutcome(teams, "champion", 1)[0] ?? null;
-  const runnerUpTeam = getTeamsForOutcome(teams, "runner-up", 1)[0] ?? null;
-  const thirdPlaceTeam = getTeamsForOutcome(teams, "third-place", 1)[0] ?? null;
+  const championTeam = getTeamsForOutcome(teams, "champion", 1, computedFinalOutcomes)[0] ?? null;
+  const runnerUpTeam = getTeamsForOutcome(teams, "runner-up", 1, computedFinalOutcomes)[0] ?? null;
+  const thirdPlaceTeam = getTeamsForOutcome(teams, "third-place", 1, computedFinalOutcomes)[0] ?? null;
   const fourthPlaceTeams = Array.from(
     { length: fourthPlaceMeta.slots },
-    (_, index) => getTeamsForOutcome(teams, "fourth-place", fourthPlaceMeta.slots)[index] ?? null,
+    (_, index) => getTeamsForOutcome(teams, "fourth-place", fourthPlaceMeta.slots, computedFinalOutcomes)[index] ?? null,
   );
 
   return (

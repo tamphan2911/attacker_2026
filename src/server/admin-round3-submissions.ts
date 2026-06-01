@@ -3,6 +3,28 @@ import { SubmissionRound, TeamSubmissionResourceSource } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import type { AdminRound3SubmissionRow } from "@/types/admin-round3-submissions";
 
+type ServiceSuccess<T> = {
+  ok: true;
+  status: number;
+  data: T;
+};
+
+type ServiceFailure = {
+  ok: false;
+  status: number;
+  error: string;
+};
+
+type ServiceResult<T> = ServiceSuccess<T> | ServiceFailure;
+
+function ok<T>(data: T, status = 200): ServiceSuccess<T> {
+  return { ok: true, status, data };
+}
+
+function fail(status: number, error: string): ServiceFailure {
+  return { ok: false, status, error };
+}
+
 export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRound3SubmissionRow[] }> {
   const submissions = await prisma.teamSubmission.findMany({
     where: {
@@ -15,6 +37,8 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
           id: true,
           name: true,
           tag: true,
+          finalScore: true,
+          finalScoreUpdatedAt: true,
         },
       },
       submittedByUser: {
@@ -40,12 +64,32 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
     }
   }
 
+  const rankedLatestRows = Array.from(latestByTeam.values())
+    .filter((submission) => typeof submission.team.finalScore === "number")
+    .sort((left, right) => {
+      const scoreDelta = (right.team.finalScore ?? 0) - (left.team.finalScore ?? 0);
+      if (scoreDelta !== 0) {
+        return scoreDelta;
+      }
+
+      return left.submittedAt.getTime() - right.submittedAt.getTime();
+    });
+  const finalRankByTeamId = new Map(
+    rankedLatestRows.map((submission, index) => [submission.teamId, index + 1]),
+  );
+
   return {
     rows: submissions.map<AdminRound3SubmissionRow>((submission) => ({
       submissionId: submission.id,
       teamId: submission.team.id,
       teamName: submission.team.name,
       teamTag: submission.team.tag,
+      finalScore: submission.team.finalScore ?? undefined,
+      finalScoreUpdatedAt: submission.team.finalScoreUpdatedAt?.toISOString(),
+      finalRank:
+        latestByTeam.get(submission.teamId)?.id === submission.id
+          ? finalRankByTeamId.get(submission.teamId)
+          : undefined,
       title: submission.title,
       version: submission.version,
       isLatest: latestByTeam.get(submission.teamId)?.id === submission.id ? "valid latest" : "history only",
@@ -62,4 +106,44 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
       submittedByLoginId: submission.submittedByUser.loginId,
     })),
   };
+}
+
+export async function saveAdminRound3FinalScore(
+  teamId: string,
+  finalScore: number | null,
+): Promise<ServiceResult<{ teamId: string; finalScore?: number; finalScoreUpdatedAt?: string }>> {
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    select: {
+      id: true,
+      submissions: {
+        where: { round: SubmissionRound.ROUND_3 },
+        select: { id: true },
+        take: 1,
+      },
+    },
+  });
+
+  if (!team || team.submissions.length === 0) {
+    return fail(404, "Round 3 report not found for this team.");
+  }
+
+  const updated = await prisma.team.update({
+    where: { id: teamId },
+    data: {
+      finalScore,
+      finalScoreUpdatedAt: finalScore === null ? null : new Date(),
+    },
+    select: {
+      id: true,
+      finalScore: true,
+      finalScoreUpdatedAt: true,
+    },
+  });
+
+  return ok({
+    teamId: updated.id,
+    finalScore: updated.finalScore ?? undefined,
+    finalScoreUpdatedAt: updated.finalScoreUpdatedAt?.toISOString(),
+  });
 }

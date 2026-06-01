@@ -1,13 +1,13 @@
 import { SubmissionRound, TeamSubmissionResourceSource, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
-import { getTimelineItemById } from "@/lib/competition";
-import { getTimelineEndDateTime } from "@/lib/timeline-dates";
 import { syncJudgeAccounts } from "@/server/judge-accounts";
 import { readStoredJudges } from "@/server/admin-service";
-import { ensureRound2JudgeAssignments } from "@/server/round2-judge-assignment";
+import {
+  ensureRound2JudgeAssignments,
+  readRound2SubmissionLockState,
+} from "@/server/round2-judge-assignment";
 import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
-import { readTimelineItems } from "@/server/timeline-items";
 import type {
   AdminRound2AssignedJudgeRecord,
   AdminRound2AssignmentStatus,
@@ -95,11 +95,7 @@ export async function readAdminRound2SubmissionRows(): Promise<{
   availableJudges: AdminRound2JudgeOption[];
   round2Closed: boolean;
 }> {
-  const timelineItems = await readTimelineItems();
-  const round2DeadlineItem = getTimelineItemById("round-2-report-submission", timelineItems);
-  const round2Closed = round2DeadlineItem
-    ? new Date().getTime() > getTimelineEndDateTime(round2DeadlineItem).getTime()
-    : false;
+  const { closed: round2Closed, deadlineAt: round2DeadlineAt } = await readRound2SubmissionLockState();
 
   if (round2Closed) {
     await ensureRound2JudgeAssignments(prisma);
@@ -146,8 +142,12 @@ export async function readAdminRound2SubmissionRows(): Promise<{
     readAdminRound2JudgeOptions(),
   ]);
 
+  const latestCandidates =
+    round2Closed && round2DeadlineAt
+      ? submissions.filter((submission) => submission.submittedAt.getTime() <= round2DeadlineAt.getTime())
+      : submissions;
   const latestByTeam = new Map<string, (typeof submissions)[number]>();
-  for (const submission of submissions) {
+  for (const submission of latestCandidates) {
     const currentLatest = latestByTeam.get(submission.teamId);
     if (
       !currentLatest ||

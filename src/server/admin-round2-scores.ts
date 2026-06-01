@@ -1,11 +1,11 @@
 import { SubmissionRound, TeamSubmissionResourceSource, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
-import { getTimelineItemById } from "@/lib/competition";
-import { getTimelineEndDateTime } from "@/lib/timeline-dates";
 import { readAdminRound2JudgeOptions } from "@/server/admin-round2-submissions";
-import { ensureRound2JudgeAssignments } from "@/server/round2-judge-assignment";
-import { readTimelineItems } from "@/server/timeline-items";
+import {
+  ensureRound2JudgeAssignments,
+  readRound2SubmissionLockState,
+} from "@/server/round2-judge-assignment";
 import type { AdminRound2JudgeOption } from "@/types/admin-round2-submissions";
 import type {
   AdminRound2JudgeScoreRecord,
@@ -25,19 +25,8 @@ function createStatus(scoredCount: number): AdminRound2ScoreStatus {
   return "not-scored";
 }
 
-async function isRound2SubmissionClosed(now = new Date()) {
-  const timelineItems = await readTimelineItems();
-  const submissionDeadline = getTimelineItemById("round-2-report-submission", timelineItems);
-
-  if (!submissionDeadline) {
-    return false;
-  }
-
-  return now.getTime() > getTimelineEndDateTime(submissionDeadline).getTime();
-}
-
 export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]> {
-  const round2Closed = await isRound2SubmissionClosed();
+  const { closed: round2Closed, deadlineAt: round2DeadlineAt } = await readRound2SubmissionLockState();
 
   if (round2Closed) {
     await ensureRound2JudgeAssignments(prisma);
@@ -79,8 +68,12 @@ export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]>
     },
   });
 
+  const latestCandidates =
+    round2Closed && round2DeadlineAt
+      ? submissions.filter((submission) => submission.submittedAt.getTime() <= round2DeadlineAt.getTime())
+      : submissions;
   const latestByTeam = new Map<string, (typeof submissions)[number]>();
-  for (const submission of submissions) {
+  for (const submission of latestCandidates) {
     const currentLatest = latestByTeam.get(submission.teamId);
     if (
       !currentLatest ||
@@ -150,16 +143,16 @@ export async function readAdminRound2ScorePageData(): Promise<{
   availableJudges: AdminRound2JudgeOption[];
   round2Closed: boolean;
 }> {
-  const [scores, availableJudges, round2Closed] = await Promise.all([
+  const [scores, availableJudges, round2LockState] = await Promise.all([
     readAdminRound2ScoreRows(),
     readAdminRound2JudgeOptions(),
-    isRound2SubmissionClosed(),
+    readRound2SubmissionLockState(),
   ]);
 
   return {
     scores,
     availableJudges,
-    round2Closed,
+    round2Closed: round2LockState.closed,
   };
 }
 

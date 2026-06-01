@@ -3,6 +3,9 @@ export interface AdminRound3SubmissionRow {
   teamId: string;
   teamName: string;
   teamTag: string;
+  finalScore?: number;
+  finalScoreUpdatedAt?: string;
+  finalRank?: number;
   title: string;
   version: number;
   isLatest: "valid latest" | "history only";

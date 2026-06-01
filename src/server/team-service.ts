@@ -24,7 +24,10 @@ import { getTimelineEndDateTime, getTimelineStartDateTime } from "@/lib/timeline
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
-import { canTeamSubmitRound3ReportByRound2Ranking } from "@/server/round2-finalists";
+import {
+  canTeamSubmitRound3ReportByRound2Ranking,
+  getTeamRound2AdvancementBracket,
+} from "@/server/round2-finalists";
 import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import { readTimelineItems } from "@/server/timeline-items";
 import {
@@ -1886,6 +1889,16 @@ export async function createTeamSubmission(
 
     if (membership.team.leaderId !== actorId) {
       return fail(403, "Only the team leader can submit a report for the team.");
+    }
+
+    if (
+      payload.round === SubmissionRound.ROUND_2 &&
+      (await getTeamRound2AdvancementBracket(membership.teamId))
+    ) {
+      return fail(
+        409,
+        "This team has already advanced beyond Round 2. Submit the report in the Final/Emerging round section.",
+      );
     }
 
     const requiredStage =

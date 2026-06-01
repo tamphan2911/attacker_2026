@@ -190,6 +190,8 @@ model Team {
   leaderId                   String
   stage                      CompetitionStage            @default(ROUND_1)
   finalOutcome               TeamFinalOutcome?
+  finalScore                 Float?
+  finalScoreUpdatedAt        DateTime?
   round1LockStatus           TeamRound1LockStatus        @default(OPEN)
   round1LockProtocolId       String?
   round1LockRequestedAt      DateTime?
