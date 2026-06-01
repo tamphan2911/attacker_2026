@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -8,6 +9,7 @@ import {
   CheckCircle2,
   Clock3,
   FileCheck2,
+  FileDown,
   Flag,
   GraduationCap,
   Medal,
@@ -23,6 +25,7 @@ import {
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import { getCompetitionRoundWindow } from "@/lib/competition";
+import { rubricFileDefinitions, type RubricFileId } from "@/lib/rubric-files";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 
 const generalRuleIcons = [UsersRound, GraduationCap, Sparkles];
@@ -88,6 +91,17 @@ const introJumpItems = [
       "border-amber-700/22 bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(249,115,22,0.1))] text-amber-900 shadow-[0_14px_30px_rgba(245,158,11,0.08)] dark:border-amber-300/20 dark:bg-amber-300/[0.12] dark:text-amber-100",
   },
 ] as const;
+
+const roundRubricLinks: Record<"01" | "02" | "03", RubricFileId> = {
+  "01": "round-1-essay",
+  "02": "round-2-report",
+  "03": "round-3-final-presentation",
+};
+
+type PublicRubricRecord = {
+  id: RubricFileId;
+  downloadUrl: string;
+};
 
 const roundRuleMeta = {
   "01": {
@@ -220,10 +234,37 @@ const roundRuleMeta = {
 
 export function RulesPage() {
   const { locale, pageContent, timelineItems } = useSiteState();
+  const [rubricRecords, setRubricRecords] = useState<PublicRubricRecord[]>([]);
   const jumpItems = pageContent.rules.introJumpItems;
   const generalHighlights = pageContent.rules.generalHighlights;
   const generalPolicyChecks = pageContent.rules.generalPolicyChecks;
   const rulesRounds = pageContent.rules.rounds;
+  const rubricRecordById = new Map<RubricFileId, PublicRubricRecord>(
+    rubricRecords.map((rubric) => [rubric.id, rubric]),
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadRubricRecords() {
+      const response = await fetch("/api/rubrics", { cache: "no-store" });
+      const payload = (await response.json().catch(() => null)) as { rubrics?: PublicRubricRecord[] } | null;
+
+      if (active && response.ok) {
+        setRubricRecords(payload?.rubrics ?? []);
+      }
+    }
+
+    void loadRubricRecords().catch(() => {
+      if (active) {
+        setRubricRecords([]);
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className="space-y-16 md:space-y-20">
@@ -367,6 +408,9 @@ export function RulesPage() {
           const roundWindow = getCompetitionRoundWindow(roundKey, timelineItems);
           const meta = roundRuleMeta[round.id as keyof typeof roundRuleMeta];
           const Icon = meta.icon;
+          const rubricId = roundRubricLinks[round.id as keyof typeof roundRubricLinks];
+          const rubricDefinition = rubricFileDefinitions.find((definition) => definition.id === rubricId)!;
+          const rubricRecord = rubricRecordById.get(rubricId);
 
           return (
             <section
@@ -387,21 +431,50 @@ export function RulesPage() {
                       <h3 className="theme-heading min-w-0 text-2xl font-semibold theme-text-strong md:text-[2.2rem]">
                         {pickText(locale, round.title)}
                       </h3>
-                      <div className="group relative shrink-0">
-                        <Link
-                          href={`/competition/timeline#${roundKey}-timeline`}
-                          aria-label={
-                            locale === "en"
-                              ? "Open this round on the timeline page"
-                              : "Mở giai đoạn này trên trang lịch trình"
-                          }
-                          className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition hover:-translate-y-0.5 active:translate-y-0 ${meta.chipClass}`}
-                        >
-                          <CalendarDays className="h-4.5 w-4.5" />
-                        </Link>
-                        <span className="theme-header-tooltip pointer-events-none absolute right-0 top-full z-20 mt-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
-                          {pickText(locale, pageContent.rules.openRoundOnTimelineLabel)}
-                        </span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <div className="group relative">
+                          {rubricRecord ? (
+                            <a
+                              href={rubricRecord.downloadUrl}
+                              aria-label={pickText(locale, rubricDefinition.publicDownloadLabel)}
+                              className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition hover:-translate-y-0.5 active:translate-y-0 ${meta.chipClass}`}
+                            >
+                              <FileDown className="h-4.5 w-4.5" />
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              aria-disabled="true"
+                              aria-label={pickText(locale, rubricDefinition.publicDownloadLabel)}
+                              className={`inline-flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border opacity-60 ${meta.chipClass}`}
+                            >
+                              <FileDown className="h-4.5 w-4.5" />
+                            </button>
+                          )}
+                          <span className="theme-header-tooltip pointer-events-none absolute right-0 top-full z-20 mt-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                            {rubricRecord
+                              ? pickText(locale, rubricDefinition.publicDownloadLabel)
+                              : locale === "en"
+                                ? "Rubric PDF is not uploaded yet"
+                                : "Chưa có file rubric PDF"}
+                          </span>
+                        </div>
+                        <div className="group relative">
+                          <Link
+                            href={`/competition/timeline#${roundKey}-timeline`}
+                            aria-label={
+                              locale === "en"
+                                ? "Open this round on the timeline page"
+                                : "Mở giai đoạn này trên trang lịch trình"
+                            }
+                            className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition hover:-translate-y-0.5 active:translate-y-0 ${meta.chipClass}`}
+                          >
+                            <CalendarDays className="h-4.5 w-4.5" />
+                          </Link>
+                          <span className="theme-header-tooltip pointer-events-none absolute right-0 top-full z-20 mt-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                            {pickText(locale, pageContent.rules.openRoundOnTimelineLabel)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
