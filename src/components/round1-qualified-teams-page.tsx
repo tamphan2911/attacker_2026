@@ -297,11 +297,19 @@ export function Round1QualifiedTeamsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTeams.map((team) => (
-                    <tr
-                      key={team.teamId}
-                      className={`border-b theme-border last:border-b-0 ${currentTeam?.id === team.teamId ? "bg-sky-400/10" : ""}`}
-                    >
+                  {filteredTeams.map((team, index) => {
+                    const rowToneClassName =
+                      currentTeam?.id === team.teamId
+                        ? "bg-cyan-100/82 shadow-[inset_4px_0_0_rgba(14,165,233,0.82)] dark:bg-cyan-300/[0.14] dark:shadow-[inset_4px_0_0_rgba(103,232,249,0.72)]"
+                        : index % 2 === 0
+                          ? "bg-white/72 dark:bg-white/[0.035]"
+                          : "bg-sky-50/72 dark:bg-sky-300/[0.055]";
+
+                    return (
+                      <tr
+                        key={team.teamId}
+                        className={`border-b border-slate-200/75 transition-colors last:border-b-0 hover:bg-sky-100/70 dark:border-white/10 dark:hover:bg-sky-300/[0.10] ${rowToneClassName}`}
+                      >
                       <td className="px-5 py-4">
                         <div className="flex min-w-[15rem] items-center gap-3">
                           <GradientAvatar
@@ -352,8 +360,9 @@ export function Round1QualifiedTeamsPage() {
                           </div>
                         </div>
                       </td>
-                    </tr>
-                  ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               {filteredTeams.length === 0 ? (
