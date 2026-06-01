@@ -308,7 +308,11 @@ export function CompetitionPage() {
         </div>
       </section>
 
-      <OrganizerContent showGallery={false} showSeasonIntroCopy={false} />
+      <OrganizerContent
+        heroImageOverride={pageContent.competition.legacyHeroImage || pageContent.organizer.heroImage}
+        showGallery={false}
+        showSeasonIntroCopy={false}
+      />
     </div>
   );
 }

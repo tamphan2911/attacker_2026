@@ -602,6 +602,7 @@ export interface SitePageContent {
   };
   competition: {
     intro: EditableSectionCopy;
+    legacyHeroImage: string;
     pillarsTitle: LocalizedText;
     pillars: LocalizedText[];
     highlights: RuleItem[];

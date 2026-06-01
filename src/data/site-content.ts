@@ -1055,6 +1055,7 @@ export const defaultPageContent: SitePageContent = {
         vi: "Attacker 2026 bắt đầu bằng một bài vòng loại cá nhân gồm 40 câu hỏi trắc nghiệm và 2 câu tự luận, sau đó đưa các đội tốt nhất vào giai đoạn đánh giá dự án bởi giám khảo và vòng chung kết bảo vệ trực tiếp. Việc đi tiếp được quyết định bởi kết quả của đội, không chỉ bởi từng cá nhân riêng lẻ.",
       },
     },
+    legacyHeroImage: "/theme-hero-1.jpg",
     pillarsTitle: { en: "Competition pillars", vi: "Trụ cột cuộc thi" },
     pillars: [
       { en: "40 objective + 2 essay questions", vi: "40 câu trắc nghiệm + 2 câu tự luận" },

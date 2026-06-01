@@ -66,6 +66,8 @@ const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
 const MAX_TESTIMONIAL_AVATAR_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_HERO_SLIDE_IMAGE_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_CONTENT_IMAGE_FILE_BYTES = 2 * 1024 * 1024;
+const DEFAULT_COMPETITION_LEGACY_IMAGE = "/theme-hero-1.jpg";
 
 function formatFileSize(bytes: number) {
   if (bytes >= 1024 * 1024) {
@@ -867,6 +869,8 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   const [faqEditorTab, setFaqEditorTab] = useState<"questions" | "topics" | "page">("questions");
   const [expandedFaqItems, setExpandedFaqItems] = useState<Set<string>>(() => new Set());
   const [faqSaveMessage, setFaqSaveMessage] = useState<{ key: string; text: string } | null>(null);
+  const [competitionHeroImageUploadError, setCompetitionHeroImageUploadError] = useState("");
+  const [isUploadingCompetitionHeroImage, setIsUploadingCompetitionHeroImage] = useState(false);
   const [pendingFaqDelete, setPendingFaqDelete] = useState<{
     type: "topic" | "question";
     index: number;
@@ -1018,6 +1022,8 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
       ),
     );
   };
+  const competitionLegacyHeroImage =
+    draft.competition.legacyHeroImage || draft.organizer.heroImage || DEFAULT_COMPETITION_LEGACY_IMAGE;
 
   return (
     <div className="space-y-8">
@@ -1712,6 +1718,177 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                   )
                 }
               />
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Competition / Legacy hero background"
+                description="Upload or replace the background image for the large competition legacy block shown on the public competition page."
+              />
+
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="overflow-hidden rounded-[1.6rem] border theme-border bg-white/72 dark:bg-white/[0.05]">
+                  <div className="relative aspect-[16/7] min-h-[220px] w-full">
+                    {competitionLegacyHeroImage ? (
+                      <Image
+                        src={competitionLegacyHeroImage}
+                        alt={locale === "en" ? "Competition legacy background preview" : "Xem trước ảnh nền Hành trình cuộc thi"}
+                        fill
+                        sizes="(min-width: 1280px) 760px, 100vw"
+                        unoptimized={
+                          competitionLegacyHeroImage.startsWith("/api/content-images/") ||
+                          competitionLegacyHeroImage.startsWith("/api/hero-slide-images/")
+                        }
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center px-6 text-center text-sm font-medium theme-text-soft">
+                        {locale === "en" ? "No background image selected yet." : "Chưa chọn ảnh nền."}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(4,14,30,0.74),rgba(5,18,39,0.24))]" />
+                    <div className="absolute bottom-5 left-5 right-5">
+                      <p className="max-w-xl text-xs font-semibold uppercase tracking-[0.28em] text-cyan-100/82">
+                        {locale === "en" ? "Preview" : "Xem trước"}
+                      </p>
+                      <p className="mt-2 max-w-xl text-xl font-semibold leading-tight text-white md:text-2xl">
+                        {pickText(locale, draft.organizer.header.title)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
+                  <label className="space-y-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Current image source" : "Nguồn ảnh hiện tại"}
+                    </span>
+                    <input
+                      value={competitionLegacyHeroImage}
+                      onChange={(event) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.competition.legacyHeroImage = event.target.value;
+                          }),
+                        )
+                      }
+                      className={fieldClassName}
+                    />
+                  </label>
+
+                  <div className="flex flex-wrap gap-2">
+                    <label className="theme-button-primary inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold">
+                      <Upload className="h-4 w-4" />
+                      {isUploadingCompetitionHeroImage
+                        ? locale === "en"
+                          ? "Uploading..."
+                          : "Đang tải..."
+                        : locale === "en"
+                          ? "Upload background"
+                          : "Tải ảnh nền"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={isUploadingCompetitionHeroImage}
+                        onChange={async (event: ChangeEvent<HTMLInputElement>) => {
+                          const file = event.target.files?.[0];
+                          event.target.value = "";
+                          if (!file) {
+                            return;
+                          }
+
+                          if (!file.type.startsWith("image/")) {
+                            setCompetitionHeroImageUploadError(
+                              locale === "en"
+                                ? "Only image files are allowed for this background."
+                                : "Chỉ chấp nhận tệp hình ảnh cho ảnh nền này.",
+                            );
+                            return;
+                          }
+
+                          if (file.size > MAX_CONTENT_IMAGE_FILE_BYTES) {
+                            setCompetitionHeroImageUploadError(
+                              locale === "en"
+                                ? `Background images must be ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)} or smaller.`
+                                : `Ảnh nền phải có dung lượng ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)} trở xuống.`,
+                            );
+                            return;
+                          }
+
+                          const formData = new FormData();
+                          formData.append("imageFile", file);
+                          setCompetitionHeroImageUploadError("");
+                          setIsUploadingCompetitionHeroImage(true);
+
+                          try {
+                            const response = await fetch("/api/admin/content/competition/legacy-image", {
+                              method: "POST",
+                              body: formData,
+                            });
+                            const payload = (await response.json().catch(() => null)) as
+                              | { imageUrl?: string; error?: string }
+                              | null;
+
+                            if (!response.ok || !payload?.imageUrl) {
+                              throw new Error(
+                                payload?.error ||
+                                  (locale === "en"
+                                    ? "The background image could not be uploaded."
+                                    : "Không thể tải ảnh nền."),
+                              );
+                            }
+
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.competition.legacyHeroImage = payload.imageUrl!;
+                              }),
+                            );
+                          } catch (error) {
+                            setCompetitionHeroImageUploadError(
+                              error instanceof Error
+                                ? error.message
+                                : locale === "en"
+                                  ? "The background image could not be uploaded."
+                                  : "Không thể tải ảnh nền.",
+                            );
+                          } finally {
+                            setIsUploadingCompetitionHeroImage(false);
+                          }
+                        }}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCompetitionHeroImageUploadError("");
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.competition.legacyHeroImage = DEFAULT_COMPETITION_LEGACY_IMAGE;
+                          }),
+                        );
+                      }}
+                      className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {locale === "en" ? "Use default" : "Dùng ảnh mặc định"}
+                    </button>
+                  </div>
+
+                  <p className="text-xs leading-6 theme-text-soft">
+                    {locale === "en"
+                      ? `Accepted formats: JPG, PNG, WEBP. Maximum size: ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)}. After uploading, click Save content to publish the new image.`
+                      : `Chấp nhận JPG, PNG, WEBP. Dung lượng tối đa: ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)}. Sau khi tải ảnh, bấm Lưu nội dung để cập nhật lên website.`}
+                  </p>
+
+                  {competitionHeroImageUploadError ? (
+                    <div className="rounded-[1.2rem] border border-rose-300/55 bg-rose-50/82 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-200/20 dark:bg-rose-300/10 dark:text-rose-100">
+                      {competitionHeroImageUploadError}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             </Surface>
           </>
         ) : null}

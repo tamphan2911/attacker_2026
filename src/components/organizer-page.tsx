@@ -21,6 +21,7 @@ export function getOrganizerSeasonHref(year: string) {
 type OrganizerContentProps = {
   showGallery?: boolean;
   showSeasonIntroCopy?: boolean;
+  heroImageOverride?: string;
 };
 
 export function OrganizerPage() {
@@ -30,11 +31,13 @@ export function OrganizerPage() {
 export function OrganizerContent({
   showGallery = true,
   showSeasonIntroCopy = true,
+  heroImageOverride,
 }: OrganizerContentProps = {}) {
   const { locale, pageContent } = useSiteState();
   const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
   const [expandedGalleryIndex, setExpandedGalleryIndex] = useState<number | null>(null);
   const organizerContent = pageContent.organizer;
+  const heroImage = heroImageOverride || organizerContent.heroImage;
   const seasonStories = organizerContent.seasonStories;
   const gallerySlides = organizerContent.gallerySlides;
   const activeGallerySlide = gallerySlides[activeGalleryIndex];
@@ -86,11 +89,15 @@ export function OrganizerContent({
     <div className="space-y-16">
       <section className="theme-card-shadow-soft relative min-h-[520px] overflow-hidden rounded-[2.4rem] border theme-border-strong">
         <Image
-          src={organizerContent.heroImage}
+          src={heroImage}
           alt={pickText(locale, organizerContent.heroCard.title)}
           fill
           sizes="100vw"
           className="object-cover"
+          unoptimized={
+            heroImage.startsWith("/api/content-images/") ||
+            heroImage.startsWith("/api/hero-slide-images/")
+          }
           priority
         />
         <div className="absolute inset-0 bg-[linear-gradient(106deg,rgba(4,14,30,0.86)_0%,rgba(5,18,39,0.66)_45%,rgba(5,18,39,0.28)_72%,rgba(5,18,39,0.42)_100%)]" />
