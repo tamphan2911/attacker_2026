@@ -348,6 +348,7 @@ export function SiteHeader() {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [openDesktopDropdownHref, setOpenDesktopDropdownHref] = useState<string | null>(null);
+  const [openMobileDropdownHref, setOpenMobileDropdownHref] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
   const isLoggedIn = Boolean(currentUser?.id);
   const isProfileRoute = pathname.startsWith("/profile");
@@ -398,6 +399,19 @@ export function SiteHeader() {
 
     return isActiveRoute(href);
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isOpen]);
 
   const topbarContactWrapClass =
     "inline-flex items-center overflow-hidden rounded-full border border-white/18 bg-slate-950/24 shadow-[0_12px_30px_rgba(2,8,20,0.18)] ring-1 ring-white/10 backdrop-blur-md dark:border-white/12 dark:bg-[rgba(255,255,255,0.09)] dark:shadow-[0_12px_30px_rgba(2,8,20,0.16)]";
@@ -461,10 +475,15 @@ export function SiteHeader() {
         </div>
       </div>
 
-      <div className="theme-navbar border-b backdrop-blur-2xl">
+      <div className="theme-navbar relative border-b backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-8">
-          <Link href="/" className="group shrink-0" onClick={() => setIsOpen(false)}>
-            <BrandMarkInner showText showIcon={false} variant="header" />
+          <Link href="/" className="group min-w-0 shrink-0" onClick={() => setIsOpen(false)}>
+            <span className="sm:hidden">
+              <BrandMarkInner showText={false} showIcon variant="header" />
+            </span>
+            <span className="hidden sm:block">
+              <BrandMarkInner showText showIcon={false} variant="header" />
+            </span>
           </Link>
 
           <nav className="hidden items-center gap-7 lg:flex">
@@ -691,108 +710,198 @@ export function SiteHeader() {
 
           <button
             type="button"
-            onClick={() => setIsOpen((current) => !current)}
-            className="theme-panel-strong theme-text-strong inline-flex h-12 w-12 items-center justify-center rounded-2xl border lg:hidden"
-            aria-label="Toggle navigation"
+            onClick={() => {
+              setIsOpen((current) => !current);
+              setOpenMobileDropdownHref(null);
+              setIsProfileMenuOpen(false);
+            }}
+            className={cn(
+              "theme-panel-strong theme-text-strong inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition lg:hidden",
+              isOpen ? "shadow-[0_16px_36px_rgba(23,114,208,0.18)]" : "hover:-translate-y-0.5",
+            )}
+            aria-label={locale === "en" ? "Toggle navigation" : "Mở menu điều hướng"}
+            aria-expanded={isOpen}
           >
             {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
         {isOpen ? (
-          <div className="border-t theme-border px-4 py-4 lg:hidden">
-            <div className="mx-auto flex max-w-7xl flex-col gap-3">
-              {primaryNavItems.map((item) => (
-                <div key={item.href} className="space-y-2">
-                  <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    "rounded-2xl px-4 py-3 text-sm font-medium transition",
-                    isActiveRoute(item.href)
-                      ? "theme-button-primary"
-                      : "theme-panel-strong theme-text-body border",
-                  )}
-                >
-                  {pickText(locale, item.label)}
-                  </Link>
-                  {item.children ? (
-                    <div className="grid gap-2 pl-3">
-                      {item.children.map((child) => (
-                        <Link
-                          key={child.href}
-                          href={child.href}
-                          onClick={() => setIsOpen(false)}
-                          className="rounded-2xl border theme-border px-4 py-2.5 text-sm theme-text-muted"
+          <div className="absolute left-0 right-0 top-full z-40 min-h-[calc(100dvh-7.25rem)] border-t theme-border bg-[rgba(239,247,255,0.94)] px-3 py-3 shadow-[0_28px_70px_rgba(13,37,66,0.18)] backdrop-blur-2xl dark:bg-[rgba(7,18,35,0.94)] lg:hidden">
+            <div className="mx-auto max-h-[calc(100dvh-7.25rem)] max-w-md overflow-y-auto overscroll-contain pr-1">
+              <div className="grid gap-2 pb-3">
+                {primaryNavItems.map((item) => {
+                  const isActive =
+                    isActiveRoute(item.href) ||
+                    item.children?.some((child) => isActiveRoute(child.href));
+                  const isDropdownOpen = openMobileDropdownHref === item.href;
+                  const itemLabel = pickText(locale, item.label);
+
+                  if (item.children) {
+                    return (
+                      <div key={item.href} className="theme-panel-strong rounded-[1.25rem] border p-1.5">
+                        <div className="flex items-stretch gap-1.5">
+                          <Link
+                            href={item.href}
+                            onClick={() => setIsOpen(false)}
+                            className={cn(
+                              "flex min-h-12 flex-1 items-center rounded-[1rem] px-4 text-sm font-semibold transition",
+                              isActive
+                                ? "theme-button-primary"
+                                : "theme-text-strong hover:bg-[rgba(23,114,208,0.08)]",
+                            )}
+                          >
+                            {itemLabel}
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenMobileDropdownHref((current) =>
+                                current === item.href ? null : item.href,
+                              )
+                            }
+                            className="theme-panel-subtle inline-flex min-h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border theme-border transition hover:bg-[rgba(23,114,208,0.08)]"
+                            aria-label={
+                              locale === "en"
+                                ? `Toggle ${itemLabel} links`
+                                : `Mở liên kết ${itemLabel}`
+                            }
+                            aria-expanded={isDropdownOpen}
+                          >
+                            <ChevronDown className={cn("h-4 w-4 transition duration-200", isDropdownOpen && "rotate-180")} />
+                          </button>
+                        </div>
+
+                        <div
+                          className={cn(
+                            "grid transition-all duration-300 ease-out",
+                            isDropdownOpen ? "mt-1.5 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+                          )}
                         >
-                          {pickText(locale, child.label)}
-                        </Link>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ))}
-              <div className={cn("grid gap-3 pt-2", isLoggedIn ? "sm:grid-cols-4" : "sm:grid-cols-3")}>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="theme-panel-strong theme-text-strong rounded-2xl border px-4 py-3 text-sm font-medium"
-                >
-              {theme === "dark"
-                    ? locale === "en"
-                      ? "Light mode"
-                      : "Chế độ sáng"
-                    : locale === "en"
-                      ? "Dark mode"
-                      : "Chế độ tối"}
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleLocale}
-                  className="theme-panel-strong theme-text-strong rounded-2xl border px-4 py-3 text-sm font-medium"
-                >
-                  {locale === "en" ? "Chuyển sang Tiếng Việt" : "Switch to English"}
-                </button>
-                {isLoggedIn ? (
-                  <>
+                          <div className="overflow-hidden">
+                            <div className="grid gap-1 border-t theme-border px-1.5 pt-1.5">
+                              {item.children.map((child) => (
+                                <Link
+                                  key={child.href}
+                                  href={child.href}
+                                  onClick={() => setIsOpen(false)}
+                                  className={cn(
+                                    "flex min-h-11 items-center justify-between rounded-[0.95rem] px-3.5 text-sm font-medium transition",
+                                    isActiveChildRoute(child.href)
+                                      ? "bg-[rgba(23,114,208,0.1)] text-[var(--text-strong)]"
+                                      : "theme-text-muted hover:bg-[rgba(23,114,208,0.07)] hover:text-[var(--text-strong)]",
+                                  )}
+                                >
+                                  <span>{pickText(locale, child.label)}</span>
+                                  <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
                     <Link
-                      href="/profile"
+                      key={item.href}
+                      href={item.href}
                       onClick={() => setIsOpen(false)}
                       className={cn(
-                        "inline-flex items-center justify-center gap-3 rounded-2xl border px-4 py-3 text-center text-sm font-semibold",
-                        isProfileRoute
+                        "theme-panel-strong flex min-h-13 items-center justify-between rounded-[1.25rem] border px-4 text-sm font-semibold transition",
+                        isActive
                           ? "theme-button-primary"
-                          : "theme-panel-strong theme-text-strong",
+                          : "theme-text-strong hover:-translate-y-0.5 hover:bg-[rgba(23,114,208,0.08)]",
                       )}
                     >
-                      <GradientAvatar
-                        label={currentUser.name}
-                        tone={currentUser.avatarTone}
-                        imageSrc={currentUser.avatarImageSrc}
-                        className="h-7 w-7 rounded-full text-[10px]"
-                      />
-                      <span>{locale === "en" ? "Profile" : "Hồ sơ"}</span>
+                      <span>{itemLabel}</span>
+                      <ArrowRight className="h-4 w-4 shrink-0" />
                     </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsOpen(false);
-                        void signOutCurrentUser();
-                      }}
-                      className="theme-panel-strong theme-text-strong inline-flex items-center justify-center gap-3 rounded-2xl border px-4 py-3 text-center text-sm font-semibold"
+                  );
+                })}
+              </div>
+
+              <div className="grid gap-2 border-t theme-border pt-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="theme-panel-strong theme-text-strong inline-flex min-h-12 items-center justify-center gap-2 rounded-[1.1rem] border px-3 text-sm font-semibold"
+                  >
+                    {theme === "dark" ? (
+                      <SunMedium className="h-4 w-4 text-amber-300" />
+                    ) : (
+                      <MoonStar className="h-4 w-4 theme-accent" />
+                    )}
+                    <span>
+                      {theme === "dark"
+                        ? locale === "en"
+                          ? "Light"
+                          : "Sáng"
+                        : locale === "en"
+                          ? "Dark"
+                          : "Tối"}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleLocale}
+                    className="theme-panel-strong theme-text-strong inline-flex min-h-12 items-center justify-center gap-2 rounded-[1.1rem] border px-3 text-sm font-semibold"
+                  >
+                    <Globe2 className="h-4 w-4 theme-accent" />
+                    <span>{locale === "en" ? "VI" : "EN"}</span>
+                    {isPending ? <span className="theme-text-soft text-xs">...</span> : null}
+                  </button>
+                </div>
+
+                {isLoggedIn ? (
+                  <div className="grid gap-2">
+                    <Link
+                      href="/messages"
+                      onClick={() => setIsOpen(false)}
+                      className="theme-panel-strong theme-text-strong inline-flex min-h-12 items-center justify-center gap-2 rounded-[1.1rem] border px-4 text-center text-sm font-semibold"
                     >
-                      <LogOut className="h-4 w-4" />
-                      <span>{locale === "en" ? "Log out" : "Đăng xuất"}</span>
-                    </button>
-                  </>
+                      <Bell className="h-4 w-4 theme-accent" />
+                      <span>{locale === "en" ? "Messages" : "Tin nhắn"}</span>
+                    </Link>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link
+                        href="/profile"
+                        onClick={() => setIsOpen(false)}
+                        className={cn(
+                          "inline-flex min-h-12 items-center justify-center gap-2 rounded-[1.1rem] border px-3 text-center text-sm font-semibold",
+                          isProfileRoute ? "theme-button-primary" : "theme-panel-strong theme-text-strong",
+                        )}
+                      >
+                        <GradientAvatar
+                          label={currentUser.name}
+                          tone={currentUser.avatarTone}
+                          imageSrc={currentUser.avatarImageSrc}
+                          className="h-7 w-7 rounded-full text-[10px]"
+                        />
+                        <span>{locale === "en" ? "Profile" : "Hồ sơ"}</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsOpen(false);
+                          void signOutCurrentUser();
+                        }}
+                        className="theme-panel-strong theme-text-strong inline-flex min-h-12 items-center justify-center gap-2 rounded-[1.1rem] border px-3 text-center text-sm font-semibold"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>{locale === "en" ? "Log out" : "Đăng xuất"}</span>
+                      </button>
+                    </div>
+                  </div>
                 ) : (
                   <Link
                     href="/auth"
                     onClick={() => setIsOpen(false)}
-                    className="theme-button-primary rounded-2xl px-4 py-3 text-center text-sm font-semibold"
+                    className="theme-button-primary inline-flex min-h-12 items-center justify-center rounded-[1.1rem] px-4 text-center text-sm font-semibold"
                   >
-                    {locale === "en" ? "Open Auth" : "Mở Auth"}
+                    {locale === "en" ? "Log in" : "Đăng nhập"}
                   </Link>
                 )}
               </div>
