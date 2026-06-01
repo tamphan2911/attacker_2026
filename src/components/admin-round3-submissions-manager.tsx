@@ -17,6 +17,11 @@ const round3Tabs: Array<{
   { id: "emerging", icon: Sprout },
 ];
 
+const stickyTeamHeadClass =
+  "theme-admin-sticky-head sticky left-0 z-30 min-w-[240px] shadow-[12px_0_24px_rgba(14,116,144,0.08)]";
+const stickyTeamCellClass =
+  "theme-admin-sticky-cell sticky left-0 z-20 min-w-[240px] shadow-[12px_0_24px_rgba(14,116,144,0.08)]";
+
 function formatDateTime(locale: "en" | "vi", value: string) {
   return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "vi-VN", {
     timeZone: "Asia/Ho_Chi_Minh",
@@ -312,8 +317,13 @@ export function AdminRound3SubmissionsManager() {
                   locale === "en" ? "Final score" : "Điểm chung kết",
                   locale === "en" ? "Rank" : "Xếp hạng",
                   locale === "en" ? "Download" : "Tải xuống",
-                ].map((label) => (
-                  <th key={label} className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                ].map((label, columnIndex) => (
+                  <th
+                    key={label}
+                    className={`px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] ${
+                      columnIndex === 1 ? stickyTeamHeadClass : ""
+                    }`}
+                  >
                     {label}
                   </th>
                 ))}
@@ -323,7 +333,7 @@ export function AdminRound3SubmissionsManager() {
               {filteredRows.map((row, index) => (
                 <tr key={row.submissionId} className="border-b theme-border last:border-b-0">
                   <td className="px-4 py-4 theme-text-soft">{index + 1}</td>
-                  <td className="px-4 py-4">
+                  <td className={`${stickyTeamCellClass} px-4 py-4`}>
                     <p className="font-semibold theme-text-strong">{row.teamName}</p>
                     <p className="mt-1 text-xs theme-text-soft">{row.teamTag}</p>
                   </td>
