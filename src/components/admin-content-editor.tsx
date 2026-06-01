@@ -372,6 +372,8 @@ function iconForPage(pageId: ContentPageId) {
       return ShieldCheck;
     case "timeline":
       return Clock3;
+    case "round-1-results":
+      return Trophy;
     case "finalists":
       return Trophy;
     case "final-results":
@@ -443,6 +445,7 @@ const contentPageTree: Array<{
     children: [
       { kind: "page", id: "rules" },
       { kind: "page", id: "timeline" },
+      { kind: "page", id: "round-1-results" },
       { kind: "page", id: "faq" },
       { kind: "page", id: "sponsors" },
       { kind: "page", id: "judges" },
@@ -3957,6 +3960,110 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                       </div>
                     ) : null}
                   </div>
+                ))}
+              </div>
+            </Surface>
+          </>
+        ) : null}
+
+        {pageId === "round-1-results" ? (
+          <>
+            <CopySectionEditor
+              title="Round 1 results / Published header"
+              section={draft.round1Results.releasedHeader}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.round1Results.releasedHeader[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Round 1 results / Waiting header"
+              section={draft.round1Results.unreleasedHeader}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.round1Results.unreleasedHeader[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Round 1 results / Empty published state"
+              section={draft.round1Results.emptyState}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.round1Results.emptyState[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Round 1 results / Result list intro"
+              section={draft.round1Results.listHeader}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.round1Results.listHeader[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Round 1 results / No search match"
+              section={draft.round1Results.noSearchResults}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.round1Results.noSearchResults[field][language] = value;
+                  }),
+                )
+              }
+            />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Round 1 results / Labels and short messages"
+                description="Edit every small label, button text, table label, loading text, and helper message used by the Round 1 results page."
+              />
+              <div className="grid gap-4 xl:grid-cols-2">
+                {[
+                  ["Loading message", draft.round1Results.loadingLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.loadingLabel[language] = value; }],
+                  ["Error message", draft.round1Results.errorLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.errorLabel[language] = value; }],
+                  ["To be announced label", draft.round1Results.toBeAnnouncedLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.toBeAnnouncedLabel[language] = value; }],
+                  ["Announcement date label", draft.round1Results.announcementDateLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.announcementDateLabel[language] = value; }],
+                  ["Waiting notice", draft.round1Results.waitingNotice, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.waitingNotice[language] = value; }],
+                  ["View timeline button", draft.round1Results.viewTimelineLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.viewTimelineLabel[language] = value; }],
+                  ["Open news button", draft.round1Results.openNewsLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.openNewsLabel[language] = value; }],
+                  ["Admin preview title", draft.round1Results.adminPreviewTitle, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.adminPreviewTitle[language] = value; }],
+                  ["Admin preview description", draft.round1Results.adminPreviewDescription, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.adminPreviewDescription[language] = value; }],
+                  ["Search placeholder", draft.round1Results.searchPlaceholder, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.searchPlaceholder[language] = value; }],
+                  ["Team column label", draft.round1Results.teamColumnLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.teamColumnLabel[language] = value; }],
+                  ["Members column label", draft.round1Results.membersColumnLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.membersColumnLabel[language] = value; }],
+                  ["Members suffix", draft.round1Results.membersSuffix, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.membersSuffix[language] = value; }],
+                  ["Leader label", draft.round1Results.leaderLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.leaderLabel[language] = value; }],
+                  ["Missing university label", draft.round1Results.universityMissingLabel, (language: Locale, value: string, next: SitePageContent) => { next.round1Results.universityMissingLabel[language] = value; }],
+                ].map(([title, value, updater]) => (
+                  <LocalizedTextEditorCard
+                    key={title as string}
+                    title={title as string}
+                    value={value as LocalizedText}
+                    rows={title === "Waiting notice" || title === "Admin preview description" || title === "Error message" ? 3 : 2}
+                    onChange={(language, nextValue) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          (updater as (language: Locale, value: string, next: SitePageContent) => void)(
+                            language,
+                            nextValue,
+                            next,
+                          );
+                        }),
+                      )
+                    }
+                  />
                 ))}
               </div>
             </Surface>

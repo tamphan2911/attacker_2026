@@ -575,6 +575,29 @@ export interface EditableHeroSlide {
   cards: EditableHeroSlideCard[];
 }
 
+export interface EditableRound1ResultsPageContent {
+  releasedHeader: EditableSectionCopy;
+  unreleasedHeader: EditableSectionCopy;
+  loadingLabel: LocalizedText;
+  errorLabel: LocalizedText;
+  toBeAnnouncedLabel: LocalizedText;
+  announcementDateLabel: LocalizedText;
+  waitingNotice: LocalizedText;
+  viewTimelineLabel: LocalizedText;
+  openNewsLabel: LocalizedText;
+  adminPreviewTitle: LocalizedText;
+  adminPreviewDescription: LocalizedText;
+  emptyState: EditableSectionCopy;
+  listHeader: EditableSectionCopy;
+  searchPlaceholder: LocalizedText;
+  teamColumnLabel: LocalizedText;
+  membersColumnLabel: LocalizedText;
+  membersSuffix: LocalizedText;
+  leaderLabel: LocalizedText;
+  universityMissingLabel: LocalizedText;
+  noSearchResults: EditableSectionCopy;
+}
+
 export interface SitePageContent {
   siteHeader: {
     slogan: LocalizedText;
@@ -614,6 +637,7 @@ export interface SitePageContent {
     competitionPath: EditablePathBlock;
     mentors: EditableSectionCopy;
   };
+  round1Results: EditableRound1ResultsPageContent;
   rules: {
     header: EditableSectionCopy;
     coreRules: EditableSectionCopy;

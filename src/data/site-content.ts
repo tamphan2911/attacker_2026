@@ -1239,6 +1239,78 @@ export const defaultPageContent: SitePageContent = {
       },
     },
   },
+  round1Results: {
+    releasedHeader: {
+      eyebrow: { en: "Round 1 results", vi: "Kết quả Vòng 1" },
+      title: { en: "Teams qualified for Round 2", vi: "Danh sách đội vào Vòng 2" },
+      description: {
+        en: "This page lists qualified teams only. The display order does not indicate ranking, placement, or score order.",
+        vi: "Trang này chỉ liệt kê các đội đủ điều kiện vào Vòng 2. Thứ tự hiển thị không thể hiện xếp hạng, thứ hạng hay thứ tự điểm.",
+      },
+    },
+    unreleasedHeader: {
+      eyebrow: { en: "Round 1 results", vi: "Kết quả Vòng 1" },
+      title: {
+        en: "The Round 1 result announcement is not live yet.",
+        vi: "Kết quả Vòng 1 chưa được công bố.",
+      },
+      description: {
+        en: "The qualified-team list will appear here after the official announcement time.",
+        vi: "Danh sách đội vào Vòng 2 sẽ hiển thị tại đây sau thời điểm công bố chính thức.",
+      },
+    },
+    loadingLabel: { en: "Loading Round 1 announcement...", vi: "Đang tải thông báo Vòng 1..." },
+    errorLabel: {
+      en: "Could not load the Round 1 result announcement right now.",
+      vi: "Hiện chưa thể tải thông báo kết quả Vòng 1.",
+    },
+    toBeAnnouncedLabel: { en: "To be announced", vi: "Sẽ cập nhật" },
+    announcementDateLabel: { en: "Announcement date", vi: "Ngày công bố" },
+    waitingNotice: {
+      en: "Before the announcement date, this page only shows the waiting notice so teams see the same official result release.",
+      vi: "Trước ngày công bố, trang này chỉ hiển thị thông báo chờ để các đội nhận kết quả theo cùng một thời điểm chính thức.",
+    },
+    viewTimelineLabel: { en: "View timeline", vi: "Xem timeline" },
+    openNewsLabel: { en: "Open news", vi: "Mở tin tức" },
+    adminPreviewTitle: { en: "Admin preview is enabled", vi: "Đang xem trước bằng quyền admin" },
+    adminPreviewDescription: {
+      en: "This Round 1 result page is visible to admin-mode accounts before the official announcement time.",
+      vi: "Trang kết quả Vòng 1 này được mở cho tài khoản admin mode trước thời điểm công bố chính thức.",
+    },
+    emptyState: {
+      eyebrow: { en: "", vi: "" },
+      title: {
+        en: "No qualified teams are published yet.",
+        vi: "Chưa có danh sách đội được công bố.",
+      },
+      description: {
+        en: "The announcement date has passed, but the reviewed score data is not available for public listing yet.",
+        vi: "Thời điểm công bố đã đến, nhưng dữ liệu điểm đã duyệt chưa sẵn sàng để hiển thị công khai.",
+      },
+    },
+    listHeader: {
+      eyebrow: { en: "Qualified team list", vi: "Danh sách đội vượt qua Vòng 1" },
+      title: { en: "", vi: "" },
+      description: {
+        en: "Search updates the table immediately by team name, code, keyword, member name, or university.",
+        vi: "Ô tìm kiếm cập nhật bảng ngay theo tên đội, mã đội, từ khóa, tên thành viên hoặc trường đại học.",
+      },
+    },
+    searchPlaceholder: { en: "Search teams or members...", vi: "Tìm đội hoặc thành viên..." },
+    teamColumnLabel: { en: "Team", vi: "Đội thi" },
+    membersColumnLabel: { en: "Team members", vi: "Thành viên đội" },
+    membersSuffix: { en: "members", vi: "thành viên" },
+    leaderLabel: { en: "Leader", vi: "Đội trưởng" },
+    universityMissingLabel: { en: "University not updated", vi: "Chưa cập nhật trường" },
+    noSearchResults: {
+      eyebrow: { en: "", vi: "" },
+      title: { en: "No matching teams found.", vi: "Không tìm thấy đội phù hợp." },
+      description: {
+        en: "Try another team name, member, or university.",
+        vi: "Hãy thử tên đội, thành viên hoặc trường đại học khác.",
+      },
+    },
+  },
   rules: {
     header: {
       eyebrow: { en: "Competition rules", vi: "Thể lệ cuộc thi" },

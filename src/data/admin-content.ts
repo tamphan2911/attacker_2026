@@ -6,6 +6,7 @@ export type ContentPageId =
   | "faq"
   | "rules"
   | "timeline"
+  | "round-1-results"
   | "finalists"
   | "final-results"
   | "news"
@@ -81,6 +82,15 @@ export const contentPageConfigs: ContentPageConfig[] = [
     description: {
       en: "Timeline diagram, round summaries, and page labels around the stage list.",
       vi: "Sơ đồ lịch trình, phần tóm tắt theo vòng và các nhãn bao quanh danh sách giai đoạn.",
+    },
+  },
+  {
+    id: "round-1-results",
+    href: "/admin/content/pages/round-1-results",
+    label: { en: "Round 1 results", vi: "Kết quả Vòng 1" },
+    description: {
+      en: "Round 1 result announcement page text, waiting-state copy, table labels, and search messages.",
+      vi: "Nội dung trang công bố kết quả Vòng 1, trạng thái chờ, nhãn bảng và thông báo tìm kiếm.",
     },
   },
   {

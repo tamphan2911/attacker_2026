@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { GradientAvatar, SectionHeading, Surface } from "@/components/site-ui";
-import { formatDateRangeLabel } from "@/lib/site";
+import { formatDateRangeLabel, pickText } from "@/lib/site";
 
 type QualifiedTeamMember = {
   userId: string;
@@ -51,7 +51,8 @@ type Round1QualifiedTeamsPayload = {
 };
 
 export function Round1QualifiedTeamsPage() {
-  const { locale, currentTeam } = useSiteState();
+  const { locale, currentTeam, pageContent } = useSiteState();
+  const content = pageContent.round1Results;
   const [payload, setPayload] = useState<Round1QualifiedTeamsPayload | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -79,11 +80,7 @@ export function Round1QualifiedTeamsPage() {
         }
       } catch {
         if (!cancelled) {
-          setError(
-            locale === "en"
-              ? "Could not load the Round 1 result announcement right now."
-              : "Hiện chưa thể tải thông báo kết quả Vòng 1.",
-          );
+          setError(pickText(locale, content.errorLabel));
         }
       } finally {
         if (!cancelled) {
@@ -95,11 +92,11 @@ export function Round1QualifiedTeamsPage() {
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [content.errorLabel, locale]);
 
   const announcementLabel = useMemo(() => {
     if (!payload?.announcementStartDate) {
-      return locale === "en" ? "To be announced" : "Sẽ cập nhật";
+      return pickText(locale, content.toBeAnnouncedLabel);
     }
 
     return formatDateRangeLabel(
@@ -110,6 +107,7 @@ export function Round1QualifiedTeamsPage() {
       payload.announcementEndTime,
     );
   }, [
+    content.toBeAnnouncedLabel,
     locale,
     payload?.announcementEndDate,
     payload?.announcementEndTime,
@@ -143,9 +141,7 @@ export function Round1QualifiedTeamsPage() {
   if (isLoading) {
     return (
       <Surface className="mx-auto max-w-3xl px-6 py-10 text-center">
-        <p className="text-sm theme-text-soft">
-          {locale === "en" ? "Loading Round 1 announcement..." : "Đang tải thông báo Vòng 1..."}
-        </p>
+        <p className="text-sm theme-text-soft">{pickText(locale, content.loadingLabel)}</p>
       </Surface>
     );
   }
@@ -153,7 +149,7 @@ export function Round1QualifiedTeamsPage() {
   if (error || !payload) {
     return (
       <Surface className="mx-auto max-w-3xl px-6 py-10 text-center">
-        <p className="text-sm leading-7 theme-text-soft">{error}</p>
+        <p className="text-sm leading-7 theme-text-soft">{error || pickText(locale, content.errorLabel)}</p>
       </Surface>
     );
   }
@@ -162,13 +158,9 @@ export function Round1QualifiedTeamsPage() {
     return (
       <div className="space-y-8">
         <SectionHeading
-          eyebrow={locale === "en" ? "Round 1 results" : "Kết quả Vòng 1"}
-          title={locale === "en" ? "The Round 1 result announcement is not live yet." : "Kết quả Vòng 1 chưa được công bố."}
-          description={
-            locale === "en"
-              ? "The qualified-team list will appear here after the official announcement time."
-              : "Danh sách đội vào Vòng 2 sẽ hiển thị tại đây sau thời điểm công bố chính thức."
-          }
+          eyebrow={pickText(locale, content.unreleasedHeader.eyebrow)}
+          title={pickText(locale, content.unreleasedHeader.title)}
+          description={pickText(locale, content.unreleasedHeader.description)}
         />
 
         <Surface className="overflow-hidden px-6 py-6 md:px-8 md:py-8">
@@ -179,13 +171,11 @@ export function Round1QualifiedTeamsPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
-                  {locale === "en" ? "Announcement date" : "Ngày công bố"}
+                  {pickText(locale, content.announcementDateLabel)}
                 </p>
                 <h2 className="mt-2 text-2xl font-semibold theme-text-strong">{announcementLabel}</h2>
                 <p className="mt-3 max-w-2xl text-sm leading-7 theme-text-muted">
-                  {locale === "en"
-                    ? "Before the announcement date, this page only shows the waiting notice so teams see the same official result release."
-                    : "Trước ngày công bố, trang này chỉ hiển thị thông báo chờ để các đội nhận kết quả theo cùng một thời điểm chính thức."}
+                  {pickText(locale, content.waitingNotice)}
                 </p>
               </div>
             </div>
@@ -195,14 +185,14 @@ export function Round1QualifiedTeamsPage() {
                 href="/timeline"
                 className="inline-flex items-center justify-center gap-2 rounded-full border border-sky-300/45 bg-sky-100/75 px-5 py-3 text-sm font-semibold text-sky-900 transition hover:-translate-y-0.5 hover:bg-sky-100 dark:border-sky-300/18 dark:bg-sky-300/12 dark:text-sky-100"
               >
-                {locale === "en" ? "View timeline" : "Xem timeline"}
+                {pickText(locale, content.viewTimelineLabel)}
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/news"
                 className="inline-flex items-center justify-center gap-2 rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
               >
-                {locale === "en" ? "Open news" : "Mở tin tức"}
+                {pickText(locale, content.openNewsLabel)}
               </Link>
             </div>
           </div>
@@ -214,13 +204,9 @@ export function Round1QualifiedTeamsPage() {
   return (
     <div className="space-y-10 md:space-y-12">
       <SectionHeading
-        eyebrow={locale === "en" ? "Round 1 results" : "Kết quả Vòng 1"}
-        title={locale === "en" ? "Teams qualified for Round 2" : "Danh sách đội vào Vòng 2"}
-        description={
-          locale === "en"
-            ? "This page lists qualified teams only. The display order does not indicate ranking, placement, or score order."
-            : "Trang này chỉ liệt kê các đội đủ điều kiện vào Vòng 2. Thứ tự hiển thị không thể hiện xếp hạng, thứ hạng hay thứ tự điểm."
-        }
+        eyebrow={pickText(locale, content.releasedHeader.eyebrow)}
+        title={pickText(locale, content.releasedHeader.title)}
+        description={pickText(locale, content.releasedHeader.description)}
       />
 
       {payload.adminPreview ? (
@@ -231,12 +217,10 @@ export function Round1QualifiedTeamsPage() {
             </span>
             <div>
               <p className="text-sm font-semibold theme-text-strong">
-                {locale === "en" ? "Admin preview is enabled" : "Đang xem trước bằng quyền admin"}
+                {pickText(locale, content.adminPreviewTitle)}
               </p>
               <p className="mt-1 text-sm leading-6 theme-text-muted">
-                {locale === "en"
-                  ? "This Round 1 result page is visible to admin-mode accounts before the official announcement time."
-                  : "Trang kết quả Vòng 1 này được mở cho tài khoản admin mode trước thời điểm công bố chính thức."}
+                {pickText(locale, content.adminPreviewDescription)}
               </p>
             </div>
           </div>
@@ -247,69 +231,62 @@ export function Round1QualifiedTeamsPage() {
         <Surface className="px-6 py-8 text-center">
           <Search className="mx-auto h-8 w-8 theme-text-faint" />
           <h2 className="mt-4 text-2xl font-semibold theme-text-strong">
-            {locale === "en" ? "No qualified teams are published yet." : "Chưa có danh sách đội được công bố."}
+            {pickText(locale, content.emptyState.title)}
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 theme-text-muted">
-            {locale === "en"
-              ? "The announcement date has passed, but the reviewed score data is not available for public listing yet."
-              : "Thời điểm công bố đã đến, nhưng dữ liệu điểm đã duyệt chưa sẵn sàng để hiển thị công khai."}
+            {pickText(locale, content.emptyState.description)}
           </p>
         </Surface>
       ) : (
         <Surface className="overflow-hidden px-0 py-0">
-            <div className="border-b theme-border px-5 py-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
-                    {locale === "en" ? "Qualified team list" : "Danh sách đội vượt qua Vòng 1"}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 theme-text-muted">
-                    {locale === "en"
-                      ? "Search updates the table immediately by team name, code, keyword, member name, or university."
-                      : "Ô tìm kiếm cập nhật bảng ngay theo tên đội, mã đội, từ khóa, tên thành viên hoặc trường đại học."}
-                  </p>
-                </div>
-                <label className="relative w-full lg:max-w-md">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-sky-700 dark:text-sky-100" />
-                  <input
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder={
-                      locale === "en"
-                        ? "Search teams or members..."
-                        : "Tìm đội hoặc thành viên..."
-                    }
-                    className="theme-field h-12 w-full rounded-full border px-11 text-sm font-medium outline-none transition focus:border-sky-400/60"
-                  />
-                </label>
+          <div className="border-b theme-border px-5 py-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
+                  {pickText(locale, content.listHeader.eyebrow)}
+                </p>
+                <p className="mt-2 text-sm leading-6 theme-text-muted">
+                  {pickText(locale, content.listHeader.description)}
+                </p>
               </div>
+              <label className="relative w-full lg:max-w-md">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-sky-700 dark:text-sky-100" />
+                <input
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder={pickText(locale, content.searchPlaceholder)}
+                  className="theme-field h-12 w-full rounded-full border px-11 text-sm font-medium outline-none transition focus:border-sky-400/60"
+                />
+              </label>
             </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead>
-                  <tr className="border-b theme-border bg-[rgba(244,249,255,0.9)] dark:bg-white/[0.04]">
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                      {locale === "en" ? "Team" : "Đội thi"}
-                    </th>
-                    <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                      {locale === "en" ? "Team members" : "Thành viên đội"}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredTeams.map((team, index) => {
-                    const rowToneClassName =
-                      currentTeam?.id === team.teamId
-                        ? "bg-cyan-100/82 shadow-[inset_4px_0_0_rgba(14,165,233,0.82)] dark:bg-cyan-300/[0.14] dark:shadow-[inset_4px_0_0_rgba(103,232,249,0.72)]"
-                        : index % 2 === 0
-                          ? "bg-white/72 dark:bg-white/[0.035]"
-                          : "bg-sky-50/72 dark:bg-sky-300/[0.055]";
+          </div>
 
-                    return (
-                      <tr
-                        key={team.teamId}
-                        className={`border-b border-slate-200/75 transition-colors last:border-b-0 hover:bg-sky-100/70 dark:border-white/10 dark:hover:bg-sky-300/[0.10] ${rowToneClassName}`}
-                      >
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b theme-border bg-[rgba(244,249,255,0.9)] dark:bg-white/[0.04]">
+                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                    {pickText(locale, content.teamColumnLabel)}
+                  </th>
+                  <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                    {pickText(locale, content.membersColumnLabel)}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTeams.map((team, index) => {
+                  const rowToneClassName =
+                    currentTeam?.id === team.teamId
+                      ? "bg-cyan-100/82 shadow-[inset_4px_0_0_rgba(14,165,233,0.82)] dark:bg-cyan-300/[0.14] dark:shadow-[inset_4px_0_0_rgba(103,232,249,0.72)]"
+                      : index % 2 === 0
+                        ? "bg-white/72 dark:bg-white/[0.035]"
+                        : "bg-sky-50/72 dark:bg-sky-300/[0.055]";
+
+                  return (
+                    <tr
+                      key={team.teamId}
+                      className={`border-b border-slate-200/75 transition-colors last:border-b-0 hover:bg-sky-100/70 dark:border-white/10 dark:hover:bg-sky-300/[0.10] ${rowToneClassName}`}
+                    >
                       <td className="px-5 py-4">
                         <div className="flex min-w-[15rem] items-center gap-3">
                           <GradientAvatar
@@ -328,7 +305,7 @@ export function Round1QualifiedTeamsPage() {
                         <div className="min-w-[32rem]">
                           <div className="mb-3 inline-flex items-center gap-2 rounded-full border theme-border theme-panel px-3 py-1 text-xs font-semibold theme-text-strong">
                             <Users2 className="h-3.5 w-3.5 theme-text-soft" />
-                            {team.memberCount} {locale === "en" ? "members" : "thành viên"}
+                            {team.memberCount} {pickText(locale, content.membersSuffix)}
                           </div>
                           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
                             {team.members.map((member) => (
@@ -347,12 +324,12 @@ export function Round1QualifiedTeamsPage() {
                                     <p className="truncate text-xs font-semibold theme-text-strong">{member.name}</p>
                                     {member.isLeader ? (
                                       <span className="shrink-0 rounded-full border border-sky-600/20 bg-sky-100/82 px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.12em] text-sky-800 dark:border-sky-300/18 dark:bg-sky-300/12 dark:text-sky-100">
-                                        {locale === "en" ? "Leader" : "Đội trưởng"}
+                                        {pickText(locale, content.leaderLabel)}
                                       </span>
                                     ) : null}
                                   </div>
                                   <p className="mt-0.5 line-clamp-2 text-[0.68rem] leading-4 theme-text-soft">
-                                    {member.university || (locale === "en" ? "University not updated" : "Chưa cập nhật trường")}
+                                    {member.university || pickText(locale, content.universityMissingLabel)}
                                   </p>
                                 </div>
                               </div>
@@ -360,24 +337,24 @@ export function Round1QualifiedTeamsPage() {
                           </div>
                         </div>
                       </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              {filteredTeams.length === 0 ? (
-                <div className="px-6 py-10 text-center">
-                  <Search className="mx-auto h-8 w-8 theme-text-faint" />
-                  <p className="mt-4 text-sm font-semibold theme-text-strong">
-                    {locale === "en" ? "No matching teams found." : "Không tìm thấy đội phù hợp."}
-                  </p>
-                  <p className="mt-2 text-sm theme-text-muted">
-                    {locale === "en" ? "Try another team name, member, or university." : "Hãy thử tên đội, thành viên hoặc trường đại học khác."}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          </Surface>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {filteredTeams.length === 0 ? (
+              <div className="px-6 py-10 text-center">
+                <Search className="mx-auto h-8 w-8 theme-text-faint" />
+                <p className="mt-4 text-sm font-semibold theme-text-strong">
+                  {pickText(locale, content.noSearchResults.title)}
+                </p>
+                <p className="mt-2 text-sm theme-text-muted">
+                  {pickText(locale, content.noSearchResults.description)}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </Surface>
       )}
     </div>
   );
