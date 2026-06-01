@@ -118,12 +118,6 @@ export function ContactPage() {
                   href: `tel:${pageContent.contact.primaryHotlineValue}`,
                   internal: false,
                 },
-                {
-                  icon: <Clock3 className="h-4 w-4 text-sky-400" />,
-                  label: pickText(locale, pageContent.contact.supportWindowLabel),
-                  value: pageContent.contact.supportWindowValue,
-                  internal: false,
-                },
               ].map((item) => (
                 <div
                   key={item.label}
