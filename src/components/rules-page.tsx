@@ -422,29 +422,31 @@ export function RulesPage() {
                   <div className="theme-rules-soft-panel mt-6 rounded-[1.8rem] border px-5 py-5">
                     <p className="text-sm leading-8 theme-text-body">{pickText(locale, round.description)}</p>
 
-                    <div className="mt-5 grid gap-3 md:grid-cols-3">
-                      {round.deliverables.map((deliverable, deliverableIndex) => {
-                        const DeliverableIcon = meta.deliverableIcon;
+                    <div className="mt-5">
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                        {pickText(locale, pageContent.rules.specificRoundRulesLabel)}
+                      </p>
+                      <div className="mt-4 grid gap-3 md:grid-cols-3">
+                        {round.specificRules.map((note, index) => {
+                          const NoteIcon = specificRuleIcons[index] ?? Sparkles;
 
-                        return (
-                        <div
-                          key={deliverable.en}
-                          className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className={`inline-flex h-8 w-8 items-center justify-center rounded-2xl border ${meta.deliverableIconClass}`}>
-                              <DeliverableIcon className="h-4 w-4" />
-                            </span>
-                            <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-                              {`${pickText(locale, pageContent.rules.deliverablePrefix)} ${deliverableIndex + 1}`}
-                            </p>
+                          return (
+                          <div
+                            key={note.en}
+                            className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
+                          >
+                            <div className="flex items-start gap-3">
+                              <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl ${meta.noteMarkerClass}`}>
+                                <NoteIcon className="h-4 w-4" />
+                              </span>
+                              <p className="text-sm leading-7 theme-text-body">
+                                {pickText(locale, note)}
+                              </p>
+                            </div>
                           </div>
-                          <p className="mt-2 text-sm leading-7 theme-text-body">
-                            {pickText(locale, deliverable)}
-                          </p>
-                        </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -456,50 +458,27 @@ export function RulesPage() {
                     />
                     <div className="relative">
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                        {pickText(locale, pageContent.rules.specificRoundRulesLabel)}
+                        {pickText(locale, pageContent.rules.roundNotesLabel)}
                       </p>
                       <div className="mt-5 space-y-3">
-                        {round.specificRules.map((note, index) => {
-                          const NoteIcon = specificRuleIcons[index] ?? Sparkles;
-
-                          return (
-                            <div
-                              key={note.en}
-                              className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
-                            >
-                              <div className="flex items-center gap-3">
-                                <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.95rem] ${meta.noteMarkerClass}`}>
-                                  <NoteIcon className="h-4 w-4" />
-                                </span>
-                                <p className="text-sm leading-7 theme-text-body">{pickText(locale, note)}</p>
-                              </div>
+                        {round.roundNotes.map((note) => (
+                          <div
+                            key={note.en}
+                            className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
+                          >
+                            <div className="flex items-center gap-3">
+                              <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.95rem] ${meta.noteMarkerClass}`}>
+                                <NotebookPen className="h-4 w-4" />
+                              </span>
+                              <p className="text-sm leading-7 theme-text-body">{pickText(locale, note)}</p>
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </Surface>
                 </div>
               </div>
-
-              <Surface className="theme-rules-shell mt-6 overflow-hidden px-5 py-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                  {pickText(locale, pageContent.rules.roundNotesLabel)}
-                </p>
-                <div className="mt-5 grid gap-3 lg:grid-cols-2">
-                  {round.roundNotes.map((note) => (
-                    <div
-                      key={note.en}
-                      className="theme-rules-note-card flex items-start gap-3 rounded-[1.35rem] border px-4 py-4"
-                    >
-                      <span className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.95rem] ${meta.noteMarkerClass}`}>
-                        <NotebookPen className="h-4 w-4" />
-                      </span>
-                      <p className="text-sm leading-7 theme-text-body">{pickText(locale, note)}</p>
-                    </div>
-                  ))}
-                </div>
-              </Surface>
             </section>
           );
         })}
