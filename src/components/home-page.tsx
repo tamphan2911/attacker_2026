@@ -155,7 +155,7 @@ export function HomePage() {
 
   return (
     <div className="space-y-24 pb-8">
-      <section className="relative left-1/2 right-1/2 -mx-[50vw] -mt-6 w-screen overflow-hidden md:-mt-8">
+      <section className="relative left-1/2 right-1/2 hidden -mx-[50vw] -mt-6 w-screen overflow-hidden md:block md:-mt-8">
         <div className="relative min-h-[560px] md:min-h-[620px]">
           {heroDeck.map((slide, index) => (
             <div
@@ -195,7 +195,7 @@ export function HomePage() {
       </section>
 
       {visibleMetricItems.length > 0 ? (
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 max-md:!mt-0 md:grid-cols-2 xl:grid-cols-4">
         {visibleMetricItems.map((item) => {
           return (
           <div
