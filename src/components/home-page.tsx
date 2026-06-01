@@ -156,7 +156,7 @@ export function HomePage() {
   return (
     <div className="space-y-24 pb-8">
       <section className="relative left-1/2 hidden w-screen max-w-[1600px] -translate-x-1/2 overflow-hidden md:block md:-mt-8">
-        <div className="relative aspect-[1600/1050] w-full bg-slate-950">
+        <div className="relative aspect-[16/7] w-full bg-slate-950">
           {heroDeck.map((slide, index) => (
             <div
               key={`${slide.title.en}-${index}`}
