@@ -3420,11 +3420,11 @@ function SubmissionRoundCard({
         ? round3Bracket === "emerging"
           ? "Đã đóng hạn báo cáo Vòng Đội ươm mầm"
           : "Đã đóng hạn báo cáo chung kết"
-        : `${pickRoundLabel(locale, round)} da ket thuc`
+        : `${pickRoundLabel(locale, round)} đã kết thúc`
     : hasPassedRound
       ? locale === "en"
         ? `${pickRoundLabel(locale, round)} passed`
-        : `Da qua ${pickRoundLabel(locale, round)}`
+        : `Đã qua ${pickRoundLabel(locale, round)}`
       : isCurrentRound
         ? locale === "en"
           ? `Currently competing in ${activeRoundLabel}`
