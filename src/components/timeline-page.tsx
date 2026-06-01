@@ -164,20 +164,12 @@ function buildTimelineActionLinks({
   }
 
   if (item.id === "round-3-final-presentation") {
-    actionLinks.push(
-      {
-        key: `${item.id}-finalist-results`,
-        href: "/competition/final-results",
-        label: labels.finalistResultsLabel,
-        icon: Presentation,
-      },
-      {
-        key: `${item.id}-emerging-results`,
-        href: "/competition/emerging-results",
-        label: labels.emergingResultsLabel,
-        icon: Presentation,
-      },
-    );
+    actionLinks.push({
+      key: `${item.id}-finalist-results`,
+      href: "/competition/final-results",
+      label: labels.finalistResultsLabel,
+      icon: Presentation,
+    });
   }
 
   for (const supportLink of item.supportLinks ?? []) {
