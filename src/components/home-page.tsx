@@ -7,17 +7,12 @@ import {
   ArrowRight,
   Award,
   Badge,
-  CalendarRange,
   BriefcaseBusiness,
   Crown,
   GraduationCap,
-  Medal,
   Quote,
-  ShieldCheck,
   Sparkles,
   Star,
-  TrendingUp,
-  Users2,
 } from "lucide-react";
 
 import { defaultPageContent } from "@/data/site-content";
@@ -74,18 +69,6 @@ const homepageRewardItems = [
     iconClass: "bg-[linear-gradient(135deg,#38bdf8,#14b8a6)] text-white",
     borderClass: "border-cyan-300/40",
   },
-] as const;
-
-const heroCardIcons = [
-  [Users2, ShieldCheck, TrendingUp],
-  [Crown, Star, Award],
-  [CalendarRange, TrendingUp, Medal],
-] as const;
-
-const heroCardIconClasses = [
-  "bg-[linear-gradient(135deg,rgba(56,189,248,0.95),rgba(14,165,233,0.95))] text-white shadow-[0_14px_32px_rgba(56,189,248,0.3)]",
-  "bg-[linear-gradient(135deg,rgba(52,211,153,0.95),rgba(16,185,129,0.95))] text-slate-950 shadow-[0_14px_32px_rgba(16,185,129,0.24)]",
-  "bg-[linear-gradient(135deg,rgba(251,191,36,0.98),rgba(249,115,22,0.96))] text-slate-950 shadow-[0_14px_32px_rgba(249,115,22,0.24)]",
 ] as const;
 
 const testimonialQuoteClasses = [
@@ -152,7 +135,6 @@ export function HomePage() {
   const testimonialsSection = pageContent.home.testimonialsSection;
   const testimonialsTitle =
     locale === "vi" ? "Cảm nhận từ các mùa trước" : "Voices from earlier seasons";
-  const currentHeroSlide = heroDeck[activeSlide] ?? heroDeck[0];
   const sponsorMarqueeItems = [...sponsors, ...sponsors];
   const testimonialItems = pageContent.home.testimonials;
   const testimonialMarqueeItems = [...testimonialItems, ...testimonialItems];
@@ -164,7 +146,7 @@ export function HomePage() {
 
     const intervalId = window.setInterval(() => {
       setActiveSlide((current) => (current + 1) % heroDeck.length);
-    }, 5200);
+    }, 7000);
 
     return () => {
       window.clearInterval(intervalId);
@@ -191,56 +173,10 @@ export function HomePage() {
                 unoptimized={slide.image.startsWith("/api/hero-slide-images/")}
                 className="hero-pan object-cover"
               />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.04)_0%,rgba(7,18,35,0.18)_42%,rgba(7,18,35,0.64)_100%)]" />
             </div>
           ))}
 
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_12%,rgba(255,255,255,0.12),transparent_24%),linear-gradient(90deg,rgba(7,18,35,0.18)_0%,rgba(7,18,35,0.04)_38%,rgba(7,18,35,0.05)_62%,rgba(7,18,35,0.18)_100%),linear-gradient(180deg,rgba(7,18,35,0.02)_0%,rgba(7,18,35,0.12)_46%,rgba(7,18,35,0.72)_100%)]" />
-
-          <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl items-end px-4 pb-16 pt-24 text-white md:min-h-[620px] md:px-8 md:pb-20 md:pt-28">
-            <div className="grid w-full gap-4 lg:grid-cols-[390px_390px] lg:items-end lg:justify-between">
-              <div className="hero-soft-glass max-w-[390px] rounded-[1.25rem] px-4 py-4 lg:translate-y-6">
-                <h1 className="theme-heading max-w-[22rem] text-[1.24rem] font-semibold leading-[1.17] text-white [text-shadow:0_12px_28px_rgba(7,18,35,0.38)] md:text-[1.58rem] md:leading-[1.14]">
-                  {pickText(locale, currentHeroSlide.title)}
-                </h1>
-                <p className="mt-2.5 max-w-[22rem] text-[0.7rem] leading-5 text-white/76 [text-shadow:0_10px_24px_rgba(7,18,35,0.30)] md:text-[0.74rem]">
-                  {pickText(locale, currentHeroSlide.description)}
-                </p>
-              </div>
-
-              <div className="grid gap-2 sm:grid-cols-3 lg:w-[390px] lg:-translate-x-14 lg:translate-y-16 lg:grid-cols-1 lg:self-end lg:justify-self-end">
-                {currentHeroSlide.cards.map((item, index) => {
-                  const Icon = heroCardIcons[activeSlide % heroCardIcons.length]?.[index] ?? Sparkles;
-
-                  return (
-                    <div
-                      key={item.label.en}
-                      className="hero-soft-glass hero-soft-glass--compact rounded-[1.1rem] px-3.5 py-2"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.8rem] ${heroCardIconClasses[index % heroCardIconClasses.length]}`}
-                        >
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-white/60">
-                            {pickText(locale, item.label)}
-                          </p>
-                          <p className="mt-0.5 truncate text-[0.82rem] font-semibold text-white">
-                            {pickText(locale, item.value)}
-                          </p>
-                          <p className="mt-0.5 line-clamp-1 text-[0.68rem] leading-4 text-white/74">
-                            {pickText(locale, item.note)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
+          <div className="relative z-10 mx-auto flex min-h-[560px] max-w-7xl items-end px-4 pb-16 pt-24 md:min-h-[620px] md:px-8 md:pb-20 md:pt-28">
             <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-2">
               {heroDeck.map((slide, index) => (
                 <button
