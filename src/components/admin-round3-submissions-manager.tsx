@@ -119,8 +119,8 @@ export function AdminRound3SubmissionsManager() {
 
     if (draft !== "") {
       const parsedScore = Number(draft);
-      if (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > 100) {
-        setError(locale === "en" ? "Final score must be between 0 and 100." : "Điểm chung kết phải từ 0 đến 100.");
+      if (!Number.isFinite(parsedScore) || parsedScore < 0) {
+        setError(locale === "en" ? "Final score must be zero or higher." : "Điểm chung kết phải từ 0 trở lên.");
         return;
       }
       finalScore = parsedScore;
@@ -367,7 +367,6 @@ export function AdminRound3SubmissionsManager() {
                         <input
                           type="number"
                           min={0}
-                          max={100}
                           step={0.01}
                           value={scoreDrafts[row.teamId] ?? ""}
                           onChange={(event) =>
@@ -376,7 +375,7 @@ export function AdminRound3SubmissionsManager() {
                               [row.teamId]: event.target.value,
                             }))
                           }
-                          placeholder="0-100"
+                          placeholder={locale === "en" ? "Score" : "Điểm"}
                           className="theme-field h-10 w-24 rounded-[0.8rem] border px-3 text-sm outline-none"
                         />
                         <button

@@ -9,7 +9,7 @@ import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
 
 const scoreSchema = z.object({
   teamId: z.string().min(1),
-  finalScore: z.number().min(0).max(100).nullable(),
+  finalScore: z.number().min(0).nullable(),
 });
 
 export async function GET() {
