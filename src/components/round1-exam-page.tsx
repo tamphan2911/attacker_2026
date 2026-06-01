@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -75,6 +75,16 @@ type DialogMode = "start" | "submit" | null;
 type Round1WindowAvailability = "not-started" | "open" | "closed";
 
 const ROUND1_SUBMITTED_DASHBOARD_URL = "/dashboard?round1=submitted";
+const ESSAY_BLOCKED_INPUT_TYPES = new Set([
+  "insertFromDrop",
+  "insertFromPaste",
+  "insertFromPasteAsQuotation",
+  "insertFromYank",
+]);
+
+function isRound1EssayAnswerTarget(target: EventTarget | null) {
+  return target instanceof HTMLElement && target.dataset.round1EssayAnswer === "true";
+}
 
 function getRound1WindowAvailability(
   round1Window: TimelineDateRange | undefined,
@@ -510,6 +520,18 @@ export function Round1ExamPage() {
     }, 4200);
   }, [locale]);
 
+  const handleEssayBeforeInput = useCallback(
+    (event: FormEvent<HTMLTextAreaElement>) => {
+      const inputType = (event.nativeEvent as InputEvent).inputType;
+
+      if (ESSAY_BLOCKED_INPUT_TYPES.has(inputType)) {
+        event.preventDefault();
+        showEssayPasteWarning();
+      }
+    },
+    [showEssayPasteWarning],
+  );
+
   const showEssayWordLimitWarning = useCallback(() => {
     if (essayWordLimitWarningTimeoutRef.current) {
       window.clearTimeout(essayWordLimitWarningTimeoutRef.current);
@@ -797,10 +819,24 @@ export function Round1ExamPage() {
 
     const handlePaste = (event: ClipboardEvent) => {
       event.preventDefault();
+      if (isRound1EssayAnswerTarget(event.target)) {
+        showEssayPasteWarning();
+      }
+    };
+
+    const handleDrop = (event: DragEvent) => {
+      event.preventDefault();
+      if (isRound1EssayAnswerTarget(event.target)) {
+        showEssayPasteWarning();
+      }
+    };
+
+    const handleBeforeInput = (event: InputEvent) => {
       if (
-        event.target instanceof HTMLElement &&
-        event.target.dataset.round1EssayAnswer === "true"
+        ESSAY_BLOCKED_INPUT_TYPES.has(event.inputType) &&
+        isRound1EssayAnswerTarget(event.target)
       ) {
+        event.preventDefault();
         showEssayPasteWarning();
       }
     };
@@ -825,8 +861,7 @@ export function Round1ExamPage() {
       if (key === "a" || key === "c" || key === "v" || key === "x") {
         if (
           key === "v" &&
-          event.target instanceof HTMLElement &&
-          event.target.dataset.round1EssayAnswer === "true"
+          isRound1EssayAnswerTarget(event.target)
         ) {
           showEssayPasteWarning();
         }
@@ -842,6 +877,8 @@ export function Round1ExamPage() {
     document.addEventListener("copy", blockEvent);
     document.addEventListener("cut", blockEvent);
     document.addEventListener("paste", handlePaste);
+    document.addEventListener("drop", handleDrop);
+    document.addEventListener("beforeinput", handleBeforeInput);
     document.addEventListener("selectstart", blockEvent);
     document.addEventListener("dragstart", blockEvent);
     document.addEventListener("contextmenu", blockEvent);
@@ -854,6 +891,8 @@ export function Round1ExamPage() {
       document.removeEventListener("copy", blockEvent);
       document.removeEventListener("cut", blockEvent);
       document.removeEventListener("paste", handlePaste);
+      document.removeEventListener("drop", handleDrop);
+      document.removeEventListener("beforeinput", handleBeforeInput);
       document.removeEventListener("selectstart", blockEvent);
       document.removeEventListener("dragstart", blockEvent);
       document.removeEventListener("contextmenu", blockEvent);
@@ -1975,6 +2014,7 @@ export function Round1ExamPage() {
                           : current,
                       );
                     }}
+                    onBeforeInput={handleEssayBeforeInput}
                     onPaste={(event) => {
                       event.preventDefault();
                       showEssayPasteWarning();
