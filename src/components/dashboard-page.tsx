@@ -34,6 +34,7 @@ import {
   hasTeamReachedRound,
   isRoundFinished,
   isTimelineItemFinished,
+  isTimelineItemStarted,
   isTeamRosterLocked,
   isTeamRound1Locked,
   isTeamCurrentlyCompetingRound,
@@ -748,6 +749,8 @@ export function DashboardPage() {
   const round1Finished = isTimelineItemFinished("round-1-individual-qualifier", timelineItems, new Date());
   const round2Finished = isRoundFinished("round-2", new Date(), timelineItems);
   const round3Finished = isRoundFinished("round-3", new Date(), timelineItems);
+  const finalPresentationFinished = isTimelineItemFinished("round-3-final-presentation", timelineItems, new Date());
+  const emergingAwardsReleased = isTimelineItemStarted("round-3-emerging-awards-announcement", timelineItems, new Date());
   const round3SubmissionDeadlineItem = getSubmissionDeadlineTimelineItem("round-3", timelineItems);
   const round3SubmissionClosed = Boolean(
     currentTeam &&
@@ -2692,6 +2695,14 @@ export function DashboardPage() {
                       "round-2": { ...current["round-2"], ...payload },
                     }))
                   }
+                  resultLink={
+                    round2ResultsReleased
+                      ? {
+                          href: "/competition/finalists",
+                          label: locale === "en" ? "Round 2 results" : "Kết quả Vòng 2",
+                        }
+                      : undefined
+                  }
                   onSubmit={() => handleSubmission("round-2")}
                 />
               ) : null}
@@ -2718,6 +2729,19 @@ export function DashboardPage() {
                       ...current,
                       "round-3": { ...current["round-3"], ...payload },
                     }))
+                  }
+                  resultLink={
+                    currentTeamRound2Advancement === "finalist" && finalPresentationFinished
+                      ? {
+                          href: "/competition/final-results",
+                          label: locale === "en" ? "Finalist results" : "Kết quả chung kết",
+                        }
+                      : currentTeamRound2Advancement === "emerging" && emergingAwardsReleased
+                        ? {
+                            href: "/competition/emerging-results",
+                            label: locale === "en" ? "Emerging results" : "Kết quả Đội ươm mầm",
+                          }
+                        : undefined
                   }
                   onSubmit={() => handleSubmission("round-3")}
                 />
@@ -3323,6 +3347,7 @@ function SubmissionRoundCard({
   users,
   form,
   uploadState,
+  resultLink,
   onFormChange,
   onSubmit,
 }: {
@@ -3342,6 +3367,10 @@ function SubmissionRoundCard({
   users: UserProfile[];
   form: SubmissionFormState;
   uploadState: SubmissionUploadState;
+  resultLink?: {
+    href: string;
+    label: string;
+  };
   onFormChange: (payload: Partial<SubmissionFormState>) => void;
   onSubmit: () => void | Promise<void>;
 }) {
@@ -3444,7 +3473,18 @@ function SubmissionRoundCard({
                   : "Trung tâm quản lý báo cáo chung kết"}
             </p>
           </div>
-          <p className="mt-4 text-3xl font-semibold theme-text-strong">{roundLabel}</p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <p className="text-3xl font-semibold theme-text-strong">{roundLabel}</p>
+            {resultLink ? (
+              <Link
+                href={resultLink.href}
+                className="theme-button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold"
+              >
+                {resultLink.label}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            ) : null}
+          </div>
           {roundWindowLabel ? (
             <p className="mt-2 text-sm theme-text-soft">{roundWindowLabel}</p>
           ) : null}
