@@ -122,8 +122,10 @@ function cn(...values: Array<string | undefined | false>) {
 
 const stickyFirstColumnClass = "theme-admin-sticky-cell sticky left-0 z-20";
 const stickySecondColumnClass = "theme-admin-sticky-cell sticky z-10";
+const stickyThirdColumnClass = "theme-admin-sticky-cell sticky z-10";
 const stickyFirstHeadClass = "theme-admin-sticky-head sticky left-0 z-30";
 const stickySecondHeadClass = "theme-admin-sticky-head sticky z-20";
+const stickyThirdHeadClass = "theme-admin-sticky-head sticky z-20";
 const stickyFirstStrongColumnClass = "theme-admin-sticky-cell-strong sticky left-0 z-20";
 const stickySecondStrongColumnClass = "theme-admin-sticky-cell-strong sticky z-10";
 
@@ -1738,12 +1740,15 @@ export function AdminRound1ScoresManager() {
                         ? { left: 0, width: 72, minWidth: 72 }
                         : columnIndex === 1
                           ? { left: 72, minWidth: 96 }
-                          : undefined
+                          : columnIndex === 2
+                            ? { left: 168, minWidth: 260 }
+                            : undefined
                     }
                     className={cn(
                       "px-4 py-3 font-medium",
                       columnIndex === 0 ? stickyFirstHeadClass : "",
                       columnIndex === 1 ? stickySecondHeadClass : "",
+                      columnIndex === 2 ? stickyThirdHeadClass : "",
                     )}
                   >
                     {label}
@@ -1766,7 +1771,10 @@ export function AdminRound1ScoresManager() {
                   >
                     {group.rank ?? "-"}
                   </td>
-                  <td className="px-4 py-4">
+                  <td
+                    style={{ left: 168, minWidth: 260 }}
+                    className={cn("px-4 py-4", stickyThirdColumnClass)}
+                  >
                     <Link href={`/admin/teams/${group.team.id}`} className="font-semibold theme-accent">
                       {group.team.name}
                     </Link>
