@@ -135,7 +135,11 @@ function buildTimelineActionLinks({
   now: Date;
   labels: Pick<
     ReturnType<typeof useSiteState>["pageContent"]["timelinePage"],
-    "readResultUpdateLabel" | "round2SubmissionClosedTitle" | "finalReportClosedTitle"
+    | "readResultUpdateLabel"
+    | "finalistResultsLabel"
+    | "emergingResultsLabel"
+    | "round2SubmissionClosedTitle"
+    | "finalReportClosedTitle"
     | "createAccountActionLabel"
   >;
 }): TimelineActionLink[] {
@@ -150,13 +154,30 @@ function buildTimelineActionLinks({
     });
   }
 
-  if (item.id === "round-2-top-5-announcement" || item.id === "round-3-final-presentation") {
+  if (item.id === "round-2-top-5-announcement") {
     actionLinks.push({
       key: `${item.id}-finalists`,
-      href: item.id === "round-3-final-presentation" ? "/competition/final-results" : "/competition/finalists",
+      href: "/competition/finalists",
       label: labels.readResultUpdateLabel,
       icon: Presentation,
     });
+  }
+
+  if (item.id === "round-3-final-presentation") {
+    actionLinks.push(
+      {
+        key: `${item.id}-finalist-results`,
+        href: "/competition/final-results",
+        label: labels.finalistResultsLabel,
+        icon: Presentation,
+      },
+      {
+        key: `${item.id}-emerging-results`,
+        href: "/competition/emerging-results",
+        label: labels.emergingResultsLabel,
+        icon: Presentation,
+      },
+    );
   }
 
   for (const supportLink of item.supportLinks ?? []) {
@@ -255,6 +276,10 @@ function buildTimelineActionLinks({
     }
 
     if (item.id === "round-3-final-presentation" && supportLink.href === "/competition") {
+      continue;
+    }
+
+    if (item.id === "round-3-final-presentation" && supportLink.href === "/competition/judges") {
       continue;
     }
 

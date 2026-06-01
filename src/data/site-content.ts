@@ -2086,6 +2086,8 @@ export const defaultPageContent: SitePageContent = {
     openDetailLabel: { en: "Open detail", vi: "Mở chi tiết" },
     openRuleBlockLabel: { en: "View rules", vi: "Xem thể lệ" },
     readResultUpdateLabel: { en: "Read result update", vi: "Đọc cập nhật kết quả" },
+    finalistResultsLabel: { en: "Finalist results", vi: "Kết quả chung kết" },
+    emergingResultsLabel: { en: "Emerging results", vi: "Kết quả Đội ươm mầm" },
     round2SubmissionClosedTitle: {
       en: "Round 2 submission window has closed.",
       vi: "Hạn nộp bài Vòng 2 đã kết thúc.",
@@ -3254,6 +3256,28 @@ export const timelineItems: TimelineItem[] = [
     },
     supportLinks: [
       { href: "/competition/judges", label: { en: "See judging panel", vi: "Xem hội đồng giám khảo" } },
+    ],
+  },
+  {
+    id: "round-3-emerging-awards-announcement",
+    phase: "round-3",
+    startDate: "2026-09-10",
+    endDate: "2026-09-10",
+    title: { en: "Announcing 10 Emerging award teams", vi: "Công bố 10 đội nhận giải Đội ươm mầm" },
+    description: {
+      en: "The 10 highest-scoring teams from the Emerging round are announced as Emerging award recipients.",
+      vi: "10 đội có điểm cao nhất trong Vòng Đội ươm mầm được công bố nhận giải Đội ươm mầm.",
+    },
+    location: {
+      en: "Official website and organizer announcement channels",
+      vi: "Website chính thức và các kênh thông báo của ban tổ chức",
+    },
+    method: {
+      en: "Final Emerging round score ranking and award announcement",
+      vi: "Công bố xếp hạng điểm cuối cùng của Vòng Đội ươm mầm và danh sách nhận giải",
+    },
+    supportLinks: [
+      { href: "/competition/emerging-results", label: { en: "Emerging results", vi: "Kết quả Đội ươm mầm" } },
     ],
   },
 ];

@@ -711,6 +711,8 @@ export interface SitePageContent {
     openDetailLabel: LocalizedText;
     openRuleBlockLabel: LocalizedText;
     readResultUpdateLabel: LocalizedText;
+    finalistResultsLabel: LocalizedText;
+    emergingResultsLabel: LocalizedText;
     round2SubmissionClosedTitle: LocalizedText;
     finalReportClosedTitle: LocalizedText;
     stepsLabel: LocalizedText;
