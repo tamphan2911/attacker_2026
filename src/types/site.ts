@@ -809,6 +809,21 @@ export interface SitePageContent {
     reservedLabel: LocalizedText;
     emergingTeamLabel: LocalizedText;
   };
+  emergingResults: {
+    header: EditableSectionCopy;
+    announcementLabel: LocalizedText;
+    toBeAnnouncedLabel: LocalizedText;
+    releasedLabel: LocalizedText;
+    pendingLabel: LocalizedText;
+    awardTeamsLabel: LocalizedText;
+    emptySlotTitle: LocalizedText;
+    loadingSlotDescription: LocalizedText;
+    pendingSlotDescription: LocalizedText;
+    yourTeamLabel: LocalizedText;
+    awardLabel: LocalizedText;
+    membersSuffix: LocalizedText;
+    leaderLabel: LocalizedText;
+  };
   finalResults: {
     champion: EditableSectionCopy;
     runnerUp: EditableSectionCopy;

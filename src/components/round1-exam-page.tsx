@@ -396,7 +396,7 @@ function Round1ConfirmDialog({
           </div>
 
           {essayWarning ? (
-            <div className="rounded-[1.4rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+            <div className="rounded-[1.4rem] border border-amber-500/35 bg-amber-500/12 px-4 py-3.5 text-sm leading-7 text-amber-900 shadow-[0_14px_32px_rgba(245,158,11,0.08)] dark:border-amber-300/24 dark:bg-amber-300/14 dark:text-amber-100">
               {locale === "en"
                 ? `Each essay answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words and no more than ${ROUND1_ESSAY_WORD_LIMIT} words before manual submission.`
                 : `Mỗi câu tự luận cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ và không vượt quá ${ROUND1_ESSAY_WORD_LIMIT} từ trước khi nộp thủ công.`}

@@ -23,6 +23,7 @@ import {
   Quote,
   ShieldCheck,
   Sparkles,
+  Sprout,
   Save,
   Tags,
   Trash2,
@@ -376,6 +377,8 @@ function iconForPage(pageId: ContentPageId) {
       return Trophy;
     case "finalists":
       return Trophy;
+    case "emerging-results":
+      return Sprout;
     case "final-results":
       return Medal;
     case "news":
@@ -450,6 +453,7 @@ const contentPageTree: Array<{
       { kind: "page", id: "sponsors" },
       { kind: "page", id: "judges" },
       { kind: "page", id: "finalists" },
+      { kind: "page", id: "emerging-results" },
       { kind: "page", id: "final-results" },
     ],
   },
@@ -4115,6 +4119,51 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 ["Finalists / Awaiting official update", draft.finalists.awaitingOfficialUpdate, (language: Locale, value: string, next: SitePageContent) => { next.finalists.awaitingOfficialUpdate[language] = value; }],
                 ["Finalists / Reserved label", draft.finalists.reservedLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.reservedLabel[language] = value; }],
                 ["Finalists / Emerging Team label", draft.finalists.emergingTeamLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.emergingTeamLabel[language] = value; }],
+              ].map(([title, value, updater]) => (
+                <LocalizedTextEditorCard
+                  key={title as string}
+                  title={title as string}
+                  value={value as LocalizedText}
+                  onChange={(language, nextValue) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
+                      }),
+                    )
+                  }
+                />
+              ))}
+            </div>
+          </>
+        ) : null}
+
+        {pageId === "emerging-results" ? (
+          <>
+            <CopySectionEditor
+              title="Emerging results / Header"
+              section={draft.emergingResults.header}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.emergingResults.header[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <div className="grid gap-4 xl:grid-cols-2">
+              {[
+                ["Emerging results / Announcement label", draft.emergingResults.announcementLabel, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.announcementLabel[language] = value; }],
+                ["Emerging results / To be announced label", draft.emergingResults.toBeAnnouncedLabel, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.toBeAnnouncedLabel[language] = value; }],
+                ["Emerging results / Released label", draft.emergingResults.releasedLabel, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.releasedLabel[language] = value; }],
+                ["Emerging results / Pending label", draft.emergingResults.pendingLabel, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.pendingLabel[language] = value; }],
+                ["Emerging results / Award teams label", draft.emergingResults.awardTeamsLabel, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.awardTeamsLabel[language] = value; }],
+                ["Emerging results / Empty team card title", draft.emergingResults.emptySlotTitle, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.emptySlotTitle[language] = value; }],
+                ["Emerging results / Loading card description", draft.emergingResults.loadingSlotDescription, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.loadingSlotDescription[language] = value; }],
+                ["Emerging results / Pending card description", draft.emergingResults.pendingSlotDescription, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.pendingSlotDescription[language] = value; }],
+                ["Emerging results / Your team label", draft.emergingResults.yourTeamLabel, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.yourTeamLabel[language] = value; }],
+                ["Emerging results / Award label", draft.emergingResults.awardLabel, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.awardLabel[language] = value; }],
+                ["Emerging results / Members suffix", draft.emergingResults.membersSuffix, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.membersSuffix[language] = value; }],
+                ["Emerging results / Leader label", draft.emergingResults.leaderLabel, (language: Locale, value: string, next: SitePageContent) => { next.emergingResults.leaderLabel[language] = value; }],
               ].map(([title, value, updater]) => (
                 <LocalizedTextEditorCard
                   key={title as string}

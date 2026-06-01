@@ -8,6 +8,7 @@ export type ContentPageId =
   | "timeline"
   | "round-1-results"
   | "finalists"
+  | "emerging-results"
   | "final-results"
   | "news"
   | "forum"
@@ -100,6 +101,15 @@ export const contentPageConfigs: ContentPageConfig[] = [
     description: {
       en: "Finalist listing copy, recognition copy, and placeholder labels.",
       vi: "Nội dung danh sách chung kết, phần ghi nhận và các nhãn giữ chỗ.",
+    },
+  },
+  {
+    id: "emerging-results",
+    href: "/admin/content/pages/emerging-results",
+    label: { en: "Emerging results", vi: "Kết quả Đội ươm mầm" },
+    description: {
+      en: "Emerging result announcement page text, status labels, and team-card labels.",
+      vi: "Nội dung trang công bố kết quả Đội ươm mầm, nhãn trạng thái và nhãn thẻ đội.",
     },
   },
   {

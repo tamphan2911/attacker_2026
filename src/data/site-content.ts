@@ -2320,6 +2320,31 @@ export const defaultPageContent: SitePageContent = {
     reservedLabel: { en: "Reserved", vi: "Giữ chỗ" },
     emergingTeamLabel: { en: "Incubation bracket", vi: "Bảng ươm mầm" },
   },
+  emergingResults: {
+    header: {
+      eyebrow: { en: "Emerging award", vi: "Giải Đội ươm mầm" },
+      title: { en: "Emerging results", vi: "Kết quả Đội ươm mầm" },
+      description: {
+        en: "The official Emerging award recipients are listed for public announcement. The display order does not indicate ranking.",
+        vi: "Danh sách đội nhận giải Đội ươm mầm được công bố chính thức. Thứ tự hiển thị không mang ý nghĩa xếp hạng.",
+      },
+    },
+    announcementLabel: { en: "Announcement", vi: "Công bố" },
+    toBeAnnouncedLabel: { en: "To be announced", vi: "Sẽ cập nhật" },
+    releasedLabel: { en: "Released", vi: "Đã công bố" },
+    pendingLabel: { en: "Pending", vi: "Chờ công bố" },
+    awardTeamsLabel: { en: "10 award teams", vi: "10 đội nhận giải" },
+    emptySlotTitle: { en: "Emerging award team", vi: "Đội nhận giải Đội ươm mầm" },
+    loadingSlotDescription: { en: "Loading official results...", vi: "Đang tải kết quả chính thức..." },
+    pendingSlotDescription: {
+      en: "Official team information will appear after the announcement.",
+      vi: "Thông tin đội chính thức sẽ hiển thị sau khi công bố.",
+    },
+    yourTeamLabel: { en: "Your team", vi: "Đội của bạn" },
+    awardLabel: { en: "Emerging award", vi: "Giải Đội ươm mầm" },
+    membersSuffix: { en: "members", vi: "thành viên" },
+    leaderLabel: { en: "Leader", vi: "Đội trưởng" },
+  },
   finalResults: {
     champion: {
       eyebrow: { en: "First place", vi: "Hạng nhất" },
