@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import {
+  Download,
   FilePenLine,
   LockKeyhole,
   Plus,
@@ -10,6 +11,7 @@ import {
   UserCog,
   X,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import {
   ADMIN_TABLE_PAGE_SIZE,
@@ -68,6 +70,17 @@ function isAllowedAvatarFile(file: File) {
   }
 
   return file.type.startsWith("image/");
+}
+
+function exportRowsToWorkbook(
+  fileName: string,
+  sheetName: string,
+  rows: Record<string, string | number>[],
+) {
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  XLSX.writeFile(workbook, fileName);
 }
 
 function TableFilterField({
@@ -404,6 +417,19 @@ export function AdminOrganizerManager() {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(filteredRows, ADMIN_TABLE_PAGE_SIZE);
+  const organizerExportRows = useMemo(
+    () =>
+      filteredRows.map((row, index) => ({
+        "#": index + 1,
+        [locale === "en" ? "Name" : "Họ tên"]: row.name,
+        [locale === "en" ? "Login ID" : "Mã đăng nhập"]: row.loginId,
+        [locale === "en" ? "Role" : "Vai trò"]: row.roleLabel,
+        [locale === "en" ? "Access" : "Quyền truy cập"]: row.accessLabel,
+        [locale === "en" ? "Referal code" : "Referal code"]: row.supporterReferralCode || "-",
+        [locale === "en" ? "Activated referrals" : "Đã kích hoạt"]: row.activatedReferralCount,
+      })),
+    [filteredRows, locale],
+  );
   const refereeRows = useMemo(
     () =>
       users
@@ -466,6 +492,29 @@ export function AdminOrganizerManager() {
     startIndex: refereeStartIndex,
     paginatedRows: paginatedRefereeRows,
   } = useAdminTablePagination(filteredRefereeRows, ADMIN_TABLE_PAGE_SIZE);
+  const refereeExportRows = useMemo(
+    () =>
+      filteredRefereeRows.map((row, index) => ({
+        "#": index + 1,
+        [locale === "en" ? "Name" : "Họ tên"]: row.name,
+        Email: row.email,
+        [locale === "en" ? "Student ID" : "MSSV"]: row.studentId || "-",
+        [locale === "en" ? "Referal code" : "Referal code"]: row.referralCode || "-",
+        Supporter: row.supporterName
+          ? `${row.supporterName}${row.supporterLoginId ? ` (${row.supporterLoginId})` : ""}`
+          : "-",
+        [locale === "en" ? "Email activation" : "Kích hoạt email"]: row.emailVerified
+          ? locale === "en"
+            ? "Activated"
+            : "Đã kích hoạt"
+          : locale === "en"
+            ? "Not activated"
+            : "Chưa kích hoạt",
+        [locale === "en" ? "University" : "Trường"]: row.university || "-",
+        [locale === "en" ? "Major" : "Chuyên ngành"]: row.major || "-",
+      })),
+    [filteredRefereeRows, locale],
+  );
 
   useEffect(() => {
     setPage(1);
@@ -663,7 +712,23 @@ export function AdminOrganizerManager() {
                 : "Tách riêng tài khoản vận hành nội bộ khỏi dữ liệu thí sinh."}
             </p>
           </div>
-          {canManage ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() =>
+                exportRowsToWorkbook(
+                  "attacker-2026-organizer-team.xlsx",
+                  "OrganizerTeam",
+                  organizerExportRows,
+                )
+              }
+              disabled={organizerExportRows.length === 0}
+              className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              {locale === "en" ? "Export organizer-team.xlsx" : "Xuất organizer-team.xlsx"}
+            </button>
+            {canManage ? (
             <button
               type="button"
               onClick={openCreateModal}
@@ -672,7 +737,8 @@ export function AdminOrganizerManager() {
               <Plus className="h-4 w-4" />
               {locale === "en" ? "New organizer account" : "Tài khoản mới"}
             </button>
-          ) : null}
+            ) : null}
+          </div>
         </div>
 
         <div className="mt-5 overflow-x-auto">
@@ -856,6 +922,21 @@ export function AdminOrganizerManager() {
                   : "Các người dùng đã nhập referal code của supporter khi đăng ký."}
               </p>
             </div>
+            <button
+              type="button"
+              onClick={() =>
+                exportRowsToWorkbook(
+                  "attacker-2026-referees.xlsx",
+                  "Referees",
+                  refereeExportRows,
+                )
+              }
+              disabled={refereeExportRows.length === 0}
+              className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
+            >
+              <Download className="h-4 w-4" />
+              {locale === "en" ? "Export referees.xlsx" : "Xuất referees.xlsx"}
+            </button>
           </div>
 
           <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_220px_180px]">
