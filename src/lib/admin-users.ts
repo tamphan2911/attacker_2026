@@ -1,7 +1,8 @@
 import {
   getTeamCompetitionState,
-  isRoundFinished,
   pickCompetitionStateLabel,
+  pickTeamDisplayStatusLabel,
+  pickTeamDisplayStatusTone,
 } from "@/lib/competition";
 import type { Locale, TeamProfile, TimelineItem, UserProfile } from "@/types/site";
 
@@ -43,7 +44,7 @@ export function getAdminUserCompetitionStatus(
 ): {
   key: string;
   label: string;
-  tone: "default" | "success" | "warning";
+  tone: "default" | "success" | "warning" | "info";
 } {
   if (user.role === "admin") {
     return {
@@ -85,45 +86,13 @@ export function getAdminUserCompetitionStatus(
     };
   }
 
-  if (team.stage === "round-3" && isRoundFinished("round-3", new Date(), timelineItems)) {
-    return {
-      key: "finished",
-      label: locale === "en" ? "Finished" : "Hoàn thành",
-      tone: "success",
-    };
-  }
-
-  if (team.stage === "round-2" && isRoundFinished("round-2", new Date(), timelineItems)) {
-    return {
-      key: "stopped",
-      label: locale === "en" ? "Stopped at Round 2" : "Dừng tại Vòng 2",
-      tone: "warning",
-    };
-  }
-
-  if (team.stage === "round-1" && isRoundFinished("round-1", new Date(), timelineItems)) {
-    return {
-      key: "stopped",
-      label: locale === "en" ? "Stopped at Round 1" : "Dừng tại Vòng 1",
-      tone: "warning",
-    };
-  }
-
   const competitionState = getTeamCompetitionState(team);
-  if (competitionState === "not-eligible") {
-    return {
-      key: "stopped",
-      label:
-        locale === "en"
-          ? "Stopped before Round 1 (not eligible)"
-          : "Dừng trước Vòng 1 (chưa đủ điều kiện)",
-      tone: "warning",
-    };
-  }
-
   return {
-    key: competitionState,
-    label: pickCompetitionStateLabel(locale, competitionState),
-    tone: "success",
+    key: team.round2Advancement ?? competitionState,
+    label:
+      competitionState === "not-eligible"
+        ? pickCompetitionStateLabel(locale, competitionState)
+        : pickTeamDisplayStatusLabel(locale, team, new Date(), timelineItems),
+    tone: pickTeamDisplayStatusTone(team, new Date(), timelineItems),
   };
 }

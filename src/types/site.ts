@@ -13,6 +13,8 @@ export type TeamFinalOutcome =
   | "fourth-place"
   | "emerging-team";
 
+export type Round2AdvancementBracket = "finalist" | "emerging";
+
 export type LocalizedText = Record<Locale, string>;
 
 export interface NavItem {
@@ -860,6 +862,7 @@ export interface TeamProfile {
   leaderId: string;
   memberIds: string[];
   stage: CompetitionStage;
+  round2Advancement?: Round2AdvancementBracket;
   finalOutcome?: TeamFinalOutcome;
   finalScore?: number;
   finalScoreUpdatedAt?: string;

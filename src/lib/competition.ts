@@ -263,6 +263,58 @@ function canShowTeamFinalOutcome(team: TeamProfile, now = new Date(), timelineIt
   return isRoundFinished("round-3", now, timelineItems);
 }
 
+function isEmergingAwardAnnouncementReleased(now = new Date(), timelineItems?: TimelineItem[]) {
+  return isTimelineItemStarted("round-3-emerging-awards-announcement", timelineItems, now);
+}
+
+function pickRound2AdvancementStatusLabel(locale: Locale, team: TeamProfile, now = new Date(), timelineItems?: TimelineItem[]) {
+  if (team.round2Advancement === "finalist") {
+    if (isRoundFinished("round-3", now, timelineItems)) {
+      return locale === "en" ? "Stop at Final round" : "Dừng chân tại chung kết";
+    }
+
+    return locale === "en" ? "Finalist" : "Đội chung kết";
+  }
+
+  if (team.round2Advancement === "emerging") {
+    if (isEmergingAwardAnnouncementReleased(now, timelineItems) || isRoundFinished("round-3", now, timelineItems)) {
+      return locale === "en" ? "Stop at Emerging round" : "Dừng chân tại Vòng Đội ươm mầm";
+    }
+
+    return locale === "en" ? "Emerging round" : "Vòng Đội ươm mầm";
+  }
+
+  return undefined;
+}
+
+function pickRound2AdvancementStatusDescription(locale: Locale, team: TeamProfile, now = new Date(), timelineItems?: TimelineItem[]) {
+  if (team.round2Advancement === "finalist") {
+    if (isRoundFinished("round-3", now, timelineItems)) {
+      return locale === "en"
+        ? "This team advanced from Round 2 to the final round and stopped there."
+        : "Đội này đã vượt qua Vòng 2 để vào chung kết và dừng chân tại đó.";
+    }
+
+    return locale === "en"
+      ? "This team advanced from Round 2 and is competing as a finalist."
+      : "Đội này đã vượt qua Vòng 2 và đang thi đấu ở nhóm chung kết.";
+  }
+
+  if (team.round2Advancement === "emerging") {
+    if (isEmergingAwardAnnouncementReleased(now, timelineItems) || isRoundFinished("round-3", now, timelineItems)) {
+      return locale === "en"
+        ? "This team advanced from Round 2 to the Emerging round and stopped there."
+        : "Đội này đã vượt qua Vòng 2 vào Vòng Đội ươm mầm và dừng chân tại đó.";
+    }
+
+    return locale === "en"
+      ? "This team advanced from Round 2 and is competing in the Emerging round."
+      : "Đội này đã vượt qua Vòng 2 và đang thi đấu ở Vòng Đội ươm mầm.";
+  }
+
+  return undefined;
+}
+
 export function pickTeamDisplayStatusLabel(
   locale: Locale,
   team: TeamProfile,
@@ -276,6 +328,11 @@ export function pickTeamDisplayStatusLabel(
 
   if (canShowTeamFinalOutcome(team, now, timelineItems) && team.finalOutcome) {
     return pickTeamFinalOutcomeLabel(locale, team.finalOutcome);
+  }
+
+  const advancementStatusLabel = pickRound2AdvancementStatusLabel(locale, team, now, timelineItems);
+  if (advancementStatusLabel) {
+    return advancementStatusLabel;
   }
 
   if (team.stage === "round-3" && isRoundFinished("round-3", now, timelineItems)) {
@@ -326,7 +383,12 @@ export function pickTeamDisplayStatusDescription(
         return locale === "en"
           ? "This team completed the season as an Emerging Team after Round 2."
           : "Đội này khép lại mùa giải với danh hiệu Đội ươm mầm sau Vòng 2.";
-    }
+      }
+  }
+
+  const advancementStatusDescription = pickRound2AdvancementStatusDescription(locale, team, now, timelineItems);
+  if (advancementStatusDescription) {
+    return advancementStatusDescription;
   }
 
   if (team.stage === "round-3" && isRoundFinished("round-3", now, timelineItems)) {
@@ -362,6 +424,18 @@ export function pickTeamDisplayStatusTone(
 
   if (canShowTeamFinalOutcome(team, now, timelineItems) && team.finalOutcome) {
     return "success" as const;
+  }
+
+  if (team.round2Advancement) {
+    if (
+      (team.round2Advancement === "finalist" && isRoundFinished("round-3", now, timelineItems)) ||
+      (team.round2Advancement === "emerging" &&
+        (isEmergingAwardAnnouncementReleased(now, timelineItems) || isRoundFinished("round-3", now, timelineItems)))
+    ) {
+      return "warning" as const;
+    }
+
+    return "info" as const;
   }
 
   if (

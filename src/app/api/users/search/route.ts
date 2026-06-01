@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getCurrentDbUser } from "@/server/auth-helpers";
 import { unauthorizedResponse } from "@/server/route-utils";
 import { serializeTeam, serializeUser } from "@/server/site-serializers";
+import { attachRound2AdvancementToTeams } from "@/server/team-advancement";
 
 export async function GET(request: Request) {
   const currentUser = await getCurrentDbUser();
@@ -57,10 +58,12 @@ export async function GET(request: Request) {
     }
   }
 
+  const teams = await attachRound2AdvancementToTeams(Array.from(teamById.values()).map(serializeTeam));
+
   return Response.json(
     {
       users: users.map(serializeUser),
-      teams: Array.from(teamById.values()).map(serializeTeam),
+      teams,
     },
     { status: 200 },
   );

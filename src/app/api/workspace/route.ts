@@ -15,6 +15,7 @@ import {
 } from "@/server/site-serializers";
 import { ensureRound1SubmissionArchives } from "@/server/round1-submission-archive";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
+import { attachRound2AdvancementToTeams } from "@/server/team-advancement";
 import { getRound1ExamState } from "@/server/team-service";
 import { readTimelineItems } from "@/server/timeline-items";
 
@@ -188,11 +189,13 @@ export async function GET() {
       );
     }
 
+    const serializedTeams = await attachRound2AdvancementToTeams(teams.map(serializeTeam));
+
     return NextResponse.json(
       {
         currentUserId: currentDbUser.id,
         users: users.map(serializeUser),
-        teams: teams.map(serializeTeam),
+        teams: serializedTeams,
         invitations: invitations.map(serializeInvitation),
         leadershipTransferRequests: leadershipTransferRequests.map(serializeLeadershipTransferRequest),
         teamLockRequests: teamLockRequests.map(serializeRound1LockRequest),
@@ -309,11 +312,13 @@ export async function GET() {
     );
   }
 
+  const serializedTeams = await attachRound2AdvancementToTeams(teams.map(serializeTeam));
+
   return NextResponse.json(
     {
       currentUserId: currentDbUser.id,
       users: users.map(serializeUser),
-      teams: teams.map(serializeTeam),
+      teams: serializedTeams,
       invitations: invitations.map(serializeInvitation),
       leadershipTransferRequests: leadershipTransferRequests.map(serializeLeadershipTransferRequest),
       teamLockRequests: teamLockRequests.map(serializeRound1LockRequest),
