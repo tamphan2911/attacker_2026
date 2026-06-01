@@ -1,11 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, FileText, Save, Search } from "lucide-react";
+import { Download, FileText, Save, Search, Sprout, Trophy } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { StatusPill, Surface } from "@/components/site-ui";
 import type { AdminRound3SubmissionRow } from "@/types/admin-round3-submissions";
+
+type Round3AdminTab = "finalist" | "emerging";
+
+const round3Tabs: Array<{
+  id: Round3AdminTab;
+  icon: typeof Trophy;
+}> = [
+  { id: "finalist", icon: Trophy },
+  { id: "emerging", icon: Sprout },
+];
 
 function formatDateTime(locale: "en" | "vi", value: string) {
   return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "vi-VN", {
@@ -54,6 +64,7 @@ export function AdminRound3SubmissionsManager() {
   const [search, setSearch] = useState("");
   const [scoreDrafts, setScoreDrafts] = useState<Record<string, string>>({});
   const [savingTeamId, setSavingTeamId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<Round3AdminTab>("finalist");
 
   const loadRows = useCallback(
     async (active = true) => {
@@ -137,12 +148,38 @@ export function AdminRound3SubmissionsManager() {
     }
   }
 
-  const filteredRows = useMemo(
-    () => rows.filter((row) => matchesSearch(row, search)),
-    [rows, search],
+  const tabRows = useMemo(
+    () => rows.filter((row) => row.round2Bracket === activeTab),
+    [activeTab, rows],
   );
-  const latestCount = rows.filter((row) => row.isLatest === "valid latest").length;
-  const scoredCount = rows.filter((row) => row.isLatest === "valid latest" && typeof row.finalScore === "number").length;
+  const filteredRows = useMemo(
+    () => tabRows.filter((row) => matchesSearch(row, search)),
+    [tabRows, search],
+  );
+  const countsByTab = useMemo(
+    () =>
+      round3Tabs.reduce(
+        (counts, tab) => {
+          const matchingRows = rows.filter((row) => row.round2Bracket === tab.id);
+          counts[tab.id] = {
+            latest: matchingRows.filter((row) => row.isLatest === "valid latest").length,
+            total: matchingRows.length,
+            scored: matchingRows.filter((row) => row.isLatest === "valid latest" && typeof row.finalScore === "number").length,
+          };
+          return counts;
+        },
+        {} as Record<Round3AdminTab, { latest: number; total: number; scored: number }>,
+      ),
+    [rows],
+  );
+  const currentCounts = countsByTab[activeTab];
+  const tabLabel = activeTab === "finalist"
+    ? locale === "en"
+      ? "Finalist"
+      : "Nhóm chung kết"
+    : locale === "en"
+      ? "Emerging"
+      : "Đội ươm mầm";
 
   if (loading) {
     return (
@@ -175,16 +212,71 @@ export function AdminRound3SubmissionsManager() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill tone="success">
-            {locale === "en" ? `${latestCount} latest submissions` : `${latestCount} bài mới nhất`}
+            {locale === "en" ? `${currentCounts.latest} latest submissions` : `${currentCounts.latest} bài mới nhất`}
           </StatusPill>
           <StatusPill>
-            {locale === "en" ? `${rows.length} total versions` : `${rows.length} phiên bản`}
+            {locale === "en" ? `${currentCounts.total} total versions` : `${currentCounts.total} phiên bản`}
           </StatusPill>
           <StatusPill tone="info">
-            {locale === "en" ? `${scoredCount} scored teams` : `${scoredCount} đội đã nhập điểm`}
+            {locale === "en" ? `${currentCounts.scored} scored teams` : `${currentCounts.scored} đội đã nhập điểm`}
           </StatusPill>
         </div>
       </div>
+
+      <Surface className="p-2">
+        <div className="grid gap-2 md:grid-cols-2">
+          {round3Tabs.map((tab) => {
+            const Icon = tab.icon;
+            const selected = activeTab === tab.id;
+            const label = tab.id === "finalist"
+              ? locale === "en"
+                ? "Finalist"
+                : "Nhóm chung kết"
+              : locale === "en"
+                ? "Emerging"
+                : "Đội ươm mầm";
+            const description = tab.id === "finalist"
+              ? locale === "en"
+                ? "Top 5 teams advanced to the final presentation"
+                : "5 đội vào phần trình bày chung kết"
+              : locale === "en"
+                ? "Emerging round teams and reward ranking"
+                : "Các đội ươm mầm và xếp hạng giải thưởng";
+
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center justify-between gap-4 rounded-[1rem] border px-4 py-3 text-left transition duration-200 ${
+                  selected
+                    ? "border-sky-400/40 bg-sky-500/12 shadow-[0_16px_34px_rgba(14,116,144,0.12)]"
+                    : "theme-border bg-transparent hover:bg-[var(--panel-strong)]"
+                }`}
+              >
+                <span className="flex min-w-0 items-center gap-3">
+                  <span
+                    className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[0.9rem] border ${
+                      selected
+                        ? "border-sky-400/35 bg-sky-500/16 text-sky-700 dark:text-sky-100"
+                        : "theme-border theme-text-soft"
+                    }`}
+                  >
+                    <Icon className="h-4.5 w-4.5" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold theme-text-strong">{label}</span>
+                    <span className="mt-1 block text-xs leading-5 theme-text-muted">{description}</span>
+                  </span>
+                </span>
+                <StatusPill tone={selected ? "info" : "default"}>
+                  {countsByTab[tab.id].latest}
+                </StatusPill>
+              </button>
+            );
+          })}
+        </div>
+      </Surface>
 
       <Surface className="px-5 py-5 md:px-6">
         <label className="space-y-2">
@@ -304,11 +396,11 @@ export function AdminRound3SubmissionsManager() {
                   </td>
                   <td className="px-4 py-4">
                     {row.finalRank ? (
-                      <StatusPill tone={row.finalRank <= 5 ? "success" : row.finalRank <= 15 ? "info" : "default"}>
-                        {row.finalRank <= 5
+                      <StatusPill tone={row.round2Bracket === "finalist" ? "success" : row.finalRank <= 10 ? "info" : "default"}>
+                        {row.round2Bracket === "finalist"
                           ? `Final #${row.finalRank}`
-                          : row.finalRank <= 15
-                            ? `Emerging #${row.finalRank - 5}`
+                          : row.finalRank <= 10
+                            ? `Emerging #${row.finalRank}`
                             : `#${row.finalRank}`}
                       </StatusPill>
                     ) : (
@@ -337,7 +429,9 @@ export function AdminRound3SubmissionsManager() {
               {filteredRows.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="px-4 py-10 text-center text-sm theme-text-muted">
-                    {locale === "en" ? "No Final/Emerging submissions match this view." : "Không có bài nộp chung kết/Đội ươm mầm phù hợp."}
+                    {locale === "en"
+                      ? `No ${tabLabel} submissions match this view.`
+                      : `Không có bài nộp ${tabLabel.toLowerCase()} phù hợp.`}
                   </td>
                 </tr>
               ) : null}

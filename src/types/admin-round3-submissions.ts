@@ -3,6 +3,7 @@ export interface AdminRound3SubmissionRow {
   teamId: string;
   teamName: string;
   teamTag: string;
+  round2Bracket?: "finalist" | "emerging";
   finalScore?: number;
   finalScoreUpdatedAt?: string;
   finalRank?: number;

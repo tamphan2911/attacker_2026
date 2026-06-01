@@ -1,6 +1,7 @@
 import { SubmissionRound, TeamSubmissionResourceSource } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import { readRound2FinalistResults, type Round2AdvancementBracket } from "@/server/round2-finalists";
 import type { AdminRound3SubmissionRow } from "@/types/admin-round3-submissions";
 
 type ServiceSuccess<T> = {
@@ -26,30 +27,43 @@ function fail(status: number, error: string): ServiceFailure {
 }
 
 export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRound3SubmissionRow[] }> {
-  const submissions = await prisma.teamSubmission.findMany({
-    where: {
-      round: SubmissionRound.ROUND_3,
-    },
-    orderBy: [{ submittedAt: "desc" }, { version: "desc" }],
-    include: {
-      team: {
-        select: {
-          id: true,
-          name: true,
-          tag: true,
-          finalScore: true,
-          finalScoreUpdatedAt: true,
+  const [submissions, round2Results] = await Promise.all([
+    prisma.teamSubmission.findMany({
+      where: {
+        round: SubmissionRound.ROUND_3,
+      },
+      orderBy: [{ submittedAt: "desc" }, { version: "desc" }],
+      include: {
+        team: {
+          select: {
+            id: true,
+            name: true,
+            tag: true,
+            finalScore: true,
+            finalScoreUpdatedAt: true,
+          },
+        },
+        submittedByUser: {
+          select: {
+            id: true,
+            name: true,
+            loginId: true,
+          },
         },
       },
-      submittedByUser: {
-        select: {
-          id: true,
-          name: true,
-          loginId: true,
-        },
-      },
-    },
-  });
+    }),
+    readRound2FinalistResults(),
+  ]);
+
+  const bracketByTeamId = new Map<string, Round2AdvancementBracket>();
+  if (round2Results.released) {
+    for (const team of round2Results.finalists) {
+      bracketByTeamId.set(team.id, "finalist");
+    }
+    for (const team of round2Results.emergingTeams) {
+      bracketByTeamId.set(team.id, "emerging");
+    }
+  }
 
   const latestByTeam = new Map<string, (typeof submissions)[number]>();
   for (const submission of submissions) {
@@ -64,19 +78,26 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
     }
   }
 
-  const rankedLatestRows = Array.from(latestByTeam.values())
-    .filter((submission) => typeof submission.team.finalScore === "number")
-    .sort((left, right) => {
-      const scoreDelta = (right.team.finalScore ?? 0) - (left.team.finalScore ?? 0);
-      if (scoreDelta !== 0) {
-        return scoreDelta;
-      }
+  const finalRankByTeamId = new Map<string, number>();
+  for (const bracket of ["finalist", "emerging"] as const) {
+    Array.from(latestByTeam.values())
+      .filter(
+        (submission) =>
+          bracketByTeamId.get(submission.teamId) === bracket &&
+          typeof submission.team.finalScore === "number",
+      )
+      .sort((left, right) => {
+        const scoreDelta = (right.team.finalScore ?? 0) - (left.team.finalScore ?? 0);
+        if (scoreDelta !== 0) {
+          return scoreDelta;
+        }
 
-      return left.submittedAt.getTime() - right.submittedAt.getTime();
-    });
-  const finalRankByTeamId = new Map(
-    rankedLatestRows.map((submission, index) => [submission.teamId, index + 1]),
-  );
+        return left.submittedAt.getTime() - right.submittedAt.getTime();
+      })
+      .forEach((submission, index) => {
+        finalRankByTeamId.set(submission.teamId, index + 1);
+      });
+  }
 
   return {
     rows: submissions.map<AdminRound3SubmissionRow>((submission) => ({
@@ -84,6 +105,7 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
       teamId: submission.team.id,
       teamName: submission.team.name,
       teamTag: submission.team.tag,
+      round2Bracket: bracketByTeamId.get(submission.teamId),
       finalScore: submission.team.finalScore ?? undefined,
       finalScoreUpdatedAt: submission.team.finalScoreUpdatedAt?.toISOString(),
       finalRank:
