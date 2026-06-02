@@ -581,6 +581,9 @@ export interface EditableFooterSnapshotItem {
 }
 
 export interface EditableSiteFooterContent {
+  brandLogoImage: string;
+  brandTitle: LocalizedText;
+  brandSubtitle: LocalizedText;
   description: LocalizedText;
   ctaLabel: LocalizedText;
   navigateHeading: LocalizedText;

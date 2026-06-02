@@ -42,6 +42,10 @@ import {
   getCompetitionLegacyImageValidationError,
   MAX_COMPETITION_LEGACY_IMAGE_BYTES,
 } from "@/lib/competition-legacy-image";
+import {
+  getFooterBrandImageValidationError,
+  MAX_FOOTER_BRAND_IMAGE_BYTES,
+} from "@/lib/footer-brand-image";
 import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
@@ -73,6 +77,7 @@ const MAX_TESTIMONIAL_AVATAR_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_HERO_SLIDE_IMAGE_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_CONTENT_IMAGE_FILE_BYTES = MAX_COMPETITION_LEGACY_IMAGE_BYTES;
 const DEFAULT_COMPETITION_LEGACY_IMAGE = "/theme-hero-1.jpg";
+const DEFAULT_FOOTER_BRAND_IMAGE = "/footer-brand-demo.jpg";
 
 function formatFileSize(bytes: number) {
   if (bytes >= 1024 * 1024) {
@@ -885,6 +890,8 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   const [faqSaveMessage, setFaqSaveMessage] = useState<{ key: string; text: string } | null>(null);
   const [competitionHeroImageUploadError, setCompetitionHeroImageUploadError] = useState("");
   const [isUploadingCompetitionHeroImage, setIsUploadingCompetitionHeroImage] = useState(false);
+  const [footerBrandImageUploadError, setFooterBrandImageUploadError] = useState("");
+  const [isUploadingFooterBrandImage, setIsUploadingFooterBrandImage] = useState(false);
   const [pendingFaqDelete, setPendingFaqDelete] = useState<{
     type: "topic" | "question";
     index: number;
@@ -1038,6 +1045,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   };
   const competitionLegacyHeroImage =
     draft.competition.legacyHeroImage || draft.organizer.heroImage || DEFAULT_COMPETITION_LEGACY_IMAGE;
+  const footerBrandImage = draft.footer.brandLogoImage || DEFAULT_FOOTER_BRAND_IMAGE;
 
   return (
     <div className="space-y-8">
@@ -3773,6 +3781,199 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
 
         {pageId === "footer" ? (
           <>
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Footer / Brand logo and text"
+                description="Edit only the brand lockup shown in the footer. Header branding stays separate."
+              />
+              <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
+                  <p className="text-sm font-semibold theme-text-strong">
+                    {locale === "en" ? "Footer brand preview" : "Xem trước brand footer"}
+                  </p>
+                  <div className="mt-4 flex items-center gap-3 rounded-[1.35rem] border theme-border bg-white/82 px-4 py-4 dark:bg-white/[0.05]">
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-white/25 shadow-[0_16px_36px_rgba(23,114,208,0.18)]">
+                      <Image
+                        src={footerBrandImage}
+                        alt={pickText(locale, draft.footer.brandTitle)}
+                        fill
+                        sizes="44px"
+                        unoptimized={footerBrandImage.startsWith("/api/content-images/")}
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="theme-eyebrow text-[0.72rem] font-semibold uppercase tracking-[0.34em]">
+                        {pickText(locale, draft.footer.brandTitle)}
+                      </p>
+                      <p className="theme-heading text-sm theme-text-soft">
+                        {pickText(locale, draft.footer.brandSubtitle)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
+                  <label className="space-y-2">
+                    <span className="text-sm theme-text-muted">
+                      {locale === "en" ? "Current logo image source" : "Nguồn ảnh logo hiện tại"}
+                    </span>
+                    <input
+                      value={footerBrandImage}
+                      onChange={(event) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.footer.brandLogoImage = event.target.value;
+                          }),
+                        )
+                      }
+                      className={fieldClassName}
+                    />
+                  </label>
+
+                  <div className="flex flex-wrap gap-2">
+                    <label className="theme-button-primary inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold">
+                      <Upload className="h-4 w-4" />
+                      {isUploadingFooterBrandImage
+                        ? locale === "en"
+                          ? "Uploading..."
+                          : "Đang tải..."
+                        : locale === "en"
+                          ? "Upload logo"
+                          : "Tải logo"}
+                      <input
+                        type="file"
+                        accept="image/jpeg,.jpg,.jpeg"
+                        className="hidden"
+                        disabled={isUploadingFooterBrandImage}
+                        onChange={async (event: ChangeEvent<HTMLInputElement>) => {
+                          const file = event.target.files?.[0];
+                          event.target.value = "";
+                          if (!file) {
+                            return;
+                          }
+
+                          const validationError = getFooterBrandImageValidationError(file);
+                          if (validationError === "type") {
+                            setFooterBrandImageUploadError(
+                              locale === "en"
+                                ? "Only JPG images are allowed for the footer logo."
+                                : "Chỉ chấp nhận ảnh JPG cho logo footer.",
+                            );
+                            return;
+                          }
+
+                          if (validationError === "size") {
+                            setFooterBrandImageUploadError(
+                              locale === "en"
+                                ? `Footer logo JPG images must be ${formatFileSize(MAX_FOOTER_BRAND_IMAGE_BYTES)} or smaller.`
+                                : `Ảnh logo footer phải có dung lượng ${formatFileSize(MAX_FOOTER_BRAND_IMAGE_BYTES)} trở xuống.`,
+                            );
+                            return;
+                          }
+
+                          const formData = new FormData();
+                          formData.append("imageFile", file);
+                          setFooterBrandImageUploadError("");
+                          setIsUploadingFooterBrandImage(true);
+
+                          try {
+                            const response = await fetch("/api/admin/content/footer/brand-image", {
+                              method: "POST",
+                              body: formData,
+                            });
+                            const payload = (await response.json().catch(() => null)) as
+                              | { imageUrl?: string; error?: string }
+                              | null;
+
+                            if (!response.ok || !payload?.imageUrl) {
+                              throw new Error(
+                                payload?.error ||
+                                  (locale === "en"
+                                    ? "The footer logo could not be uploaded."
+                                    : "Không thể tải logo footer."),
+                              );
+                            }
+
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.footer.brandLogoImage = payload.imageUrl!;
+                              }),
+                            );
+                          } catch (error) {
+                            setFooterBrandImageUploadError(
+                              error instanceof Error
+                                ? error.message
+                                : locale === "en"
+                                  ? "The footer logo could not be uploaded."
+                                  : "Không thể tải logo footer.",
+                            );
+                          } finally {
+                            setIsUploadingFooterBrandImage(false);
+                          }
+                        }}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFooterBrandImageUploadError("");
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.footer.brandLogoImage = DEFAULT_FOOTER_BRAND_IMAGE;
+                          }),
+                        );
+                      }}
+                      className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {locale === "en" ? "Use demo" : "Dùng ảnh demo"}
+                    </button>
+                  </div>
+
+                  <p className="text-xs leading-6 theme-text-soft">
+                    {locale === "en"
+                      ? `Accepted format: JPG only. Maximum size: ${formatFileSize(MAX_FOOTER_BRAND_IMAGE_BYTES)}. After uploading, click Save content to publish the new logo.`
+                      : `Chỉ chấp nhận JPG. Dung lượng tối đa: ${formatFileSize(MAX_FOOTER_BRAND_IMAGE_BYTES)}. Sau khi tải ảnh, bấm Lưu nội dung để cập nhật logo.`}
+                  </p>
+
+                  {footerBrandImageUploadError ? (
+                    <div className="rounded-[1.2rem] border border-rose-300/55 bg-rose-50/82 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-200/20 dark:bg-rose-300/10 dark:text-rose-100">
+                      {footerBrandImageUploadError}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="grid gap-4 xl:grid-cols-2">
+                <LocalizedFieldEditor
+                  label="Footer brand title"
+                  rows={2}
+                  value={draft.footer.brandTitle}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.footer.brandTitle[language] = value;
+                      }),
+                    )
+                  }
+                />
+                <LocalizedFieldEditor
+                  label="Footer brand subtitle"
+                  rows={2}
+                  value={draft.footer.brandSubtitle}
+                  onChange={(language, value) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.footer.brandSubtitle[language] = value;
+                      }),
+                    )
+                  }
+                />
+              </div>
+            </Surface>
+
             <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
               <BlockIntro
                 title="Footer / Main copy"

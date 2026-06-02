@@ -1,18 +1,51 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { CalendarRange, Mail, PhoneCall } from "lucide-react";
 
 import { navItems } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { BrandMark } from "@/components/site-ui";
 
 function FacebookIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
       <path d="M13.5 21v-7h2.35l.4-3h-2.75V9.19c0-.87.24-1.46 1.49-1.46H16.5V5.05c-.26-.03-1.15-.11-2.19-.11-2.17 0-3.66 1.32-3.66 3.75V11H8.2v3h2.45v7h2.85Z" />
     </svg>
+  );
+}
+
+function FooterBrand({
+  locale,
+  logoImage,
+  title,
+  subtitle,
+}: {
+  locale: "en" | "vi";
+  logoImage: string;
+  title: { en: string; vi: string };
+  subtitle: { en: string; vi: string };
+}) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-2xl border border-white/25 shadow-[0_16px_36px_rgba(23,114,208,0.18)]">
+        <Image
+          src={logoImage}
+          alt={pickText(locale, title)}
+          fill
+          sizes="44px"
+          unoptimized={logoImage.startsWith("/api/content-images/")}
+          className="object-cover"
+        />
+      </div>
+      <div className="min-w-0">
+        <p className="theme-eyebrow text-[0.72rem] font-semibold uppercase tracking-[0.34em]">
+          {pickText(locale, title)}
+        </p>
+        <p className="theme-heading text-sm theme-text-soft">{pickText(locale, subtitle)}</p>
+      </div>
+    </div>
   );
 }
 
@@ -27,7 +60,12 @@ export function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 py-14 md:px-8">
         <div className="grid gap-10 lg:grid-cols-[1.1fr_0.8fr_0.75fr_1fr]">
           <div className="space-y-5">
-            <BrandMark />
+            <FooterBrand
+              locale={locale}
+              logoImage={footer.brandLogoImage}
+              title={footer.brandTitle}
+              subtitle={footer.brandSubtitle}
+            />
             <p className="max-w-xl text-sm leading-7 theme-text-muted">
               {pickText(locale, footer.description)}
             </p>
