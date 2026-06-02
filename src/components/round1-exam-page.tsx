@@ -471,6 +471,21 @@ export function Round1ExamPage() {
   const captureWarningTimeoutRef = useRef<number | null>(null);
   const essayPasteWarningTimeoutRef = useRef<number | null>(null);
   const essayWordLimitWarningTimeoutRef = useRef<number | null>(null);
+  const updateSession = useCallback(
+    (
+      nextSession:
+        | Round1ExamSession
+        | null
+        | ((current: Round1ExamSession | null) => Round1ExamSession | null),
+    ) => {
+      const resolvedSession =
+        typeof nextSession === "function" ? nextSession(sessionRef.current) : nextSession;
+      sessionRef.current = resolvedSession;
+      setSession(resolvedSession);
+      return resolvedSession;
+    },
+    [],
+  );
 
   const activeObjectiveBank = getActiveRound1Bank(round1TestBanks, "objective");
   const activeEssayBank = getActiveRound1Bank(round1TestBanks, "essay");
@@ -576,12 +591,12 @@ export function Round1ExamPage() {
       setResolvedSubmission(null);
       setPageError(null);
       setAttemptState("ready");
-      setSession(payload.attempt);
+      updateSession(payload.attempt);
       setNowMs(Date.now());
       setDialogMode(null);
       return true;
     },
-    [],
+    [updateSession],
   );
 
   useEffect(() => {
@@ -652,7 +667,7 @@ export function Round1ExamPage() {
         }
 
         setResolvedSubmission(payload.submission);
-        setSession(payload.attempt);
+        updateSession(payload.attempt);
         setAttemptState("ready");
 
         if (payload.submission && (payload.autoSubmitted || !providerSubmission)) {
@@ -660,7 +675,7 @@ export function Round1ExamPage() {
         }
       } catch {
         if (!cancelled) {
-          setSession(null);
+          updateSession(null);
           setAttemptState("ready");
           setPageError(
             locale === "en"
@@ -676,13 +691,17 @@ export function Round1ExamPage() {
     return () => {
       cancelled = true;
     };
-  }, [currentUser.id, existingSubmission, hasHydrated, isAuthenticated, isStudent, locale, providerSubmission]);
+  }, [currentUser.id, existingSubmission, hasHydrated, isAuthenticated, isStudent, locale, providerSubmission, updateSession]);
 
   const persistAttemptProgress = useCallback(
     async (
       targetSession: Round1ExamSession,
       options?: { keepalive?: boolean; silent?: boolean },
     ) => {
+      if (submitInFlightRef.current) {
+        return;
+      }
+
       const response = await fetch("/api/round-1/attempt", {
         method: "PATCH",
         headers: {
@@ -712,11 +731,11 @@ export function Round1ExamPage() {
       setPageError(null);
       if (payload.submission) {
         setResolvedSubmission(payload.submission);
-        setSession(null);
+        updateSession(null);
         window.location.assign(ROUND1_SUBMITTED_DASHBOARD_URL);
       }
     },
-    [locale],
+    [locale, updateSession],
   );
 
   useEffect(() => {
@@ -725,7 +744,8 @@ export function Round1ExamPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      void persistAttemptProgress(session);
+      const latestSession = sessionRef.current ?? session;
+      void persistAttemptProgress(latestSession);
     }, 700);
 
     return () => {
@@ -907,6 +927,11 @@ export function Round1ExamPage() {
         return;
       }
 
+      const latestSession =
+        sessionRef.current && sessionRef.current.id === targetSession.id
+          ? sessionRef.current
+          : targetSession;
+
       submitInFlightRef.current = true;
       setDialogPending(true);
       setDialogError(null);
@@ -920,8 +945,8 @@ export function Round1ExamPage() {
           credentials: "same-origin",
           cache: "no-store",
           body: JSON.stringify({
-            currentQuestionIndex: targetSession.currentQuestionIndex,
-            answers: targetSession.answers,
+            currentQuestionIndex: latestSession.currentQuestionIndex,
+            answers: latestSession.answers,
           }),
         });
 
@@ -982,7 +1007,8 @@ export function Round1ExamPage() {
     }
 
     const timeoutId = window.setTimeout(() => {
-      void submitExamAttempt(session);
+      const latestSession = sessionRef.current ?? session;
+      void submitExamAttempt(latestSession);
     }, 0);
 
     return () => {
@@ -1051,19 +1077,21 @@ export function Round1ExamPage() {
   }, [applyAttemptPayload, locale, round1StartWarning]);
 
   const handleConfirmSubmit = async () => {
-    if (!session) {
+    const latestSession = sessionRef.current ?? session;
+
+    if (!latestSession) {
       return;
     }
 
     if (remainingSeconds > 0) {
-      const essayRequirementError = getEssayWordRequirementError(session);
+      const essayRequirementError = getEssayWordRequirementError(latestSession);
       if (essayRequirementError) {
         setDialogError(essayRequirementError);
         return;
       }
     }
 
-    await submitExamAttempt(session);
+    await submitExamAttempt(latestSession);
   };
   const currentQuestion = session?.questions[session.currentQuestionIndex];
   const currentResponse = currentQuestion ? session?.answers[currentQuestion.id] : undefined;
@@ -1196,7 +1224,7 @@ export function Round1ExamPage() {
       : `${currentTeam.leaderId === currentUser.id ? "Đội trưởng đội" : "Thành viên đội"} ${currentTeam.name}`
     : "";
   const navigateToQuestion = (index: number) => {
-    setSession((current) =>
+    updateSession((current) =>
       current
         ? {
             ...current,
@@ -1809,7 +1837,7 @@ export function Round1ExamPage() {
                         key={option.id}
                         type="button"
                         onClick={() =>
-                          setSession((current) =>
+                          updateSession((current) =>
                             current
                               ? {
                                   ...current,
@@ -1859,7 +1887,7 @@ export function Round1ExamPage() {
                         key={option.id}
                         type="button"
                         onClick={() =>
-                          setSession((current) => {
+                          updateSession((current) => {
                             if (!current) {
                               return current;
                             }
@@ -1936,7 +1964,7 @@ export function Round1ExamPage() {
                             <select
                               value={currentResponse?.pairingMatches?.[item.id] ?? ""}
                               onChange={(event) =>
-                                setSession((current) =>
+                                updateSession((current) =>
                                   current
                                     ? {
                                         ...current,
@@ -1992,7 +2020,7 @@ export function Round1ExamPage() {
                         showEssayWordLimitWarning();
                       }
 
-                      setSession((current) =>
+                      updateSession((current) =>
                         current
                           ? {
                               ...current,

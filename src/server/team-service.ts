@@ -1696,11 +1696,6 @@ export async function saveRound1AttemptProgress(
       return fail(404, "Round 1 attempt not found.");
     }
 
-    if (isRound1AttemptExpired(attempt)) {
-      const submission = await finalizeRound1AttemptRecord(tx, attempt, payload);
-      return ok({ attempt: null, submission, autoSubmitted: true });
-    }
-
     const questionCount = parseRound1AttemptQuestions(attempt.questions).length;
     const nextIndex =
       questionCount > 0
