@@ -5,8 +5,16 @@ import { ROUND1_ESSAY_POINT_VALUE } from "@/lib/round1";
 import { getCurrentDbUser, hasJudgeRole } from "@/server/auth-helpers";
 import { saveJudgeRound1Review } from "@/server/judge-service";
 
+const essayQuestionScoreSchema = z
+  .number()
+  .min(0)
+  .max(ROUND1_ESSAY_POINT_VALUE)
+  .refine((value) => Math.round(value * 10) / 10 === value, {
+    message: "Essay question scores may use at most one decimal place.",
+  });
+
 const payloadSchema = z.object({
-  questionScores: z.record(z.string(), z.number().int().min(0).max(ROUND1_ESSAY_POINT_VALUE)),
+  questionScores: z.record(z.string(), essayQuestionScoreSchema),
   note: z.string().trim().max(2000).optional().default(""),
 });
 

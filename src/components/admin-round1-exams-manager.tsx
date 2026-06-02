@@ -9,6 +9,7 @@ import {
   ArrowUp,
   ArrowUpDown,
   BookText,
+  Bot,
   CircleDashed,
   Clock3,
   FileQuestion,
@@ -17,10 +18,12 @@ import {
   ListFilter,
   Search,
   ShieldCheck,
+  Sparkles,
   Target,
   Trash2,
   UserRound,
   CheckCircle2,
+  RotateCcw,
 } from "lucide-react";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
@@ -45,6 +48,8 @@ import type {
   AdminRound1ExamDetail,
   AdminRound1ExamListRow,
   AdminRound1ExamStatus,
+  AdminRound1AiScoringStatus,
+  AdminRound1ScoreSource,
 } from "@/types/admin-round1-exams";
 import type { CompetitionStage } from "@/types/site";
 
@@ -93,6 +98,35 @@ type Round1ExamSortKey =
   | "lastUpdate";
 
 type SortDirection = "asc" | "desc";
+
+type Round1AiScoringJobSnapshot = {
+  id: string;
+  mode: "run-all" | "retry-failed";
+  status: "pending" | "running" | "completed" | "failed";
+  model: string;
+  totalEligible: number;
+  processedCount: number;
+  scoredCount: number;
+  failedCount: number;
+  skippedHumanCount: number;
+  skippedExistingCount: number;
+  lastError?: string;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+};
+
+type Round1AiScoringOverview = {
+  activeJob: Round1AiScoringJobSnapshot | null;
+  totals: {
+    assignedSubmissions: number;
+    humanScored: number;
+    gptScored: number;
+    failed: number;
+    needsGptScore: number;
+    gptScoringPercent: number;
+  };
+};
 
 function createStringCompare(locale: "en" | "vi") {
   const collator = new Intl.Collator(locale === "vi" ? "vi-VN" : "en-US", {
@@ -186,6 +220,58 @@ function createStatusMeta(locale: "en" | "vi", status: AdminRound1ExamStatus) {
   }
 }
 
+function createAiStatusMeta(locale: "en" | "vi", status: AdminRound1AiScoringStatus) {
+  switch (status) {
+    case "scoring":
+      return {
+        label: locale === "en" ? "Scoring" : "Đang chấm GPT",
+        tone: "info" as const,
+      };
+    case "scored":
+      return {
+        label: locale === "en" ? "GPT scored" : "GPT đã chấm",
+        tone: "success" as const,
+      };
+    case "failed":
+      return {
+        label: locale === "en" ? "GPT failed" : "GPT lỗi",
+        tone: "warning" as const,
+      };
+    case "skipped-human":
+      return {
+        label: locale === "en" ? "Human locked" : "Đã khóa bởi giám khảo",
+        tone: "default" as const,
+      };
+    case "not-started":
+    default:
+      return {
+        label: locale === "en" ? "Not started" : "Chưa chạy",
+        tone: "default" as const,
+      };
+  }
+}
+
+function createScoreSourceMeta(locale: "en" | "vi", source: AdminRound1ScoreSource) {
+  switch (source) {
+    case "human-judge":
+      return {
+        label: locale === "en" ? "Human judge" : "Giám khảo",
+        tone: "success" as const,
+      };
+    case "gpt-draft":
+      return {
+        label: locale === "en" ? "GPT draft" : "GPT nháp",
+        tone: "info" as const,
+      };
+    case "none":
+    default:
+      return {
+        label: locale === "en" ? "No score" : "Chưa có điểm",
+        tone: "default" as const,
+      };
+  }
+}
+
 function matchFilter(value: string, filter: string) {
   if (!filter.trim()) {
     return true;
@@ -254,6 +340,10 @@ export function AdminRound1ExamList() {
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<AdminRound1ExamListRow | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [aiOverview, setAiOverview] = useState<Round1AiScoringOverview | null>(null);
+  const [aiActionLoading, setAiActionLoading] = useState<"run-all" | "retry-failed" | null>(null);
+  const [aiProcessBusy, setAiProcessBusy] = useState(false);
+  const [aiError, setAiError] = useState("");
   useAdminTitleScroll();
 
   const load = useCallback(async () => {
@@ -276,6 +366,46 @@ export function AdminRound1ExamList() {
       setLoading(false);
     }
   }, [locale]);
+
+  const loadAiOverview = useCallback(async () => {
+    const response = await fetch("/api/admin/round-1/ai-essay-scoring", { cache: "no-store" });
+    const payload = (await response.json().catch(() => null)) as
+      | { overview?: Round1AiScoringOverview; error?: string }
+      | null;
+
+    if (!response.ok || !payload?.overview) {
+      throw new Error(payload?.error ?? (locale === "en" ? "Could not load GPT scoring progress." : "Không thể tải tiến độ chấm GPT."));
+    }
+
+    setAiOverview(payload.overview);
+  }, [locale]);
+
+  const startAiScoring = async (mode: "run-all" | "retry-failed") => {
+    try {
+      setAiError("");
+      setAiActionLoading(mode);
+      const response = await fetch("/api/admin/round-1/ai-essay-scoring", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ mode }),
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { overview?: Round1AiScoringOverview; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.overview) {
+        throw new Error(payload?.error ?? (locale === "en" ? "Could not start GPT scoring." : "Không thể bắt đầu chấm GPT."));
+      }
+
+      setAiOverview(payload.overview);
+      await load();
+    } catch (nextError) {
+      setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected GPT scoring error." : "Có lỗi bất ngờ khi chấm GPT.");
+    } finally {
+      setAiActionLoading(null);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -302,6 +432,60 @@ export function AdminRound1ExamList() {
       active = false;
     };
   }, [load, locale]);
+
+  useEffect(() => {
+    void loadAiOverview().catch((nextError) => {
+      setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected GPT scoring error." : "Có lỗi bất ngờ khi tải tiến độ GPT.");
+    });
+  }, [loadAiOverview, locale]);
+
+  useEffect(() => {
+    const activeJob = aiOverview?.activeJob;
+    if (!activeJob || activeJob.status === "completed" || activeJob.status === "failed" || aiProcessBusy) {
+      return;
+    }
+
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      const processNext = async () => {
+        try {
+          setAiProcessBusy(true);
+          const response = await fetch(`/api/admin/round-1/ai-essay-scoring/${activeJob.id}/process`, {
+            method: "POST",
+            credentials: "same-origin",
+          });
+          const payload = (await response.json().catch(() => null)) as
+            | { overview?: Round1AiScoringOverview; error?: string }
+            | null;
+
+          if (!response.ok || !payload?.overview) {
+            throw new Error(payload?.error ?? (locale === "en" ? "Could not process the next GPT score." : "Không thể xử lý lượt chấm GPT tiếp theo."));
+          }
+
+          if (!cancelled) {
+            setAiOverview(payload.overview);
+            await load();
+          }
+        } catch (nextError) {
+          if (!cancelled) {
+            setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected GPT scoring error." : "Có lỗi bất ngờ khi chấm GPT.");
+            await loadAiOverview().catch(() => {});
+          }
+        } finally {
+          if (!cancelled) {
+            setAiProcessBusy(false);
+          }
+        }
+      };
+
+      void processNext();
+    }, 900);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [aiOverview, aiProcessBusy, load, loadAiOverview, locale]);
 
   const canDeleteAttempt = currentUser.role === "admin";
 
@@ -506,6 +690,116 @@ export function AdminRound1ExamList() {
       </div>
 
       <Surface className="px-5 py-5 md:px-6">
+        <div className="mb-5 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-sky-500/20 bg-sky-500/10 text-sky-600 dark:text-sky-200">
+                  <Bot className="h-4.5 w-4.5" />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                    {locale === "en" ? "GPT essay scoring" : "Chấm tự luận bằng GPT"}
+                  </p>
+                  <p className="mt-1 text-sm leading-6 theme-text-muted">
+                    {locale === "en"
+                      ? "GPT fills draft essay scores only for submissions without a saved human judge score."
+                      : "GPT chỉ điền điểm nháp cho bài chưa có điểm do giám khảo lưu."}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => void startAiScoring("run-all")}
+                disabled={Boolean(aiActionLoading || aiOverview?.activeJob)}
+                className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Sparkles className={cn("h-4 w-4", aiActionLoading === "run-all" ? "animate-pulse" : "")} />
+                {aiActionLoading === "run-all"
+                  ? locale === "en"
+                    ? "Starting..."
+                    : "Đang chạy..."
+                  : locale === "en"
+                    ? "Run GPT essay scoring"
+                    : "Chạy chấm GPT"}
+              </button>
+              <button
+                type="button"
+                onClick={() => void startAiScoring("retry-failed")}
+                disabled={Boolean(aiActionLoading || aiOverview?.activeJob)}
+                className="theme-button-secondary inline-flex items-center justify-center gap-2 rounded-full border px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RotateCcw className={cn("h-4 w-4", aiActionLoading === "retry-failed" ? "animate-spin" : "")} />
+                {aiActionLoading === "retry-failed"
+                  ? locale === "en"
+                    ? "Retrying..."
+                    : "Đang thử lại..."
+                  : locale === "en"
+                    ? "Retry failed GPT scoring"
+                    : "Chấm lại lỗi GPT"}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-5 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+              <p className="font-semibold theme-text-strong">
+                {locale === "en"
+                  ? `GPT progress ${formatScoreValue(aiOverview?.totals.gptScoringPercent ?? 0)}%`
+                  : `Tiến độ GPT ${formatScoreValue(aiOverview?.totals.gptScoringPercent ?? 0)}%`}
+              </p>
+              {aiOverview?.activeJob ? (
+                <StatusPill tone={aiOverview.activeJob.status === "failed" ? "warning" : "info"}>
+                  {locale === "en"
+                    ? `${aiOverview.activeJob.status} · ${aiOverview.activeJob.processedCount}/${aiOverview.activeJob.totalEligible}`
+                    : `${aiOverview.activeJob.status} · ${aiOverview.activeJob.processedCount}/${aiOverview.activeJob.totalEligible}`}
+                </StatusPill>
+              ) : (
+                <StatusPill>{locale === "en" ? "No active GPT job" : "Không có phiên GPT đang chạy"}</StatusPill>
+              )}
+            </div>
+            <div className="h-3 overflow-hidden rounded-full border theme-border bg-white/70 dark:bg-white/[0.06]">
+              <div
+                className="h-full rounded-full bg-[linear-gradient(90deg,#38bdf8,#22c55e)] transition-all duration-500"
+                style={{ width: `${Math.max(0, Math.min(100, aiOverview?.totals.gptScoringPercent ?? 0))}%` }}
+              />
+            </div>
+            <div className="grid gap-2 text-xs sm:grid-cols-2 lg:grid-cols-5">
+              <div className="rounded-2xl border theme-border bg-white/70 px-3 py-2 dark:bg-white/[0.04]">
+                <p className="font-semibold theme-text-strong">{aiOverview?.totals.assignedSubmissions ?? 0}</p>
+                <p className="theme-text-soft">{locale === "en" ? "Assigned submissions" : "Bài đã phân công"}</p>
+              </div>
+              <div className="rounded-2xl border theme-border bg-white/70 px-3 py-2 dark:bg-white/[0.04]">
+                <p className="font-semibold theme-text-strong">{aiOverview?.totals.gptScored ?? 0}</p>
+                <p className="theme-text-soft">{locale === "en" ? "GPT scored" : "GPT đã chấm"}</p>
+              </div>
+              <div className="rounded-2xl border theme-border bg-white/70 px-3 py-2 dark:bg-white/[0.04]">
+                <p className="font-semibold theme-text-strong">{aiOverview?.totals.humanScored ?? 0}</p>
+                <p className="theme-text-soft">{locale === "en" ? "Human scored" : "Giám khảo đã chấm"}</p>
+              </div>
+              <div className="rounded-2xl border theme-border bg-white/70 px-3 py-2 dark:bg-white/[0.04]">
+                <p className="font-semibold theme-text-strong">{aiOverview?.totals.failed ?? 0}</p>
+                <p className="theme-text-soft">{locale === "en" ? "Failed" : "Bị lỗi"}</p>
+              </div>
+              <div className="rounded-2xl border theme-border bg-white/70 px-3 py-2 dark:bg-white/[0.04]">
+                <p className="font-semibold theme-text-strong">{aiOverview?.totals.needsGptScore ?? 0}</p>
+                <p className="theme-text-soft">{locale === "en" ? "Need GPT score" : "Cần GPT chấm"}</p>
+              </div>
+            </div>
+            {aiError ? (
+              <div className="rounded-2xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-800 dark:text-amber-100">
+                {aiError}
+              </div>
+            ) : aiOverview?.activeJob?.lastError ? (
+              <div className="rounded-2xl border border-amber-400/35 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-800 dark:text-amber-100">
+                {aiOverview.activeJob.lastError}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
         <div className="grid gap-3 lg:grid-cols-[minmax(0,1.35fr)_220px_220px]">
           <label className="space-y-2">
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
@@ -562,7 +856,7 @@ export function AdminRound1ExamList() {
 
       <Surface className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-[1320px] text-left text-sm">
+          <table className="min-w-[1520px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
                 <th
@@ -631,6 +925,9 @@ export function AdminRound1ExamList() {
                   />
                 </th>
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  {locale === "en" ? "GPT scoring" : "Chấm GPT"}
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
                   <SortableHeader
                     label={locale === "en" ? "Last update" : "Cập nhật gần nhất"}
                     active={sortKey === "lastUpdate"}
@@ -697,6 +994,38 @@ export function AdminRound1ExamList() {
                   </td>
                   <td className="px-4 py-4">
                     <p className="font-semibold theme-text-strong">{formatScoreValue(row.totalScore)}</p>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        <StatusPill tone={createAiStatusMeta(locale, row.aiScoringStatus).tone}>
+                          {createAiStatusMeta(locale, row.aiScoringStatus).label}
+                        </StatusPill>
+                        <StatusPill tone={createScoreSourceMeta(locale, row.scoreSource).tone}>
+                          {createScoreSourceMeta(locale, row.scoreSource).label}
+                        </StatusPill>
+                      </div>
+                      <p className="text-xs theme-text-soft">
+                        {row.aiScoredAt
+                          ? `${locale === "en" ? "GPT at" : "GPT lúc"} ${formatDateTime(locale, row.aiScoredAt)}`
+                          : row.aiModel
+                            ? row.aiModel
+                            : row.aiError
+                              ? row.aiError
+                              : "--"}
+                      </p>
+                      {row.aiScoringStatus === "failed" ? (
+                        <button
+                          type="button"
+                          onClick={() => void startAiScoring("retry-failed")}
+                          disabled={Boolean(aiActionLoading || aiOverview?.activeJob)}
+                          className="theme-button-secondary inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" />
+                          {locale === "en" ? "Retry failed" : "Chấm lại lỗi"}
+                        </button>
+                      ) : null}
+                    </div>
                   </td>
                   <td className="px-4 py-4">
                     <div className="space-y-1 text-xs">

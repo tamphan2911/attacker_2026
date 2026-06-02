@@ -2,6 +2,8 @@ import type { Round1PaperQuestion, Round1QuestionResponse } from "@/lib/round1";
 import type { CompetitionStage } from "@/types/site";
 
 export type AdminRound1ExamStatus = "not-initiated" | "in-progress" | "submitted";
+export type AdminRound1AiScoringStatus = "not-started" | "scoring" | "scored" | "failed" | "skipped-human";
+export type AdminRound1ScoreSource = "none" | "gpt-draft" | "human-judge";
 
 export interface AdminRound1ExamListRow {
   userId: string;
@@ -26,6 +28,11 @@ export interface AdminRound1ExamListRow {
   objectiveScore?: number;
   essayScore?: number | null;
   totalScore?: number | null;
+  aiScoringStatus: AdminRound1AiScoringStatus;
+  aiScoredAt?: string;
+  aiModel?: string;
+  aiError?: string;
+  scoreSource: AdminRound1ScoreSource;
   detailAvailable: boolean;
 }
 

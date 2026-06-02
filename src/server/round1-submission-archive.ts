@@ -2,6 +2,7 @@ import { Round1BankStatus, Round1TestBankType, type Round1Submission as DbRound1
 
 import {
   ROUND1_ESSAY_MAX_SCORE,
+  ROUND1_ESSAY_POINT_VALUE,
   ROUND1_ESSAY_TOTAL,
   ROUND1_ESSAY_WORD_LIMIT,
   ROUND1_OBJECTIVE_TOTAL,
@@ -165,16 +166,19 @@ function createEssayQuestionScores(totalEssayScore: number | null | undefined, e
     return {} as Record<string, number>;
   }
 
-  const clampedTotal = Math.max(0, Math.min(ROUND1_ESSAY_MAX_SCORE, Math.round(totalEssayScore)));
-  const scores = new Array(essayQuestionIds.length).fill(Math.floor(clampedTotal / essayQuestionIds.length));
-  let remainder = clampedTotal % essayQuestionIds.length;
+  const clampedTotal = Math.round(Math.max(0, Math.min(ROUND1_ESSAY_MAX_SCORE, totalEssayScore)) * 10) / 10;
+  const baseScore = Math.floor((clampedTotal / essayQuestionIds.length) * 10) / 10;
+  const scores = new Array(essayQuestionIds.length).fill(baseScore);
+  let remainder = Math.round((clampedTotal - baseScore * essayQuestionIds.length) * 10) / 10;
 
-  for (let index = 0; index < scores.length && remainder > 0; index += 1, remainder -= 1) {
-    scores[index] += 1;
+  for (let index = 0; index < scores.length && remainder > 0; index += 1) {
+    const increment = Math.min(1, remainder);
+    scores[index] = Math.round((scores[index] + increment) * 10) / 10;
+    remainder = Math.round((remainder - increment) * 10) / 10;
   }
 
   return Object.fromEntries(
-    essayQuestionIds.map((questionId, index) => [questionId, Math.min(14, scores[index] ?? 0)]),
+    essayQuestionIds.map((questionId, index) => [questionId, Math.min(ROUND1_ESSAY_POINT_VALUE, scores[index] ?? 0)]),
   );
 }
 

@@ -1,4 +1,4 @@
-import { SubmissionRound, UserRole } from "@prisma/client";
+import { Round1JudgeReviewSource, SubmissionRound, UserRole } from "@prisma/client";
 
 import { ROUND1_ESSAY_MAX_SCORE, ROUND1_ESSAY_POINT_VALUE, countWords } from "@/lib/round1";
 import { prisma } from "@/lib/db";
@@ -42,6 +42,15 @@ function ok<T>(data: T, status = 200): ServiceSuccess<T> {
 
 function fail(status: number, error: string): ServiceFailure {
   return { ok: false, status, error };
+}
+
+function isValidRound1EssayQuestionScore(score: number) {
+  return (
+    Number.isFinite(score) &&
+    score >= 0 &&
+    score <= ROUND1_ESSAY_POINT_VALUE &&
+    Math.round(score * 10) / 10 === score
+  );
 }
 
 function normalizeRoundFromSubmission(round: SubmissionRound): CompetitionRoundKey {
@@ -449,15 +458,15 @@ export async function saveJudgeRound1Review(
   const questionScores: Record<string, number> = {};
   for (const questionId of essayQuestionIds) {
     const score = payload.questionScores[questionId];
-    if (!Number.isFinite(score) || !Number.isInteger(score) || score < 0 || score > ROUND1_ESSAY_POINT_VALUE) {
-      return fail(400, `Each Round 1 essay question score must be a whole number between 0 and ${ROUND1_ESSAY_POINT_VALUE}.`);
+    if (!isValidRound1EssayQuestionScore(score)) {
+      return fail(400, `Each Round 1 essay question score must be between 0 and ${ROUND1_ESSAY_POINT_VALUE}, with at most one decimal place.`);
     }
 
     questionScores[questionId] = score;
   }
 
   const scoredAt = new Date();
-  const essayScore = Object.values(questionScores).reduce((total, score) => total + score, 0);
+  const essayScore = Math.round(Object.values(questionScores).reduce((total, score) => total + score, 0) * 10) / 10;
   if (essayScore > ROUND1_ESSAY_MAX_SCORE) {
     return fail(400, `Round 1 essay score must be between 0 and ${ROUND1_ESSAY_MAX_SCORE}.`);
   }
@@ -488,7 +497,15 @@ export async function saveJudgeRound1Review(
       data: {
         score: essayScore,
         note: payload.note?.trim() ?? "",
+        source: Round1JudgeReviewSource.HUMAN,
         scoredAt,
+      },
+    });
+
+    await tx.round1AiEssayReview.updateMany({
+      where: { submissionId },
+      data: {
+        humanOverriddenAt: scoredAt,
       },
     });
 

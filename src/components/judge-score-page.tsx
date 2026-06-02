@@ -227,7 +227,7 @@ export function JudgeRound1ScorePage({
   );
 
   const handleQuestionScoreChange = (questionId: string, value: string) => {
-    if (value === "") {
+    if (value === "" || value === ".") {
       setQuestionScores((current) => ({
         ...current,
         [questionId]: "",
@@ -236,14 +236,17 @@ export function JudgeRound1ScorePage({
     }
 
     const parsedValue = Number(value);
-    if (!Number.isFinite(parsedValue)) {
+    if (!Number.isFinite(parsedValue) || parsedValue < 0 || parsedValue > ROUND1_ESSAY_POINT_VALUE) {
       return;
     }
 
-    const boundedScore = Math.max(0, Math.min(ROUND1_ESSAY_POINT_VALUE, Math.trunc(parsedValue)));
+    if (!/^\d{0,2}(\.\d?)?$/.test(value)) {
+      return;
+    }
+
     setQuestionScores((current) => ({
       ...current,
-      [questionId]: String(boundedScore),
+      [questionId]: value,
     }));
   };
 
@@ -251,11 +254,11 @@ export function JudgeRound1ScorePage({
     const parsedQuestionScores: Record<string, number> = {};
     for (const essay of detail.essays) {
       const parsedScore = Number(questionScores[essay.questionId]);
-      if (!Number.isFinite(parsedScore) || !Number.isInteger(parsedScore) || parsedScore < 0 || parsedScore > ROUND1_ESSAY_POINT_VALUE) {
+      if (!Number.isFinite(parsedScore) || Math.round(parsedScore * 10) / 10 !== parsedScore || parsedScore < 0 || parsedScore > ROUND1_ESSAY_POINT_VALUE) {
         setMessage(
           locale === "en"
-            ? `Each essay question score must be a whole number from 0 to ${ROUND1_ESSAY_POINT_VALUE}. Please adjust the highlighted score field before saving.`
-            : `Mỗi câu tự luận cần có điểm nguyên từ 0 đến ${ROUND1_ESSAY_POINT_VALUE}. Vui lòng chỉnh lại ô điểm trước khi lưu.`,
+            ? `Each essay question score must be from 0 to ${ROUND1_ESSAY_POINT_VALUE}, with at most one decimal place. Please adjust the score field before saving.`
+            : `Mỗi câu tự luận cần có điểm từ 0 đến ${ROUND1_ESSAY_POINT_VALUE}, tối đa một chữ số thập phân. Vui lòng chỉnh lại ô điểm trước khi lưu.`,
         );
         return;
       }
@@ -428,7 +431,7 @@ export function JudgeRound1ScorePage({
                     type="number"
                     min={0}
                     max={ROUND1_ESSAY_POINT_VALUE}
-                    step={1}
+                    step={0.1}
                     value={questionScores[essay.questionId] ?? ""}
                     onChange={(event) => handleQuestionScoreChange(essay.questionId, event.target.value)}
                     className="theme-placeholder h-11 w-20 shrink-0 rounded-2xl border theme-border theme-panel px-3 text-center text-sm font-semibold theme-text-strong outline-none"

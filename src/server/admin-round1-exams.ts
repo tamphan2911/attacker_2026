@@ -1,4 +1,9 @@
-import { TeamRound1LockStatus, UserRole } from "@prisma/client";
+import {
+  Round1AiEssayScoringStatus,
+  Round1JudgeReviewSource,
+  TeamRound1LockStatus,
+  UserRole,
+} from "@prisma/client";
 
 import {
   countWords,
@@ -15,9 +20,11 @@ import {
   parseRound1ArchiveQuestions,
 } from "@/server/round1-submission-archive";
 import type {
+  AdminRound1AiScoringStatus,
   AdminRound1ExamDetail,
   AdminRound1ExamListRow,
   AdminRound1ExamQuestionRecord,
+  AdminRound1ScoreSource,
 } from "@/types/admin-round1-exams";
 import type { CompetitionStage } from "@/types/site";
 
@@ -70,6 +77,44 @@ function countAnsweredQuestions(
   return questions.filter((question) => isRound1QuestionAnswered(question, answers[question.id])).length;
 }
 
+function mapAiScoringStatus(status?: Round1AiEssayScoringStatus | null): AdminRound1AiScoringStatus {
+  switch (status) {
+    case Round1AiEssayScoringStatus.SCORING:
+      return "scoring";
+    case Round1AiEssayScoringStatus.SCORED:
+      return "scored";
+    case Round1AiEssayScoringStatus.FAILED:
+      return "failed";
+    case Round1AiEssayScoringStatus.SKIPPED_HUMAN:
+      return "skipped-human";
+    case Round1AiEssayScoringStatus.NOT_STARTED:
+    default:
+      return "not-started";
+  }
+}
+
+function getRound1ScoreSource(
+  judgeReviews: Array<{ source: Round1JudgeReviewSource; score: number | null; scoredAt: Date | null }>,
+): AdminRound1ScoreSource {
+  if (
+    judgeReviews.some(
+      (review) => review.source === Round1JudgeReviewSource.HUMAN && review.score != null && review.scoredAt,
+    )
+  ) {
+    return "human-judge";
+  }
+
+  if (
+    judgeReviews.some(
+      (review) => review.source === Round1JudgeReviewSource.AI && review.score != null && review.scoredAt,
+    )
+  ) {
+    return "gpt-draft";
+  }
+
+  return "none";
+}
+
 type ServiceSuccess<T> = {
   ok: true;
   status: number;
@@ -106,6 +151,16 @@ export async function readAdminRound1ExamRows(): Promise<AdminRound1ExamListRow[
               round1Submissions: {
                 take: 1,
                 orderBy: { submittedAt: "desc" },
+                include: {
+                  aiEssayReview: true,
+                  judgeReviews: {
+                    select: {
+                      source: true,
+                      score: true,
+                      scoredAt: true,
+                    },
+                  },
+                },
               },
             },
           },
@@ -166,6 +221,11 @@ export async function readAdminRound1ExamRows(): Promise<AdminRound1ExamListRow[
               objectiveScore: submission?.objectiveScore ?? undefined,
               essayScore: submission?.essayScore ?? undefined,
               totalScore: submission?.totalScore ?? undefined,
+              aiScoringStatus: mapAiScoringStatus(submission?.aiEssayReview?.status),
+              aiScoredAt: submission?.aiEssayReview?.scoredAt?.toISOString(),
+              aiModel: submission?.aiEssayReview?.model || undefined,
+              aiError: submission?.aiEssayReview?.error ?? undefined,
+              scoreSource: submission ? getRound1ScoreSource(submission.judgeReviews) : "none",
               detailAvailable: Boolean(submission || attempt),
             };
           }),
