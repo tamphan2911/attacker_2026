@@ -4,8 +4,8 @@ const DB_VERSION = 1;
 
 import type { SubmissionRound } from "@/types/site";
 
-export const MAX_ROUND2_SUBMISSION_FILE_BYTES = 20 * 1024 * 1024;
-export const MAX_ROUND3_SUBMISSION_FILE_BYTES = 30 * 1024 * 1024;
+export const MAX_ROUND2_SUBMISSION_FILE_BYTES = 10 * 1024 * 1024;
+export const MAX_ROUND3_SUBMISSION_FILE_BYTES = 10 * 1024 * 1024;
 export const MAX_SUBMISSION_FILE_BYTES = MAX_ROUND2_SUBMISSION_FILE_BYTES;
 
 const allowedSubmissionExtensions = [".pdf"];
