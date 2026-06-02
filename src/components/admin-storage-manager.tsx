@@ -116,6 +116,12 @@ function getRowIdentity(row: StorageRow) {
     : row.storageKey;
 }
 
+function getDeleteEndpoint(row: StorageRow) {
+  return "category" in row
+    ? `/api/admin/storage/images?category=${encodeURIComponent(row.category)}&key=${encodeURIComponent(row.storageKey)}`
+    : `/api/admin/storage/submission-files?key=${encodeURIComponent(row.storageKey)}`;
+}
+
 function buildStorageTotals(rows: StorageRow[]) {
   const totalBytes = rows.reduce((sum, row) => sum + row.sizeBytes, 0);
   const usedRows = rows.filter((row) => row.usedBy.length > 0);
@@ -330,6 +336,140 @@ function DeleteDialog({
   );
 }
 
+function BatchDeleteDialog({
+  rows,
+  locale,
+  mode,
+  deleting,
+  onClose,
+  onConfirm,
+}: {
+  rows: StorageRow[];
+  locale: "en" | "vi";
+  mode: StorageMode;
+  deleting: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!rows.length) {
+    return null;
+  }
+
+  const isImage = mode === "images";
+  const totalBytes = rows.reduce((sum, row) => sum + row.sizeBytes, 0);
+  const previewRows = rows.slice(0, 6);
+  const title = isImage
+    ? locale === "en"
+      ? "Delete selected images?"
+      : "Xóa các hình ảnh đã chọn?"
+    : locale === "en"
+      ? "Delete selected PDFs?"
+      : "Xóa các tệp PDF đã chọn?";
+  const description = isImage
+    ? locale === "en"
+      ? "The selected images are currently unused. This will permanently remove them from service storage and cannot be restored from this admin page."
+      : "Các hình ảnh đã chọn hiện không được website sử dụng. Thao tác này sẽ xóa vĩnh viễn các tệp khỏi storage của service và không thể khôi phục từ trang admin này."
+    : locale === "en"
+      ? "The selected PDFs are currently not attached to any team submission. This will permanently remove them from service storage and cannot be restored from this admin page."
+      : "Các tệp PDF đã chọn hiện không gắn với bài nộp nào của đội. Thao tác này sẽ xóa vĩnh viễn các tệp khỏi storage của service và không thể khôi phục từ trang admin này.";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+      <button
+        type="button"
+        aria-label={locale === "en" ? "Close dialog" : "Đóng hộp thoại"}
+        className="absolute inset-0 bg-slate-950/48 backdrop-blur-sm"
+        onClick={deleting ? undefined : onClose}
+      />
+      <div className="theme-panel theme-card-shadow relative w-full max-w-2xl overflow-hidden rounded-[1.75rem] border theme-border">
+        <div className="border-b theme-border bg-red-50/80 px-5 py-5 dark:bg-red-400/10 md:px-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex gap-3">
+              <div className="mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-red-300/50 bg-red-100 text-red-800 dark:border-red-200/20 dark:bg-red-400/15 dark:text-red-100">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="theme-heading text-xl font-semibold theme-text-strong">{title}</h2>
+                <p className="mt-2 text-sm leading-6 theme-text-muted">{description}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={deleting}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border theme-border theme-panel-strong disabled:opacity-50"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-4 px-5 py-5 md:px-6">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-[1.15rem] border theme-border theme-panel-strong px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                {locale === "en" ? "Selected files" : "Tệp đã chọn"}
+              </p>
+              <p className="mt-2 text-lg font-semibold theme-text-strong">
+                {rows.length} {locale === "en" ? (rows.length === 1 ? "file" : "files") : "tệp"}
+              </p>
+            </div>
+            <div className="rounded-[1.15rem] border theme-border theme-panel-strong px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                {locale === "en" ? "Storage size" : "Dung lượng"}
+              </p>
+              <p className="mt-2 text-lg font-semibold theme-text-strong">{formatFileSize(totalBytes)}</p>
+            </div>
+          </div>
+
+          <div className="rounded-[1.15rem] border border-red-300/45 bg-red-50/80 px-4 py-4 dark:border-red-200/20 dark:bg-red-400/10">
+            <p className="text-sm font-semibold text-red-900 dark:text-red-100">
+              {locale === "en" ? "Files to be deleted" : "Các tệp sẽ bị xóa"}
+            </p>
+            <div className="mt-3 space-y-2">
+              {previewRows.map((row) => (
+                <p
+                  key={getRowIdentity(row)}
+                  className="rounded-xl border border-red-300/35 bg-white/65 px-3 py-2 font-mono text-xs text-red-900 dark:border-red-200/15 dark:bg-white/5 dark:text-red-100"
+                >
+                  {getRowIdentity(row)}
+                </p>
+              ))}
+              {rows.length > previewRows.length ? (
+                <p className="px-1 text-xs font-semibold text-red-900/75 dark:text-red-100/75">
+                  +{rows.length - previewRows.length} {locale === "en" ? "more selected files" : "tệp khác đã chọn"}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col-reverse gap-3 border-t theme-border px-5 py-4 sm:flex-row sm:justify-end md:px-6">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={deleting}
+            className="theme-button-secondary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-50"
+          >
+            {locale === "en" ? "Cancel" : "Hủy"}
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={deleting}
+            className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-55"
+          >
+            <Trash2 className={cn("h-4 w-4", deleting && "animate-pulse")} />
+            {deleting
+              ? locale === "en" ? "Deleting selected..." : "Đang xóa tệp đã chọn..."
+              : locale === "en" ? "Delete selected permanently" : "Xóa vĩnh viễn tệp đã chọn"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminStorageManager({ mode }: { mode: StorageMode }) {
   const { locale, currentUser } = useSiteState();
   const [imageRows, setImageRows] = useState<AdminStorageImageRow[]>([]);
@@ -338,7 +478,10 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
   const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>(null);
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  const [batchDeleting, setBatchDeleting] = useState(false);
 
   useAdminTitleScroll();
 
@@ -410,6 +553,11 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
   const activeRows = isImageMode ? filteredImages : filteredFiles;
   const allRows = isImageMode ? imageRows : fileRows;
   const storageTotals = useMemo(() => buildStorageTotals(allRows), [allRows]);
+  const selectedRows = useMemo(() => {
+    const selected = new Set(selectedRowIds);
+    return allRows.filter((row) => selected.has(getRowIdentity(row)) && row.usedBy.length === 0);
+  }, [allRows, selectedRowIds]);
+  const selectedRowsTotalBytes = selectedRows.reduce((sum, row) => sum + row.sizeBytes, 0);
   const {
     page,
     setPage,
@@ -418,6 +566,39 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(activeRows, ADMIN_LIST_TABLE_PAGE_SIZE);
+  const selectablePageRows = paginatedRows.filter((row) => canDelete && row.usedBy.length === 0);
+  const allSelectablePageRowsSelected =
+    selectablePageRows.length > 0 &&
+    selectablePageRows.every((row) => selectedRowIds.includes(getRowIdentity(row)));
+
+  useEffect(() => {
+    const activeIds = new Set(allRows.map(getRowIdentity));
+    setSelectedRowIds((current) => current.filter((rowId) => activeIds.has(rowId)));
+  }, [allRows]);
+
+  function toggleRowSelection(row: StorageRow, checked: boolean) {
+    const rowId = getRowIdentity(row);
+    setSelectedRowIds((current) => {
+      if (checked) {
+        return current.includes(rowId) ? current : [...current, rowId];
+      }
+
+      return current.filter((item) => item !== rowId);
+    });
+  }
+
+  function toggleCurrentPageSelection(checked: boolean) {
+    const pageIds = selectablePageRows.map(getRowIdentity);
+    setSelectedRowIds((current) => {
+      if (checked) {
+        const next = new Set(current);
+        pageIds.forEach((rowId) => next.add(rowId));
+        return Array.from(next);
+      }
+
+      return current.filter((rowId) => !pageIds.includes(rowId));
+    });
+  }
 
   function openDeleteDialog(row: StorageRow) {
     if (!canDelete) {
@@ -449,11 +630,47 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
     }
 
     const row = deleteDialog.row;
-    const endpoint = "category" in row
-      ? `/api/admin/storage/images?category=${encodeURIComponent(row.category)}&key=${encodeURIComponent(row.storageKey)}`
-      : `/api/admin/storage/submission-files?key=${encodeURIComponent(row.storageKey)}`;
+    const endpoint = getDeleteEndpoint(row);
 
     await deleteStoredFile(endpoint, row.storageKey);
+  }
+
+  async function confirmBatchDelete() {
+    if (!selectedRows.length || batchDeleting) {
+      return;
+    }
+
+    try {
+      setBatchDeleting(true);
+      setError("");
+      const failures: string[] = [];
+
+      for (const row of selectedRows) {
+        const response = await fetch(getDeleteEndpoint(row), {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+        if (!response.ok) {
+          failures.push(`${getRowIdentity(row)}: ${payload?.error ?? (locale === "en" ? "Delete failed" : "Xóa không thành công")}`);
+        }
+      }
+
+      await loadRows();
+      setBatchDeleteOpen(false);
+      setSelectedRowIds([]);
+
+      if (failures.length) {
+        setError(
+          locale === "en"
+            ? `Some selected files could not be deleted:\n${failures.slice(0, 5).join("\n")}`
+            : `Một số tệp đã chọn không thể xóa:\n${failures.slice(0, 5).join("\n")}`,
+        );
+      }
+    } finally {
+      setBatchDeleting(false);
+    }
   }
 
   async function deleteStoredFile(endpoint: string, storageKey: string) {
@@ -570,13 +787,13 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
       </section>
 
       {error ? (
-        <Surface className="border-red-300/60 bg-red-50/80 px-5 py-4 text-sm font-semibold text-red-800 dark:border-red-300/30 dark:bg-red-400/10 dark:text-red-100">
+        <Surface className="whitespace-pre-line border-red-300/60 bg-red-50/80 px-5 py-4 text-sm font-semibold text-red-800 dark:border-red-300/30 dark:bg-red-400/10 dark:text-red-100">
           {error}
         </Surface>
       ) : null}
 
       <Surface className="overflow-hidden">
-        <div className="flex flex-col gap-4 border-b theme-border px-4 py-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-4 border-b theme-border px-4 py-4 xl:flex-row xl:items-center xl:justify-between">
           <label className="relative block md:w-[360px]">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
             <input
@@ -586,15 +803,30 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
               className="theme-input w-full rounded-full border py-3 pl-11 pr-4 text-sm"
             />
           </label>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] theme-text-soft">
-            {canDelete
-              ? locale === "en"
-                ? "Delete is blocked for files still in use"
-                : "Không thể xóa tệp đang được sử dụng"
-              : locale === "en"
-                ? "Only admin accounts can delete files"
-                : "Chỉ tài khoản admin được xóa tệp"}
-          </p>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] theme-text-soft">
+              {selectedRows.length
+                ? locale === "en"
+                  ? `${selectedRows.length} selected · ${formatFileSize(selectedRowsTotalBytes)}`
+                  : `${selectedRows.length} đã chọn · ${formatFileSize(selectedRowsTotalBytes)}`
+                : canDelete
+                  ? locale === "en"
+                    ? "Delete is blocked for files still in use"
+                    : "Không thể xóa tệp đang được sử dụng"
+                  : locale === "en"
+                    ? "Only admin accounts can delete files"
+                    : "Chỉ tài khoản admin được xóa tệp"}
+            </p>
+            <button
+              type="button"
+              onClick={() => setBatchDeleteOpen(true)}
+              disabled={!canDelete || selectedRows.length === 0 || batchDeleting}
+              className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Trash2 className="h-4 w-4" />
+              {locale === "en" ? "Delete selected" : "Xóa tệp đã chọn"}
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -602,6 +834,16 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
             <table className="min-w-[980px] divide-y theme-border text-left text-sm">
               <thead className="theme-panel-strong">
                 <tr>
+                  <th className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={allSelectablePageRowsSelected}
+                      disabled={!canDelete || selectablePageRows.length === 0}
+                      onChange={(event) => toggleCurrentPageSelection(event.target.checked)}
+                      aria-label={locale === "en" ? "Select all deletable files on this page" : "Chọn tất cả tệp có thể xóa ở trang này"}
+                      className="h-4 w-4 rounded border theme-border accent-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-35"
+                    />
+                  </th>
                   {["#", locale === "en" ? "Image" : "Hình ảnh", locale === "en" ? "Category" : "Nhóm", "Storage key", locale === "en" ? "Size" : "Dung lượng", locale === "en" ? "Updated" : "Cập nhật", locale === "en" ? "Status" : "Trạng thái", locale === "en" ? "Used by" : "Đang dùng bởi", locale === "en" ? "Delete" : "Xóa"].map((label) => (
                     <th key={label} className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] theme-text-soft">
                       {label}
@@ -612,6 +854,16 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
               <tbody>
                 {(paginatedRows as AdminStorageImageRow[]).map((row, index) => (
                   <tr key={`${row.category}-${row.storageKey}`} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedRowIds.includes(getRowIdentity(row))}
+                        disabled={!canDelete || row.usedBy.length > 0}
+                        onChange={(event) => toggleRowSelection(row, event.target.checked)}
+                        aria-label={locale === "en" ? "Select image for batch delete" : "Chọn hình ảnh để xóa hàng loạt"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-35"
+                      />
+                    </td>
                     <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{startIndex + index + 1}</td>
                     <td className="px-4 py-4">
                       <a href={row.url} target="_blank" rel="noreferrer" className="block h-14 w-14 overflow-hidden rounded-xl border theme-border theme-panel-strong">
@@ -660,6 +912,16 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
             <table className="min-w-[880px] divide-y theme-border text-left text-sm">
               <thead className="theme-panel-strong">
                 <tr>
+                  <th className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={allSelectablePageRowsSelected}
+                      disabled={!canDelete || selectablePageRows.length === 0}
+                      onChange={(event) => toggleCurrentPageSelection(event.target.checked)}
+                      aria-label={locale === "en" ? "Select all deletable files on this page" : "Chọn tất cả tệp có thể xóa ở trang này"}
+                      className="h-4 w-4 rounded border theme-border accent-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-35"
+                    />
+                  </th>
                   {["#", locale === "en" ? "PDF file" : "Tệp PDF", "Storage key", locale === "en" ? "Size" : "Dung lượng", locale === "en" ? "Updated" : "Cập nhật", locale === "en" ? "Status" : "Trạng thái", locale === "en" ? "Attached to" : "Gắn với", locale === "en" ? "Delete" : "Xóa"].map((label) => (
                     <th key={label} className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.16em] theme-text-soft">
                       {label}
@@ -670,6 +932,16 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
               <tbody>
                 {(paginatedRows as AdminStorageSubmissionFileRow[]).map((row, index) => (
                   <tr key={row.storageKey} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedRowIds.includes(getRowIdentity(row))}
+                        disabled={!canDelete || row.usedBy.length > 0}
+                        onChange={(event) => toggleRowSelection(row, event.target.checked)}
+                        aria-label={locale === "en" ? "Select PDF for batch delete" : "Chọn tệp PDF để xóa hàng loạt"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-35"
+                      />
+                    </td>
                     <td className="px-4 py-4 text-xs font-semibold theme-text-soft">{startIndex + index + 1}</td>
                     <td className="px-4 py-4">
                       <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border theme-border theme-panel-strong text-[var(--brand)]">
@@ -743,6 +1015,20 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
         }}
         onConfirm={() => {
           void confirmDeleteFromDialog();
+        }}
+      />
+      <BatchDeleteDialog
+        rows={batchDeleteOpen ? selectedRows : []}
+        locale={locale}
+        mode={mode}
+        deleting={batchDeleting}
+        onClose={() => {
+          if (!batchDeleting) {
+            setBatchDeleteOpen(false);
+          }
+        }}
+        onConfirm={() => {
+          void confirmBatchDelete();
         }}
       />
     </div>
