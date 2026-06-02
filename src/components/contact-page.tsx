@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  Clock3,
   ExternalLink,
   Mail,
   MapPin,
@@ -78,21 +77,7 @@ export function ContactPage() {
 
         <div className="space-y-4">
           <Surface className="px-6 py-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[rgba(23,114,208,0.12)]">
-                <Clock3 className="h-5 w-5 text-sky-500" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-text-soft">
-                  {pickText(locale, pageContent.contact.responseRhythmEyebrow)}
-                </p>
-                <p className="mt-1 text-sm leading-7 theme-text-body">
-                  {pickText(locale, pageContent.contact.responseRhythmDescription)}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-3">
+            <div className="space-y-3">
               {[
                 {
                   icon: <MessageCircle className="h-4 w-4 text-cyan-300" />,
