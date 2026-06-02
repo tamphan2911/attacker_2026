@@ -434,8 +434,15 @@ export function AdminRound2ScoresManager() {
   const [aiActionLoading, setAiActionLoading] = useState<"run-all" | "retry-failed" | null>(null);
   const [aiError, setAiError] = useState("");
   const aiProcessBusyRef = useRef(false);
-  const activeAiJobId = aiOverview?.activeJob?.id ?? "";
-  const activeAiJobStatus = aiOverview?.activeJob?.status;
+  const activeAiJob = aiOverview?.activeJob ?? null;
+  const activeAiProgressPercent =
+    activeAiJob && activeAiJob.totalEligible > 0
+      ? Math.min(100, Math.max(0, Math.round((activeAiJob.processedCount / activeAiJob.totalEligible) * 100)))
+      : activeAiJob?.status === "completed"
+        ? 100
+        : 0;
+  const activeAiJobId = activeAiJob?.id ?? "";
+  const activeAiJobStatus = activeAiJob?.status;
   useAdminTitleScroll();
 
   const loadData = useCallback(async () => {
@@ -904,11 +911,42 @@ export function AdminRound2ScoresManager() {
               ))}
             </div>
 
-            {aiOverview?.activeJob ? (
-              <div className="rounded-[1rem] border border-sky-500/22 bg-sky-500/10 px-3 py-3 text-sm leading-6 text-sky-900 dark:border-sky-300/20 dark:bg-sky-300/12 dark:text-sky-100">
-                {locale === "en"
-                  ? `GPT job ${aiOverview.activeJob.status}: ${aiOverview.activeJob.processedCount}/${aiOverview.activeJob.totalEligible} processed.`
-                  : `Job GPT ${aiOverview.activeJob.status}: đã xử lý ${aiOverview.activeJob.processedCount}/${aiOverview.activeJob.totalEligible}.`}
+            {activeAiJob ? (
+              <div className="rounded-[1rem] border border-sky-500/22 bg-sky-500/10 px-3 py-3 text-sm leading-6 text-sky-900 shadow-[0_18px_45px_rgba(14,165,233,0.12)] dark:border-sky-300/20 dark:bg-sky-300/12 dark:text-sky-100">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="inline-flex items-center gap-2 font-semibold">
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    {locale === "en" ? "Live scoring progress" : "Tiến độ chấm GPT"}
+                  </span>
+                  <span className="shrink-0 rounded-full border border-white/50 bg-white/70 px-2.5 py-1 text-xs font-semibold text-sky-950 dark:border-white/12 dark:bg-white/10 dark:text-sky-100">
+                    {activeAiJob.processedCount}/{activeAiJob.totalEligible} · {activeAiProgressPercent}%
+                  </span>
+                </div>
+                <div
+                  role="progressbar"
+                  aria-label={locale === "en" ? "Round 2 GPT scoring progress" : "Tiến độ chấm GPT Vòng 2"}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={activeAiProgressPercent}
+                  className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-950/10 dark:bg-white/10"
+                >
+                  <div
+                    className="h-full rounded-full bg-[linear-gradient(90deg,#7dd3fc,#38bdf8,#2563eb)] shadow-[0_0_18px_rgba(56,189,248,0.55)] transition-[width] duration-700 ease-out"
+                    style={{ width: `${activeAiProgressPercent}%` }}
+                  />
+                </div>
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs theme-text-muted">
+                  <span>
+                    {locale === "en"
+                      ? `Status: ${activeAiJob.status}`
+                      : `Trạng thái: ${activeAiJob.status}`}
+                  </span>
+                  {activeAiJob.failedCount > 0 ? (
+                    <span className="font-semibold text-amber-700 dark:text-amber-200">
+                      {locale === "en" ? `${activeAiJob.failedCount} failed` : `${activeAiJob.failedCount} lỗi`}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             ) : null}
 
@@ -916,7 +954,7 @@ export function AdminRound2ScoresManager() {
               <button
                 type="button"
                 onClick={() => void startAiScoring("run-all")}
-                disabled={!round2Closed || Boolean(aiOverview?.activeJob) || aiActionLoading != null}
+                disabled={!round2Closed || Boolean(activeAiJob) || aiActionLoading != null}
                 className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {aiActionLoading === "run-all" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
@@ -925,7 +963,7 @@ export function AdminRound2ScoresManager() {
               <button
                 type="button"
                 onClick={() => void startAiScoring("retry-failed")}
-                disabled={!round2Closed || Boolean(aiOverview?.activeJob) || aiActionLoading != null || (aiOverview?.totals.failed ?? 0) === 0}
+                disabled={!round2Closed || Boolean(activeAiJob) || aiActionLoading != null || (aiOverview?.totals.failed ?? 0) === 0}
                 className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
               >
                 {aiActionLoading === "retry-failed" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
