@@ -88,6 +88,14 @@ export async function GET() {
             ],
           },
           include: {
+            aiEssayReview: {
+              select: {
+                score: true,
+                status: true,
+                model: true,
+                scoredAt: true,
+              },
+            },
             judgeReviews: {
               orderBy: [{ createdAt: "asc" }],
               include: {
@@ -274,6 +282,14 @@ export async function GET() {
               ],
             },
         include: {
+          aiEssayReview: {
+            select: {
+              score: true,
+              status: true,
+              model: true,
+              scoredAt: true,
+            },
+          },
           judgeReviews: {
             orderBy: [{ createdAt: "asc" }],
             include: {

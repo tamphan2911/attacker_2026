@@ -275,8 +275,15 @@ export interface Round1Submission {
     judgeName: string;
     judgeLoginId?: string;
     score: number | null;
+    source?: "ai" | "human";
     scoredAt?: string;
   }>;
+  aiEssayReview?: {
+    score: number | null;
+    status: "not-started" | "scoring" | "scored" | "failed" | "skipped-human";
+    model?: string;
+    scoredAt?: string;
+  };
 }
 
 export interface UserProfile {

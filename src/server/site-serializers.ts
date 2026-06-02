@@ -400,12 +400,19 @@ export function serializeRound1Submission(
     judgeReviews?: Array<{
       judgeUserId: string;
       score: number | null;
+      source?: "AI" | "HUMAN";
       scoredAt: Date | null;
       judgeUser: {
         name: string;
         loginId: string;
       };
     }>;
+    aiEssayReview?: {
+      score: number | null;
+      status: "NOT_STARTED" | "SCORING" | "SCORED" | "FAILED" | "SKIPPED_HUMAN";
+      model: string;
+      scoredAt: Date | null;
+    } | null;
   },
   options?: { revealEssayAndTotalScores?: boolean },
 ): AppRound1Submission {
@@ -428,8 +435,18 @@ export function serializeRound1Submission(
       judgeName: review.judgeUser.name,
       judgeLoginId: review.judgeUser.loginId,
       score: review.score,
+      source: review.source === "AI" ? "ai" : "human",
       scoredAt: review.scoredAt?.toISOString(),
     })),
+    aiEssayReview:
+      revealEssayAndTotalScores && submission.aiEssayReview
+        ? {
+            score: submission.aiEssayReview.score,
+            status: submission.aiEssayReview.status.toLowerCase().replaceAll("_", "-") as NonNullable<AppRound1Submission["aiEssayReview"]>["status"],
+            model: submission.aiEssayReview.model || undefined,
+            scoredAt: submission.aiEssayReview.scoredAt?.toISOString(),
+          }
+        : undefined,
   };
 }
 

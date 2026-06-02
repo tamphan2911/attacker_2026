@@ -105,6 +105,10 @@ interface IndividualScoreRow {
   teamTag: string;
   objectiveScore: number;
   essayScore: number | null;
+  gptScore: number | null;
+  gptStatus?: NonNullable<Round1Submission["aiEssayReview"]>["status"];
+  gptModel?: string;
+  gptScoredAt?: string;
   totalScore: number | null;
   submittedAt: string;
   reviewStatus: "pending" | "reviewed";
@@ -723,6 +727,35 @@ function WaitingEssayScoreBadge({ locale, label }: { locale: Locale; label?: str
   );
 }
 
+function GptScoreCell({ locale, row }: { locale: Locale; row: IndividualScoreRow }) {
+  if (row.gptScore != null) {
+    return (
+      <div className="space-y-1.5">
+        <StatusPill tone="info">{`${row.gptScore.toFixed(2)} / ${ROUND1_ESSAY_MAX_SCORE}`}</StatusPill>
+        <p className="text-xs theme-text-soft">
+          {row.gptScoredAt
+            ? `${locale === "en" ? "GPT scored" : "GPT chấm"} ${formatDateLabel(locale, row.gptScoredAt)}`
+            : row.gptModel || (locale === "en" ? "GPT draft" : "Điểm nháp GPT")}
+        </p>
+      </div>
+    );
+  }
+
+  if (row.gptStatus === "failed") {
+    return <StatusPill tone="warning">{locale === "en" ? "GPT failed" : "GPT lỗi"}</StatusPill>;
+  }
+
+  if (row.gptStatus === "scoring") {
+    return <StatusPill tone="info">{locale === "en" ? "Scoring" : "Đang chấm"}</StatusPill>;
+  }
+
+  if (row.gptStatus === "skipped-human") {
+    return <StatusPill>{locale === "en" ? "Human locked" : "Đã có điểm giám khảo"}</StatusPill>;
+  }
+
+  return <StatusPill>{locale === "en" ? "Not scored" : "Chưa chấm GPT"}</StatusPill>;
+}
+
 function buildIndividualScoreRows(
   submissions: Round1Submission[],
   teams: TeamProfile[],
@@ -755,6 +788,10 @@ function buildIndividualScoreRows(
         teamTag: team.tag,
         objectiveScore: submission.objectiveScore,
         essayScore: submission.essayScore,
+        gptScore: submission.aiEssayReview?.score ?? (judgeReview?.source === "ai" ? judgeReview.score : null),
+        gptStatus: submission.aiEssayReview?.status,
+        gptModel: submission.aiEssayReview?.model,
+        gptScoredAt: submission.aiEssayReview?.scoredAt,
         totalScore: submission.totalScore,
         submittedAt: submission.submittedAt,
         reviewStatus: isRound1EssayPending(submission) ? "pending" : "reviewed",
@@ -1410,6 +1447,8 @@ export function AdminRound1ScoresManager() {
             row.judgeName ?? "",
             row.judgeLoginId ?? "",
             row.reviewStatus,
+            row.gptStatus ?? "",
+            row.gptModel ?? "",
           ].join(" "),
           individualScoreSearch,
         ),
@@ -1441,6 +1480,10 @@ export function AdminRound1ScoresManager() {
         teamTag: row.teamTag,
         objectiveScore: row.objectiveScore,
         essayScore: row.essayScore ?? "",
+        gptScore: row.gptScore ?? "",
+        gptStatus: row.gptStatus ?? "",
+        gptModel: row.gptModel ?? "",
+        gptScoredAt: row.gptScoredAt ?? "",
         totalScore: row.totalScore ?? "",
         judge: row.judgeName ?? "",
         judgeLoginId: row.judgeLoginId ?? "",
@@ -1632,6 +1675,7 @@ export function AdminRound1ScoresManager() {
                   locale === "en" ? "Team" : "Đội thi",
                   locale === "en" ? "Multiple choice score" : "Điểm trắc nghiệm",
                   locale === "en" ? "Essay score" : "Điểm tự luận",
+                  locale === "en" ? "GPT score" : "Điểm GPT",
                   locale === "en" ? "Total score" : "Tổng điểm",
                   locale === "en" ? "Judge" : "Giám khảo",
                   locale === "en" ? "Submitted at" : "Thời điểm nộp",
@@ -1700,6 +1744,9 @@ export function AdminRound1ScoresManager() {
                     ) : (
                       <StatusPill tone="info">{`${row.essayScore.toFixed(2)} / ${ROUND1_ESSAY_MAX_SCORE}`}</StatusPill>
                     )}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <GptScoreCell locale={locale} row={row} />
                   </td>
                   <td className="px-4 py-4 text-center">
                     {row.totalScore == null ? (
