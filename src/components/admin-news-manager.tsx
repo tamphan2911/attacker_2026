@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   ArrowUp,
   Bold,
+  ChevronDown,
   Filter,
   Heading2,
   ImagePlus,
@@ -942,6 +943,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
   } | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [uploadingContentIndex, setUploadingContentIndex] = useState<number | null>(null);
+  const [collapsedContentBlockIndexes, setCollapsedContentBlockIndexes] = useState<Set<number>>(() => new Set());
   const contentBlockRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const pendingContentScrollRef = useRef<number | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -1073,6 +1075,18 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
           type === "paragraph" ? createParagraphBlock() : createImageBlock(),
         ],
       };
+    });
+  };
+
+  const toggleContentBlockCollapsed = (index: number) => {
+    setCollapsedContentBlockIndexes((current) => {
+      const next = new Set(current);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
     });
   };
 
@@ -1542,106 +1556,145 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
             </div>
 
             <div className="space-y-4">
-              {draft.content.map((block, index) => (
-                <div
-                  key={`block-wrap-${index}`}
-                  ref={(node) => {
-                    contentBlockRefs.current[index] = node;
-                  }}
-                >
-                  <Surface className="space-y-4 px-4 py-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <StatusPill>
-                          {locale === "en" ? `Block ${index + 1}` : `Khối ${index + 1}`}
-                        </StatusPill>
-                        <select
-                          value={block.type}
-                          onChange={(event) =>
+              {draft.content.map((block, index) => {
+                const isCollapsed = collapsedContentBlockIndexes.has(index);
+
+                return (
+                  <div
+                    key={`block-wrap-${index}`}
+                    ref={(node) => {
+                      contentBlockRefs.current[index] = node;
+                    }}
+                  >
+                    <Surface className="space-y-4 px-4 py-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <StatusPill>
+                            {locale === "en" ? `Block ${index + 1}` : `Khối ${index + 1}`}
+                          </StatusPill>
+                          <select
+                            value={block.type}
+                            onChange={(event) => {
+                              setCollapsedContentBlockIndexes((current) => {
+                                const next = new Set(current);
+                                next.delete(index);
+                                return next;
+                              });
+                              setDraft((current) =>
+                                current
+                                  ? {
+                                      ...current,
+                                      content: current.content.map((item, itemIndex) =>
+                                        itemIndex === index
+                                          ? event.target.value === "paragraph"
+                                            ? createParagraphBlock()
+                                            : createImageBlock()
+                                          : item,
+                                      ),
+                                  }
+                                  : current,
+                              );
+                            }}
+                            className="theme-admin-select rounded-full border px-3 py-2 text-sm font-semibold outline-none"
+                          >
+                            <option value="paragraph">paragraph</option>
+                            <option value="image">image</option>
+                          </select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <IconToolButton
+                            label={locale === "en" ? "Move block up" : "Đưa block lên"}
+                            disabled={index === 0}
+                            onClick={() => {
+                              setCollapsedContentBlockIndexes(new Set());
+                              setDraft((current) =>
+                                current ? { ...current, content: moveItem(current.content, index, -1) } : current,
+                              );
+                            }}
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                          </IconToolButton>
+                          <IconToolButton
+                            label={locale === "en" ? "Move block down" : "Đưa block xuống"}
+                            disabled={index === draft.content.length - 1}
+                            onClick={() => {
+                              setCollapsedContentBlockIndexes(new Set());
+                              setDraft((current) =>
+                                current ? { ...current, content: moveItem(current.content, index, 1) } : current,
+                              );
+                            }}
+                          >
+                            <ArrowDown className="h-4 w-4" />
+                          </IconToolButton>
+                          <IconToolButton
+                            label={
+                              isCollapsed
+                                ? locale === "en"
+                                  ? "Expand block"
+                                  : "Mở khối"
+                                : locale === "en"
+                                  ? "Collapse block"
+                                  : "Thu gọn khối"
+                            }
+                            onClick={() => toggleContentBlockCollapsed(index)}
+                          >
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform duration-200 ${
+                                isCollapsed ? "" : "rotate-180"
+                              }`}
+                            />
+                          </IconToolButton>
+                          <IconToolButton
+                            label={locale === "en" ? "Delete block" : "Xóa block"}
+                            tone="danger"
+                            disabled={draft.content.length === 1}
+                            onClick={() => {
+                              setCollapsedContentBlockIndexes(new Set());
+                              setDraft((current) =>
+                                current && current.content.length > 1
+                                  ? {
+                                      ...current,
+                                      content: current.content.filter((_, itemIndex) => itemIndex !== index),
+                                    }
+                                  : current,
+                              );
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </IconToolButton>
+                        </div>
+                      </div>
+
+                      {isCollapsed ? (
+                        <div className="rounded-[1.25rem] border theme-border theme-panel-subtle px-4 py-3 text-sm theme-text-soft">
+                          {block.type === "paragraph"
+                            ? locale === "en"
+                              ? "Paragraph editor collapsed."
+                              : "Trình sửa đoạn văn đang thu gọn."
+                            : locale === "en"
+                              ? "Image editor collapsed."
+                              : "Trình sửa hình ảnh đang thu gọn."}
+                        </div>
+                      ) : block.type === "paragraph" ? (
+                        <RichParagraphEditor
+                          value={block.body}
+                          onChange={(language, value) =>
                             setDraft((current) =>
                               current
                                 ? {
                                     ...current,
                                     content: current.content.map((item, itemIndex) =>
-                                      itemIndex === index
-                                        ? event.target.value === "paragraph"
-                                          ? createParagraphBlock()
-                                          : createImageBlock()
+                                      itemIndex === index && item.type === "paragraph"
+                                        ? { ...item, body: { ...item.body, [language]: value } }
                                         : item,
                                     ),
                                   }
                                 : current,
                             )
                           }
-                          className="theme-admin-select rounded-full border px-3 py-2 text-sm font-semibold outline-none"
-                        >
-                          <option value="paragraph">paragraph</option>
-                          <option value="image">image</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <IconToolButton
-                          label={locale === "en" ? "Move block up" : "Đưa block lên"}
-                          disabled={index === 0}
-                          onClick={() =>
-                            setDraft((current) =>
-                              current ? { ...current, content: moveItem(current.content, index, -1) } : current,
-                            )
-                          }
-                        >
-                          <ArrowUp className="h-4 w-4" />
-                        </IconToolButton>
-                        <IconToolButton
-                          label={locale === "en" ? "Move block down" : "Đưa block xuống"}
-                          disabled={index === draft.content.length - 1}
-                          onClick={() =>
-                            setDraft((current) =>
-                              current ? { ...current, content: moveItem(current.content, index, 1) } : current,
-                            )
-                          }
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                        </IconToolButton>
-                        <IconToolButton
-                          label={locale === "en" ? "Delete block" : "Xóa block"}
-                          tone="danger"
-                          disabled={draft.content.length === 1}
-                          onClick={() =>
-                            setDraft((current) =>
-                              current && current.content.length > 1
-                                ? {
-                                    ...current,
-                                    content: current.content.filter((_, itemIndex) => itemIndex !== index),
-                                  }
-                                : current,
-                            )
-                          }
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </IconToolButton>
-                      </div>
-                    </div>
-
-                    {block.type === "paragraph" ? (
-                      <RichParagraphEditor
-                        value={block.body}
-                        onChange={(language, value) =>
-                          setDraft((current) =>
-                            current
-                              ? {
-                                  ...current,
-                                  content: current.content.map((item, itemIndex) =>
-                                    itemIndex === index && item.type === "paragraph"
-                                      ? { ...item, body: { ...item.body, [language]: value } }
-                                      : item,
-                                  ),
-                                }
-                              : current,
-                          )
-                        }
-                      />
-                    ) : (
-                      <div className="space-y-4">
+                        />
+                      ) : (
+                        <div className="space-y-4">
                         <label className="space-y-2">
                           <span className="text-sm theme-text-muted">
                             {locale === "en" ? "Image upload" : "Tải hình ảnh"}
@@ -1693,11 +1746,11 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                             </div>
 
                             {block.src ? (
-                              <div className="mt-4 overflow-hidden rounded-[1.3rem] border theme-border">
+                              <div className="mt-4 inline-flex max-w-full overflow-hidden rounded-[1.3rem] border theme-border bg-white/60 dark:bg-white/[0.03]">
                                 <img
                                   src={block.src}
                                   alt={pickText(locale, block.alt) || "Body image preview"}
-                                  className="h-48 w-full object-cover"
+                                  className="h-auto max-h-64 max-w-full object-contain"
                                 />
                               </div>
                             ) : null}
@@ -1805,9 +1858,10 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                         />
                       </div>
                     )}
-                  </Surface>
-                </div>
-              ))}
+                    </Surface>
+                  </div>
+                );
+              })}
             </div>
           </Surface>
       </section>

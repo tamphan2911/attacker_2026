@@ -4,6 +4,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { Fragment } from "react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
 import { formatDateLabel, pickText } from "@/lib/site";
@@ -75,7 +76,7 @@ function RichParagraphBlock({ body }: { body: string }) {
         index += 1;
       }
       elements.push(
-        <blockquote key={`quote-${index}`} className="rounded-[1.5rem] border-l-4 border-sky-400/70 bg-sky-100/50 px-5 py-4 text-base leading-8 theme-text-body dark:bg-sky-300/10">
+        <blockquote key={`quote-${index}`} className="rounded-[1.5rem] border-l-4 border-sky-400/70 bg-sky-100/50 px-5 py-4 text-base leading-7 theme-text-body dark:bg-sky-300/10">
           {quoteLines.map((quoteLine, quoteIndex) => (
             <p key={`quote-line-${quoteIndex}`}>{renderInlineRichText(quoteLine)}</p>
           ))}
@@ -91,7 +92,7 @@ function RichParagraphBlock({ body }: { body: string }) {
         index += 1;
       }
       elements.push(
-        <ul key={`list-${index}`} className="list-disc space-y-2 pl-6 text-base leading-8 theme-text-body">
+        <ul key={`list-${index}`} className="ml-3 list-disc space-y-1.5 pl-7 text-base leading-7 theme-text-body marker:text-sky-500 dark:marker:text-sky-300">
           {items.map((item, itemIndex) => (
             <li key={`list-item-${itemIndex}`}>{renderInlineRichText(item)}</li>
           ))}
@@ -107,7 +108,7 @@ function RichParagraphBlock({ body }: { body: string }) {
         index += 1;
       }
       elements.push(
-        <ol key={`ordered-${index}`} className="list-decimal space-y-2 pl-6 text-base leading-8 theme-text-body">
+        <ol key={`ordered-${index}`} className="ml-3 list-decimal space-y-1.5 pl-7 text-base leading-7 theme-text-body marker:text-sky-500 dark:marker:text-sky-300">
           {items.map((item, itemIndex) => (
             <li key={`ordered-item-${itemIndex}`}>{renderInlineRichText(item)}</li>
           ))}
@@ -117,14 +118,14 @@ function RichParagraphBlock({ body }: { body: string }) {
     }
 
     elements.push(
-      <p key={`paragraph-${index}`} className="text-base leading-8 theme-text-body">
+      <p key={`paragraph-${index}`} className="text-base leading-7 theme-text-body">
         {renderInlineRichText(line)}
       </p>,
     );
     index += 1;
   }
 
-  return <>{elements}</>;
+  return <div className="space-y-3">{elements}</div>;
 }
 
 export function NewsArticlePage({ post }: { post: NewsPost }) {
@@ -207,33 +208,47 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
 
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="px-6 py-6 md:px-8 md:py-8">
-          <div className="space-y-8">
-            {post.content.map((block, index) =>
-              block.type === "paragraph" ? (
-                <RichParagraphBlock key={index} body={pickText(articleLocale, block.body)} />
-              ) : (
-                <figure key={index} className="space-y-4">
-                  <div
-                    className={`relative overflow-hidden rounded-[1.9rem] border theme-border ${
-                      block.emphasis === "feature"
-                        ? "aspect-[16/9] md:aspect-[19/9] theme-card-shadow-soft"
-                        : "aspect-[16/10] md:aspect-[16/8.5]"
-                    }`}
-                  >
-                    <img
-                      src={block.src}
-                      alt={pickText(articleLocale, block.alt)}
-                      loading="lazy"
-                      className="absolute inset-0 h-full w-full object-cover"
+          <div className="space-y-5">
+            {post.content.map((block, index) => {
+              const previousBlock = post.content[index - 1];
+              const showParagraphDivider = block.type === "paragraph" && previousBlock?.type === "paragraph";
+
+              return (
+                <Fragment key={`${block.type}-${index}`}>
+                  {showParagraphDivider ? (
+                    <div
+                      aria-hidden="true"
+                      className="h-px w-full bg-[linear-gradient(90deg,transparent,rgba(37,99,235,0.2),transparent)] dark:bg-[linear-gradient(90deg,transparent,rgba(125,211,252,0.22),transparent)]"
                     />
-                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.02),rgba(7,18,35,0.12),rgba(7,18,35,0.18))]" />
-                  </div>
-                  <figcaption className="text-sm leading-7 theme-text-soft">
-                    {pickText(articleLocale, block.caption)}
-                  </figcaption>
-                </figure>
-              ),
-            )}
+                  ) : null}
+                  {block.type === "paragraph" ? (
+                    <RichParagraphBlock body={pickText(articleLocale, block.body)} />
+                  ) : (
+                    <figure
+                      className={`mx-auto space-y-3 text-center ${
+                        block.emphasis === "feature" ? "max-w-3xl" : "max-w-2xl"
+                      }`}
+                    >
+                      <div
+                        className={`inline-block max-w-full overflow-hidden rounded-[1.7rem] border theme-border ${
+                          block.emphasis === "feature" ? "theme-card-shadow-soft" : ""
+                        }`}
+                      >
+                        <img
+                          src={block.src}
+                          alt={pickText(articleLocale, block.alt)}
+                          loading="lazy"
+                          className="h-auto max-h-[72vh] max-w-full object-contain"
+                        />
+                      </div>
+                      <figcaption className="mx-auto max-w-2xl text-left text-sm leading-6 theme-text-soft">
+                        {pickText(articleLocale, block.caption)}
+                      </figcaption>
+                    </figure>
+                  )}
+                </Fragment>
+              );
+            })}
           </div>
         </Surface>
 
