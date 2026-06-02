@@ -10,6 +10,22 @@ export const CONSTRUCTION_ACCESS_COOKIE = "attacker_construction_access";
 const CONSTRUCTION_PASSWORD = "Tamdeptrai";
 
 function formatLaunchDate(value: string, locale: Locale) {
+  if (locale === "vi") {
+    const date = new Date(value);
+    const timeLabel = new Intl.DateTimeFormat("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).format(date);
+    const dateLabel = new Intl.DateTimeFormat("vi-VN", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    }).format(date);
+
+    return `lúc ${timeLabel} - ngày ${dateLabel}`;
+  }
+
   return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
     day: "2-digit",
     month: "long",
