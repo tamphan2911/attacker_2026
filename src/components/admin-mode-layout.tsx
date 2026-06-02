@@ -6,6 +6,8 @@ import {
   CalendarClock,
   FilePenLine,
   FileQuestion,
+  Files,
+  Images,
   LayoutDashboard,
   Mail,
   MessageCircle,
@@ -123,6 +125,26 @@ const adminNavGroups: Array<{
         adminOnly: true,
         children: [
           { href: "/admin/timeline", label: { en: "Timeline schedule", vi: "Lịch trình chính thức" } },
+        ],
+      },
+      {
+        href: "/admin/storage/images",
+        icon: Images,
+        label: { en: "Images", vi: "Hình ảnh" },
+        description: { en: "Uploaded image storage", vi: "Storage hình ảnh đã tải lên" },
+        adminOnly: true,
+        children: [
+          { href: "/admin/storage/images", label: { en: "Uploaded images", vi: "Hình ảnh đã tải lên" } },
+        ],
+      },
+      {
+        href: "/admin/storage/submission-files",
+        icon: Files,
+        label: { en: "PDF files", vi: "Tệp PDF" },
+        description: { en: "Team submission uploads", vi: "PDF bài nộp của đội" },
+        adminOnly: true,
+        children: [
+          { href: "/admin/storage/submission-files", label: { en: "Submission PDFs", vi: "PDF bài nộp" } },
         ],
       },
     ],
