@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
+import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
   ADMIN_LIST_TABLE_PAGE_SIZE,
@@ -1420,11 +1421,14 @@ export function AdminRound1Manager() {
 }
 
 export function AdminRound1ScoresManager() {
-  const { locale, round1Submissions, teams, timelineItems, users } = useSiteState();
+  const { locale, currentUser, round1Submissions, teams, timelineItems, users } = useSiteState();
   useAdminTitleScroll();
   const [activeScoreView, setActiveScoreView] = useState<"team" | "individual">("team");
   const [teamScoreSearch, setTeamScoreSearch] = useState("");
   const [individualScoreSearch, setIndividualScoreSearch] = useState("");
+  const [selectedIndividualUserIds, setSelectedIndividualUserIds] = useState<string[]>([]);
+  const [bulkDialog, setBulkDialog] = useState<"selected" | "all" | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const teamGroups = useMemo(
     () => buildTeamResultGroups(round1Submissions, teams, users),
@@ -1508,6 +1512,29 @@ export function AdminRound1ScoresManager() {
     startIndex: teamStartIndex,
     paginatedRows: paginatedTeamRows,
   } = useAdminTablePagination(filteredTeamGroups, ADMIN_LIST_TABLE_PAGE_SIZE);
+  const selectedIndividualRows = filteredIndividualRows.filter((row) => selectedIndividualUserIds.includes(row.userId));
+  const canDeleteRound1Scores = currentUser.role === "admin";
+
+  async function deleteRound1IndividualRows(rowsToDelete: IndividualScoreRow[]) {
+    setBulkDeleting(true);
+    try {
+      for (const row of rowsToDelete) {
+        const response = await fetch(`/api/admin/round-1/submissions/${row.submissionId}/essay-score`, {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        if (!response.ok) {
+          throw new Error(payload?.error ?? (locale === "en" ? "Could not delete selected Round 1 scores." : "Không thể xóa điểm Vòng 1 đã chọn."));
+        }
+      }
+      setSelectedIndividualUserIds([]);
+      setBulkDialog(null);
+      window.location.reload();
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
 
   useEffect(() => {
     setIndividualPage(1);
@@ -1662,6 +1689,28 @@ export function AdminRound1ScoresManager() {
                 {locale === "en" ? "Export individual scores" : "Xuất điểm cá nhân"}
               </span>
             </button>
+            {canDeleteRound1Scores ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setBulkDialog("selected")}
+                  disabled={selectedIndividualRows.length === 0 || bulkDeleting}
+                  className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {locale === "en" ? "Delete selected" : "Xóa đã chọn"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkDialog("all")}
+                  disabled={filteredIndividualRows.length === 0 || bulkDeleting}
+                  className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {locale === "en" ? "Delete all scores" : "Xóa tất cả điểm"}
+                </button>
+              </>
+            ) : null}
           </div>
         </div>
 
@@ -1669,6 +1718,17 @@ export function AdminRound1ScoresManager() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
+                {canDeleteRound1Scores ? (
+                  <th className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={filteredIndividualRows.length > 0 && filteredIndividualRows.every((row) => selectedIndividualUserIds.includes(row.userId))}
+                      onChange={(event) => setSelectedIndividualUserIds(event.target.checked ? filteredIndividualRows.map((row) => row.userId) : [])}
+                      aria-label={locale === "en" ? "Select all visible individual scores" : "Chọn tất cả điểm cá nhân đang hiển thị"}
+                      className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                    />
+                  </th>
+                ) : null}
                 {[
                   "#",
                   locale === "en" ? "Participant" : "Thí sinh",
@@ -1705,6 +1765,23 @@ export function AdminRound1ScoresManager() {
             <tbody>
               {paginatedIndividualRows.map((row, index) => (
                 <tr key={row.submissionId} className="border-b theme-border last:border-b-0">
+                  {canDeleteRound1Scores ? (
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedIndividualUserIds.includes(row.userId)}
+                        onChange={(event) =>
+                          setSelectedIndividualUserIds((current) =>
+                            event.target.checked
+                              ? current.includes(row.userId) ? current : [...current, row.userId]
+                              : current.filter((id) => id !== row.userId),
+                          )
+                        }
+                        aria-label={locale === "en" ? "Select individual score" : "Chọn điểm cá nhân"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                      />
+                    </td>
+                  ) : null}
                   <td
                     style={{ left: 0, width: 72, minWidth: 72 }}
                     className={cn("px-4 py-4 text-xs font-semibold theme-text-soft", stickyFirstColumnClass)}
@@ -2009,6 +2086,30 @@ export function AdminRound1ScoresManager() {
         />
       </Surface>
       ) : null}
+      <AdminBulkDeleteDialog
+        open={bulkDialog !== null}
+        locale={locale}
+        title={
+          bulkDialog === "all"
+            ? locale === "en" ? "Delete all visible Round 1 scores?" : "Xóa tất cả điểm Vòng 1 đang hiển thị?"
+            : locale === "en" ? "Delete selected Round 1 scores?" : "Xóa điểm Vòng 1 đã chọn?"
+        }
+        description={
+          bulkDialog === "all"
+            ? locale === "en"
+              ? "This clears essay scores, total scores, judge reviews, and GPT essay scoring records for every visible row. Round 1 submissions and answers stay saved. The delete-all password is required."
+              : "Thao tác này xóa điểm tự luận, tổng điểm, phiếu chấm và dữ liệu chấm GPT của mọi dòng đang hiển thị. Bài nộp và câu trả lời Vòng 1 vẫn được giữ lại. Cần nhập mật khẩu xác nhận xóa tất cả."
+            : locale === "en"
+              ? "This clears essay scores, total scores, judge reviews, and GPT essay scoring records for the selected rows. Round 1 submissions and answers stay saved."
+              : "Thao tác này xóa điểm tự luận, tổng điểm, phiếu chấm và dữ liệu chấm GPT của các dòng đã chọn. Bài nộp và câu trả lời Vòng 1 vẫn được giữ lại."
+        }
+        items={(bulkDialog === "all" ? filteredIndividualRows : selectedIndividualRows).map((row) => `${row.studentName} · ${row.teamName}`)}
+        confirmLabel={locale === "en" ? "Delete Round 1 scores" : "Xóa điểm Vòng 1"}
+        busy={bulkDeleting}
+        passwordRequired={bulkDialog === "all"}
+        onClose={() => setBulkDialog(null)}
+        onConfirm={() => void deleteRound1IndividualRows(bulkDialog === "all" ? filteredIndividualRows : selectedIndividualRows)}
+      />
     </div>
   );
 }

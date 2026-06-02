@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
+import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
   ADMIN_LIST_TABLE_PAGE_SIZE,
@@ -438,6 +439,9 @@ export function AdminRound2SubmissionsManager() {
   const [versionFilter, setVersionFilter] = useState<"all" | "latest" | "history">("all");
   const [assignmentFilter, setAssignmentFilter] = useState<"all" | AdminRound2AssignmentStatus>("all");
   const [deletingSubmissionId, setDeletingSubmissionId] = useState<string | null>(null);
+  const [selectedSubmissionIds, setSelectedSubmissionIds] = useState<string[]>([]);
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  const [batchDeleting, setBatchDeleting] = useState(false);
   const [activeRow, setActiveRow] = useState<AdminRound2SubmissionRow | null>(null);
   useAdminTitleScroll();
 
@@ -565,6 +569,18 @@ export function AdminRound2SubmissionsManager() {
   } = useAdminTablePagination(filteredRows, ADMIN_LIST_TABLE_PAGE_SIZE);
 
   const canDeleteSubmission = currentUser.role === "admin";
+  const selectedRows = useMemo(
+    () => filteredRows.filter((row) => selectedSubmissionIds.includes(row.submissionId)),
+    [filteredRows, selectedSubmissionIds],
+  );
+
+  function toggleSubmissionSelection(submissionId: string, checked: boolean) {
+    setSelectedSubmissionIds((current) =>
+      checked
+        ? current.includes(submissionId) ? current : [...current, submissionId]
+        : current.filter((id) => id !== submissionId),
+    );
+  }
 
   const deleteSubmission = async (row: AdminRound2SubmissionRow) => {
     const confirmed = window.confirm(
@@ -607,6 +623,30 @@ export function AdminRound2SubmissionsManager() {
       setDeletingSubmissionId(null);
     }
   };
+
+  async function deleteSelectedSubmissions() {
+    setBatchDeleting(true);
+    try {
+      for (const row of selectedRows) {
+        const response = await fetch(`/api/admin/round-2/submissions/${row.submissionId}`, {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        if (!response.ok) {
+          throw new Error(payload?.error ?? (locale === "en" ? "Could not delete selected submissions." : "Không thể xóa các bài nộp đã chọn."));
+        }
+      }
+
+      setSelectedSubmissionIds([]);
+      setBatchDeleteOpen(false);
+      await load();
+    } catch (nextError) {
+      window.alert(nextError instanceof Error ? nextError.message : locale === "en" ? "Could not delete selected submissions." : "Không thể xóa các bài nộp đã chọn.");
+    } finally {
+      setBatchDeleting(false);
+    }
+  }
 
   if (loading) {
     return <LoadingState locale={locale} />;
@@ -665,6 +705,17 @@ export function AdminRound2SubmissionsManager() {
             <Download className="h-4 w-4" />
             {locale === "en" ? "Export round2-submissions.xlsx" : "Xuất round2-submissions.xlsx"}
           </button>
+          {canDeleteSubmission ? (
+            <button
+              type="button"
+              onClick={() => setBatchDeleteOpen(true)}
+              disabled={selectedRows.length === 0 || batchDeleting}
+              className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Trash2 className="h-4 w-4" />
+              {locale === "en" ? "Delete selected" : "Xóa bài đã chọn"}
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -726,6 +777,17 @@ export function AdminRound2SubmissionsManager() {
           <table className="min-w-[1220px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
+                {canDeleteSubmission ? (
+                  <th className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={filteredRows.length > 0 && filteredRows.every((row) => selectedSubmissionIds.includes(row.submissionId))}
+                      onChange={(event) => setSelectedSubmissionIds(event.target.checked ? filteredRows.map((row) => row.submissionId) : [])}
+                      aria-label={locale === "en" ? "Select all visible submissions" : "Chọn tất cả bài đang hiển thị"}
+                      className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                    />
+                  </th>
+                ) : null}
                 {[
                   "#",
                   locale === "en" ? "Team" : "Đội",
@@ -759,6 +821,17 @@ export function AdminRound2SubmissionsManager() {
             <tbody>
               {paginatedRows.map((row, index) => (
                 <tr key={row.submissionId} className="border-b theme-border last:border-b-0">
+                  {canDeleteSubmission ? (
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedSubmissionIds.includes(row.submissionId)}
+                        onChange={(event) => toggleSubmissionSelection(row.submissionId, event.target.checked)}
+                        aria-label={locale === "en" ? "Select submission" : "Chọn bài nộp"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                      />
+                    </td>
+                  ) : null}
                   <td
                     style={{ left: 0, width: 72, minWidth: 72 }}
                     className={cn("px-4 py-4 text-xs font-semibold theme-text-soft", stickyFirstColumnClass)}
@@ -844,6 +917,21 @@ export function AdminRound2SubmissionsManager() {
           onSaved={load}
         />
       ) : null}
+      <AdminBulkDeleteDialog
+        open={batchDeleteOpen}
+        locale={locale}
+        title={locale === "en" ? "Delete selected Round 2 submissions?" : "Xóa các bài nộp Vòng 2 đã chọn?"}
+        description={
+          locale === "en"
+            ? "Selected Round 2 submission records and uploaded PDFs will be removed permanently."
+            : "Các bài nộp Vòng 2 đã chọn và tệp PDF đã tải lên sẽ bị xóa vĩnh viễn."
+        }
+        items={selectedRows.map((row) => `${row.teamName} · ${row.title}`)}
+        confirmLabel={locale === "en" ? "Delete selected submissions" : "Xóa các bài đã chọn"}
+        busy={batchDeleting}
+        onClose={() => setBatchDeleteOpen(false)}
+        onConfirm={() => void deleteSelectedSubmissions()}
+      />
     </div>
   );
 }

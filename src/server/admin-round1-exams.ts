@@ -388,3 +388,47 @@ export async function deleteAdminRound1ExamRecord(
     deletedAttempt: Boolean(attemptId),
   });
 }
+
+export async function clearAdminRound1EssayScore(
+  submissionId: string,
+): Promise<ServiceResult<{ submissionId: string }>> {
+  const submission = await prisma.round1Submission.findUnique({
+    where: { id: submissionId },
+    select: { id: true, bankId: true, answers: true, rightCount: true, essayScore: true },
+  });
+
+  if (!submission) {
+    return fail(404, "Round 1 submission not found.");
+  }
+
+  const archive = await ensureRound1SubmissionArchive({
+    id: submission.id,
+    bankId: submission.bankId,
+    answers: submission.answers,
+    rightCount: submission.rightCount,
+    essayScore: submission.essayScore,
+  });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.round1JudgeReview.deleteMany({
+      where: { submissionId },
+    });
+    await tx.round1AiEssayReview.deleteMany({
+      where: { submissionId },
+    });
+    await tx.round1Submission.update({
+      where: { id: submissionId },
+      data: {
+        essayScore: null,
+        totalScore: null,
+        answers: JSON.stringify({
+          questions: archive.questions,
+          answers: archive.answers,
+          essayQuestionScores: {},
+        }),
+      },
+    });
+  });
+
+  return ok({ submissionId });
+}

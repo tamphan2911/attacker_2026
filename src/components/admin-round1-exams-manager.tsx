@@ -32,6 +32,7 @@ import {
   AdminTablePagination,
   useAdminTablePagination,
 } from "@/components/admin-table-pagination";
+import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { PageIntro, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { pickRoundLabel } from "@/lib/competition";
@@ -340,6 +341,9 @@ export function AdminRound1ExamList() {
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const [deleteCandidate, setDeleteCandidate] = useState<AdminRound1ExamListRow | null>(null);
   const [deleteError, setDeleteError] = useState("");
+  const [selectedAttemptUserIds, setSelectedAttemptUserIds] = useState<string[]>([]);
+  const [bulkDialog, setBulkDialog] = useState<"selected" | "all" | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [aiOverview, setAiOverview] = useState<Round1AiScoringOverview | null>(null);
   const [aiActionLoading, setAiActionLoading] = useState<"run-all" | "retry-failed" | null>(null);
   const [aiError, setAiError] = useState("");
@@ -655,6 +659,66 @@ export function AdminRound1ExamList() {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(sortedRows, ADMIN_LIST_TABLE_PAGE_SIZE);
+  const selectableRows = useMemo(
+    () => sortedRows.filter((row) => row.detailAvailable),
+    [sortedRows],
+  );
+  const selectedRows = useMemo(
+    () => selectableRows.filter((row) => selectedAttemptUserIds.includes(row.userId)),
+    [selectableRows, selectedAttemptUserIds],
+  );
+
+  const toggleAttemptSelection = (userId: string, checked: boolean) => {
+    setSelectedAttemptUserIds((current) =>
+      checked
+        ? current.includes(userId)
+          ? current
+          : [...current, userId]
+        : current.filter((id) => id !== userId),
+    );
+  };
+
+  const deleteAttemptRows = async (rowsToDelete: AdminRound1ExamListRow[]) => {
+    if (rowsToDelete.length === 0) {
+      return;
+    }
+
+    try {
+      setBulkDeleting(true);
+      setDeleteError("");
+      for (const row of rowsToDelete) {
+        const response = await fetch(`/api/admin/round-1/exams/${row.userId}`, {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+        if (!response.ok) {
+          throw new Error(
+            payload?.error ??
+              (locale === "en"
+                ? "Could not delete selected Round 1 attempts."
+                : "Không thể xóa các lượt thi Vòng 1 đã chọn."),
+          );
+        }
+      }
+
+      setSelectedAttemptUserIds([]);
+      setBulkDialog(null);
+      await load();
+      await refreshWorkspace();
+    } catch (nextError) {
+      setDeleteError(
+        nextError instanceof Error
+          ? nextError.message
+          : locale === "en"
+            ? "Could not delete selected Round 1 attempts."
+            : "Không thể xóa các lượt thi Vòng 1 đã chọn.",
+      );
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
 
   useEffect(() => {
     setPage(1);
@@ -694,9 +758,33 @@ export function AdminRound1ExamList() {
               : "Liệt kê mọi thí sinh đủ điều kiện đã hoặc có thể vào bài thi Vòng 1 chính thức, kèm trạng thái hiện tại và liên kết đi sâu vào đề thi đã lưu."}
           </p>
         </div>
-        <StatusPill tone="info">
-          {locale === "en" ? `${rows.length} eligible exams` : `${rows.length} bài thi đủ điều kiện`}
-        </StatusPill>
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusPill tone="info">
+            {locale === "en" ? `${rows.length} eligible exams` : `${rows.length} bài thi đủ điều kiện`}
+          </StatusPill>
+          {canDeleteAttempt ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setBulkDialog("selected")}
+                disabled={selectedRows.length === 0 || bulkDeleting}
+                className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <Trash2 className="h-4 w-4" />
+                {locale === "en" ? "Delete selected" : "Xóa lượt đã chọn"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setBulkDialog("all")}
+                disabled={selectableRows.length === 0 || bulkDeleting}
+                className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                <Trash2 className="h-4 w-4" />
+                {locale === "en" ? "Delete all attempts" : "Xóa tất cả lượt thi"}
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
 
       <Surface className="px-5 py-5 md:px-6">
@@ -869,6 +957,24 @@ export function AdminRound1ExamList() {
           <table className="min-w-[1520px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
+                {canDeleteAttempt ? (
+                  <th className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectableRows.length > 0 &&
+                        selectableRows.every((row) => selectedAttemptUserIds.includes(row.userId))
+                      }
+                      onChange={(event) =>
+                        setSelectedAttemptUserIds(
+                          event.target.checked ? selectableRows.map((row) => row.userId) : [],
+                        )
+                      }
+                      aria-label={locale === "en" ? "Select all visible attempts" : "Chọn tất cả lượt thi đang hiển thị"}
+                      className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                    />
+                  </th>
+                ) : null}
                 <th
                   style={{ left: 0, width: 72, minWidth: 72 }}
                   className={cn("px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]", stickyFirstHeadClass)}
@@ -958,6 +1064,18 @@ export function AdminRound1ExamList() {
             <tbody>
               {paginatedRows.map((row, index) => (
                 <tr key={row.userId} className="border-b theme-border last:border-b-0">
+                  {canDeleteAttempt ? (
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedAttemptUserIds.includes(row.userId)}
+                        onChange={(event) => toggleAttemptSelection(row.userId, event.target.checked)}
+                        disabled={!row.detailAvailable}
+                        aria-label={locale === "en" ? "Select attempt" : "Chọn lượt thi"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-35"
+                      />
+                    </td>
+                  ) : null}
                   <td
                     style={{ left: 0, width: 72, minWidth: 72 }}
                     className={cn("px-4 py-4 font-medium theme-text-soft", stickyFirstColumnClass)}
@@ -1224,6 +1342,46 @@ export function AdminRound1ExamList() {
           </div>
         </div>
       ) : null}
+      <AdminBulkDeleteDialog
+        open={Boolean(bulkDialog)}
+        locale={locale}
+        title={
+          bulkDialog === "all"
+            ? locale === "en"
+              ? "Delete all visible Round 1 attempts?"
+              : "Xóa tất cả lượt thi Vòng 1 đang hiển thị?"
+            : locale === "en"
+              ? "Delete selected Round 1 attempts?"
+              : "Xóa các lượt thi Vòng 1 đã chọn?"
+        }
+        description={
+          bulkDialog === "all"
+            ? locale === "en"
+              ? "This password-protected action removes every saved Round 1 attempt currently matching the filters, including answers, essay scores, and judge reviews."
+              : "Thao tác có mật khẩu này xóa mọi lượt thi Vòng 1 đang khớp bộ lọc, bao gồm câu trả lời, điểm tự luận và phiếu chấm."
+            : locale === "en"
+              ? "The selected saved attempts, answers, essay scores, and judge reviews will be deleted permanently."
+              : "Các lượt thi đã chọn, câu trả lời, điểm tự luận và phiếu chấm liên quan sẽ bị xóa vĩnh viễn."
+        }
+        items={(bulkDialog === "all" ? selectableRows : selectedRows).map((row) => `${row.name} · ${row.teamName}`)}
+        confirmLabel={
+          bulkDialog === "all"
+            ? locale === "en"
+              ? "Delete all attempts"
+              : "Xóa tất cả lượt thi"
+            : locale === "en"
+              ? "Delete selected attempts"
+              : "Xóa lượt đã chọn"
+        }
+        busy={bulkDeleting}
+        passwordRequired={bulkDialog === "all"}
+        onClose={() => {
+          if (!bulkDeleting) {
+            setBulkDialog(null);
+          }
+        }}
+        onConfirm={() => void deleteAttemptRows(bulkDialog === "all" ? selectableRows : selectedRows)}
+      />
     </div>
   );
 }

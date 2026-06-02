@@ -15,6 +15,7 @@ import {
   AdminTablePagination,
   useAdminTablePagination,
 } from "@/components/admin-table-pagination";
+import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import type { ForumThread, ForumThreadCategory } from "@/types/site";
@@ -108,6 +109,9 @@ export function AdminForumManager() {
   const [statusFilter, setStatusFilter] = useState<ThreadStatusFilter>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [isDeletingSlug, setIsDeletingSlug] = useState("");
+  const [selectedThreadSlugs, setSelectedThreadSlugs] = useState<string[]>([]);
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  const [batchDeleting, setBatchDeleting] = useState(false);
   const [pendingDeleteThread, setPendingDeleteThread] = useState<ForumThread | null>(null);
   const [error, setError] = useState("");
 
@@ -188,6 +192,31 @@ export function AdminForumManager() {
     paginatedRows,
     startIndex,
   } = useAdminTablePagination(filteredThreads, ADMIN_LIST_TABLE_PAGE_SIZE);
+  const selectedThreads = filteredThreads.filter((thread) => selectedThreadSlugs.includes(thread.slug));
+
+  async function handleDeleteThreads(rowsToDelete: ForumThread[]) {
+    setBatchDeleting(true);
+    setError("");
+    try {
+      for (const thread of rowsToDelete) {
+        const response = await fetch(`/api/admin/forum/threads/${thread.slug}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        if (!response.ok) {
+          throw new Error(payload?.error ?? "Could not delete selected forum threads.");
+        }
+      }
+      setThreads((current) => current.filter((item) => !rowsToDelete.some((row) => row.slug === item.slug)));
+      setSelectedThreadSlugs([]);
+      setBatchDeleteOpen(false);
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Could not delete selected forum threads.");
+    } finally {
+      setBatchDeleting(false);
+    }
+  }
 
   async function handleDeleteThread(thread: ForumThread) {
     setIsDeletingSlug(thread.slug);
@@ -275,12 +304,32 @@ export function AdminForumManager() {
               {error}
             </div>
           ) : null}
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setBatchDeleteOpen(true)}
+              disabled={selectedThreads.length === 0 || batchDeleting}
+              className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Trash2 className="h-4 w-4" />
+              {locale === "en" ? "Delete selected" : "Xóa đã chọn"}
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[980px] text-left text-sm">
             <thead className="border-b theme-border theme-panel-subtle">
               <tr className="text-xs uppercase tracking-[0.18em] theme-text-soft">
+                <th className="px-4 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={filteredThreads.length > 0 && filteredThreads.every((thread) => selectedThreadSlugs.includes(thread.slug))}
+                    onChange={(event) => setSelectedThreadSlugs(event.target.checked ? filteredThreads.map((thread) => thread.slug) : [])}
+                    aria-label={locale === "en" ? "Select all visible threads" : "Chọn tất cả chủ đề đang hiển thị"}
+                    className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                  />
+                </th>
                 <th
                   style={{ left: 0, width: 72, minWidth: 72 }}
                   className={cn("px-4 py-3 text-center", stickyFirstHeadClass)}
@@ -304,7 +353,7 @@ export function AdminForumManager() {
             <tbody className="divide-y divide-slate-900/10 dark:divide-white/10">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center">
+                  <td colSpan={9} className="px-4 py-10 text-center">
                     <span className="inline-flex items-center gap-3 text-sm theme-text-body">
                       <LoaderCircle className="h-4 w-4 animate-spin theme-accent" />
                       {locale === "en" ? "Loading forum threads..." : "Đang tải chủ đề forum..."}
@@ -313,13 +362,28 @@ export function AdminForumManager() {
                 </tr>
               ) : paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm theme-text-muted">
+                  <td colSpan={9} className="px-4 py-10 text-center text-sm theme-text-muted">
                     {locale === "en" ? "No forum thread matches the current filters." : "Không có chủ đề nào khớp bộ lọc hiện tại."}
                   </td>
                 </tr>
               ) : (
                 paginatedRows.map((thread, index) => (
                   <tr key={thread.id} className="transition hover:bg-[rgba(23,114,208,0.05)]">
+                    <td className="px-4 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedThreadSlugs.includes(thread.slug)}
+                        onChange={(event) =>
+                          setSelectedThreadSlugs((current) =>
+                            event.target.checked
+                              ? current.includes(thread.slug) ? current : [...current, thread.slug]
+                              : current.filter((slug) => slug !== thread.slug),
+                          )
+                        }
+                        aria-label={locale === "en" ? "Select forum thread" : "Chọn chủ đề forum"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                      />
+                    </td>
                     <td
                       style={{ left: 0, width: 72, minWidth: 72 }}
                       className={cn("px-4 py-3 text-center font-semibold theme-text-soft", stickyFirstColumnClass)}
@@ -429,6 +493,21 @@ export function AdminForumManager() {
           </div>
         </div>
       ) : null}
+      <AdminBulkDeleteDialog
+        open={batchDeleteOpen}
+        locale={locale}
+        title={locale === "en" ? "Delete selected forum threads?" : "Xóa các chủ đề forum đã chọn?"}
+        description={
+          locale === "en"
+            ? "This removes the selected forum threads and all replies."
+            : "Thao tác này xóa các chủ đề forum đã chọn và toàn bộ phản hồi."
+        }
+        items={selectedThreads.map((thread) => thread.title)}
+        confirmLabel={locale === "en" ? "Delete threads" : "Xóa chủ đề"}
+        busy={batchDeleting}
+        onClose={() => setBatchDeleteOpen(false)}
+        onConfirm={() => void handleDeleteThreads(selectedThreads)}
+      />
     </div>
   );
 }

@@ -14,8 +14,10 @@ import {
   LoaderCircle,
   Save,
   Search,
+  Trash2,
 } from "lucide-react";
 
+import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
   ADMIN_LIST_TABLE_PAGE_SIZE,
@@ -360,6 +362,9 @@ export function AdminRound2ScoresManager() {
   const [statusFilter, setStatusFilter] = useState<"all" | AdminRound2ScoreStatus>("all");
   const [sortKey, setSortKey] = useState<Round2SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [selectedSubmissionIds, setSelectedSubmissionIds] = useState<string[]>([]);
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  const [batchDeleting, setBatchDeleting] = useState(false);
   useAdminTitleScroll();
 
   const loadData = useCallback(async () => {
@@ -572,6 +577,42 @@ export function AdminRound2ScoresManager() {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(sortedRows, ADMIN_LIST_TABLE_PAGE_SIZE);
+  const selectedRows = useMemo(
+    () => sortedRows.filter((row) => selectedSubmissionIds.includes(row.submissionId)),
+    [selectedSubmissionIds, sortedRows],
+  );
+
+  function toggleScoreSelection(submissionId: string, checked: boolean) {
+    setSelectedSubmissionIds((current) =>
+      checked
+        ? current.includes(submissionId) ? current : [...current, submissionId]
+        : current.filter((id) => id !== submissionId),
+    );
+  }
+
+  async function deleteSelectedScores() {
+    setBatchDeleting(true);
+    setError("");
+    try {
+      for (const row of selectedRows) {
+        const response = await fetch(`/api/admin/round-2/scores/${row.submissionId}`, {
+          method: "DELETE",
+          credentials: "same-origin",
+        });
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        if (!response.ok) {
+          throw new Error(payload?.error ?? (locale === "en" ? "Could not delete selected score rows." : "Không thể xóa các dòng điểm đã chọn."));
+        }
+      }
+      setSelectedSubmissionIds([]);
+      setBatchDeleteOpen(false);
+      await loadData();
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected error." : "Có lỗi bất ngờ.");
+    } finally {
+      setBatchDeleting(false);
+    }
+  }
 
   useEffect(() => {
     setPage(1);
@@ -598,9 +639,20 @@ export function AdminRound2ScoresManager() {
               : "Theo dõi bài nộp Vòng 2 mới nhất của từng đội, hai giám khảo được tự động phân công và điểm được lưu từ tài khoản giám khảo."}
           </p>
         </div>
-        <StatusPill tone="info">
-          {locale === "en" ? `${rows.length} teams` : `${rows.length} đội`}
-        </StatusPill>
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusPill tone="info">
+            {locale === "en" ? `${rows.length} teams` : `${rows.length} đội`}
+          </StatusPill>
+          <button
+            type="button"
+            onClick={() => setBatchDeleteOpen(true)}
+            disabled={selectedRows.length === 0 || batchDeleting}
+            className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <Trash2 className="h-4 w-4" />
+            {locale === "en" ? "Delete selected scores" : "Xóa điểm đã chọn"}
+          </button>
+        </div>
       </div>
 
       <Surface className="px-5 py-4 md:px-6">
@@ -668,6 +720,15 @@ export function AdminRound2ScoresManager() {
           <table className="min-w-[1480px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
+                <th className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={sortedRows.length > 0 && sortedRows.every((row) => selectedSubmissionIds.includes(row.submissionId))}
+                    onChange={(event) => setSelectedSubmissionIds(event.target.checked ? sortedRows.map((row) => row.submissionId) : [])}
+                    aria-label={locale === "en" ? "Select all visible score rows" : "Chọn tất cả dòng điểm đang hiển thị"}
+                    className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                  />
+                </th>
                 <th
                   style={{ left: 0, width: 72, minWidth: 72 }}
                   className={cn("px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]", stickyFirstHeadClass)}
@@ -755,6 +816,15 @@ export function AdminRound2ScoresManager() {
 
                 return (
                   <tr key={row.submissionId} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedSubmissionIds.includes(row.submissionId)}
+                        onChange={(event) => toggleScoreSelection(row.submissionId, event.target.checked)}
+                        aria-label={locale === "en" ? "Select score row" : "Chọn dòng điểm"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                      />
+                    </td>
                     <td
                       style={{ left: 0, width: 72, minWidth: 72 }}
                       className={cn("px-4 py-4 font-medium theme-text-soft", stickyFirstColumnClass)}
@@ -899,6 +969,21 @@ export function AdminRound2ScoresManager() {
           onPageChange={setPage}
         />
       </Surface>
+      <AdminBulkDeleteDialog
+        open={batchDeleteOpen}
+        locale={locale}
+        title={locale === "en" ? "Delete selected Round 2 scores?" : "Xóa điểm Vòng 2 đã chọn?"}
+        description={
+          locale === "en"
+            ? "This removes the judge review score records for the selected Round 2 rows. Submission files stay untouched."
+            : "Thao tác này xóa dữ liệu điểm/phiếu chấm của các dòng Vòng 2 đã chọn. Tệp bài nộp không bị xóa."
+        }
+        items={selectedRows.map((row) => `${row.teamName} · ${row.title}`)}
+        confirmLabel={locale === "en" ? "Delete selected scores" : "Xóa điểm đã chọn"}
+        busy={batchDeleting}
+        onClose={() => setBatchDeleteOpen(false)}
+        onConfirm={() => void deleteSelectedScores()}
+      />
     </div>
   );
 }

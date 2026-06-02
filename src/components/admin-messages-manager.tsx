@@ -16,6 +16,7 @@ import {
   AdminTablePagination,
   useAdminTablePagination,
 } from "@/components/admin-table-pagination";
+import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import type { Locale } from "@/types/site";
@@ -163,6 +164,9 @@ export function AdminMessagesManager() {
   const [messageStateFilter, setMessageStateFilter] = useState<MessageStateFilter>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [isDeletingId, setIsDeletingId] = useState("");
+  const [selectedConversationIds, setSelectedConversationIds] = useState<string[]>([]);
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  const [batchDeleting, setBatchDeleting] = useState(false);
   const [pendingDeleteConversation, setPendingDeleteConversation] = useState<AdminConversationRow | null>(null);
   const [error, setError] = useState("");
 
@@ -265,6 +269,34 @@ export function AdminMessagesManager() {
     paginatedRows,
     startIndex,
   } = useAdminTablePagination(filteredConversations, ADMIN_LIST_TABLE_PAGE_SIZE);
+  const selectedConversations = filteredConversations.filter((conversation) => selectedConversationIds.includes(conversation.id));
+
+  async function deleteConversations(rowsToDelete: AdminConversationRow[]) {
+    setBatchDeleting(true);
+    setError("");
+    try {
+      for (const conversation of rowsToDelete) {
+        const response = await fetch(`/api/admin/messages/${conversation.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+        if (!response.ok) {
+          throw new Error(payload?.error ?? "Could not delete selected conversations.");
+        }
+      }
+
+      setConversations((current) => current.filter((item) => !rowsToDelete.some((row) => row.id === item.id)));
+      setSelectedConversationIds([]);
+      setBatchDeleteOpen(false);
+      window.dispatchEvent(new Event("attacker-messages-refresh"));
+      window.dispatchEvent(new Event("attacker-notifications-refresh"));
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Could not delete selected conversations.");
+    } finally {
+      setBatchDeleting(false);
+    }
+  }
 
   useEffect(() => {
     setPage(1);
@@ -380,12 +412,32 @@ export function AdminMessagesManager() {
               {error}
             </div>
           ) : null}
+          <div className="mt-4 flex justify-end">
+            <button
+              type="button"
+              onClick={() => setBatchDeleteOpen(true)}
+              disabled={selectedConversations.length === 0 || batchDeleting}
+              className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Trash2 className="h-4 w-4" />
+              {locale === "en" ? "Delete selected" : "Xóa đã chọn"}
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1180px] text-left text-sm">
             <thead className="border-b theme-border theme-panel-subtle">
               <tr className="text-xs uppercase tracking-[0.18em] theme-text-soft">
+                <th className="px-4 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={filteredConversations.length > 0 && filteredConversations.every((conversation) => selectedConversationIds.includes(conversation.id))}
+                    onChange={(event) => setSelectedConversationIds(event.target.checked ? filteredConversations.map((conversation) => conversation.id) : [])}
+                    aria-label={locale === "en" ? "Select all visible conversations" : "Chọn tất cả cuộc trò chuyện đang hiển thị"}
+                    className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                  />
+                </th>
                 <th
                   style={{ left: 0, width: 72, minWidth: 72 }}
                   className={cn("px-4 py-3 text-center", stickyFirstHeadClass)}
@@ -409,7 +461,7 @@ export function AdminMessagesManager() {
             <tbody className="divide-y divide-slate-900/10 dark:divide-white/10">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center">
+                  <td colSpan={9} className="px-4 py-10 text-center">
                     <span className="inline-flex items-center gap-3 text-sm theme-text-body">
                       <LoaderCircle className="h-4 w-4 animate-spin theme-accent" />
                       {locale === "en" ? "Loading conversations..." : "Đang tải cuộc trò chuyện..."}
@@ -418,7 +470,7 @@ export function AdminMessagesManager() {
                 </tr>
               ) : paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm theme-text-muted">
+                  <td colSpan={9} className="px-4 py-10 text-center text-sm theme-text-muted">
                     {locale === "en"
                       ? "No conversation matches the current filters."
                       : "Không có cuộc trò chuyện nào khớp bộ lọc hiện tại."}
@@ -427,6 +479,21 @@ export function AdminMessagesManager() {
               ) : (
                 paginatedRows.map((conversation, index) => (
                   <tr key={conversation.id} className="transition hover:bg-[rgba(23,114,208,0.05)]">
+                    <td className="px-4 py-3 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedConversationIds.includes(conversation.id)}
+                        onChange={(event) =>
+                          setSelectedConversationIds((current) =>
+                            event.target.checked
+                              ? current.includes(conversation.id) ? current : [...current, conversation.id]
+                              : current.filter((id) => id !== conversation.id),
+                          )
+                        }
+                        aria-label={locale === "en" ? "Select conversation" : "Chọn cuộc trò chuyện"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                      />
+                    </td>
                     <td
                       style={{ left: 0, width: 72, minWidth: 72 }}
                       className={cn("px-4 py-3 text-center font-semibold theme-text-soft", stickyFirstColumnClass)}
@@ -609,6 +676,21 @@ export function AdminMessagesManager() {
           </div>
         </div>
       ) : null}
+      <AdminBulkDeleteDialog
+        open={batchDeleteOpen}
+        locale={locale}
+        title={locale === "en" ? "Delete selected conversations?" : "Xóa các cuộc trò chuyện đã chọn?"}
+        description={
+          locale === "en"
+            ? "This removes the selected conversations and their messages from the admin message center."
+            : "Thao tác này xóa các cuộc trò chuyện đã chọn và tin nhắn liên quan khỏi trung tâm tin nhắn admin."
+        }
+        items={selectedConversations.map((conversation) => summarizeParticipants(locale, conversation))}
+        confirmLabel={locale === "en" ? "Delete conversations" : "Xóa cuộc trò chuyện"}
+        busy={batchDeleting}
+        onClose={() => setBatchDeleteOpen(false)}
+        onConfirm={() => void deleteConversations(selectedConversations)}
+      />
     </div>
   );
 }

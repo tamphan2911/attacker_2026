@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
-import { saveAdminRound2ScoreRow } from "@/server/admin-round2-scores";
+import { getCurrentDbUser, hasAdminRole, hasElevatedRole } from "@/server/auth-helpers";
+import { deleteAdminRound2ScoreRow, saveAdminRound2ScoreRow } from "@/server/admin-round2-scores";
 
 const payloadSchema = z.object({
   judges: z
@@ -32,4 +32,22 @@ export async function PUT(
   const { submissionId } = await context.params;
   const result = await saveAdminRound2ScoreRow(submissionId, payload.data);
   return NextResponse.json({ error: result.error }, { status: result.status });
+}
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ submissionId: string }> },
+) {
+  const user = await getCurrentDbUser();
+  if (!user || !hasAdminRole(user.role)) {
+    return NextResponse.json({ error: "Only admin accounts can delete Round 2 scores." }, { status: 403 });
+  }
+
+  const { submissionId } = await context.params;
+  const result = await deleteAdminRound2ScoreRow(submissionId);
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  return NextResponse.json(result.data, { status: result.status });
 }

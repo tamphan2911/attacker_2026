@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
+import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import {
   ADMIN_LIST_TABLE_PAGE_SIZE,
   AdminTablePagination,
@@ -170,12 +171,14 @@ function TableHeader({
   description,
   exportLabel,
   onExport,
+  actions,
 }: {
   id?: string;
   title: string;
   description: string;
   exportLabel: string;
   onExport: () => void;
+  actions?: ReactNode;
 }) {
   return (
     <div
@@ -186,14 +189,17 @@ function TableHeader({
         <p className="theme-heading text-3xl font-semibold theme-text-strong">{title}</p>
         <p className="mt-3 text-sm leading-7 theme-text-muted">{description}</p>
       </div>
-      <button
-        type="button"
-        onClick={onExport}
-        className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-      >
-        <Download className="h-4 w-4" />
-        {exportLabel}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        {actions}
+        <button
+          type="button"
+          onClick={onExport}
+          className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+        >
+          <Download className="h-4 w-4" />
+          {exportLabel}
+        </button>
+      </div>
     </div>
   );
 }
@@ -261,6 +267,9 @@ function UsersTableSection() {
     email: string;
     teamName: string;
   } | null>(null);
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
+  const [bulkDialog, setBulkDialog] = useState<"selected" | "all" | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const userRows = useMemo(
     () =>
@@ -360,6 +369,20 @@ function UsersTableSection() {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(filteredRows, ADMIN_LIST_TABLE_PAGE_SIZE);
+  const selectedRows = filteredRows.filter((row) => selectedUserIds.includes(row.id));
+
+  async function deleteUserRows(rowsToDelete: typeof filteredRows) {
+    setBulkDeleting(true);
+    try {
+      for (const row of rowsToDelete) {
+        await deleteUserByAdmin(row.id);
+      }
+      setSelectedUserIds([]);
+      setBulkDialog(null);
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
 
   useEffect(() => {
     if (!deleteCandidate) {
@@ -388,6 +411,28 @@ function UsersTableSection() {
         }
         exportLabel={locale === "en" ? "Export participants.xlsx" : "Xuất participants.xlsx"}
         onExport={() => exportRowsToWorkbook("attacker-2026-participants.xlsx", "Participants", rows)}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => setBulkDialog("selected")}
+              disabled={selectedRows.length === 0 || bulkDeleting}
+              className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Trash2 className="h-4 w-4" />
+              {locale === "en" ? "Delete selected" : "Xóa đã chọn"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkDialog("all")}
+              disabled={filteredRows.length === 0 || bulkDeleting}
+              className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Trash2 className="h-4 w-4" />
+              {locale === "en" ? "Delete all users" : "Xóa tất cả người dùng"}
+            </button>
+          </>
+        }
       />
 
       <Surface className="overflow-hidden">
@@ -395,6 +440,15 @@ function UsersTableSection() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
+                <th className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={filteredRows.length > 0 && filteredRows.every((row) => selectedUserIds.includes(row.id))}
+                    onChange={(event) => setSelectedUserIds(event.target.checked ? filteredRows.map((row) => row.id) : [])}
+                    aria-label={locale === "en" ? "Select all visible users" : "Chọn tất cả người dùng đang hiển thị"}
+                    className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                  />
+                </th>
                 {[
                   "#",
                   locale === "en" ? "Name" : "Họ tên",
@@ -430,6 +484,7 @@ function UsersTableSection() {
                 ))}
               </tr>
               <tr className="border-t theme-border bg-[var(--panel)]">
+                <th className="px-4 py-3" />
                 <th style={{ left: 0, width: 72, minWidth: 72 }} className={cn("px-4 py-3", firstStickyFilterClass)} />
                 <th style={{ left: 72, minWidth: 260 }} className={cn("px-4 py-3", secondStickyFilterClass)}>
                   <TableFilterField
@@ -525,6 +580,21 @@ function UsersTableSection() {
               {paginatedRows.map((row, index) => {
                 return (
                   <tr key={row.id} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedUserIds.includes(row.id)}
+                        onChange={(event) =>
+                          setSelectedUserIds((current) =>
+                            event.target.checked
+                              ? current.includes(row.id) ? current : [...current, row.id]
+                              : current.filter((id) => id !== row.id),
+                          )
+                        }
+                        aria-label={locale === "en" ? "Select user" : "Chọn người dùng"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                      />
+                    </td>
                     <td
                       style={{ left: 0, width: 72, minWidth: 72 }}
                       className={cn("px-4 py-4 text-xs font-semibold theme-text-soft", firstStickyColumnClass)}
@@ -684,6 +754,30 @@ function UsersTableSection() {
           </div>
         </div>
       ) : null}
+      <AdminBulkDeleteDialog
+        open={bulkDialog !== null}
+        locale={locale}
+        title={
+          bulkDialog === "all"
+            ? locale === "en" ? "Delete all visible users?" : "Xóa tất cả người dùng đang hiển thị?"
+            : locale === "en" ? "Delete selected users?" : "Xóa người dùng đã chọn?"
+        }
+        description={
+          bulkDialog === "all"
+            ? locale === "en"
+              ? "This deletes every user matching the current filters. This action requires the delete-all password."
+              : "Thao tác này xóa mọi người dùng khớp bộ lọc hiện tại và yêu cầu mật khẩu xác nhận xóa tất cả."
+            : locale === "en"
+              ? "This deletes the selected participant accounts and related admin data."
+              : "Thao tác này xóa các tài khoản thí sinh đã chọn và dữ liệu admin liên quan."
+        }
+        items={(bulkDialog === "all" ? filteredRows : selectedRows).map((row) => `${row.name} · ${row.email}`)}
+        confirmLabel={locale === "en" ? "Delete users" : "Xóa người dùng"}
+        busy={bulkDeleting}
+        passwordRequired={bulkDialog === "all"}
+        onClose={() => setBulkDialog(null)}
+        onConfirm={() => void deleteUserRows(bulkDialog === "all" ? filteredRows : selectedRows)}
+      />
     </div>
   );
 }
@@ -697,6 +791,9 @@ function TeamsTableSection() {
   const secondStickyHeadClass = "theme-admin-sticky-head sticky z-20";
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState<"all" | "round-1" | "round-2" | "round-3">("all");
+  const [selectedTeamIds, setSelectedTeamIds] = useState<string[]>([]);
+  const [bulkDialog, setBulkDialog] = useState<"selected" | "all" | null>(null);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const rows = useMemo(
     () =>
@@ -761,6 +858,20 @@ function TeamsTableSection() {
     startIndex,
     paginatedRows,
   } = useAdminTablePagination(filteredRows, ADMIN_LIST_TABLE_PAGE_SIZE);
+  const selectedRows = filteredRows.filter((row) => selectedTeamIds.includes(row.id));
+
+  async function deleteTeamRows(rowsToDelete: typeof filteredRows) {
+    setBulkDeleting(true);
+    try {
+      for (const row of rowsToDelete) {
+        await deleteTeamByAdmin(row.id);
+      }
+      setSelectedTeamIds([]);
+      setBulkDialog(null);
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -774,6 +885,28 @@ function TeamsTableSection() {
         }
         exportLabel={locale === "en" ? "Export teams.xlsx" : "Xuất teams.xlsx"}
         onExport={() => exportRowsToWorkbook("attacker-2026-teams.xlsx", "Teams", exportRows)}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => setBulkDialog("selected")}
+              disabled={selectedRows.length === 0 || bulkDeleting}
+              className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Trash2 className="h-4 w-4" />
+              {locale === "en" ? "Delete selected" : "Xóa đã chọn"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkDialog("all")}
+              disabled={filteredRows.length === 0 || bulkDeleting}
+              className="theme-button-danger inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <Trash2 className="h-4 w-4" />
+              {locale === "en" ? "Delete all teams" : "Xóa tất cả đội"}
+            </button>
+          </>
+        }
       />
 
       <Surface className="px-5 py-5 md:px-6">
@@ -819,6 +952,15 @@ function TeamsTableSection() {
           <table className="min-w-full text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
+                <th className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={filteredRows.length > 0 && filteredRows.every((row) => selectedTeamIds.includes(row.id))}
+                    onChange={(event) => setSelectedTeamIds(event.target.checked ? filteredRows.map((row) => row.id) : [])}
+                    aria-label={locale === "en" ? "Select all visible teams" : "Chọn tất cả đội đang hiển thị"}
+                    className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                  />
+                </th>
                 {["#", "Team", "Tag", "Leader", "Members", "Status", "Stage", "Keyword", "Created", "Action"].map((label) => (
                   <th
                     key={label}
@@ -844,6 +986,21 @@ function TeamsTableSection() {
               {paginatedRows.map((row, index) => {
                 return (
                   <tr key={row.id} className="border-b theme-border last:border-b-0">
+                    <td className="px-4 py-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedTeamIds.includes(row.id)}
+                        onChange={(event) =>
+                          setSelectedTeamIds((current) =>
+                            event.target.checked
+                              ? current.includes(row.id) ? current : [...current, row.id]
+                              : current.filter((id) => id !== row.id),
+                          )
+                        }
+                        aria-label={locale === "en" ? "Select team" : "Chọn đội"}
+                        className="h-4 w-4 rounded border theme-border accent-[var(--brand)]"
+                      />
+                    </td>
                     <td
                       style={{ left: 0, width: 72, minWidth: 72 }}
                       className={cn("px-4 py-4 text-xs font-semibold theme-text-soft", firstStickyColumnClass)}
@@ -924,6 +1081,30 @@ function TeamsTableSection() {
           onPageChange={setPage}
         />
       </Surface>
+      <AdminBulkDeleteDialog
+        open={bulkDialog !== null}
+        locale={locale}
+        title={
+          bulkDialog === "all"
+            ? locale === "en" ? "Delete all visible teams?" : "Xóa tất cả đội đang hiển thị?"
+            : locale === "en" ? "Delete selected teams?" : "Xóa đội đã chọn?"
+        }
+        description={
+          bulkDialog === "all"
+            ? locale === "en"
+              ? "This deletes every team matching the current filters. This action requires the delete-all password."
+              : "Thao tác này xóa mọi đội khớp bộ lọc hiện tại và yêu cầu mật khẩu xác nhận xóa tất cả."
+            : locale === "en"
+              ? "This deletes the selected teams and their related team data."
+              : "Thao tác này xóa các đội đã chọn và dữ liệu đội liên quan."
+        }
+        items={(bulkDialog === "all" ? filteredRows : selectedRows).map((row) => `${row.team} · #${row.tag}`)}
+        confirmLabel={locale === "en" ? "Delete teams" : "Xóa đội"}
+        busy={bulkDeleting}
+        passwordRequired={bulkDialog === "all"}
+        onClose={() => setBulkDialog(null)}
+        onConfirm={() => void deleteTeamRows(bulkDialog === "all" ? filteredRows : selectedRows)}
+      />
     </div>
   );
 }

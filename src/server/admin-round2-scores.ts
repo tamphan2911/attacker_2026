@@ -174,3 +174,28 @@ export async function saveAdminRound2ScoreRow(
     error: "Round 2 judge assignment and score entry are now handled from judge accounts.",
   };
 }
+
+export async function deleteAdminRound2ScoreRow(submissionId: string) {
+  const submission = await prisma.teamSubmission.findUnique({
+    where: { id: submissionId },
+    select: { id: true },
+  });
+
+  if (!submission) {
+    return {
+      ok: false as const,
+      status: 404,
+      error: "Round 2 score row not found.",
+    };
+  }
+
+  await prisma.teamSubmissionJudgeReview.deleteMany({
+    where: { submissionId },
+  });
+
+  return {
+    ok: true as const,
+    status: 200,
+    data: { submissionId },
+  };
+}
