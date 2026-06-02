@@ -763,7 +763,7 @@ export function TimelinePage() {
                         <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                           {pickText(locale, pageContent.timelinePage.round3Presentation.eyebrow)}
                         </p>
-                        <h2 className="theme-heading mt-3 text-3xl font-semibold theme-text-strong md:text-[2.75rem] md:leading-[1.05] xl:text-[3.35rem]">
+                        <h2 className="theme-heading mt-3 text-2xl font-semibold theme-text-strong md:text-[2.25rem] md:leading-[1.08]">
                           {pickText(locale, pageContent.timelinePage.round3Presentation.title)}
                         </h2>
                         <p className="mt-4 text-sm leading-8 theme-text-muted">
