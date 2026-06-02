@@ -347,12 +347,17 @@ export function HomePage() {
 
           <div className="overflow-hidden py-1">
             <div className="marquee-track flex w-max items-stretch gap-5 px-1 hover:[animation-play-state:paused]">
-              {testimonialMarqueeItems.map((item, index) => (
-                <div
-                  key={`${item.name}-${index}`}
-                  className="theme-home-testimonial-card relative flex min-h-[248px] w-[320px] shrink-0 flex-col rounded-[1.8rem] border p-5 text-left md:w-[352px]"
-                  aria-hidden={index >= testimonialItems.length}
-                >
+              {testimonialMarqueeItems.map((item, index) => {
+                const currentEmploymentText = item.currentEmployment
+                  ? pickText(locale, item.currentEmployment).trim()
+                  : "";
+
+                return (
+                  <div
+                    key={`${item.name}-${index}`}
+                    className="theme-home-testimonial-card relative flex min-h-[248px] w-[320px] shrink-0 flex-col rounded-[1.8rem] border p-5 text-left md:w-[352px]"
+                    aria-hidden={index >= testimonialItems.length}
+                  >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-center gap-3">
                     <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border theme-border">
@@ -381,15 +386,16 @@ export function HomePage() {
                     <GraduationCap className="h-3.5 w-3.5" />
                     <span>{item.university}</span>
                   </div>
-                  {item.currentEmployment ? (
+                  {currentEmploymentText ? (
                     <div className="theme-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium">
                       <BriefcaseBusiness className="h-3.5 w-3.5" />
-                      <span>{pickText(locale, item.currentEmployment)}</span>
+                      <span>{currentEmploymentText}</span>
                     </div>
                   ) : null}
                 </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
