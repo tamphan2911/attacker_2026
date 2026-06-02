@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getNewsImageValidationError } from "@/lib/news-images";
+import {
+  getCompetitionLegacyImageValidationError,
+  MAX_COMPETITION_LEGACY_IMAGE_BYTES,
+} from "@/lib/competition-legacy-image";
 import { getCurrentDbUser, hasElevatedRole } from "@/server/auth-helpers";
 import {
   buildContentImageStorageKey,
@@ -26,17 +29,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Upload an image file before saving." }, { status: 400 });
   }
 
-  const validationError = getNewsImageValidationError(imageFile);
+  const validationError = getCompetitionLegacyImageValidationError(imageFile);
   if (validationError === "type") {
     return NextResponse.json(
-      { error: "Only JPG, PNG, and WEBP images are allowed." },
+      { error: "Only JPG images are allowed." },
       { status: 400 },
     );
   }
 
   if (validationError === "size") {
     return NextResponse.json(
-      { error: "The uploaded image must be 2MB or smaller." },
+      { error: `The uploaded JPG must be ${Math.round(MAX_COMPETITION_LEGACY_IMAGE_BYTES / 1024 / 1024)}MB or smaller.` },
       { status: 400 },
     );
   }

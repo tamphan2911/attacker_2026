@@ -38,6 +38,10 @@ import {
   type ContentPageId,
   type ContentTypeId,
 } from "@/data/admin-content";
+import {
+  getCompetitionLegacyImageValidationError,
+  MAX_COMPETITION_LEGACY_IMAGE_BYTES,
+} from "@/lib/competition-legacy-image";
 import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
@@ -67,7 +71,7 @@ const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
 const MAX_TESTIMONIAL_AVATAR_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_HERO_SLIDE_IMAGE_FILE_BYTES = 2 * 1024 * 1024;
-const MAX_CONTENT_IMAGE_FILE_BYTES = 2 * 1024 * 1024;
+const MAX_CONTENT_IMAGE_FILE_BYTES = MAX_COMPETITION_LEGACY_IMAGE_BYTES;
 const DEFAULT_COMPETITION_LEGACY_IMAGE = "/theme-hero-1.jpg";
 
 function formatFileSize(bytes: number) {
@@ -1795,7 +1799,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                           : "Tải ảnh nền"}
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,.jpg,.jpeg"
                         className="hidden"
                         disabled={isUploadingCompetitionHeroImage}
                         onChange={async (event: ChangeEvent<HTMLInputElement>) => {
@@ -1805,19 +1809,20 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                             return;
                           }
 
-                          if (!file.type.startsWith("image/")) {
+                          const validationError = getCompetitionLegacyImageValidationError(file);
+                          if (validationError === "type") {
                             setCompetitionHeroImageUploadError(
                               locale === "en"
-                                ? "Only image files are allowed for this background."
-                                : "Chỉ chấp nhận tệp hình ảnh cho ảnh nền này.",
+                                ? "Only JPG images are allowed for this background."
+                                : "Chỉ chấp nhận ảnh JPG cho ảnh nền này.",
                             );
                             return;
                           }
 
-                          if (file.size > MAX_CONTENT_IMAGE_FILE_BYTES) {
+                          if (validationError === "size") {
                             setCompetitionHeroImageUploadError(
                               locale === "en"
-                                ? `Background images must be ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)} or smaller.`
+                                ? `Background JPG images must be ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)} or smaller.`
                                 : `Ảnh nền phải có dung lượng ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)} trở xuống.`,
                             );
                             return;
@@ -1885,8 +1890,8 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
 
                   <p className="text-xs leading-6 theme-text-soft">
                     {locale === "en"
-                      ? `Accepted formats: JPG, PNG, WEBP. Maximum size: ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)}. After uploading, click Save content to publish the new image.`
-                      : `Chấp nhận JPG, PNG, WEBP. Dung lượng tối đa: ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)}. Sau khi tải ảnh, bấm Lưu nội dung để cập nhật lên website.`}
+                      ? `Accepted format: JPG only. Maximum size: ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)}. After uploading, click Save content to publish the new image.`
+                      : `Chỉ chấp nhận JPG. Dung lượng tối đa: ${formatFileSize(MAX_CONTENT_IMAGE_FILE_BYTES)}. Sau khi tải ảnh, bấm Lưu nội dung để cập nhật lên website.`}
                   </p>
 
                   {competitionHeroImageUploadError ? (
