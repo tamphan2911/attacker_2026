@@ -120,6 +120,15 @@ function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
 }
 
+function matchesSearch(value: string, search: string) {
+  const normalizedSearch = search.trim().toLowerCase();
+  if (!normalizedSearch) {
+    return true;
+  }
+
+  return value.toLowerCase().includes(normalizedSearch);
+}
+
 const stickyFirstColumnClass = "theme-admin-sticky-cell sticky left-0 z-20";
 const stickySecondColumnClass = "theme-admin-sticky-cell sticky z-10";
 const stickyThirdColumnClass = "theme-admin-sticky-cell sticky z-10";
@@ -1377,6 +1386,8 @@ export function AdminRound1ScoresManager() {
   const { locale, round1Submissions, teams, timelineItems, users } = useSiteState();
   useAdminTitleScroll();
   const [activeScoreView, setActiveScoreView] = useState<"team" | "individual">("team");
+  const [teamScoreSearch, setTeamScoreSearch] = useState("");
+  const [individualScoreSearch, setIndividualScoreSearch] = useState("");
 
   const teamGroups = useMemo(
     () => buildTeamResultGroups(round1Submissions, teams, users),
@@ -1386,9 +1397,44 @@ export function AdminRound1ScoresManager() {
     () => buildIndividualScoreRows(round1Submissions, teams, users),
     [round1Submissions, teams, users],
   );
+  const filteredIndividualRows = useMemo(
+    () =>
+      individualRows.filter((row) =>
+        matchesSearch(
+          [
+            row.studentName,
+            row.studentLoginId ?? "",
+            row.userId,
+            row.teamName,
+            row.teamTag,
+            row.judgeName ?? "",
+            row.judgeLoginId ?? "",
+            row.reviewStatus,
+          ].join(" "),
+          individualScoreSearch,
+        ),
+      ),
+    [individualRows, individualScoreSearch],
+  );
+  const filteredTeamGroups = useMemo(
+    () =>
+      teamGroups.filter((group) =>
+        matchesSearch(
+          [
+            group.team.name,
+            group.team.tag,
+            group.team.id,
+            group.rank ? String(group.rank) : "",
+            ...group.memberRows.map((row) => `${row.student.name} ${row.student.loginId ?? ""} ${row.student.email}`),
+          ].join(" "),
+          teamScoreSearch,
+        ),
+      ),
+    [teamGroups, teamScoreSearch],
+  );
   const individualExportRows = useMemo(
     () =>
-      individualRows.map((row) => ({
+      filteredIndividualRows.map((row) => ({
         participant: row.studentName,
         loginId: row.studentLoginId ?? "",
         team: row.teamName,
@@ -1402,23 +1448,31 @@ export function AdminRound1ScoresManager() {
         submittedAt: row.submittedAt,
         reviewStatus: row.reviewStatus,
       })),
-    [individualRows],
+    [filteredIndividualRows],
   );
-  const teamExportRows = useMemo(() => buildTeamScoreExportRows(teamGroups), [teamGroups]);
+  const teamExportRows = useMemo(() => buildTeamScoreExportRows(filteredTeamGroups), [filteredTeamGroups]);
   const {
     page: individualPage,
     setPage: setIndividualPage,
     pageCount: individualPageCount,
     startIndex: individualStartIndex,
     paginatedRows: paginatedIndividualRows,
-  } = useAdminTablePagination(individualRows, ADMIN_LIST_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(filteredIndividualRows, ADMIN_LIST_TABLE_PAGE_SIZE);
   const {
     page: teamPage,
     setPage: setTeamPage,
     pageCount: teamPageCount,
     startIndex: teamStartIndex,
     paginatedRows: paginatedTeamRows,
-  } = useAdminTablePagination(teamGroups, ADMIN_LIST_TABLE_PAGE_SIZE);
+  } = useAdminTablePagination(filteredTeamGroups, ADMIN_LIST_TABLE_PAGE_SIZE);
+
+  useEffect(() => {
+    setIndividualPage(1);
+  }, [individualScoreSearch, setIndividualPage]);
+
+  useEffect(() => {
+    setTeamPage(1);
+  }, [teamScoreSearch, setTeamPage]);
 
   return (
     <div className="space-y-8">
@@ -1527,23 +1581,45 @@ export function AdminRound1ScoresManager() {
             <p className="theme-heading text-3xl font-semibold theme-text-strong">
               {locale === "en" ? "Round 1 individual score" : "Điểm cá nhân Vòng 1"}
             </p>
+            <p className="text-sm theme-text-muted">
+              {locale === "en"
+                ? `${filteredIndividualRows.length} of ${individualRows.length} individual rows shown`
+                : `Đang hiển thị ${filteredIndividualRows.length}/${individualRows.length} dòng cá nhân`}
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={() =>
-              exportRowsToWorkbook(
-                "attacker-2026-round1-individual-scores.xlsx",
-                "Round1IndividualScores",
-                individualExportRows,
-              )
-            }
-            className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
-          >
-            <span className="inline-flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              {locale === "en" ? "Export individual scores" : "Xuất điểm cá nhân"}
-            </span>
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="min-w-[min(100%,22rem)] space-y-2">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
+                <Search className="h-3.5 w-3.5" />
+                {locale === "en" ? "Search individual" : "Tìm cá nhân"}
+              </span>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
+                <input
+                  value={individualScoreSearch}
+                  onChange={(event) => setIndividualScoreSearch(event.target.value)}
+                  placeholder={locale === "en" ? "Name, login ID, team, judge..." : "Tên, mã đăng nhập, đội, giám khảo..."}
+                  className="theme-field h-12 w-full rounded-[1rem] border pl-10 pr-4 text-sm outline-none"
+                />
+              </div>
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                exportRowsToWorkbook(
+                  "attacker-2026-round1-individual-scores.xlsx",
+                  "Round1IndividualScores",
+                  individualExportRows,
+                )
+              }
+              className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                {locale === "en" ? "Export individual scores" : "Xuất điểm cá nhân"}
+              </span>
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 overflow-x-auto">
@@ -1685,7 +1761,7 @@ export function AdminRound1ScoresManager() {
           page={individualPage}
           pageCount={individualPageCount}
           pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
-          totalRows={individualRows.length}
+          totalRows={filteredIndividualRows.length}
           onPageChange={setIndividualPage}
         />
       </Surface>
@@ -1698,23 +1774,45 @@ export function AdminRound1ScoresManager() {
             <p className="theme-heading text-3xl font-semibold theme-text-strong">
               {locale === "en" ? "Round 1 team score" : "Điểm đội Vòng 1"}
             </p>
+            <p className="text-sm theme-text-muted">
+              {locale === "en"
+                ? `${filteredTeamGroups.length} of ${teamGroups.length} team rows shown`
+                : `Đang hiển thị ${filteredTeamGroups.length}/${teamGroups.length} dòng đội`}
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={() =>
-              exportRowsToWorkbook(
-                "attacker-2026-round1-team-scores.xlsx",
-                "Round1TeamScores",
-                teamExportRows,
-              )
-            }
-            className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
-          >
-            <span className="inline-flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              {locale === "en" ? "Export team scores" : "Xuất điểm đội"}
-            </span>
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <label className="min-w-[min(100%,22rem)] space-y-2">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
+                <Search className="h-3.5 w-3.5" />
+                {locale === "en" ? "Search team" : "Tìm đội"}
+              </span>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
+                <input
+                  value={teamScoreSearch}
+                  onChange={(event) => setTeamScoreSearch(event.target.value)}
+                  placeholder={locale === "en" ? "Team name, tag, rank, member..." : "Tên đội, mã đội, hạng, thành viên..."}
+                  className="theme-field h-12 w-full rounded-[1rem] border pl-10 pr-4 text-sm outline-none"
+                />
+              </div>
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                exportRowsToWorkbook(
+                  "attacker-2026-round1-team-scores.xlsx",
+                  "Round1TeamScores",
+                  teamExportRows,
+                )
+              }
+              className="rounded-full border theme-border theme-panel px-5 py-3 text-sm font-semibold theme-text-strong"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Download className="h-4 w-4" />
+                {locale === "en" ? "Export team scores" : "Xuất điểm đội"}
+              </span>
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 overflow-x-auto">
@@ -1859,7 +1957,7 @@ export function AdminRound1ScoresManager() {
           page={teamPage}
           pageCount={teamPageCount}
           pageSize={ADMIN_LIST_TABLE_PAGE_SIZE}
-          totalRows={teamGroups.length}
+          totalRows={filteredTeamGroups.length}
           onPageChange={setTeamPage}
         />
       </Surface>
