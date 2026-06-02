@@ -1593,6 +1593,14 @@ export const defaultPageContent: SitePageContent = {
             vi: "Thứ hạng chung cuộc chỉ được xác định sau khi hoàn tất phần bảo vệ trực tiếp tại vòng chung kết.",
           },
         ],
+        round3EmergingRules: {
+          en: "The 20 teams qualified for the Emerging round revise and resubmit their project report before the official Emerging round deadline. The organizing committee reviews the updated reports according to the published schedule, and the 10 awarded Emerging teams are announced after evaluation is completed.",
+          vi: "20 đội thi bảng Ươm mầm chỉnh sửa báo cáo mô tả dự án và nộp lại trước hạn chính thức của Vòng Đội ươm mầm. Ban tổ chức đánh giá các báo cáo đã cập nhật theo lịch trình công bố, sau đó công bố 10 đội đạt giải Ươm mầm.",
+        },
+        round3FinalRules: {
+          en: "The 5 finalist teams submit the final version of their report before the final-report deadline. Finalist teams also prepare presentation slides and poster or standee design files according to organizer instructions before the live final presentation and judge Q&A.",
+          vi: "5 đội thi chung kết nộp phiên bản báo cáo cuối cùng trước hạn nộp báo cáo chung kết. Các đội chung kết đồng thời chuẩn bị slide thuyết trình và file thiết kế poster hoặc standee theo hướng dẫn của Ban tổ chức trước phần thuyết trình trực tiếp và hỏi đáp cùng Ban giám khảo.",
+        },
         roundNotes: [
           {
             en: "The final report deadline closes before presentation day, so teams should freeze the submitted deck and report early enough for rehearsal.",

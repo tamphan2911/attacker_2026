@@ -98,6 +98,99 @@ const roundRubricLinks: Record<"01" | "02" | "03", RubricFileId> = {
   "03": "round-3-final-presentation",
 };
 
+function renderInlineRichText(text: string) {
+  const parts: React.ReactNode[] = [];
+  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)\]\((https?:\/\/[^)\s]+)\))/gu;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    if (match[2]) {
+      parts.push(<strong key={`strong-${match.index}`}>{match[2]}</strong>);
+    } else if (match[3]) {
+      parts.push(<em key={`em-${match.index}`}>{match[3]}</em>);
+    } else if (match[4] && match[5]) {
+      parts.push(
+        <a
+          key={`link-${match.index}`}
+          href={match[5]}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-[var(--brand)] underline-offset-4 hover:underline"
+        >
+          {match[4]}
+        </a>,
+      );
+    }
+
+    lastIndex = pattern.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts;
+}
+
+function RichRulesText({ body }: { body: string }) {
+  const lines = body.split(/\n+/u).map((line) => line.trim()).filter(Boolean);
+  if (!lines.length) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-3">
+      {lines.map((line, index) => {
+        if (line.startsWith("## ")) {
+          return (
+            <h5 key={`${line}-${index}`} className="theme-heading text-lg font-semibold theme-text-strong">
+              {renderInlineRichText(line.slice(3).trim())}
+            </h5>
+          );
+        }
+
+        if (line.startsWith("> ")) {
+          return (
+            <blockquote
+              key={`${line}-${index}`}
+              className="rounded-[1.15rem] border-l-4 border-sky-400/70 bg-sky-100/50 px-4 py-3 text-sm leading-7 theme-text-body dark:bg-sky-300/10"
+            >
+              {renderInlineRichText(line.slice(2).trim())}
+            </blockquote>
+          );
+        }
+
+        if (line.startsWith("- ")) {
+          return (
+            <ul key={`${line}-${index}`} className="list-disc pl-5 text-sm leading-7 theme-text-body">
+              <li>{renderInlineRichText(line.slice(2).trim())}</li>
+            </ul>
+          );
+        }
+
+        if (/^\d+\.\s/u.test(line)) {
+          return (
+            <ol key={`${line}-${index}`} className="list-decimal pl-5 text-sm leading-7 theme-text-body">
+              <li>{renderInlineRichText(line.replace(/^\d+\.\s/u, "").trim())}</li>
+            </ol>
+          );
+        }
+
+        return (
+          <p key={`${line}-${index}`} className="text-sm leading-8 theme-text-body">
+            {renderInlineRichText(line)}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 type PublicRubricRecord = {
   id: RubricFileId;
   downloadUrl: string;
@@ -499,27 +592,63 @@ export function RulesPage() {
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                         {pickText(locale, pageContent.rules.specificRoundRulesLabel)}
                       </p>
-                      <div className="mt-4 grid gap-3 md:grid-cols-3">
-                        {round.specificRules.map((note, index) => {
-                          const NoteIcon = specificRuleIcons[index] ?? Sparkles;
-
-                          return (
-                          <div
-                            key={note.en}
-                            className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
-                          >
-                            <div className="flex items-start gap-3">
-                              <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl ${meta.noteMarkerClass}`}>
-                                <NoteIcon className="h-4 w-4" />
-                              </span>
-                              <p className="text-sm leading-7 theme-text-body">
-                                {pickText(locale, note)}
-                              </p>
+                      {round.id === "03" ? (
+                        <div className="mt-5 space-y-6">
+                          <div>
+                            <p className="theme-heading text-lg font-semibold theme-text-strong">
+                              {locale === "en" ? "Emerging round" : "Vòng Đội ươm mầm"}
+                            </p>
+                            <div className="mt-3">
+                              <RichRulesText
+                                body={
+                                  pickText(locale, round.round3EmergingRules ?? {
+                                    en: round.specificRules.map((item) => item.en).join("\n"),
+                                    vi: round.specificRules.map((item) => item.vi).join("\n"),
+                                  })
+                                }
+                              />
                             </div>
                           </div>
-                          );
-                        })}
-                      </div>
+                          <div className="border-t theme-border" />
+                          <div>
+                            <p className="theme-heading text-lg font-semibold theme-text-strong">
+                              {locale === "en" ? "Final" : "Chung kết"}
+                            </p>
+                            <div className="mt-3">
+                              <RichRulesText
+                                body={
+                                  pickText(locale, round.round3FinalRules ?? {
+                                    en: round.specificRules.map((item) => item.en).join("\n"),
+                                    vi: round.specificRules.map((item) => item.vi).join("\n"),
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-4 grid gap-3 md:grid-cols-3">
+                          {round.specificRules.map((note, index) => {
+                            const NoteIcon = specificRuleIcons[index] ?? Sparkles;
+
+                            return (
+                            <div
+                              key={note.en}
+                              className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4"
+                            >
+                              <div className="flex items-start gap-3">
+                                <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl ${meta.noteMarkerClass}`}>
+                                  <NoteIcon className="h-4 w-4" />
+                                </span>
+                                <p className="text-sm leading-7 theme-text-body">
+                                  {pickText(locale, note)}
+                                </p>
+                              </div>
+                            </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

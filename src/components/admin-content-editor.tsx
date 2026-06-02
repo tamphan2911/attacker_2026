@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import {
   ArrowLeft,
+  Bold,
   BriefcaseBusiness,
   CalendarRange,
   ChevronDown,
@@ -12,9 +13,14 @@ import {
   CircleHelp,
   Clock3,
   FileText,
+  Heading2,
   ImageIcon,
   Images,
+  Italic,
   LayoutDashboard,
+  Link2,
+  List,
+  ListOrdered,
   Mail,
   Medal,
   MessageSquare,
@@ -236,6 +242,127 @@ function LocalizedFieldEditor({
             className={fieldClassName}
           />
         </label>
+      ))}
+    </div>
+  );
+}
+
+function LocalizedRichTextEditor({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: LocalizedText;
+  onChange: (locale: Locale, nextValue: string) => void;
+}) {
+  const textAreaRefs = useRef<Record<Locale, HTMLTextAreaElement | null>>({ en: null, vi: null });
+
+  const applyInlineFormat = (language: Locale, before: string, after = before, placeholder = "text") => {
+    const textarea = textAreaRefs.current[language];
+    const currentValue = value[language] ?? "";
+    const start = textarea?.selectionStart ?? currentValue.length;
+    const end = textarea?.selectionEnd ?? currentValue.length;
+    const selectedText = currentValue.slice(start, end) || placeholder;
+    const nextValue = `${currentValue.slice(0, start)}${before}${selectedText}${after}${currentValue.slice(end)}`;
+    onChange(language, nextValue);
+
+    window.requestAnimationFrame(() => {
+      textarea?.focus();
+      textarea?.setSelectionRange(start + before.length, start + before.length + selectedText.length);
+    });
+  };
+
+  const applyLinePrefix = (language: Locale, prefix: string) => {
+    const textarea = textAreaRefs.current[language];
+    const currentValue = value[language] ?? "";
+    const start = textarea?.selectionStart ?? currentValue.length;
+    const lineStart = currentValue.lastIndexOf("\n", Math.max(0, start - 1)) + 1;
+    const nextValue = `${currentValue.slice(0, lineStart)}${prefix}${currentValue.slice(lineStart)}`;
+    onChange(language, nextValue);
+
+    window.requestAnimationFrame(() => {
+      textarea?.focus();
+      textarea?.setSelectionRange(start + prefix.length, start + prefix.length);
+    });
+  };
+
+  const insertLink = (language: Locale) => {
+    const textarea = textAreaRefs.current[language];
+    const currentValue = value[language] ?? "";
+    const start = textarea?.selectionStart ?? currentValue.length;
+    const end = textarea?.selectionEnd ?? currentValue.length;
+    const selectedText = currentValue.slice(start, end) || "link text";
+    const nextValue = `${currentValue.slice(0, start)}[${selectedText}](https://example.com)${currentValue.slice(end)}`;
+    onChange(language, nextValue);
+
+    window.requestAnimationFrame(() => {
+      textarea?.focus();
+      textarea?.setSelectionRange(start + 1, start + 1 + selectedText.length);
+    });
+  };
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      {(["en", "vi"] as Locale[]).map((language) => (
+        <div key={language} className="space-y-3 rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-semibold theme-text-strong">
+              {`${label} (${language.toUpperCase()})`}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { type: "heading", label: language === "en" ? "Heading" : "Tiêu đề", icon: Heading2 },
+                { type: "bullet", label: language === "en" ? "Bullet list" : "Danh sách chấm", icon: List },
+                { type: "ordered", label: language === "en" ? "Numbered list" : "Danh sách số", icon: ListOrdered },
+                { type: "quote", label: language === "en" ? "Quote" : "Trích dẫn", icon: Quote },
+                { type: "bold", label: language === "en" ? "Bold" : "In đậm", icon: Bold },
+                { type: "italic", label: language === "en" ? "Italic" : "In nghiêng", icon: Italic },
+                { type: "link", label: language === "en" ? "Link" : "Liên kết", icon: Link2 },
+              ].map((tool) => {
+                const Icon = tool.icon;
+                return (
+                  <button
+                    key={tool.label}
+                    type="button"
+                    title={tool.label}
+                    aria-label={tool.label}
+                    onClick={() => {
+                      if (tool.type === "heading") applyLinePrefix(language, "## ");
+                      if (tool.type === "bullet") applyLinePrefix(language, "- ");
+                      if (tool.type === "ordered") applyLinePrefix(language, "1. ");
+                      if (tool.type === "quote") applyLinePrefix(language, "> ");
+                      if (tool.type === "bold") {
+                        applyInlineFormat(language, "**", "**", language === "en" ? "bold text" : "chữ đậm");
+                      }
+                      if (tool.type === "italic") {
+                        applyInlineFormat(language, "*", "*", language === "en" ? "italic text" : "chữ nghiêng");
+                      }
+                      if (tool.type === "link") insertLink(language);
+                    }}
+                    className="theme-button-secondary inline-flex h-9 w-9 items-center justify-center rounded-full"
+                  >
+                    <Icon className="h-4 w-4" />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <textarea
+            ref={(node) => {
+              textAreaRefs.current[language] = node;
+            }}
+            rows={8}
+            value={value[language]}
+            onChange={(event) => onChange(language, event.target.value)}
+            className={`${fieldClassName} min-h-[220px] leading-7`}
+          />
+          <p className="text-xs leading-6 theme-text-soft">
+            {language === "en"
+              ? "Use toolbar shortcuts for headings, lists, quotes, bold, italic, and links."
+              : "Dùng thanh công cụ để tạo tiêu đề, danh sách, trích dẫn, in đậm, in nghiêng và liên kết."}
+          </p>
+        </div>
       ))}
     </div>
   );
@@ -2827,20 +2954,55 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                       )
                     }
                   />
-                  <LocalizedListBlockEditor
-                    title="Specific round rules"
-                    description="These note cards appear in the right-side specific-rule panel."
-                    items={round.specificRules}
-                    itemLabelPrefix="Rule"
-                    rows={3}
-                    onChange={(itemIndex, language, value) =>
-                      setDraft((current) =>
-                        updateDraftContent(current, (next) => {
-                          next.rules.rounds[index].specificRules[itemIndex][language] = value;
-                        }),
-                      )
-                    }
-                  />
+                  {round.id === "03" ? (
+                    <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                      <BlockIntro
+                        title="Round 3 split rules"
+                        description="These rich text fields replace the specific-rule cards for Round 3 on the public rules page."
+                      />
+                      <LocalizedRichTextEditor
+                        label="Emerging round rules"
+                        value={round.round3EmergingRules ?? createBlankLocalizedText()}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              const targetRound = next.rules.rounds[index];
+                              targetRound.round3EmergingRules = targetRound.round3EmergingRules ?? createBlankLocalizedText();
+                              targetRound.round3EmergingRules[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                      <LocalizedRichTextEditor
+                        label="Final rules"
+                        value={round.round3FinalRules ?? createBlankLocalizedText()}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              const targetRound = next.rules.rounds[index];
+                              targetRound.round3FinalRules = targetRound.round3FinalRules ?? createBlankLocalizedText();
+                              targetRound.round3FinalRules[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </Surface>
+                  ) : (
+                    <LocalizedListBlockEditor
+                      title="Specific round rules"
+                      description="These note cards appear in the right-side specific-rule panel."
+                      items={round.specificRules}
+                      itemLabelPrefix="Rule"
+                      rows={3}
+                      onChange={(itemIndex, language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.rules.rounds[index].specificRules[itemIndex][language] = value;
+                          }),
+                        )
+                      }
+                    />
+                  )}
                   <LocalizedListBlockEditor
                     title="Round notes"
                     description="These notes appear in the full-width note block below each round."
