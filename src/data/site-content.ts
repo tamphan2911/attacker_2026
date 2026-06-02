@@ -695,6 +695,7 @@ export const heroCopy = {
 
 export const defaultPageContent: SitePageContent = {
   siteHeader: {
+    brandLogoImage: "/header-brand-demo.jpg",
     slogan: {
       en: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",
       vi: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",

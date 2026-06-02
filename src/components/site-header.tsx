@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -22,7 +23,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { pickText } from "@/lib/site";
 import type { Locale, LocalizedText } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { BrandMarkInner, GradientAvatar } from "@/components/site-ui";
+import { GradientAvatar } from "@/components/site-ui";
 
 function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
@@ -33,6 +34,27 @@ function FacebookIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
       <path d="M13.5 21v-7h2.35l.4-3h-2.75V9.19c0-.87.24-1.46 1.49-1.46H16.5V5.05c-.26-.03-1.15-.11-2.19-.11-2.17 0-3.66 1.32-3.66 3.75V11H8.2v3h2.45v7h2.85Z" />
     </svg>
+  );
+}
+
+function HeaderBrandLogo({
+  imageSrc,
+  label,
+}: {
+  imageSrc: string;
+  label: string;
+}) {
+  return (
+    <span className="theme-card-shadow-soft relative block h-11 w-11 overflow-hidden rounded-[1.15rem] border border-[rgba(23,114,208,0.18)] bg-white/92 shadow-[0_18px_36px_rgba(16,38,66,0.1)] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_22px_42px_rgba(16,38,66,0.14)] sm:h-[3.9rem] sm:w-[16.5rem] dark:border-[rgba(88,196,255,0.2)] dark:bg-slate-950/92 dark:shadow-[0_18px_38px_rgba(2,8,20,0.3)]">
+      <Image
+        src={imageSrc}
+        alt={label}
+        fill
+        sizes="(min-width: 640px) 264px, 44px"
+        unoptimized={imageSrc.startsWith("/api/content-images/")}
+        className="object-cover"
+      />
+    </span>
   );
 }
 
@@ -381,6 +403,7 @@ export function SiteHeader() {
   const topbarPhone = pageContent.siteHeader.phone.trim();
   const topbarFacebookLabel = pickText(locale, pageContent.siteHeader.facebookLabel);
   const topbarFacebookUrl = pageContent.siteHeader.facebookUrl.trim();
+  const headerBrandLogoImage = pageContent.siteHeader.brandLogoImage || "/header-brand-demo.jpg";
   const topbarSupportLabel = locale === "en" ? "Support message" : "Nhắn hỗ trợ";
 
   const isActiveRoute = (href: string) => {
@@ -477,12 +500,7 @@ export function SiteHeader() {
       <div className="theme-navbar relative border-b backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-8">
           <Link href="/" className="group min-w-0 shrink-0" onClick={() => setIsOpen(false)}>
-            <span className="sm:hidden">
-              <BrandMarkInner showText={false} showIcon variant="header" />
-            </span>
-            <span className="hidden sm:block">
-              <BrandMarkInner showText showIcon={false} variant="header" />
-            </span>
+            <HeaderBrandLogo imageSrc={headerBrandLogoImage} label="Attacker 2026" />
           </Link>
 
           <nav className="hidden items-center gap-7 lg:flex">
