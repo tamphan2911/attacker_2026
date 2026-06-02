@@ -4232,6 +4232,106 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Finalists / Next steps guidance"
+                description="Edit the two instruction boxes shown above the finalist and Emerging round qualifier lists."
+              />
+              <div className="grid gap-4 xl:grid-cols-2">
+                {[
+                  ["Finalist guidance title", draft.finalists.finalistGuidance.title, (language: Locale, value: string, next: SitePageContent) => { next.finalists.finalistGuidance.title[language] = value; }],
+                  ["Finalist guidance email label", draft.finalists.finalistGuidance.emailLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.finalistGuidance.emailLabel[language] = value; }],
+                  ["Finalist guidance button label", draft.finalists.finalistGuidance.reportLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.finalistGuidance.reportLabel[language] = value; }],
+                  ["Emerging guidance title", draft.finalists.emergingGuidance.title, (language: Locale, value: string, next: SitePageContent) => { next.finalists.emergingGuidance.title[language] = value; }],
+                  ["Emerging guidance email label", draft.finalists.emergingGuidance.emailLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.emergingGuidance.emailLabel[language] = value; }],
+                  ["Emerging guidance button label", draft.finalists.emergingGuidance.reportLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.emergingGuidance.reportLabel[language] = value; }],
+                ].map(([title, value, updater]) => (
+                  <LocalizedTextEditorCard
+                    key={title as string}
+                    title={`Finalists / ${title as string}`}
+                    value={value as LocalizedText}
+                    rows={(title as string).includes("title") ? 3 : 2}
+                    onChange={(language, nextValue) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          (updater as (language: Locale, value: string, next: SitePageContent) => void)(
+                            language,
+                            nextValue,
+                            next,
+                          );
+                        }),
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </Surface>
+            <div className="grid gap-4 xl:grid-cols-2">
+              <LocalizedListBlockEditor
+                title="Finalists / Finalist guidance bullets"
+                description="Edit the bullet list in the Next steps for finalist teams box."
+                items={draft.finalists.finalistGuidance.items}
+                itemLabelPrefix="Finalist bullet"
+                rows={4}
+                addLabel={locale === "en" ? "Add finalist bullet" : "Thêm gạch đầu dòng chung kết"}
+                removeLabel={locale === "en" ? "Remove finalist bullet" : "Xóa gạch đầu dòng chung kết"}
+                minItems={1}
+                onAdd={() =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.finalists.finalistGuidance.items.push(createBlankLocalizedText());
+                    }),
+                  )
+                }
+                onRemove={(index) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.finalists.finalistGuidance.items =
+                        next.finalists.finalistGuidance.items.filter((_, currentIndex) => currentIndex !== index);
+                    }),
+                  )
+                }
+                onChange={(index, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.finalists.finalistGuidance.items[index][language] = value;
+                    }),
+                  )
+                }
+              />
+              <LocalizedListBlockEditor
+                title="Finalists / Emerging guidance bullets"
+                description="Edit the bullet list in the Next steps for Emerging round qualifiers box."
+                items={draft.finalists.emergingGuidance.items}
+                itemLabelPrefix="Emerging bullet"
+                rows={4}
+                addLabel={locale === "en" ? "Add Emerging bullet" : "Thêm gạch đầu dòng Ươm mầm"}
+                removeLabel={locale === "en" ? "Remove Emerging bullet" : "Xóa gạch đầu dòng Ươm mầm"}
+                minItems={1}
+                onAdd={() =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.finalists.emergingGuidance.items.push(createBlankLocalizedText());
+                    }),
+                  )
+                }
+                onRemove={(index) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.finalists.emergingGuidance.items =
+                        next.finalists.emergingGuidance.items.filter((_, currentIndex) => currentIndex !== index);
+                    }),
+                  )
+                }
+                onChange={(index, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.finalists.emergingGuidance.items[index][language] = value;
+                    }),
+                  )
+                }
+              />
+            </div>
             <div className="grid gap-4 xl:grid-cols-2">
               {[
                 ["Finalists / Finalist slot label", draft.finalists.finalistSlotLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalists.finalistSlotLabel[language] = value; }],

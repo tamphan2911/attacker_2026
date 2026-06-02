@@ -2353,6 +2353,46 @@ export const defaultPageContent: SitePageContent = {
     awaitingOfficialUpdate: { en: "Awaiting official update", vi: "Chờ cập nhật chính thức" },
     reservedLabel: { en: "Reserved", vi: "Giữ chỗ" },
     emergingTeamLabel: { en: "Incubation bracket", vi: "Bảng ươm mầm" },
+    finalistGuidance: {
+      title: {
+        en: "Next steps for finalist teams",
+        vi: "Việc cần làm cho 5 đội vào chung kết",
+      },
+      items: [
+        {
+          en: "Submit the final version of the report in your Team Workspace.",
+          vi: "Nộp phiên bản báo cáo cuối cùng trong trang Đội thi.",
+        },
+        {
+          en: "Submit the final presentation slide file via email to the organizer, or contact the organizer for support.",
+          vi: "Gửi file slide thuyết trình chung kết qua email cho ban tổ chức, hoặc liên hệ ban tổ chức để được hỗ trợ.",
+        },
+        {
+          en: "Submit the poster/standee design file via email to the organizer, or contact the organizer for support.",
+          vi: "Gửi file thiết kế poster/standee qua email cho ban tổ chức, hoặc liên hệ ban tổ chức để được hỗ trợ.",
+        },
+      ],
+      emailLabel: { en: "Organizer email", vi: "Email ban tổ chức" },
+      reportLabel: { en: "Submit final round report", vi: "Nộp báo cáo chung kết" },
+    },
+    emergingGuidance: {
+      title: {
+        en: "Next steps for Emerging round qualifiers",
+        vi: "Việc cần làm cho 20 đội vào Vòng Đội ươm mầm",
+      },
+      items: [
+        {
+          en: "Submit the final version of the report in your Team Workspace for Emerging round rescoring.",
+          vi: "Nộp phiên bản báo cáo cuối cùng trong trang Đội thi để được chấm lại ở Vòng Đội ươm mầm.",
+        },
+        {
+          en: "Submit the poster/standee design file via email to the organizer, or contact the organizer for support.",
+          vi: "Gửi file thiết kế poster/standee qua email cho ban tổ chức, hoặc liên hệ ban tổ chức để được hỗ trợ.",
+        },
+      ],
+      emailLabel: { en: "Organizer email", vi: "Email ban tổ chức" },
+      reportLabel: { en: "Submit Emerging round report", vi: "Nộp báo cáo Vòng Đội ươm mầm" },
+    },
   },
   emergingResults: {
     header: {

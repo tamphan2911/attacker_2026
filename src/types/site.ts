@@ -616,6 +616,13 @@ export interface EditableRound1ResultsPageContent {
   noSearchResults: EditableSectionCopy;
 }
 
+export interface EditableFinalistsGuidancePanel {
+  title: LocalizedText;
+  items: LocalizedText[];
+  emailLabel: LocalizedText;
+  reportLabel: LocalizedText;
+}
+
 export interface SitePageContent {
   siteHeader: {
     slogan: LocalizedText;
@@ -827,6 +834,8 @@ export interface SitePageContent {
     awaitingOfficialUpdate: LocalizedText;
     reservedLabel: LocalizedText;
     emergingTeamLabel: LocalizedText;
+    finalistGuidance: EditableFinalistsGuidancePanel;
+    emergingGuidance: EditableFinalistsGuidancePanel;
   };
   emergingResults: {
     header: EditableSectionCopy;
