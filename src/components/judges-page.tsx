@@ -16,7 +16,7 @@ function JudgeCompactCard({ judge }: { judge: JudgeProfile }) {
 
   return (
     <Surface className="group flex h-full min-h-[17.5rem] flex-col overflow-hidden rounded-[1.25rem] px-0 py-0 transition duration-300 hover:-translate-y-1 hover:border-sky-300/60 hover:shadow-[0_22px_46px_rgba(30,89,145,0.14)] dark:hover:border-sky-200/30 dark:hover:shadow-[0_22px_46px_rgba(2,8,20,0.34)]">
-      <div className="relative h-32 shrink-0 overflow-hidden">
+      <div className="relative h-[9.2rem] shrink-0 overflow-hidden">
         <div
           role="img"
           aria-label={judge.name}
