@@ -1111,7 +1111,7 @@ export const defaultPageContent: SitePageContent = {
         },
         deliverables: [
           { en: "40 objective questions", vi: "40 câu trắc nghiệm trên 6 chủ đề" },
-          { en: "2 essay responses with 500-word limit each", vi: "2 câu tự luận, mỗi câu trả lời 300-500 từ" },
+          { en: "2 essay responses with 500-word limit each", vi: "2 câu tự luận, mỗi câu tối đa 500 từ" },
           { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
         ],
       },
@@ -1437,7 +1437,7 @@ export const defaultPageContent: SitePageContent = {
         },
         deliverables: [
           { en: "40 objective questions", vi: "40 câu trắc nghiệm trên 6 chủ đề" },
-          { en: "2 essay responses with 500-word limit each", vi: "2 câu tự luận, mỗi câu trả lời 300-500 từ" },
+          { en: "2 essay responses with 500-word limit each", vi: "2 câu tự luận, mỗi câu tối đa 500 từ" },
           { en: "Team average score ranking for Top 50", vi: "Xếp hạng theo điểm trung bình đội để chọn Top 50" },
         ],
         focus: {
@@ -2636,7 +2636,7 @@ export const roundItems: RoundItem[] = [
       },
       {
         en: "2 essay responses with 500-word limit each",
-        vi: "2 câu tự luận, mỗi câu trả lời 300-500 từ",
+        vi: "2 câu tự luận, mỗi câu tối đa 500 từ",
       },
       {
         en: "Team average score ranking for Top 50",
@@ -3539,8 +3539,8 @@ const legacyVietnameseRulesCopyReplacements: Record<string, string> = {
   "Vào Vòng Đội ươm mầm": "Bảng ươm mầm",
   "Đầu việc": "Lưu ý",
   "Quy định riêng của vòng": "Quy định vòng thi",
-  "2 bài tự luận, mỗi bài tối đa 200 từ": "2 câu tự luận, mỗi câu trả lời 300-500 từ",
-  "2 bài tự luận, mỗi bài tối đa 500 từ": "2 câu tự luận, mỗi câu trả lời 300-500 từ",
+  "2 bài tự luận, mỗi bài tối đa 200 từ": "2 câu tự luận, mỗi câu tối đa 500 từ",
+  "2 bài tự luận, mỗi bài tối đa 500 từ": "2 câu tự luận, mỗi câu tối đa 500 từ",
   "36 câu trắc nghiệm trên 6 chủ đề": "40 câu trắc nghiệm trên 6 chủ đề",
   "40 câu trắc nghiệm": "40 câu trắc nghiệm trên 6 chủ đề",
   "Điểm phần trắc nghiệm có trước, còn điểm tự luận vẫn ở trạng thái chờ cho đến khi admin hoặc moderator chấm xong.":

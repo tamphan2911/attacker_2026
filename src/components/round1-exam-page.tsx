@@ -31,7 +31,6 @@ import {
 import {
   ROUND1_ESSAY_TOTAL,
   ROUND1_ESSAY_MAX_SCORE,
-  ROUND1_ESSAY_MIN_WORDS,
   ROUND1_ESSAY_WORD_LIMIT,
   ROUND1_OBJECTIVE_MAX_SCORE,
   ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC,
@@ -398,8 +397,8 @@ function Round1ConfirmDialog({
           {essayWarning ? (
             <div className="rounded-[1.4rem] border border-amber-500/35 bg-amber-500/12 px-4 py-3.5 text-sm leading-7 text-amber-900 shadow-[0_14px_32px_rgba(245,158,11,0.08)] dark:border-amber-300/24 dark:bg-amber-300/14 dark:text-amber-100">
               {locale === "en"
-                ? `Each essay answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words and no more than ${ROUND1_ESSAY_WORD_LIMIT} words before manual submission.`
-                : `Mỗi câu tự luận cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ và không vượt quá ${ROUND1_ESSAY_WORD_LIMIT} từ trước khi nộp thủ công.`}
+                ? `Essay answers cannot exceed ${ROUND1_ESSAY_WORD_LIMIT} words before manual submission.`
+                : `Mỗi câu tự luận không được vượt quá ${ROUND1_ESSAY_WORD_LIMIT} từ trước khi nộp thủ công.`}
             </div>
           ) : null}
 
@@ -960,12 +959,6 @@ export function Round1ExamPage() {
         const wordCount = countWords(targetSession.answers[question.id]?.essayText ?? "");
         const questionNumber = question.paperOrder;
 
-        if (wordCount < ROUND1_ESSAY_MIN_WORDS) {
-          return locale === "en"
-            ? `Essay question ${questionNumber} needs more than ${ROUND1_ESSAY_MIN_WORDS - 1} words before submission. It currently has ${wordCount} words.`
-            : `Câu tự luận ${questionNumber} cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ trước khi nộp. Hiện câu này có ${wordCount} từ.`;
-        }
-
         if (wordCount > round1WordLimit) {
           return locale === "en"
             ? `Essay question ${questionNumber} is above the ${round1WordLimit}-word maximum. Please shorten it before submitting.`
@@ -1195,8 +1188,6 @@ export function Round1ExamPage() {
       ? countWords(currentResponse?.essayText ?? "")
       : 0;
   const currentEssayRemainingWords = Math.max(0, round1WordLimit - currentEssayWordCount);
-  const currentEssayMeetsMinimum =
-    currentQuestion?.type === "essay" && currentEssayWordCount >= ROUND1_ESSAY_MIN_WORDS;
   const currentEssayExceedsLimit = currentQuestion?.type === "essay" && currentEssayWordCount > round1WordLimit;
   const participantTeamRoleLabel = currentTeam
     ? locale === "en"
@@ -1500,8 +1491,8 @@ export function Round1ExamPage() {
                         : "Khối tự luận",
                     body:
                       locale === "en"
-                        ? `${ROUND1_ESSAY_TOTAL} essay questions stay at the end of the paper. Each answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words, cannot exceed ${round1WordLimit} words, and is reviewed manually later.`
-                        : `Gồm ${ROUND1_ESSAY_TOTAL} câu ở cuối đề, yêu cầu trình bày ý tưởng rõ ràng trong khoảng ${ROUND1_ESSAY_MIN_WORDS - 1}–${round1WordLimit} từ mỗi câu.`,
+                        ? `${ROUND1_ESSAY_TOTAL} essay questions stay at the end of the paper. Each answer can be shorter than 300 words, cannot exceed ${round1WordLimit} words, and is reviewed manually later.`
+                        : `Gồm ${ROUND1_ESSAY_TOTAL} câu ở cuối đề. Mỗi câu có thể ngắn hơn 300 từ, cần trình bày rõ ý và không vượt quá ${round1WordLimit} từ.`,
                   },
                   {
                     icon: <ShieldCheck className="h-5 w-5 text-amber-300" />,
@@ -1801,8 +1792,8 @@ export function Round1ExamPage() {
 	              {currentQuestion.type === "essay" ? (
 	                <div className="mt-5 rounded-[1.35rem] border border-sky-700/18 bg-[linear-gradient(135deg,rgba(224,242,254,0.9),rgba(219,234,254,0.72))] px-4 py-3.5 text-sm leading-7 text-slate-900 shadow-[0_14px_34px_rgba(14,116,144,0.08)] dark:border-sky-300/18 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.16),rgba(37,99,235,0.12))] dark:text-sky-100">
 	                  {locale === "en"
-	                    ? `The essay answer must be more than ${ROUND1_ESSAY_MIN_WORDS - 1} words and no more than ${round1WordLimit} words.`
-	                    : `Câu trả lời tự luận cần dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ và không vượt quá ${round1WordLimit} từ.`}
+	                    ? `The essay answer can be shorter than 300 words. Keep it clear and no more than ${round1WordLimit} words.`
+	                    : `Câu trả lời tự luận có thể ngắn hơn 300 từ. Hãy trình bày rõ ý và không vượt quá ${round1WordLimit} từ.`}
 	                </div>
 	              ) : null}
 
@@ -2042,20 +2033,10 @@ export function Round1ExamPage() {
                     </div>
                   ) : null}
                   <div className="flex flex-col gap-3 text-sm leading-7 sm:flex-row sm:items-center sm:justify-between">
-                    <p
-                      className={
-                        currentEssayMeetsMinimum
-                          ? "theme-text-soft"
-                          : "font-medium text-amber-800 dark:text-amber-100"
-                      }
-                    >
-                      {currentEssayMeetsMinimum
-                        ? locale === "en"
-                          ? "Minimum length met for this essay answer."
-                          : "Câu trả lời đã đạt yêu cầu độ dài tối thiểu."
-                        : locale === "en"
-                          ? `Write more than ${ROUND1_ESSAY_MIN_WORDS - 1} words before submitting.`
-                          : `Hãy viết dài hơn ${ROUND1_ESSAY_MIN_WORDS - 1} từ trước khi nộp.`}
+                    <p className="theme-text-soft">
+                      {locale === "en"
+                        ? `No minimum word count is required. Keep the answer within ${round1WordLimit} words.`
+                        : `Không bắt buộc tối thiểu 300 từ. Hãy giữ câu trả lời trong giới hạn ${round1WordLimit} từ.`}
                     </p>
                     <div
                       className={`inline-flex items-center justify-end gap-2 self-end rounded-full border px-3.5 py-2 text-xs font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.06)] ${
@@ -2285,7 +2266,7 @@ export function Round1ExamPage() {
             .slice(ROUND1_OBJECTIVE_TOTAL)
             .some((question) => {
               const wordCount = countWords(session.answers[question.id]?.essayText ?? "");
-              return wordCount < ROUND1_ESSAY_MIN_WORDS || wordCount > round1WordLimit;
+              return wordCount > round1WordLimit;
             }),
         )}
         blockingWarning={null}
