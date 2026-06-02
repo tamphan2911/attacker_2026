@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowDown,
@@ -342,13 +342,17 @@ export function AdminRound1ExamList() {
   const [deleteError, setDeleteError] = useState("");
   const [aiOverview, setAiOverview] = useState<Round1AiScoringOverview | null>(null);
   const [aiActionLoading, setAiActionLoading] = useState<"run-all" | "retry-failed" | null>(null);
-  const [aiProcessBusy, setAiProcessBusy] = useState(false);
   const [aiError, setAiError] = useState("");
+  const aiProcessBusyRef = useRef(false);
+  const activeAiJobId = aiOverview?.activeJob?.id ?? "";
+  const activeAiJobStatus = aiOverview?.activeJob?.status;
   useAdminTitleScroll();
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (options?: { silent?: boolean }) => {
     try {
-      setLoading(true);
+      if (!options?.silent) {
+        setLoading(true);
+      }
       setError("");
       const response = await fetch("/api/admin/round-1/exams", { cache: "no-store" });
       const payload = (await response.json().catch(() => null)) as
@@ -363,7 +367,9 @@ export function AdminRound1ExamList() {
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected error." : "Có lỗi bất ngờ.");
     } finally {
-      setLoading(false);
+      if (!options?.silent) {
+        setLoading(false);
+      }
     }
   }, [locale]);
 
@@ -399,7 +405,7 @@ export function AdminRound1ExamList() {
       }
 
       setAiOverview(payload.overview);
-      await load();
+      await load({ silent: true });
     } catch (nextError) {
       setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected GPT scoring error." : "Có lỗi bất ngờ khi chấm GPT.");
     } finally {
@@ -440,52 +446,56 @@ export function AdminRound1ExamList() {
   }, [loadAiOverview, locale]);
 
   useEffect(() => {
-    const activeJob = aiOverview?.activeJob;
-    if (!activeJob || activeJob.status === "completed" || activeJob.status === "failed" || aiProcessBusy) {
+    if (!activeAiJobId || activeAiJobStatus === "completed" || activeAiJobStatus === "failed") {
       return;
     }
 
     let cancelled = false;
-    const timer = window.setTimeout(() => {
-      const processNext = async () => {
-        try {
-          setAiProcessBusy(true);
-          const response = await fetch(`/api/admin/round-1/ai-essay-scoring/${activeJob.id}/process`, {
-            method: "POST",
-            credentials: "same-origin",
-          });
-          const payload = (await response.json().catch(() => null)) as
-            | { overview?: Round1AiScoringOverview; error?: string }
-            | null;
+    const processNext = async () => {
+      if (aiProcessBusyRef.current) {
+        return;
+      }
 
-          if (!response.ok || !payload?.overview) {
-            throw new Error(payload?.error ?? (locale === "en" ? "Could not process the next GPT score." : "Không thể xử lý lượt chấm GPT tiếp theo."));
-          }
+      try {
+        aiProcessBusyRef.current = true;
+        const response = await fetch(`/api/admin/round-1/ai-essay-scoring/${activeAiJobId}/process`, {
+          method: "POST",
+          credentials: "same-origin",
+        });
+        const payload = (await response.json().catch(() => null)) as
+          | { overview?: Round1AiScoringOverview; error?: string }
+          | null;
 
-          if (!cancelled) {
-            setAiOverview(payload.overview);
-            await load();
-          }
-        } catch (nextError) {
-          if (!cancelled) {
-            setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected GPT scoring error." : "Có lỗi bất ngờ khi chấm GPT.");
-            await loadAiOverview().catch(() => {});
-          }
-        } finally {
-          if (!cancelled) {
-            setAiProcessBusy(false);
-          }
+        if (!response.ok || !payload?.overview) {
+          throw new Error(payload?.error ?? (locale === "en" ? "Could not process the next GPT score." : "Không thể xử lý lượt chấm GPT tiếp theo."));
         }
-      };
 
+        if (!cancelled) {
+          setAiOverview(payload.overview);
+          await load({ silent: true });
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected GPT scoring error." : "Có lỗi bất ngờ khi chấm GPT.");
+          await loadAiOverview().catch(() => {});
+        }
+      } finally {
+        if (!cancelled) {
+          aiProcessBusyRef.current = false;
+        }
+      }
+    };
+
+    void processNext();
+    const timer = window.setInterval(() => {
       void processNext();
-    }, 900);
+    }, 1800);
 
     return () => {
       cancelled = true;
-      window.clearTimeout(timer);
+      window.clearInterval(timer);
     };
-  }, [aiOverview, aiProcessBusy, load, loadAiOverview, locale]);
+  }, [activeAiJobId, activeAiJobStatus, load, loadAiOverview, locale]);
 
   const canDeleteAttempt = currentUser.role === "admin";
 
