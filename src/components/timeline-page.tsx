@@ -23,6 +23,7 @@ import { Surface } from "@/components/site-ui";
 import {
   canTeamTakeRound1,
   isTeamCurrentlyCompetingRound,
+  WEBSITE_ANNOUNCEMENT_TIMELINE_ID,
 } from "@/lib/competition";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 import {
@@ -101,6 +102,17 @@ const timelinePhaseMeta: Array<{
     darkStatusClass: "dark:border-amber-300/22 dark:bg-amber-300/[0.12] dark:text-amber-100",
   },
 ];
+
+function compareTimelineDisplayOrder(left: TimelineItem, right: TimelineItem) {
+  if (left.id === WEBSITE_ANNOUNCEMENT_TIMELINE_ID) {
+    return -1;
+  }
+  if (right.id === WEBSITE_ANNOUNCEMENT_TIMELINE_ID) {
+    return 1;
+  }
+
+  return compareTimelineDateRanges(left, right);
+}
 
 type TimelineCardStatus = "finished" | "ongoing" | "upcoming" | "not-started";
 
@@ -423,7 +435,7 @@ export function TimelinePage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  const orderedTimelineItems = [...visibleTimelineItems].sort(compareTimelineDateRanges);
+  const orderedTimelineItems = [...visibleTimelineItems].sort(compareTimelineDisplayOrder);
 
   const nextUpcomingItem = orderedTimelineItems.find((item) => getTimelineStartDateTime(item).getTime() > now.getTime());
   const nextUpcomingKey = nextUpcomingItem ? getTimelineItemKey(nextUpcomingItem) : null;
@@ -522,7 +534,7 @@ export function TimelinePage() {
             : pageContent.timelinePage.round3;
     const items = [...visibleTimelineItems]
       .filter((item) => item.phase === phase.phase)
-      .sort(compareTimelineDateRanges);
+      .sort(compareTimelineDisplayOrder);
 
     return {
       ...phase,

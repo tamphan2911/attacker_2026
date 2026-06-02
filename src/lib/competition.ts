@@ -29,6 +29,7 @@ const primaryRoundTimelineItemIds: Record<CompetitionRoundKey, string> = {
 };
 
 export const ROUND1_RESULT_ANNOUNCEMENT_TIMELINE_ID = "round-1-top-50-announcement";
+export const WEBSITE_ANNOUNCEMENT_TIMELINE_ID = "website-announcement";
 
 function sortTimelineItemsByDate(items: TimelineItem[]) {
   return [...items].sort(compareTimelineDateRanges);
@@ -115,6 +116,10 @@ export function isTimelineItemStarted(
 
 export function isRound1ResultAnnouncementReleased(timelineItems?: TimelineItem[], now = new Date()) {
   return isTimelineItemStarted(ROUND1_RESULT_ANNOUNCEMENT_TIMELINE_ID, timelineItems, now);
+}
+
+export function isWebsiteAnnouncementReleased(timelineItems?: TimelineItem[], now = new Date()) {
+  return isTimelineItemStarted(WEBSITE_ANNOUNCEMENT_TIMELINE_ID, timelineItems, now);
 }
 
 export function isRound2Started(timelineItems?: TimelineItem[], now = new Date()) {

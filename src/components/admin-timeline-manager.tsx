@@ -7,6 +7,7 @@ import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-sc
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface, StatusPill } from "@/components/site-ui";
 import { timelineItems as defaultTimelineItems } from "@/data/site-content";
+import { WEBSITE_ANNOUNCEMENT_TIMELINE_ID } from "@/lib/competition";
 import { compareTimelineDateRanges } from "@/lib/timeline-dates";
 import { pickText } from "@/lib/site";
 import type { CompetitionRoundKey, TimelineItem } from "@/types/site";
@@ -26,7 +27,16 @@ function cloneTimeline(value: TimelineItem[]) {
 }
 
 function sortTimelineItems(items: TimelineItem[]) {
-  return [...items].sort(compareTimelineDateRanges);
+  return [...items].sort((left, right) => {
+    if (left.id === WEBSITE_ANNOUNCEMENT_TIMELINE_ID) {
+      return -1;
+    }
+    if (right.id === WEBSITE_ANNOUNCEMENT_TIMELINE_ID) {
+      return 1;
+    }
+
+    return compareTimelineDateRanges(left, right);
+  });
 }
 
 export function AdminTimelineManager() {

@@ -2,6 +2,7 @@ import type { LocalizedText } from "@/types/site";
 
 export type ContentPageId =
   | "home"
+  | "construction"
   | "competition"
   | "faq"
   | "rules"
@@ -48,6 +49,15 @@ export const contentPageConfigs: ContentPageConfig[] = [
     description: {
       en: "Homepage section copy and landing-page messaging.",
       vi: "Nội dung section và thông điệp landing page.",
+    },
+  },
+  {
+    id: "construction",
+    href: "/admin/content/pages/construction",
+    label: { en: "Construction", vi: "Trang đang xây dựng" },
+    description: {
+      en: "Countdown page text and pre-launch auth gate copy.",
+      vi: "Nội dung trang đếm ngược và cửa truy cập trước ngày công bố.",
     },
   },
   {

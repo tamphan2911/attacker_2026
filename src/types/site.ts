@@ -666,6 +666,23 @@ export interface SitePageContent {
     destinations: EditableSectionCopy;
     cta: EditableSectionCopy;
   };
+  construction: {
+    eyebrow: LocalizedText;
+    title: LocalizedText;
+    description: LocalizedText;
+    waitPrefix: LocalizedText;
+    countdownLabel: LocalizedText;
+    daysLabel: LocalizedText;
+    hoursLabel: LocalizedText;
+    minutesLabel: LocalizedText;
+    secondsLabel: LocalizedText;
+    authGateTitle: LocalizedText;
+    authGateDescription: LocalizedText;
+    passwordLabel: LocalizedText;
+    passwordPlaceholder: LocalizedText;
+    passwordSubmitLabel: LocalizedText;
+    passwordError: LocalizedText;
+  };
   competition: {
     intro: EditableSectionCopy;
     legacyHeroImage: string;

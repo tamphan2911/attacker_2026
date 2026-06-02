@@ -1086,6 +1086,56 @@ export const defaultPageContent: SitePageContent = {
       },
     },
   },
+  construction: {
+    eyebrow: {
+      en: "Website announcement",
+      vi: "Thông báo website",
+    },
+    title: {
+      en: "Attacker 2026 is coming soon",
+      vi: "Attacker 2026 sẽ sớm ra mắt",
+    },
+    description: {
+      en: "Website Attacker 2026 đang trong giai đoạn hoàn thiện. Cảm ơn bạn đã kiên nhẫn chờ đợi trong lúc Ban tổ chức chuẩn bị trải nghiệm tốt nhất cho mùa thi năm nay.",
+      vi: "Website Attacker 2026 đang trong giai đoạn hoàn thiện. Cảm ơn bạn đã kiên nhẫn chờ đợi trong lúc Ban tổ chức chuẩn bị trải nghiệm tốt nhất cho mùa thi năm nay.",
+    },
+    waitPrefix: {
+      en: "Vui lòng chờ đến thời điểm công bố chính thức:",
+      vi: "Vui lòng chờ đến thời điểm công bố chính thức:",
+    },
+    countdownLabel: {
+      en: "Thời gian còn lại",
+      vi: "Thời gian còn lại",
+    },
+    daysLabel: { en: "Ngày", vi: "Ngày" },
+    hoursLabel: { en: "Giờ", vi: "Giờ" },
+    minutesLabel: { en: "Phút", vi: "Phút" },
+    secondsLabel: { en: "Giây", vi: "Giây" },
+    authGateTitle: {
+      en: "Khu vực nội bộ trước ngày công bố",
+      vi: "Khu vực nội bộ trước ngày công bố",
+    },
+    authGateDescription: {
+      en: "Website chưa mở công khai. Vui lòng nhập mật khẩu truy cập nội bộ để tiếp tục đến trang đăng nhập / đăng ký.",
+      vi: "Website chưa mở công khai. Vui lòng nhập mật khẩu truy cập nội bộ để tiếp tục đến trang đăng nhập / đăng ký.",
+    },
+    passwordLabel: {
+      en: "Mật khẩu truy cập",
+      vi: "Mật khẩu truy cập",
+    },
+    passwordPlaceholder: {
+      en: "Nhập mật khẩu",
+      vi: "Nhập mật khẩu",
+    },
+    passwordSubmitLabel: {
+      en: "Tiếp tục",
+      vi: "Tiếp tục",
+    },
+    passwordError: {
+      en: "Mật khẩu chưa đúng. Vui lòng kiểm tra lại.",
+      vi: "Mật khẩu chưa đúng. Vui lòng kiểm tra lại.",
+    },
+  },
   competition: {
     intro: {
       eyebrow: { en: "Competition", vi: "Cuộc thi" },
@@ -3255,6 +3305,31 @@ export const ruleItems: RuleItem[] = [
 ];
 
 export const timelineItems: TimelineItem[] = [
+  {
+    id: "website-announcement",
+    phase: "general",
+    startDate: "2026-06-10",
+    endDate: "2026-06-10",
+    startTime: "00:00",
+    endTime: "23:59",
+    title: { en: "Website announcement", vi: "Công bố website" },
+    description: {
+      en: "The official Attacker 2026 website opens to the public.",
+      vi: "Website chính thức của Attacker 2026 mở công khai cho người tham gia.",
+    },
+    location: {
+      en: "Official Attacker 2026 website",
+      vi: "Website chính thức Attacker 2026",
+    },
+    method: {
+      en: "Public website launch and registration preparation",
+      vi: "Công bố website và chuẩn bị mở đăng ký",
+    },
+    supportLinks: [
+      { href: "/", label: { en: "Open homepage", vi: "Mở trang chủ" } },
+      { href: "/auth", label: { en: "Open account page", vi: "Mở trang tài khoản" } },
+    ],
+  },
   {
     id: "registration-opens",
     phase: "general",

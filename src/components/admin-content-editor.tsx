@@ -507,6 +507,8 @@ function iconForPage(pageId: ContentPageId) {
   switch (pageId) {
     case "home":
       return Sparkles;
+    case "construction":
+      return Clock3;
     case "competition":
       return Trophy;
     case "faq":
@@ -587,6 +589,7 @@ const contentPageTree: Array<{
       { kind: "type", id: "home-testimonials" },
     ],
   },
+  { id: "construction" },
   {
     id: "competition",
     children: [
@@ -1733,6 +1736,96 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                   )
                 }
               />
+            </Surface>
+          </>
+        ) : null}
+
+        {pageId === "construction" ? (
+          <>
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Construction page / Countdown"
+                description="Edit the full-screen pre-launch countdown page shown before the website announcement timepoint."
+              />
+              {([
+                ["Eyebrow", draft.construction.eyebrow, (language: Locale, value: string, next: SitePageContent) => { next.construction.eyebrow[language] = value; }],
+                ["Title", draft.construction.title, (language: Locale, value: string, next: SitePageContent) => { next.construction.title[language] = value; }],
+                ["Description", draft.construction.description, (language: Locale, value: string, next: SitePageContent) => { next.construction.description[language] = value; }],
+                ["Wait prefix", draft.construction.waitPrefix, (language: Locale, value: string, next: SitePageContent) => { next.construction.waitPrefix[language] = value; }],
+                ["Countdown label", draft.construction.countdownLabel, (language: Locale, value: string, next: SitePageContent) => { next.construction.countdownLabel[language] = value; }],
+              ] as const).map(([label, value, updater]) => (
+                <LocalizedFieldEditor
+                  key={`construction-${label}`}
+                  label={label}
+                  rows={label === "Description" ? 4 : 2}
+                  value={value}
+                  onChange={(language, nextValue) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        updater(language, nextValue, next);
+                      }),
+                    )
+                  }
+                />
+              ))}
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Construction page / Countdown units"
+                description="Edit the four labels shown below the countdown numbers."
+              />
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {([
+                  ["Days", draft.construction.daysLabel, (language: Locale, value: string, next: SitePageContent) => { next.construction.daysLabel[language] = value; }],
+                  ["Hours", draft.construction.hoursLabel, (language: Locale, value: string, next: SitePageContent) => { next.construction.hoursLabel[language] = value; }],
+                  ["Minutes", draft.construction.minutesLabel, (language: Locale, value: string, next: SitePageContent) => { next.construction.minutesLabel[language] = value; }],
+                  ["Seconds", draft.construction.secondsLabel, (language: Locale, value: string, next: SitePageContent) => { next.construction.secondsLabel[language] = value; }],
+                ] as const).map(([label, value, updater]) => (
+                  <LocalizedFieldEditor
+                    key={`construction-unit-${label}`}
+                    label={label}
+                    rows={2}
+                    value={value}
+                    onChange={(language, nextValue) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          updater(language, nextValue, next);
+                        }),
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Construction page / Auth password popup"
+                description="Edit the modal text shown when visitors open /auth before the public announcement timepoint."
+              />
+              {([
+                ["Modal title", draft.construction.authGateTitle, (language: Locale, value: string, next: SitePageContent) => { next.construction.authGateTitle[language] = value; }],
+                ["Modal description", draft.construction.authGateDescription, (language: Locale, value: string, next: SitePageContent) => { next.construction.authGateDescription[language] = value; }],
+                ["Password label", draft.construction.passwordLabel, (language: Locale, value: string, next: SitePageContent) => { next.construction.passwordLabel[language] = value; }],
+                ["Password placeholder", draft.construction.passwordPlaceholder, (language: Locale, value: string, next: SitePageContent) => { next.construction.passwordPlaceholder[language] = value; }],
+                ["Submit label", draft.construction.passwordSubmitLabel, (language: Locale, value: string, next: SitePageContent) => { next.construction.passwordSubmitLabel[language] = value; }],
+                ["Error message", draft.construction.passwordError, (language: Locale, value: string, next: SitePageContent) => { next.construction.passwordError[language] = value; }],
+              ] as const).map(([label, value, updater]) => (
+                <LocalizedFieldEditor
+                  key={`construction-auth-${label}`}
+                  label={label}
+                  rows={label === "Modal description" ? 4 : 2}
+                  value={value}
+                  onChange={(language, nextValue) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        updater(language, nextValue, next);
+                      }),
+                    )
+                  }
+                />
+              ))}
             </Surface>
           </>
         ) : null}

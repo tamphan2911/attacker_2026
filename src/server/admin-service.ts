@@ -6,7 +6,7 @@ import {
 } from "@prisma/client";
 import { hash } from "bcryptjs";
 
-import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, round1TestBanks, sponsorProfiles } from "@/data/site-content";
+import { DEMO_ADMIN_LOGIN_ID, defaultPageContent, judgeProfiles, mergePageContentWithDefaults, round1TestBanks, sponsorProfiles } from "@/data/site-content";
 import { normalizeStudentClassYear } from "@/lib/class-year";
 import { prisma } from "@/lib/db";
 import {
@@ -152,6 +152,15 @@ export async function savePageContentByAdmin(
   });
 
   return ok({ saved: true });
+}
+
+export async function readPageContent() {
+  const cmsEntry = await prisma.cmsEntry.findUnique({
+    where: { scope: "site-page-content" },
+    select: { payload: true },
+  });
+
+  return mergePageContentWithDefaults(cmsEntry ? JSON.parse(cmsEntry.payload) : defaultPageContent);
 }
 
 const JUDGES_SCOPE = "site-judges";
