@@ -1440,7 +1440,7 @@ export function DashboardPage() {
 
       <section>
         <Surface className="px-5 py-5 md:px-6 md:py-6">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(300px,340px)] lg:items-start">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] lg:items-start">
             <div className="min-w-0">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 {currentTeam ? (
@@ -1632,15 +1632,15 @@ export function DashboardPage() {
 
             <div className="grid min-w-0 gap-3">
               <div className="min-w-0 rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-start gap-3">
                   <div className="theme-brand-gradient flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] text-sm font-semibold text-white">
                     {currentTeam ? <ShieldCheck className="h-6 w-6" /> : teamReadinessCount}
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <p className="text-[0.68rem] uppercase tracking-[0.2em] theme-text-soft">
                       {locale === "en" ? "Current stage" : "Vị trí hiện tại"}
                     </p>
-                    <p className="mt-2 max-w-full text-base font-semibold leading-6 theme-text-strong">
+                    <p className="mt-2 max-w-full text-base font-semibold leading-6 theme-text-strong break-words [overflow-wrap:anywhere]">
                       {currentTeam ? pickTeamDisplayStatusLabel(locale, currentTeam, new Date(), timelineItems) : "--"}
                     </p>
                   </div>

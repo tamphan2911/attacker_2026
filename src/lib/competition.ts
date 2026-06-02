@@ -278,7 +278,7 @@ function pickRound2AdvancementStatusLabel(locale: Locale, team: TeamProfile, now
 
   if (team.round2Advancement === "emerging") {
     if (isEmergingAwardAnnouncementReleased(now, timelineItems) || isRoundFinished("round-3", now, timelineItems)) {
-      return locale === "en" ? "Stop at Emerging round" : "Dừng chân tại Vòng Đội ươm mầm";
+      return locale === "en" ? "Stopped at Emerging round" : "Dừng chân tại vòng Ươm mầm";
     }
 
     return locale === "en" ? "Emerging round" : "Vòng Đội ươm mầm";
@@ -304,7 +304,7 @@ function pickRound2AdvancementStatusDescription(locale: Locale, team: TeamProfil
     if (isEmergingAwardAnnouncementReleased(now, timelineItems) || isRoundFinished("round-3", now, timelineItems)) {
       return locale === "en"
         ? "This team advanced from Round 2 to the Emerging round and stopped there."
-        : "Đội này đã vượt qua Vòng 2 vào Vòng Đội ươm mầm và dừng chân tại đó.";
+        : "Đội này đã vượt qua Vòng 2 vào vòng Ươm mầm và dừng chân tại đó.";
     }
 
     return locale === "en"
