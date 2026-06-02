@@ -597,6 +597,121 @@ export function TimelinePage() {
         {phaseSummaries.map((phase) => {
           const Icon = phase.icon;
           const items = phase.items;
+          const round3ReportItems = items.filter((item) =>
+            item.id === "round-3-final-report-submission" ||
+            item.id === "round-3-emerging-awards-announcement"
+          );
+          const round3PresentationItems = items.filter((item) => item.id === "round-3-final-presentation");
+
+          const renderTimelineCard = (item: TimelineItem) => {
+            const statusMeta = getTimelineCardStatusMeta(item, now, locale, nextUpcomingKey, pageContent.timelinePage);
+            const StatusIcon = statusMeta.icon;
+            const itemTitle =
+              item.id === "registration-deadline-team-lock"
+                ? pickText(locale, pageContent.timelinePage.registrationTeamLockTitle)
+                : pickText(locale, item.title);
+            const actionLinks = buildTimelineActionLinks({
+              item,
+              currentUserRole: currentUser.role,
+              currentTeam,
+              activeUserId,
+              timelineItems,
+              now,
+              labels: pageContent.timelinePage,
+            });
+
+            return (
+              <Surface key={item.id} className="theme-timeline-card px-5 py-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
+                      {formatDateRangeLabel(locale, item.startDate, item.endDate, item.startTime, item.endTime)}
+                    </p>
+                    <h3 className="theme-heading mt-3 text-xl font-semibold theme-text-strong">
+                      {itemTitle}
+                    </h3>
+                  </div>
+                  <span
+                    className={`inline-flex min-w-[12rem] flex-col items-start rounded-[1.1rem] border px-4 py-2.5 text-left ${getTimelineCardStatusClass(statusMeta.status, phase.statusClass, phase.darkStatusClass)}`}
+                  >
+                    <span className="inline-flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em]">
+                      <StatusIcon className="h-3.5 w-3.5" />
+                      {statusMeta.label}
+                    </span>
+                    {statusMeta.countdown ? (
+                      <span className="mt-1 text-xs font-medium leading-5">
+                        {statusMeta.countdown}
+                      </span>
+                    ) : null}
+                  </span>
+                </div>
+
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  <div className="theme-timeline-meta-card theme-timeline-meta-card--accent rounded-[1.25rem] border px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                      {pickText(locale, pageContent.timelinePage.timeLabel)}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 theme-text-body">
+                      {formatDateRangeLabel(locale, item.startDate, item.endDate, item.startTime, item.endTime)}
+                    </p>
+                  </div>
+                  <div className="theme-timeline-meta-card theme-timeline-meta-card--accent rounded-[1.25rem] border px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                      {pickText(locale, pageContent.timelinePage.placeLabel)}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 theme-text-body">{pickText(locale, item.location)}</p>
+                  </div>
+                  <div className="theme-timeline-meta-card rounded-[1.25rem] border px-4 py-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                      {pickText(locale, pageContent.timelinePage.methodLabel)}
+                    </p>
+                    <p className="mt-2 text-sm leading-7 theme-text-body">{pickText(locale, item.method)}</p>
+                  </div>
+                </div>
+
+                {actionLinks.length ? (
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    {actionLinks.map((actionLink) =>
+                      actionLink.action === "eligibility" ? (
+                        <button
+                          key={actionLink.key}
+                          type="button"
+                          onClick={openEligibilityNotice}
+                          className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium leading-5 [font-family:inherit] transition active:scale-[0.98]"
+                        >
+                          <actionLink.icon className="h-3.5 w-3.5" />
+                          {pickText(locale, actionLink.label)}
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </button>
+                      ) : actionLink.disabled ? (
+                        <button
+                          key={actionLink.key}
+                          type="button"
+                          disabled
+                          title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
+                          className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium leading-5 [font-family:inherit] opacity-75"
+                        >
+                          <actionLink.icon className="h-3.5 w-3.5" />
+                          {pickText(locale, actionLink.label)}
+                        </button>
+                      ) : (
+                        <Link
+                          key={actionLink.key}
+                          href={actionLink.href ?? "#"}
+                          title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
+                          className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium leading-5 [font-family:inherit] transition active:scale-[0.98]"
+                        >
+                          <actionLink.icon className="h-3.5 w-3.5" />
+                          {pickText(locale, actionLink.label)}
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      ),
+                    )}
+                  </div>
+                ) : null}
+              </Surface>
+            );
+          };
 
           return (
             <section
@@ -632,115 +747,41 @@ export function TimelinePage() {
                 </div>
 
                 <div className="space-y-4">
-                  {items.map((item) => {
-                    const statusMeta = getTimelineCardStatusMeta(item, now, locale, nextUpcomingKey, pageContent.timelinePage);
-                    const StatusIcon = statusMeta.icon;
-                    const itemTitle =
-                      item.id === "registration-deadline-team-lock"
-                        ? pickText(locale, pageContent.timelinePage.registrationTeamLockTitle)
-                        : pickText(locale, item.title);
-                    const actionLinks = buildTimelineActionLinks({
-                      item,
-                      currentUserRole: currentUser.role,
-                      currentTeam,
-                      activeUserId,
-                      timelineItems,
-                      now,
-                      labels: pageContent.timelinePage,
-                    });
-
-                    return (
-                    <Surface key={item.id} className="theme-timeline-card px-5 py-5">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-[0.26em] theme-eyebrow">
-                            {formatDateRangeLabel(locale, item.startDate, item.endDate, item.startTime, item.endTime)}
-                          </p>
-                          <h3 className="theme-heading mt-3 text-xl font-semibold theme-text-strong">
-                            {itemTitle}
-                          </h3>
-                        </div>
-                        <span
-                          className={`inline-flex min-w-[12rem] flex-col items-start rounded-[1.1rem] border px-4 py-2.5 text-left ${getTimelineCardStatusClass(statusMeta.status, phase.statusClass, phase.darkStatusClass)}`}
-                        >
-                          <span className="inline-flex items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.18em]">
-                            <StatusIcon className="h-3.5 w-3.5" />
-                            {statusMeta.label}
-                          </span>
-                          {statusMeta.countdown ? (
-                            <span className="mt-1 text-xs font-medium leading-5">
-                              {statusMeta.countdown}
-                            </span>
-                          ) : null}
-                        </span>
+                  {phase.phase === "round-3" ? (
+                    <>
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                          {pickText(locale, phase.eyebrow)}
+                        </p>
+                        <p className="theme-heading text-xl font-semibold theme-text-strong">
+                          {pickText(locale, phase.title)}
+                        </p>
+                        <p className="text-sm leading-7 theme-text-muted">
+                          {pickText(locale, phase.description)}
+                        </p>
                       </div>
-
-                      <div className="mt-5 grid gap-3 md:grid-cols-3">
-                        <div className="theme-timeline-meta-card theme-timeline-meta-card--accent rounded-[1.25rem] border px-4 py-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                            {pickText(locale, pageContent.timelinePage.timeLabel)}
-                          </p>
-                          <p className="mt-2 text-sm leading-7 theme-text-body">
-                            {formatDateRangeLabel(locale, item.startDate, item.endDate, item.startTime, item.endTime)}
-                          </p>
-                        </div>
-                        <div className="theme-timeline-meta-card theme-timeline-meta-card--accent rounded-[1.25rem] border px-4 py-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                            {pickText(locale, pageContent.timelinePage.placeLabel)}
-                          </p>
-                          <p className="mt-2 text-sm leading-7 theme-text-body">{pickText(locale, item.location)}</p>
-                        </div>
-                        <div className="theme-timeline-meta-card rounded-[1.25rem] border px-4 py-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-                            {pickText(locale, pageContent.timelinePage.methodLabel)}
-                          </p>
-                          <p className="mt-2 text-sm leading-7 theme-text-body">{pickText(locale, item.method)}</p>
-                        </div>
+                      <div className="space-y-4">
+                        {round3ReportItems.map(renderTimelineCard)}
                       </div>
-
-                      {actionLinks.length ? (
-                        <div className="mt-4 flex flex-wrap gap-3">
-                          {actionLinks.map((actionLink) =>
-                            actionLink.action === "eligibility" ? (
-                              <button
-                                key={actionLink.key}
-                                type="button"
-                                onClick={openEligibilityNotice}
-                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium leading-5 [font-family:inherit] transition active:scale-[0.98]"
-                              >
-                                <actionLink.icon className="h-3.5 w-3.5" />
-                                {pickText(locale, actionLink.label)}
-                                <ArrowRight className="h-3.5 w-3.5" />
-                              </button>
-                            ) : actionLink.disabled ? (
-                              <button
-                                key={actionLink.key}
-                                type="button"
-                                disabled
-                                title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
-                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium leading-5 [font-family:inherit] opacity-75"
-                              >
-                                <actionLink.icon className="h-3.5 w-3.5" />
-                                {pickText(locale, actionLink.label)}
-                              </button>
-                            ) : (
-                              <Link
-                                key={actionLink.key}
-                                href={actionLink.href ?? "#"}
-                                title={actionLink.title ? pickText(locale, actionLink.title) : undefined}
-                                className="theme-timeline-link theme-timeline-link--accent inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium leading-5 [font-family:inherit] transition active:scale-[0.98]"
-                              >
-                                <actionLink.icon className="h-3.5 w-3.5" />
-                                {pickText(locale, actionLink.label)}
-                                <ArrowRight className="h-3.5 w-3.5" />
-                              </Link>
-                            ),
-                          )}
-                        </div>
-                      ) : null}
-                    </Surface>
-                    );
-                  })}
+                      <div className="border-t theme-border pt-2" />
+                      <div className="space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                          {pickText(locale, pageContent.timelinePage.round3Presentation.eyebrow)}
+                        </p>
+                        <p className="theme-heading text-xl font-semibold theme-text-strong">
+                          {pickText(locale, pageContent.timelinePage.round3Presentation.title)}
+                        </p>
+                        <p className="text-sm leading-7 theme-text-muted">
+                          {pickText(locale, pageContent.timelinePage.round3Presentation.description)}
+                        </p>
+                      </div>
+                      <div className="space-y-4">
+                        {round3PresentationItems.map(renderTimelineCard)}
+                      </div>
+                    </>
+                  ) : (
+                    items.map(renderTimelineCard)
+                  )}
                 </div>
               </div>
             </section>

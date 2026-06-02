@@ -819,6 +819,7 @@ export interface SitePageContent {
     round1: EditableSectionCopy;
     round2: EditableSectionCopy;
     round3: EditableSectionCopy;
+    round3Presentation: EditableSectionCopy;
   };
   finalists: {
     finalistsHeader: EditableSectionCopy;

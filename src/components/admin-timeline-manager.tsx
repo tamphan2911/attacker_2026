@@ -18,7 +18,7 @@ const phaseMeta: Record<"general" | CompetitionRoundKey, { en: string; vi: strin
   general: { en: "Preparation", vi: "Chuẩn bị", tone: "default" },
   "round-1": { en: "Round 1", vi: "Vòng 1", tone: "info" },
   "round-2": { en: "Round 2", vi: "Vòng 2", tone: "success" },
-  "round-3": { en: "Final round", vi: "Chung kết", tone: "warning" },
+  "round-3": { en: "Round 3", vi: "Vòng 3", tone: "warning" },
 };
 
 function cloneTimeline(value: TimelineItem[]) {

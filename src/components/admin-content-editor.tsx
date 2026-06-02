@@ -4615,12 +4615,23 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
               }
             />
             <CopySectionEditor
-              title="Timeline / Final round phase"
+              title="Timeline / Round 3 phase"
               section={draft.timelinePage.round3}
               onChange={(field, language, value) =>
                 setDraft((current) =>
                   updateDraftContent(current, (next) => {
                     next.timelinePage.round3[field][language] = value;
+                  }),
+                )
+              }
+            />
+            <CopySectionEditor
+              title="Timeline / Round 3 presentation and awards subsection"
+              section={draft.timelinePage.round3Presentation}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.timelinePage.round3Presentation[field][language] = value;
                   }),
                 )
               }

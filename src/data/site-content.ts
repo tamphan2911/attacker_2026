@@ -646,7 +646,7 @@ export const competitionRoundWindows: CompetitionRoundWindow[] = [
   },
   {
     round: "round-3",
-    title: { en: "Final round schedule", vi: "Lịch trình vòng chung kết" },
+    title: { en: "Round 3 schedule", vi: "Lịch trình Vòng 3" },
     ...round3Window,
   },
 ];
@@ -2320,11 +2320,19 @@ export const defaultPageContent: SitePageContent = {
       },
     },
     round3: {
-      eyebrow: { en: "Final round", vi: "Chung kết" },
+      eyebrow: { en: "Round 3", vi: "Vòng 3" },
       title: { en: "Final report, presentation, and awards", vi: "Báo cáo cuối, thuyết trình và trao giải" },
       description: {
-        en: "The final stage starts with the finalist report deadline, then moves into live presentation, judge Q&A, and the final award decision.",
+        en: "Round 3 begins with the final and Emerging round report deadlines, then announces the Emerging award teams before the live final presentation stage.",
         vi: "5 đội điểm cao nhất vòng 2 thi chung kết, 20 đội tiếp theo vào thi bảng Ươm mầm, chọn ra 10 đội trao giải Ươm mầm dựa theo điểm báo cáo đã chỉnh sửa hoàn thiện.",
+      },
+    },
+    round3Presentation: {
+      eyebrow: { en: "Round 3", vi: "Vòng 3" },
+      title: { en: "Final presentation and awards", vi: "Thuyết trình chung kết và trao giải" },
+      description: {
+        en: "Round 3 continues with the live presentation, judge Q&A, and final award decision for the finalist teams.",
+        vi: "Vòng chung kết bước vào phần thuyết trình trực tiếp, hỏi đáp cùng Ban giám khảo và quyết định trao giải cho các đội vào chung kết.",
       },
     },
   },
