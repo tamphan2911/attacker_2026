@@ -226,7 +226,7 @@ export function FinalistsPage() {
                         label={team.name}
                         tone={team.avatarTone}
                         imageSrc={team.avatarImageSrc}
-                        className="h-16 w-24"
+                        className="h-16 w-16"
                       />
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -356,7 +356,7 @@ export function FinalistsPage() {
                               label={team.name}
                               tone={team.avatarTone}
                               imageSrc={team.avatarImageSrc}
-                              className="h-11 w-16"
+                              className="h-11 w-11"
                             />
                             <div className="min-w-0">
                               <p className="font-semibold theme-text-strong">{team.name}</p>
