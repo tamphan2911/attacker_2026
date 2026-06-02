@@ -2189,7 +2189,7 @@ export function Round1ExamPage() {
                 <p className="mt-3 text-sm leading-7 theme-text-muted">
                   {locale === "en"
                     ? `${ROUND1_OBJECTIVE_TOTAL} objective questions x 2 points, plus ${ROUND1_ESSAY_TOTAL} essay questions x ${Math.round(ROUND1_ESSAY_MAX_SCORE / ROUND1_ESSAY_TOTAL)} points reviewed later.`
-                    : `${ROUND1_OBJECTIVE_TOTAL} câu trắc nghiệm x 2 điểm, cộng với ${ROUND1_ESSAY_TOTAL} câu tự luận x ${Math.round(ROUND1_ESSAY_MAX_SCORE / ROUND1_ESSAY_TOTAL)} điểm được chấm sau.`}
+                    : "40 câu trắc nghiệm, mỗi câu 2 điểm + 2 câu tự luận, mỗi câu 10 điểm"}
                 </p>
               </div>
             </div>
