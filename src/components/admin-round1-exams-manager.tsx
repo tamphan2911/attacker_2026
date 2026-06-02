@@ -1430,12 +1430,17 @@ function QuestionRecordCard({
                 className={cn(
                   "rounded-[1rem] border px-4 py-3.5 text-sm leading-7",
                   essayAiGuard.shouldWarn
-                    ? "border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100"
-                    : "border-sky-600/18 bg-[linear-gradient(135deg,rgba(239,246,255,0.98),rgba(224,242,254,0.92))] text-slate-900 dark:border-sky-300/18 dark:bg-sky-300/10 dark:text-sky-100",
+                    ? "border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] text-amber-950 dark:border-amber-300/28 dark:bg-[linear-gradient(135deg,rgba(120,53,15,0.42),rgba(69,26,3,0.26))] dark:text-amber-50"
+                    : "border-sky-600/18 bg-[linear-gradient(135deg,rgba(239,246,255,0.98),rgba(224,242,254,0.92))] text-slate-900 dark:border-sky-300/26 dark:bg-[linear-gradient(135deg,rgba(12,74,110,0.42),rgba(15,23,42,0.22))] dark:text-sky-50",
                 )}
               >
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
+                  <AlertTriangle
+                    className={cn(
+                      "mt-0.5 h-4.5 w-4.5 shrink-0",
+                      essayAiGuard.shouldWarn ? "dark:text-amber-200" : "dark:text-sky-200",
+                    )}
+                  />
                   <div className="space-y-1.5">
                     <p className="font-semibold">
                       {locale === "en"
@@ -1817,8 +1822,8 @@ export function AdminRound1ExamDetailView({ userId }: { userId: string }) {
                   className={cn(
                     "inline-flex h-11 min-w-11 items-center justify-center rounded-[1rem] border px-3 text-sm font-semibold transition",
                     isEssay
-                      ? "border-amber-500/24 bg-[linear-gradient(135deg,rgba(255,251,235,0.94),rgba(254,243,199,0.86))] text-amber-900 dark:border-amber-300/18 dark:bg-amber-300/10 dark:text-amber-100"
-                      : "border-sky-500/22 bg-[linear-gradient(135deg,rgba(239,246,255,0.98),rgba(224,242,254,0.88))] text-sky-900 dark:border-sky-300/18 dark:bg-sky-300/10 dark:text-sky-100",
+                      ? "border-amber-500/24 bg-[linear-gradient(135deg,rgba(255,251,235,0.94),rgba(254,243,199,0.86))] text-amber-900 shadow-sm hover:border-amber-500/38 hover:text-amber-950 dark:border-amber-300/28 dark:bg-[linear-gradient(135deg,rgba(146,64,14,0.34),rgba(69,26,3,0.24))] dark:text-amber-50 dark:shadow-none dark:hover:border-amber-200/46 dark:hover:bg-[linear-gradient(135deg,rgba(180,83,9,0.44),rgba(120,53,15,0.32))]"
+                      : "border-sky-500/22 bg-[linear-gradient(135deg,rgba(239,246,255,0.98),rgba(224,242,254,0.88))] text-sky-900 shadow-sm hover:border-sky-500/38 hover:text-sky-950 dark:border-sky-300/28 dark:bg-[linear-gradient(135deg,rgba(14,116,144,0.32),rgba(15,23,42,0.24))] dark:text-sky-50 dark:shadow-none dark:hover:border-sky-200/46 dark:hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.34),rgba(30,64,175,0.28))]",
                   )}
                   title={
                     locale === "en"
