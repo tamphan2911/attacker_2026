@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, FileText, Save, Search, Sprout, Trophy } from "lucide-react";
+import { Download, FileText, Save, Search, Sprout, Trash2, Trophy } from "lucide-react";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { StatusPill, Surface } from "@/components/site-ui";
@@ -62,13 +62,14 @@ function matchesSearch(row: AdminRound3SubmissionRow, search: string) {
 }
 
 export function AdminRound3SubmissionsManager() {
-  const { locale } = useSiteState();
+  const { locale, currentUser } = useSiteState();
   const [rows, setRows] = useState<AdminRound3SubmissionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [scoreDrafts, setScoreDrafts] = useState<Record<string, string>>({});
   const [savingTeamId, setSavingTeamId] = useState<string | null>(null);
+  const [deletingSubmissionId, setDeletingSubmissionId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Round3AdminTab>("finalist");
 
   const loadRows = useCallback(
@@ -153,6 +154,49 @@ export function AdminRound3SubmissionsManager() {
     }
   }
 
+  async function deleteSubmission(row: AdminRound3SubmissionRow) {
+    const confirmed = window.confirm(
+      locale === "en"
+        ? `Delete ${tabLabel} submission ${row.title} from team ${row.teamName}? The uploaded PDF will also be deleted from storage.`
+        : `Xóa bài nộp ${tabLabel} ${row.title} của đội ${row.teamName}? Tệp PDF đã tải lên cũng sẽ bị xóa khỏi storage.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setDeletingSubmissionId(row.submissionId);
+      setError("");
+      const response = await fetch(`/api/admin/round-3/submissions/${row.submissionId}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        throw new Error(
+          payload?.error ??
+            (locale === "en"
+              ? "Could not delete the Final/Emerging submission."
+              : "Không thể xóa bài nộp chung kết/Đội ươm mầm."),
+        );
+      }
+
+      await loadRows();
+    } catch (nextError) {
+      window.alert(
+        nextError instanceof Error
+          ? nextError.message
+          : locale === "en"
+            ? "Could not delete the Final/Emerging submission."
+            : "Không thể xóa bài nộp chung kết/Đội ươm mầm.",
+      );
+    } finally {
+      setDeletingSubmissionId(null);
+    }
+  }
+
   const tabRows = useMemo(
     () => rows.filter((row) => row.round2Bracket === activeTab),
     [activeTab, rows],
@@ -185,6 +229,8 @@ export function AdminRound3SubmissionsManager() {
     : locale === "en"
       ? "Emerging"
       : "Đội ươm mầm";
+  const canDeleteSubmission = currentUser?.role === "admin";
+  const tableColumnCount = canDeleteSubmission ? 11 : 10;
 
   if (loading) {
     return (
@@ -317,6 +363,7 @@ export function AdminRound3SubmissionsManager() {
                   locale === "en" ? "Final score" : "Điểm chung kết",
                   locale === "en" ? "Rank" : "Xếp hạng",
                   locale === "en" ? "Download" : "Tải xuống",
+                  ...(canDeleteSubmission ? [locale === "en" ? "Delete" : "Xóa"] : []),
                 ].map((label, columnIndex) => (
                   <th
                     key={label}
@@ -433,11 +480,27 @@ export function AdminRound3SubmissionsManager() {
                       </StatusPill>
                     )}
                   </td>
+                  {canDeleteSubmission ? (
+                    <td className="px-4 py-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void deleteSubmission(row);
+                        }}
+                        disabled={deletingSubmissionId === row.submissionId}
+                        title={locale === "en" ? "Delete submission and uploaded PDF" : "Xóa bài nộp và tệp PDF"}
+                        aria-label={locale === "en" ? "Delete submission and uploaded PDF" : "Xóa bài nộp và tệp PDF"}
+                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-55"
+                      >
+                        <Trash2 className={`h-4 w-4 ${deletingSubmissionId === row.submissionId ? "animate-pulse" : ""}`} />
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-4 py-10 text-center text-sm theme-text-muted">
+                  <td colSpan={tableColumnCount} className="px-4 py-10 text-center text-sm theme-text-muted">
                     {locale === "en"
                       ? `No ${tabLabel} submissions match this view.`
                       : `Không có bài nộp ${tabLabel.toLowerCase()} phù hợp.`}

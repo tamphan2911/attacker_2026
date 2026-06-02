@@ -2,6 +2,7 @@ import { SubmissionRound, TeamSubmissionResourceSource } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { readRound2FinalistResults, type Round2AdvancementBracket } from "@/server/round2-finalists";
+import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import type { AdminRound3SubmissionRow } from "@/types/admin-round3-submissions";
 
 type ServiceSuccess<T> = {
@@ -168,4 +169,39 @@ export async function saveAdminRound3FinalScore(
     finalScore: updated.finalScore ?? undefined,
     finalScoreUpdatedAt: updated.finalScoreUpdatedAt?.toISOString(),
   });
+}
+
+export async function deleteRound3SubmissionByAdmin(
+  submissionId: string,
+): Promise<ServiceResult<{ deleted: true }>> {
+  const submission = await prisma.teamSubmission.findUnique({
+    where: { id: submissionId },
+    select: {
+      id: true,
+      round: true,
+      resourceSource: true,
+      resourceStorageKey: true,
+    },
+  });
+
+  if (!submission || submission.round !== SubmissionRound.ROUND_3) {
+    return fail(404, "Final/Emerging submission not found.");
+  }
+
+  if (
+    submission.resourceSource === TeamSubmissionResourceSource.UPLOAD &&
+    submission.resourceStorageKey
+  ) {
+    try {
+      await deleteTeamSubmissionFile(submission.resourceStorageKey);
+    } catch {
+      return fail(500, "The uploaded PDF could not be deleted from storage. The submission was not removed.");
+    }
+  }
+
+  await prisma.teamSubmission.delete({
+    where: { id: submissionId },
+  });
+
+  return ok({ deleted: true });
 }
