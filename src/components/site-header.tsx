@@ -38,21 +38,34 @@ function FacebookIcon({ className }: { className?: string }) {
 }
 
 function HeaderBrandLogo({
-  imageSrc,
+  lightImageSrc,
+  darkImageSrc,
   label,
 }: {
-  imageSrc: string;
+  lightImageSrc: string;
+  darkImageSrc: string;
   label: string;
 }) {
+  const lightImage = lightImageSrc || "/header-brand-demo.jpg";
+  const darkImage = darkImageSrc || lightImage;
+
   return (
-    <span className="theme-card-shadow-soft relative block h-11 w-11 overflow-hidden rounded-[1.15rem] border border-[rgba(23,114,208,0.18)] bg-white/92 shadow-[0_18px_36px_rgba(16,38,66,0.1)] transition duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_22px_42px_rgba(16,38,66,0.14)] sm:h-[3.9rem] sm:w-[16.5rem] dark:border-[rgba(88,196,255,0.2)] dark:bg-slate-950/92 dark:shadow-[0_18px_38px_rgba(2,8,20,0.3)]">
+    <span className="relative block h-11 w-11 overflow-hidden rounded-[1.15rem] transition duration-300 group-hover:-translate-y-0.5 sm:h-[3.9rem] sm:w-[16.5rem]">
       <Image
-        src={imageSrc}
+        src={lightImage}
         alt={label}
         fill
         sizes="(min-width: 640px) 264px, 44px"
-        unoptimized={imageSrc.startsWith("/api/content-images/")}
-        className="object-cover"
+        unoptimized={lightImage.startsWith("/api/content-images/")}
+        className="object-cover dark:hidden"
+      />
+      <Image
+        src={darkImage}
+        alt={label}
+        fill
+        sizes="(min-width: 640px) 264px, 44px"
+        unoptimized={darkImage.startsWith("/api/content-images/")}
+        className="hidden object-cover dark:block"
       />
     </span>
   );
@@ -403,7 +416,10 @@ export function SiteHeader() {
   const topbarPhone = pageContent.siteHeader.phone.trim();
   const topbarFacebookLabel = pickText(locale, pageContent.siteHeader.facebookLabel);
   const topbarFacebookUrl = pageContent.siteHeader.facebookUrl.trim();
-  const headerBrandLogoImage = pageContent.siteHeader.brandLogoImage || "/header-brand-demo.jpg";
+  const headerBrandLogoLightImage =
+    pageContent.siteHeader.brandLogoLightImage || pageContent.siteHeader.brandLogoImage || "/header-brand-demo.jpg";
+  const headerBrandLogoDarkImage =
+    pageContent.siteHeader.brandLogoDarkImage || pageContent.siteHeader.brandLogoImage || headerBrandLogoLightImage;
   const topbarSupportLabel = locale === "en" ? "Support message" : "Nhắn hỗ trợ";
 
   const isActiveRoute = (href: string) => {
@@ -500,7 +516,11 @@ export function SiteHeader() {
       <div className="theme-navbar relative border-b backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 md:px-8">
           <Link href="/" className="group min-w-0 shrink-0" onClick={() => setIsOpen(false)}>
-            <HeaderBrandLogo imageSrc={headerBrandLogoImage} label="Attacker 2026" />
+            <HeaderBrandLogo
+              lightImageSrc={headerBrandLogoLightImage}
+              darkImageSrc={headerBrandLogoDarkImage}
+              label="Attacker 2026"
+            />
           </Link>
 
           <nav className="hidden items-center gap-7 lg:flex">

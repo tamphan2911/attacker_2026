@@ -696,6 +696,8 @@ export const heroCopy = {
 export const defaultPageContent: SitePageContent = {
   siteHeader: {
     brandLogoImage: "/header-brand-demo.jpg",
+    brandLogoLightImage: "/header-brand-demo.jpg",
+    brandLogoDarkImage: "/header-brand-demo.jpg",
     slogan: {
       en: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",
       vi: "ARE YOU INNOVATORS? WE'RE YOUR INVESTORS",
@@ -3683,6 +3685,15 @@ export function mergePageContentWithDefaults(
   content?: Partial<SitePageContent> | null,
 ): SitePageContent {
   const nextContent = applyLegacyVietnameseRulesCopyReplacements(mergeJsonShape(cloneDefaultPageContent(), content));
+  const legacyHeaderLogoImage = content?.siteHeader?.brandLogoImage;
+
+  if (legacyHeaderLogoImage && !content?.siteHeader?.brandLogoLightImage) {
+    nextContent.siteHeader.brandLogoLightImage = legacyHeaderLogoImage;
+  }
+
+  if (legacyHeaderLogoImage && !content?.siteHeader?.brandLogoDarkImage) {
+    nextContent.siteHeader.brandLogoDarkImage = legacyHeaderLogoImage;
+  }
 
   if (
     isLegacyOrganizerAddress(nextContent.contact.organizerAddress.en) ||

@@ -629,6 +629,8 @@ export interface EditableFinalistsGuidancePanel {
 export interface SitePageContent {
   siteHeader: {
     brandLogoImage: string;
+    brandLogoLightImage: string;
+    brandLogoDarkImage: string;
     slogan: LocalizedText;
     email: string;
     phone: string;

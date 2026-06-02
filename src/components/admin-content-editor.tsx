@@ -766,7 +766,7 @@ export function ContentHeaderEditor() {
   useAdminTitleScroll();
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
   const [headerBrandImageUploadError, setHeaderBrandImageUploadError] = useState("");
-  const [isUploadingHeaderBrandImage, setIsUploadingHeaderBrandImage] = useState(false);
+  const [uploadingHeaderBrandLogoTarget, setUploadingHeaderBrandLogoTarget] = useState<"light" | "dark" | null>(null);
 
   useEffect(() => {
     setDraft(clonePageContent(pageContent));
@@ -776,7 +776,76 @@ export function ContentHeaderEditor() {
     () => JSON.stringify(draft.siteHeader) !== JSON.stringify(pageContent.siteHeader),
     [draft.siteHeader, pageContent.siteHeader],
   );
-  const headerBrandImage = draft.siteHeader.brandLogoImage || DEFAULT_HEADER_BRAND_IMAGE;
+  const headerBrandLightImage =
+    draft.siteHeader.brandLogoLightImage || draft.siteHeader.brandLogoImage || DEFAULT_HEADER_BRAND_IMAGE;
+  const headerBrandDarkImage =
+    draft.siteHeader.brandLogoDarkImage || draft.siteHeader.brandLogoImage || headerBrandLightImage;
+  const uploadHeaderBrandLogo = async (file: File, target: "light" | "dark") => {
+    const validationError = getHeaderBrandImageValidationError(file);
+    if (validationError === "type") {
+      setHeaderBrandImageUploadError(
+        locale === "en"
+          ? "Only JPG images are allowed for the header logo."
+          : "Chỉ chấp nhận ảnh JPG cho logo header.",
+      );
+      return;
+    }
+
+    if (validationError === "size") {
+      setHeaderBrandImageUploadError(
+        locale === "en"
+          ? `Header logo JPG images must be ${formatFileSize(MAX_HEADER_BRAND_IMAGE_BYTES)} or smaller.`
+          : `Ảnh logo header phải có dung lượng ${formatFileSize(MAX_HEADER_BRAND_IMAGE_BYTES)} trở xuống.`,
+      );
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("imageFile", file);
+    setHeaderBrandImageUploadError("");
+    setUploadingHeaderBrandLogoTarget(target);
+
+    try {
+      const response = await fetch("/api/admin/content/header/brand-image", {
+        method: "POST",
+        body: formData,
+      });
+      const payload = (await response.json().catch(() => null)) as
+        | { imageUrl?: string; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.imageUrl) {
+        throw new Error(
+          payload?.error ||
+            (locale === "en"
+              ? "The header logo could not be uploaded."
+              : "Không thể tải logo header."),
+        );
+      }
+
+      setDraft((current) =>
+        updateDraftContent(current, (next) => {
+          if (target === "light") {
+            next.siteHeader.brandLogoLightImage = payload.imageUrl!;
+            next.siteHeader.brandLogoImage = payload.imageUrl!;
+            return;
+          }
+
+          next.siteHeader.brandLogoDarkImage = payload.imageUrl!;
+        }),
+      );
+    } catch (error) {
+      setHeaderBrandImageUploadError(
+        error instanceof Error
+          ? error.message
+          : locale === "en"
+            ? "The header logo could not be uploaded."
+            : "Không thể tải logo header.",
+      );
+    } finally {
+      setUploadingHeaderBrandLogoTarget(null);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -805,156 +874,137 @@ export function ContentHeaderEditor() {
           }
         />
 
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
-            <p className="text-sm font-semibold theme-text-strong">
-              {locale === "en" ? "Header logo preview" : "Xem trước logo header"}
-            </p>
-            <div className="mt-4 rounded-[1.35rem] border theme-border bg-white/82 px-4 py-4 dark:bg-white/[0.05]">
-              <div className="theme-card-shadow-soft relative h-[3.9rem] w-[16.5rem] max-w-full overflow-hidden rounded-[1.15rem] border border-[rgba(23,114,208,0.18)] bg-white/92 shadow-[0_18px_36px_rgba(16,38,66,0.1)] dark:border-[rgba(88,196,255,0.2)] dark:bg-slate-950/92">
-                <Image
-                  src={headerBrandImage}
-                  alt="Attacker 2026"
-                  fill
-                  sizes="264px"
-                  unoptimized={headerBrandImage.startsWith("/api/content-images/")}
-                  className="object-cover"
-                />
+        <div className="grid gap-5 xl:grid-cols-2">
+          {([
+            {
+              target: "light" as const,
+              title: locale === "en" ? "Light theme logo" : "Logo giao diện sáng",
+              description:
+                locale === "en"
+                  ? "Shown when visitors use light mode."
+                  : "Hiển thị khi người dùng dùng giao diện sáng.",
+              value: headerBrandLightImage,
+            },
+            {
+              target: "dark" as const,
+              title: locale === "en" ? "Dark theme logo" : "Logo giao diện tối",
+              description:
+                locale === "en"
+                  ? "Shown when visitors use dark mode."
+                  : "Hiển thị khi người dùng dùng giao diện tối.",
+              value: headerBrandDarkImage,
+            },
+          ]).map((logoConfig) => (
+            <div key={logoConfig.target} className="space-y-4 rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
+              <div>
+                <p className="text-sm font-semibold theme-text-strong">{logoConfig.title}</p>
+                <p className="mt-1 text-xs leading-5 theme-text-soft">{logoConfig.description}</p>
               </div>
-            </div>
-          </div>
 
-          <div className="space-y-4 rounded-[1.6rem] border theme-border theme-panel-subtle px-4 py-4">
-            <label className="space-y-2">
-              <span className="text-sm theme-text-muted">
-                {locale === "en" ? "Current logo image source" : "Nguồn ảnh logo hiện tại"}
-              </span>
-              <input
-                value={headerBrandImage}
-                onChange={(event) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.siteHeader.brandLogoImage = event.target.value;
-                    }),
-                  )
-                }
-                className={fieldClassName}
-              />
-            </label>
+              <div
+                className={cn(
+                  "rounded-[1.35rem] border theme-border px-4 py-4",
+                  logoConfig.target === "light" ? "bg-white" : "bg-slate-950",
+                )}
+              >
+                <div className="relative h-[3.9rem] w-[16.5rem] max-w-full overflow-hidden rounded-[1.15rem]">
+                  <Image
+                    src={logoConfig.value}
+                    alt="Attacker 2026"
+                    fill
+                    sizes="264px"
+                    unoptimized={logoConfig.value.startsWith("/api/content-images/")}
+                    className="object-cover"
+                  />
+                </div>
+              </div>
 
-            <div className="flex flex-wrap gap-2">
-              <label className="theme-button-primary inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold">
-                <Upload className="h-4 w-4" />
-                {isUploadingHeaderBrandImage
-                  ? locale === "en"
-                    ? "Uploading..."
-                    : "Đang tải..."
-                  : locale === "en"
-                    ? "Upload logo"
-                    : "Tải logo"}
+              <label className="space-y-2">
+                <span className="text-sm theme-text-muted">
+                  {locale === "en" ? "Logo image source" : "Nguồn ảnh logo"}
+                </span>
                 <input
-                  type="file"
-                  accept="image/jpeg,.jpg,.jpeg"
-                  className="hidden"
-                  disabled={isUploadingHeaderBrandImage}
-                  onChange={async (event: ChangeEvent<HTMLInputElement>) => {
-                    const file = event.target.files?.[0];
-                    event.target.value = "";
-                    if (!file) {
-                      return;
-                    }
+                  value={logoConfig.value}
+                  onChange={(event) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        if (logoConfig.target === "light") {
+                          next.siteHeader.brandLogoLightImage = event.target.value;
+                          next.siteHeader.brandLogoImage = event.target.value;
+                          return;
+                        }
 
-                    const validationError = getHeaderBrandImageValidationError(file);
-                    if (validationError === "type") {
-                      setHeaderBrandImageUploadError(
-                        locale === "en"
-                          ? "Only JPG images are allowed for the header logo."
-                          : "Chỉ chấp nhận ảnh JPG cho logo header.",
-                      );
-                      return;
-                    }
-
-                    if (validationError === "size") {
-                      setHeaderBrandImageUploadError(
-                        locale === "en"
-                          ? `Header logo JPG images must be ${formatFileSize(MAX_HEADER_BRAND_IMAGE_BYTES)} or smaller.`
-                          : `Ảnh logo header phải có dung lượng ${formatFileSize(MAX_HEADER_BRAND_IMAGE_BYTES)} trở xuống.`,
-                      );
-                      return;
-                    }
-
-                    const formData = new FormData();
-                    formData.append("imageFile", file);
-                    setHeaderBrandImageUploadError("");
-                    setIsUploadingHeaderBrandImage(true);
-
-                    try {
-                      const response = await fetch("/api/admin/content/header/brand-image", {
-                        method: "POST",
-                        body: formData,
-                      });
-                      const payload = (await response.json().catch(() => null)) as
-                        | { imageUrl?: string; error?: string }
-                        | null;
-
-                      if (!response.ok || !payload?.imageUrl) {
-                        throw new Error(
-                          payload?.error ||
-                            (locale === "en"
-                              ? "The header logo could not be uploaded."
-                              : "Không thể tải logo header."),
-                        );
-                      }
-
-                      setDraft((current) =>
-                        updateDraftContent(current, (next) => {
-                          next.siteHeader.brandLogoImage = payload.imageUrl!;
-                        }),
-                      );
-                    } catch (error) {
-                      setHeaderBrandImageUploadError(
-                        error instanceof Error
-                          ? error.message
-                          : locale === "en"
-                            ? "The header logo could not be uploaded."
-                            : "Không thể tải logo header.",
-                      );
-                    } finally {
-                      setIsUploadingHeaderBrandImage(false);
-                    }
-                  }}
+                        next.siteHeader.brandLogoDarkImage = event.target.value;
+                      }),
+                    )
+                  }
+                  className={fieldClassName}
                 />
               </label>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setHeaderBrandImageUploadError("");
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.siteHeader.brandLogoImage = DEFAULT_HEADER_BRAND_IMAGE;
-                    }),
-                  );
-                }}
-                className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
-              >
-                <Trash2 className="h-4 w-4" />
-                {locale === "en" ? "Use demo" : "Dùng ảnh demo"}
-              </button>
-            </div>
+              <div className="flex flex-wrap gap-2">
+                <label className="theme-button-primary inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold">
+                  <Upload className="h-4 w-4" />
+                  {uploadingHeaderBrandLogoTarget === logoConfig.target
+                    ? locale === "en"
+                      ? "Uploading..."
+                      : "Đang tải..."
+                    : locale === "en"
+                      ? "Upload logo"
+                      : "Tải logo"}
+                  <input
+                    type="file"
+                    accept="image/jpeg,.jpg,.jpeg"
+                    className="hidden"
+                    disabled={Boolean(uploadingHeaderBrandLogoTarget)}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                      const file = event.target.files?.[0];
+                      event.target.value = "";
+                      if (!file) {
+                        return;
+                      }
 
-            <p className="text-xs leading-6 theme-text-soft">
+                      void uploadHeaderBrandLogo(file, logoConfig.target);
+                    }}
+                  />
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHeaderBrandImageUploadError("");
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        if (logoConfig.target === "light") {
+                          next.siteHeader.brandLogoLightImage = DEFAULT_HEADER_BRAND_IMAGE;
+                          next.siteHeader.brandLogoImage = DEFAULT_HEADER_BRAND_IMAGE;
+                          return;
+                        }
+
+                        next.siteHeader.brandLogoDarkImage = DEFAULT_HEADER_BRAND_IMAGE;
+                      }),
+                    );
+                  }}
+                  className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {locale === "en" ? "Use demo" : "Dùng ảnh demo"}
+                </button>
+              </div>
+            </div>
+          ))}
+
+            <p className="text-xs leading-6 theme-text-soft xl:col-span-2">
               {locale === "en"
                 ? `Accepted format: JPG only. Maximum size: ${formatFileSize(MAX_HEADER_BRAND_IMAGE_BYTES)}. After uploading, click Save changes to publish the new logo.`
                 : `Chỉ chấp nhận JPG. Dung lượng tối đa: ${formatFileSize(MAX_HEADER_BRAND_IMAGE_BYTES)}. Sau khi tải ảnh, bấm Lưu thay đổi để cập nhật logo.`}
             </p>
 
             {headerBrandImageUploadError ? (
-              <div className="rounded-[1.2rem] border border-rose-300/55 bg-rose-50/82 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-200/20 dark:bg-rose-300/10 dark:text-rose-100">
+              <div className="rounded-[1.2rem] border border-rose-300/55 bg-rose-50/82 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-200/20 dark:bg-rose-300/10 dark:text-rose-100 xl:col-span-2">
                 {headerBrandImageUploadError}
               </div>
             ) : null}
-          </div>
         </div>
       </Surface>
 
