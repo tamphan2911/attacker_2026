@@ -2775,8 +2775,8 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
           <p className="theme-heading text-2xl font-semibold theme-text-strong">
             {locale === "en" ? "Team context" : "Thông tin đội"}
           </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+          <div className="mt-6 grid gap-4 md:grid-cols-[minmax(min(100%,24rem),max-content)_minmax(14rem,1fr)]">
+            <div className="min-w-0 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
                 {locale === "en" ? "Leader" : "Đội trưởng"}
               </p>
@@ -2784,16 +2784,19 @@ export function AdminRound1TeamResultDetail({ teamId }: { teamId: string }) {
                 {leader?.name ?? "--"}
               </p>
               {leader ? (
-                <Link href={`/admin/users/${leader.id}`} className="mt-2 inline-flex text-sm font-semibold theme-accent">
+                <Link
+                  href={`/admin/users/${leader.id}`}
+                  className="mt-2 inline-flex max-w-full break-all text-sm font-semibold leading-6 theme-accent sm:break-normal sm:whitespace-nowrap"
+                >
                   {leader.email}
                 </Link>
               ) : null}
             </div>
-            <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
+            <div className="min-w-0 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
                 {locale === "en" ? "Keyword" : "Từ khóa"}
               </p>
-              <p className="mt-2 text-lg font-semibold theme-text-strong">{team.track}</p>
+              <p className="mt-2 text-lg font-semibold theme-text-strong break-words">{team.track}</p>
             </div>
             <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 md:col-span-2">
               <p className="text-xs uppercase tracking-[0.22em] theme-text-soft">
