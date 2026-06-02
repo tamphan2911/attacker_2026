@@ -92,6 +92,7 @@ export interface FAQTopic {
 export interface SponsorProfile {
   name: string;
   logoSrc: string;
+  hidden?: boolean;
   tier: LocalizedText;
   category: LocalizedText;
   description: LocalizedText;

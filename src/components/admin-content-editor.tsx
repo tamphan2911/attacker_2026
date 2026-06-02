@@ -155,6 +155,7 @@ function createSponsorDraft(index: number): SponsorProfile {
   return {
     name: `Sponsor ${index + 1}`,
     logoSrc: "",
+    hidden: false,
     tier: createBlankLocalizedText(),
     category: createBlankLocalizedText(),
     description: createBlankLocalizedText(),

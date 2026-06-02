@@ -135,7 +135,8 @@ export function HomePage() {
   const testimonialsSection = pageContent.home.testimonialsSection;
   const testimonialsTitle =
     locale === "vi" ? "Cảm nhận từ các mùa trước" : "Voices from earlier seasons";
-  const sponsorMarqueeItems = [...sponsors, ...sponsors];
+  const visibleSponsors = sponsors.filter((sponsor) => !sponsor.hidden);
+  const sponsorMarqueeItems = [...visibleSponsors, ...visibleSponsors];
   const testimonialItems = pageContent.home.testimonials;
   const testimonialMarqueeItems = [...testimonialItems, ...testimonialItems];
 
@@ -294,6 +295,7 @@ export function HomePage() {
         </div>
       </section>
 
+      {visibleSponsors.length > 0 ? (
       <section className="space-y-5">
         <div className="flex justify-end">
           <Link href="/competition/sponsors" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
@@ -311,7 +313,7 @@ export function HomePage() {
                 <div
                   key={`${sponsor.name}-${index}`}
                   className="flex min-h-[108px] min-w-[210px] shrink-0 items-center justify-center rounded-[2rem] border theme-border bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(244,249,255,0.94))] px-6 py-5 shadow-[0_22px_44px_rgba(148,163,184,0.12)] md:min-h-[122px] md:min-w-[248px] md:px-7 md:py-6"
-                  aria-hidden={index >= sponsors.length}
+                  aria-hidden={index >= visibleSponsors.length}
                 >
                   <Image
                     src={sponsor.logoSrc}
@@ -327,6 +329,7 @@ export function HomePage() {
           </div>
         </Surface>
       </section>
+      ) : null}
 
       {testimonialItems.length > 0 ? (
       <section className="theme-home-testimonials-shell relative overflow-hidden rounded-[2.4rem] border px-6 py-8 md:px-8 md:py-10">

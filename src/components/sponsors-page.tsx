@@ -35,6 +35,7 @@ function getSponsorTierStyle(tier: LocalizedText) {
 
 export function SponsorsPage() {
   const { locale, pageContent, sponsors } = useSiteState();
+  const visibleSponsors = sponsors.filter((sponsor) => !sponsor.hidden);
 
   return (
     <div className="space-y-16">
@@ -47,7 +48,7 @@ export function SponsorsPage() {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-2">
-        {sponsors.map((sponsor, index) => (
+        {visibleSponsors.map((sponsor, index) => (
           <Surface key={`${sponsor.name}-${index}`} className="overflow-hidden px-6 py-6">
             <div className="space-y-5">
               <div className="flex flex-wrap items-start justify-between gap-4">

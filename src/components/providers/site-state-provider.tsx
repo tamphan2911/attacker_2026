@@ -300,6 +300,7 @@ function normalizeSponsorProfile(sponsor: SponsorProfile): SponsorProfile {
   return {
     ...sponsor,
     contribution: sponsor.contribution ?? sponsor.description,
+    hidden: sponsor.hidden ?? false,
   };
 }
 

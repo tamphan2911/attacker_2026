@@ -6,7 +6,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import {
   ArrowLeft,
+  ArrowDown,
+  ArrowUp,
   Building2,
+  Eye,
+  EyeOff,
   Filter,
   Handshake,
   PencilLine,
@@ -50,6 +54,7 @@ function createSponsorDraft(index: number): SponsorProfile {
   return {
     name: `Sponsor ${index + 1}`,
     logoSrc: "",
+    hidden: false,
     tier: createBlankLocalizedText(),
     category: createBlankLocalizedText(),
     description: createBlankLocalizedText(),
@@ -557,6 +562,10 @@ export function AdminSponsorsList() {
         .sort((left, right) => getSponsorOptionLabel(locale, left).localeCompare(getSponsorOptionLabel(locale, right))),
     [locale, sponsors],
   );
+  const visibleSponsorCount = useMemo(
+    () => sponsors.filter((sponsor) => !sponsor.hidden).length,
+    [sponsors],
+  );
   const filteredRows = useMemo(
     () =>
       rows.filter(({ sponsor }) => {
@@ -575,7 +584,6 @@ export function AdminSponsorsList() {
     page,
     setPage,
     pageCount,
-    startIndex,
     paginatedRows,
   } = useAdminTablePagination(filteredRows, ADMIN_LIST_TABLE_PAGE_SIZE);
 
@@ -622,6 +630,27 @@ export function AdminSponsorsList() {
     setPendingDelete(null);
   };
 
+  const moveSponsor = (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= sponsors.length) {
+      return;
+    }
+
+    const nextSponsors = cloneSponsors(sponsors);
+    const currentSponsor = nextSponsors[index];
+    nextSponsors[index] = nextSponsors[targetIndex];
+    nextSponsors[targetIndex] = currentSponsor;
+    saveNextSponsors(nextSponsors);
+  };
+
+  const toggleSponsorVisibility = (index: number) => {
+    saveNextSponsors(
+      sponsors.map((sponsor, currentIndex) =>
+        currentIndex === index ? { ...sponsor, hidden: !sponsor.hidden } : sponsor,
+      ),
+    );
+  };
+
   return (
     <div className="space-y-8">
       <div id={ADMIN_TITLE_ID} className="scroll-mt-32 space-y-2">
@@ -638,7 +667,7 @@ export function AdminSponsorsList() {
           <div className="theme-brand-gradient flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[0_18px_40px_rgba(23,114,208,0.2)]">
             <Handshake className="h-5 w-5" />
           </div>
-          <p className="mt-5 text-4xl font-semibold theme-text-strong">{sponsors.length}</p>
+          <p className="mt-5 text-4xl font-semibold theme-text-strong">{visibleSponsorCount}</p>
           <p className="mt-2 text-sm leading-7 theme-text-muted">
             {locale === "en" ? "visible sponsor records" : "hồ sơ nhà tài trợ đang hiển thị"}
           </p>
@@ -686,11 +715,12 @@ export function AdminSponsorsList() {
         </div>
 
         <div className="mt-5 overflow-x-auto">
-          <table className="min-w-[1160px] border-separate border-spacing-y-3 text-sm">
+          <table className="min-w-[1300px] border-separate border-spacing-y-3 text-sm">
             <thead>
               <tr className="text-left text-[0.72rem] font-semibold uppercase tracking-[0.22em] theme-text-soft">
                 <th className="w-[72px] px-4 py-2">#</th>
                 <th className="min-w-[280px] px-4 py-2">{locale === "en" ? "Sponsor" : "Nhà tài trợ"}</th>
+                <th className="min-w-[130px] px-4 py-2">{locale === "en" ? "Status" : "Trạng thái"}</th>
                 <th className="min-w-[180px] px-4 py-2">{locale === "en" ? "Tier" : "Hạng"}</th>
                 <th className="min-w-[220px] px-4 py-2">{locale === "en" ? "Category" : "Nhóm"}</th>
                 <th className="min-w-[280px] px-4 py-2">{locale === "en" ? "Contribution" : "Đồng hành"}</th>
@@ -709,6 +739,7 @@ export function AdminSponsorsList() {
                     />
                   </div>
                 </th>
+                <th className="px-4 py-2" />
                 <th className="px-4 py-2">
                   <select
                     value={tierFilter}
@@ -749,15 +780,15 @@ export function AdminSponsorsList() {
             <tbody>
               {paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="rounded-[1.4rem] border theme-border theme-panel px-4 py-8 text-center text-sm theme-text-muted">
+                  <td colSpan={7} className="rounded-[1.4rem] border theme-border theme-panel px-4 py-8 text-center text-sm theme-text-muted">
                     {locale === "en" ? "No sponsor matches the current filters." : "Không có nhà tài trợ nào khớp bộ lọc hiện tại."}
                   </td>
                 </tr>
               ) : (
-                paginatedRows.map(({ sponsor, index }, rowIndex) => (
+                paginatedRows.map(({ sponsor, index }) => (
                   <tr key={`${sponsor.name}-${index}`} className="theme-panel-strong">
                     <td className="rounded-l-[1.4rem] border-y border-l theme-border px-4 py-4 text-xs font-semibold theme-text-soft">
-                      {startIndex + rowIndex + 1}
+                      {index + 1}
                     </td>
                     <td className="border-y theme-border px-4 py-4">
                       <div className="flex items-center gap-4">
@@ -774,6 +805,17 @@ export function AdminSponsorsList() {
                       </div>
                     </td>
                     <td className="border-y theme-border px-4 py-4">
+                      <StatusPill tone={sponsor.hidden ? "warning" : "success"}>
+                        {sponsor.hidden
+                          ? locale === "en"
+                            ? "Hidden"
+                            : "Đang ẩn"
+                          : locale === "en"
+                            ? "Visible"
+                            : "Hiển thị"}
+                      </StatusPill>
+                    </td>
+                    <td className="border-y theme-border px-4 py-4">
                       <StatusPill>{pickText(locale, sponsor.tier) || "--"}</StatusPill>
                     </td>
                     <td className="border-y theme-border px-4 py-4 text-sm theme-text-body">
@@ -784,6 +826,62 @@ export function AdminSponsorsList() {
                     </td>
                     <td className="rounded-r-[1.4rem] border-y border-r theme-border px-4 py-4">
                       <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          disabled={index === 0}
+                          title={locale === "en" ? "Move sponsor up" : "Đưa nhà tài trợ lên"}
+                          aria-label={locale === "en" ? "Move sponsor up" : "Đưa nhà tài trợ lên"}
+                          onClick={() => moveSponsor(index, -1)}
+                          className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                          <span className="sr-only">{locale === "en" ? "Move sponsor up" : "Đưa nhà tài trợ lên"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={index >= sponsors.length - 1}
+                          title={locale === "en" ? "Move sponsor down" : "Đưa nhà tài trợ xuống"}
+                          aria-label={locale === "en" ? "Move sponsor down" : "Đưa nhà tài trợ xuống"}
+                          onClick={() => moveSponsor(index, 1)}
+                          className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-45"
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                          <span className="sr-only">{locale === "en" ? "Move sponsor down" : "Đưa nhà tài trợ xuống"}</span>
+                        </button>
+                        <button
+                          type="button"
+                          title={
+                            sponsor.hidden
+                              ? locale === "en"
+                                ? "Show sponsor on public pages"
+                                : "Hiển thị nhà tài trợ trên trang công khai"
+                              : locale === "en"
+                                ? "Hide sponsor from public pages"
+                                : "Ẩn nhà tài trợ khỏi trang công khai"
+                          }
+                          aria-label={
+                            sponsor.hidden
+                              ? locale === "en"
+                                ? "Show sponsor on public pages"
+                                : "Hiển thị nhà tài trợ trên trang công khai"
+                              : locale === "en"
+                                ? "Hide sponsor from public pages"
+                                : "Ẩn nhà tài trợ khỏi trang công khai"
+                          }
+                          onClick={() => toggleSponsorVisibility(index)}
+                          className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full"
+                        >
+                          {sponsor.hidden ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                          <span className="sr-only">
+                            {sponsor.hidden
+                              ? locale === "en"
+                                ? "Show sponsor"
+                                : "Hiển thị nhà tài trợ"
+                              : locale === "en"
+                                ? "Hide sponsor"
+                                : "Ẩn nhà tài trợ"}
+                          </span>
+                        </button>
                         <Link
                           href={getSponsorListHref(index)}
                           title={locale === "en" ? "Edit sponsor" : "Sửa nhà tài trợ"}
