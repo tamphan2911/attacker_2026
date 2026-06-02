@@ -129,6 +129,7 @@ function RichParagraphBlock({ body }: { body: string }) {
 
 export function NewsArticlePage({ post }: { post: NewsPost }) {
   const { locale, newsPosts, pageContent } = useSiteState();
+  const articleLocale = "vi" as const;
   const relatedPosts = newsPosts.filter((item) => item.slug !== post.slug).slice(0, 3);
 
   return (
@@ -141,7 +142,7 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
       <section className="theme-card-shadow-soft relative overflow-hidden rounded-[2rem] border">
         <Image
           src={post.coverImageSrc}
-          alt={pickText(locale, post.coverImageAlt)}
+          alt={pickText(articleLocale, post.coverImageAlt)}
           fill
           sizes="100vw"
           className="object-cover"
@@ -151,16 +152,16 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
         <div className="relative grid gap-6 px-5 py-7 md:px-8 md:py-8 lg:grid-cols-[minmax(0,1fr)_290px] lg:items-end lg:px-10 lg:py-10">
           <div className="max-w-3xl space-y-5 text-white">
             <p className="text-xs font-semibold uppercase tracking-[0.34em] text-white/70">
-              {pickText(locale, post.category)}
+              {pickText(articleLocale, post.category)}
             </p>
             <h1 className="theme-heading text-3xl font-semibold tracking-tight text-white md:text-[3.1rem] md:leading-[1.04]">
-              {pickText(locale, post.title)}
+              {pickText(articleLocale, post.title)}
             </h1>
             <p className="max-w-2xl text-base leading-8 text-white/78 md:text-[1.05rem]">
-              {pickText(locale, post.excerpt)}
+              {pickText(articleLocale, post.excerpt)}
             </p>
             <div className="flex flex-wrap items-center gap-3 text-sm text-white/68">
-              <span>{formatDateLabel(locale, post.publishedAt)}</span>
+              <span>{formatDateLabel(articleLocale, post.publishedAt)}</span>
               <span className="h-1 w-1 rounded-full bg-white/42" />
               <span>{post.author}</span>
               <span className="h-1 w-1 rounded-full bg-white/42" />
@@ -177,7 +178,7 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/42">
                   {locale === "en" ? "Published" : "Ngày đăng"}
                 </p>
-                <p className="mt-2 text-sm text-white/82">{formatDateLabel(locale, post.publishedAt)}</p>
+                <p className="mt-2 text-sm text-white/82">{formatDateLabel(articleLocale, post.publishedAt)}</p>
               </div>
               <div>
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/42">
@@ -196,7 +197,7 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
                   {locale === "en" ? "Cover note" : "Ghi chú ảnh bìa"}
                 </p>
                 <p className="mt-2 text-sm leading-7 text-white/72">
-                  {pickText(locale, post.coverLabel)}
+                  {pickText(articleLocale, post.coverLabel)}
                 </p>
               </div>
             </div>
@@ -209,7 +210,7 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
           <div className="space-y-8">
             {post.content.map((block, index) =>
               block.type === "paragraph" ? (
-                <RichParagraphBlock key={index} body={pickText(locale, block.body)} />
+                <RichParagraphBlock key={index} body={pickText(articleLocale, block.body)} />
               ) : (
                 <figure key={index} className="space-y-4">
                   <div
@@ -221,14 +222,14 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
                   >
                     <img
                       src={block.src}
-                      alt={pickText(locale, block.alt)}
+                      alt={pickText(articleLocale, block.alt)}
                       loading="lazy"
                       className="absolute inset-0 h-full w-full object-cover"
                     />
                     <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(7,18,35,0.02),rgba(7,18,35,0.12),rgba(7,18,35,0.18))]" />
                   </div>
                   <figcaption className="text-sm leading-7 theme-text-soft">
-                    {pickText(locale, block.caption)}
+                    {pickText(articleLocale, block.caption)}
                   </figcaption>
                 </figure>
               ),
@@ -244,12 +245,12 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
             {relatedPosts.map((item) => (
               <Link key={item.slug} href={`/news/${item.slug}`} className="block">
                 <div className="rounded-[1.7rem] border theme-border theme-panel px-4 py-4 transition hover:border-sky-300/22 hover:bg-[var(--panel-strong)]">
-                  <StatusPill>{pickText(locale, item.category)}</StatusPill>
+                  <StatusPill>{pickText(articleLocale, item.category)}</StatusPill>
                   <p className="mt-4 text-base font-semibold leading-7 theme-text-strong">
-                    {pickText(locale, item.title)}
+                    {pickText(articleLocale, item.title)}
                   </p>
                   <p className="mt-3 text-sm leading-7 theme-text-muted">
-                    {pickText(locale, item.excerpt)}
+                    {pickText(articleLocale, item.excerpt)}
                   </p>
                   <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-200">
                     {locale === "en" ? "Open article" : "Mở bài viết"}

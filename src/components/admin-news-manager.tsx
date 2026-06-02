@@ -91,6 +91,32 @@ function createEmptyNewsPost(): NewsPost {
   };
 }
 
+function vietnameseOnlyText(value: LocalizedText): LocalizedText {
+  const nextValue = value.vi.trim() || value.en.trim();
+  return { en: nextValue, vi: nextValue };
+}
+
+function normalizeVietnameseOnlyNewsPost(post: NewsPost): NewsPost {
+  return {
+    ...post,
+    category: vietnameseOnlyText(post.category),
+    title: vietnameseOnlyText(post.title),
+    excerpt: vietnameseOnlyText(post.excerpt),
+    coverLabel: vietnameseOnlyText(post.coverLabel),
+    coverImageAlt: vietnameseOnlyText(post.coverImageAlt),
+    highlights: post.highlights.map(vietnameseOnlyText),
+    content: post.content.map((block) =>
+      block.type === "paragraph"
+        ? { ...block, body: vietnameseOnlyText(block.body) }
+        : {
+            ...block,
+            alt: vietnameseOnlyText(block.alt),
+            caption: vietnameseOnlyText(block.caption),
+          },
+    ),
+  };
+}
+
 function slugify(value: string) {
   return value
     .normalize("NFKD")
@@ -225,21 +251,15 @@ function LocalizedFieldEditor({
   onChange: (locale: Locale, nextValue: string) => void;
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {(["en", "vi"] as Locale[]).map((locale) => (
-        <label key={locale} className="space-y-2">
-          <span className="text-sm theme-text-muted">
-            {`${label} (${locale.toUpperCase()})`}
-          </span>
-          <textarea
-            rows={rows}
-            value={value[locale]}
-            onChange={(event) => onChange(locale, event.target.value)}
-            className={fieldClassName}
-          />
-        </label>
-      ))}
-    </div>
+    <label className="space-y-2">
+      <span className="text-sm theme-text-muted">{`${label} (VI)`}</span>
+      <textarea
+        rows={rows}
+        value={value.vi}
+        onChange={(event) => onChange("vi", event.target.value)}
+        className={fieldClassName}
+      />
+    </label>
   );
 }
 
@@ -297,8 +317,8 @@ function RichParagraphEditor({
   };
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      {(["en", "vi"] as Locale[]).map((language) => (
+    <div className="space-y-4">
+      {(["vi"] as Locale[]).map((language) => (
         <div key={language} className="space-y-3 rounded-[1.5rem] border theme-border theme-panel-strong px-4 py-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-sm font-semibold theme-text-strong">
@@ -352,9 +372,7 @@ function RichParagraphEditor({
             className={`${fieldClassName} min-h-[220px] font-[inherit] leading-7`}
           />
           <p className="text-xs leading-6 theme-text-soft">
-            {language === "en"
-              ? "Use toolbar shortcuts for headings, lists, quotes, bold, italic, and links. The public article page will render these formats."
-              : "Dùng thanh công cụ để tạo tiêu đề, danh sách, trích dẫn, in đậm, in nghiêng và liên kết. Trang bài viết sẽ hiển thị các định dạng này."}
+            Dùng thanh công cụ để tạo tiêu đề, danh sách, trích dẫn, in đậm, in nghiêng và liên kết. Trang bài viết sẽ hiển thị các định dạng này.
           </p>
         </div>
       ))}
@@ -1062,25 +1080,24 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
     setEditorMessage("");
 
     const nextSlug = generatedSlug || slugify(draft.slug || `news-${Date.now()}`);
+    const normalizedDraft = normalizeVietnameseOnlyNewsPost(draft);
     const nextPostBase: NewsPost = {
-      ...draft,
+      ...normalizedDraft,
       slug: nextSlug,
-      publishedAt: draft.publishedAt || new Date().toISOString().slice(0, 10),
-      readTime: draft.readTime || "3 min",
-      tags: draft.tags.filter(Boolean),
-      highlights: draft.highlights.filter((item) => item.en.trim() || item.vi.trim()),
-      content: draft.content.filter((block) =>
+      publishedAt: normalizedDraft.publishedAt || new Date().toISOString().slice(0, 10),
+      readTime: normalizedDraft.readTime || "3 min",
+      tags: normalizedDraft.tags.filter(Boolean),
+      highlights: normalizedDraft.highlights.filter((item) => item.vi.trim()),
+      content: normalizedDraft.content.filter((block) =>
         block.type === "paragraph"
-          ? block.body.en.trim() || block.body.vi.trim()
+          ? block.body.vi.trim()
           : block.src.trim() ||
-              block.alt.en.trim() ||
               block.alt.vi.trim() ||
-              block.caption.en.trim() ||
               block.caption.vi.trim(),
       ),
     };
 
-    if (!nextPostBase.coverLabel.en.trim() && !nextPostBase.coverLabel.vi.trim()) {
+    if (!nextPostBase.coverLabel.vi.trim()) {
       setEditorMessage(
         locale === "en"
           ? "Cover caption is required. It is also used as the caption for the cover image block inside the article."
