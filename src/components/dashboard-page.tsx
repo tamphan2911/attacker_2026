@@ -3409,7 +3409,7 @@ function SubmissionRoundCard({
           : "Nộp báo cáo Vòng Đội ươm mầm"
       : locale === "en"
         ? "Final report submission"
-        : "Nộp báo cáo chung kết";
+        : "Nộp báo cáo Chung kết";
   const roundWindow = getSubmissionDeadlineTimelineItem(round, timelineItems) ?? getCompetitionRoundWindow(round, timelineItems);
   const roundWindowLabel = submissionWindowLabel ?? (roundWindow
     ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate, roundWindow.startTime, roundWindow.endTime)
@@ -3427,7 +3427,7 @@ function SubmissionRoundCard({
       : round === "round-3"
         ? round3Bracket === "emerging"
           ? "Đã đóng hạn báo cáo Vòng Đội ươm mầm"
-          : "Đã đóng hạn báo cáo chung kết"
+          : "Đã đóng hạn báo cáo Chung kết"
         : `${pickRoundLabel(locale, round)} đã kết thúc`
     : hasPassedRound
       ? locale === "en"
@@ -3454,7 +3454,7 @@ function SubmissionRoundCard({
       : round === "round-3"
         ? round3Bracket === "emerging"
           ? "Hạn nộp báo cáo Vòng Đội ươm mầm đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
-          : "Hạn nộp báo cáo chung kết đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
+          : "Hạn nộp báo cáo Chung kết đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
         : "Khu vực nộp báo cáo Vòng 2 đã đóng vì hạn nộp chính thức của Vòng 2 đã kết thúc. Phiên bản hợp lệ mới nhất của đội vẫn được hiển thị để theo dõi, và đội không thể tải thêm phiên bản báo cáo mới."
     : hasPassedRound
       ? locale === "en"
@@ -3478,7 +3478,7 @@ function SubmissionRoundCard({
                 ? "Submission center"
                 : round === "round-2"
                   ? "Trung tâm quản lý báo cáo Vòng 2"
-                  : "Trung tâm quản lý báo cáo chung kết"}
+                  : "Trung tâm quản lý báo cáo Chung kết"}
             </p>
           </div>
           <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -3647,7 +3647,7 @@ function SubmissionRoundCard({
                           : "Đã kết thúc nộp báo cáo Vòng Đội ươm mầm."
                         : locale === "en"
                           ? "Final report submission is finished."
-                          : "Đã kết thúc nộp báo cáo chung kết."}
+                          : "Đã kết thúc nộp báo cáo Chung kết."}
                   </p>
                   <p className="mt-2">
                     {round === "round-2"

@@ -1103,7 +1103,7 @@ export const defaultPageContent: SitePageContent = {
     pillars: [
       { en: "40 objective + 2 essay questions", vi: "40 câu trắc nghiệm + 2 câu tự luận" },
       { en: "Team-average progression", vi: "Đi tiếp theo điểm trung bình đội" },
-      { en: "Final report deadline + live final judging", vi: "Hạn nộp báo cáo chung kết + chấm trực tiếp" },
+      { en: "Final report deadline + live final judging", vi: "Hạn nộp báo cáo Chung kết + chấm trực tiếp" },
     ],
     highlights: [
       {
@@ -2210,7 +2210,7 @@ export const defaultPageContent: SitePageContent = {
     },
     finalReportClosedTitle: {
       en: "The final report deadline has passed.",
-      vi: "Hạn nộp báo cáo chung kết đã kết thúc.",
+      vi: "Hạn nộp báo cáo Chung kết đã kết thúc.",
     },
     stepsLabel: { en: "steps", vi: "bước" },
     timeLabel: { en: "Time", vi: "Thời gian" },
@@ -2382,7 +2382,7 @@ export const defaultPageContent: SitePageContent = {
         },
       ],
       emailLabel: { en: "Organizer email", vi: "Email ban tổ chức" },
-      reportLabel: { en: "Submit final round report", vi: "Nộp báo cáo chung kết" },
+      reportLabel: { en: "Submit final round report", vi: "Nộp báo cáo Chung kết" },
     },
     emergingGuidance: {
       title: {
@@ -3404,10 +3404,10 @@ export const timelineItems: TimelineItem[] = [
     phase: "round-3",
     startDate: round3FinalReportWindow.startDate,
     endDate: round3FinalReportWindow.endDate,
-    title: { en: "Final and Emerging round report deadline", vi: "Hạn nộp báo cáo chung kết và Vòng Đội ươm mầm" },
+    title: { en: "Final and Emerging round report deadline", vi: "Hạn nộp báo cáo Chung kết và Vòng Đội ươm mầm" },
     description: {
       en: "The Top 5 finalist teams submit final reports, while the 20 Emerging round qualifiers submit their updated Emerging round reports for rescoring.",
-      vi: "Top 5 đội chung kết nộp báo cáo chung kết, còn 20 đội vào Vòng Đội ươm mầm nộp báo cáo cập nhật để được chấm lại.",
+      vi: "Top 5 đội chung kết nộp báo cáo Chung kết, còn 20 đội vào Vòng Đội ươm mầm nộp báo cáo cập nhật để được chấm lại.",
     },
     location: {
       en: "Team workspace submission center",
@@ -3418,7 +3418,7 @@ export const timelineItems: TimelineItem[] = [
       vi: "Đội trưởng đại diện đội thi nộp bài.",
     },
     supportLinks: [
-      { href: "/dashboard", label: { en: "Submit final/Emerging report", vi: "Nộp báo cáo chung kết/Đội ươm mầm" } },
+      { href: "/dashboard", label: { en: "Submit final/Emerging report", vi: "Nộp báo cáo Chung kết/Đội ươm mầm" } },
       { href: "/competition/judges", label: { en: "See judging panel", vi: "Xem hội đồng giám khảo" } },
     ],
   },
