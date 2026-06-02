@@ -101,6 +101,11 @@ enum Round1JudgeReviewSource {
   HUMAN
 }
 
+enum TeamSubmissionJudgeReviewSource {
+  AI
+  HUMAN
+}
+
 enum Round1AiEssayScoringStatus {
   NOT_STARTED
   SCORING
@@ -117,6 +122,26 @@ enum Round1AiEssayScoringJobStatus {
 }
 
 enum Round1AiEssayScoringJobMode {
+  RUN_ALL
+  RETRY_FAILED
+}
+
+enum Round2AiReportScoringStatus {
+  NOT_STARTED
+  SCORING
+  SCORED
+  FAILED
+  SKIPPED_HUMAN
+}
+
+enum Round2AiReportScoringJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum Round2AiReportScoringJobMode {
   RUN_ALL
   RETRY_FAILED
 }
@@ -428,6 +453,7 @@ model TeamSubmission {
   team               Team                         @relation(fields: [teamId], references: [id], onDelete: Cascade)
   submittedByUser    User                         @relation(fields: [submittedByUserId], references: [id], onDelete: Restrict)
   judgeReviews       TeamSubmissionJudgeReview[]
+  aiReportReview     Round2AiReportReview?
 
   @@unique([teamId, round, version])
 }
@@ -496,6 +522,7 @@ model TeamSubmissionJudgeReview {
   submissionId String
   score        Float?
   note         String         @default("")
+  source       TeamSubmissionJudgeReviewSource @default(HUMAN)
   scoredAt     DateTime?
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
@@ -504,6 +531,45 @@ model TeamSubmissionJudgeReview {
 
   @@unique([judgeUserId, submissionId])
   @@index([judgeUserId, scoredAt])
+}
+
+model Round2AiReportReview {
+  id                String                      @id @default(cuid())
+  submissionId      String                      @unique
+  model             String                      @default("")
+  status            Round2AiReportScoringStatus @default(NOT_STARTED)
+  score             Float?
+  rubricScores      String                      @default("{}")
+  comment           String                      @default("")
+  error             String?
+  scoredAt          DateTime?
+  humanOverriddenAt DateTime?
+  createdAt         DateTime                    @default(now())
+  updatedAt         DateTime                    @updatedAt
+  submission        TeamSubmission              @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([status, updatedAt])
+}
+
+model Round2AiReportScoringJob {
+  id                   String                         @id @default(cuid())
+  mode                 Round2AiReportScoringJobMode
+  status               Round2AiReportScoringJobStatus @default(PENDING)
+  model                String                         @default("")
+  totalEligible        Int                            @default(0)
+  processedCount       Int                            @default(0)
+  scoredCount          Int                            @default(0)
+  failedCount          Int                            @default(0)
+  skippedHumanCount    Int                            @default(0)
+  skippedExistingCount Int                            @default(0)
+  lastError            String?
+  createdByUserId      String?
+  startedAt            DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime                       @default(now())
+  updatedAt            DateTime                       @updatedAt
+
+  @@index([status, createdAt])
 }
 
 model Round2TeamJudgeAssignment {

@@ -26,7 +26,7 @@ function formatLaunchDate(value: string, locale: Locale) {
     return `lúc ${timeLabel} - ngày ${dateLabel}`;
   }
 
-  return new Intl.DateTimeFormat(locale === "vi" ? "vi-VN" : "en-US", {
+  return new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "long",
     year: "numeric",

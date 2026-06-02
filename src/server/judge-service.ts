@@ -1,4 +1,9 @@
-import { Round1JudgeReviewSource, SubmissionRound, UserRole } from "@prisma/client";
+import {
+  Round1JudgeReviewSource,
+  SubmissionRound,
+  TeamSubmissionJudgeReviewSource,
+  UserRole,
+} from "@prisma/client";
 
 import { ROUND1_ESSAY_MAX_SCORE, ROUND1_ESSAY_POINT_VALUE, countWords } from "@/lib/round1";
 import { prisma } from "@/lib/db";
@@ -120,7 +125,7 @@ function isScored(review?: { score: number | null; scoredAt: Date | null } | nul
 
 const TEAM_REVIEW_NOTE_PREFIX = "__ATTACKER_RUBRIC_REVIEW_V1__";
 
-function decodeTeamReviewNote(rawNote: string | null | undefined) {
+export function decodeTeamReviewNote(rawNote: string | null | undefined) {
   const note = rawNote ?? "";
   if (!note.startsWith(TEAM_REVIEW_NOTE_PREFIX)) {
     return {
@@ -156,7 +161,7 @@ function decodeTeamReviewNote(rawNote: string | null | undefined) {
   }
 }
 
-function encodeTeamReviewNote(note: string, rubricScores: Record<string, number>) {
+export function encodeTeamReviewNote(note: string, rubricScores: Record<string, number>) {
   return `${TEAM_REVIEW_NOTE_PREFIX}${JSON.stringify({
     note: note.trim(),
     rubricScores,
@@ -700,25 +705,38 @@ export async function saveJudgeTeamSubmissionReview(
     return fail(400, `Submission score must be between 0 and ${detail.data.maxScore}.`);
   }
 
-  await prisma.teamSubmissionJudgeReview.upsert({
-    where: {
-      judgeUserId_submissionId: {
+  await prisma.$transaction(async (tx) => {
+    await tx.teamSubmissionJudgeReview.upsert({
+      where: {
+        judgeUserId_submissionId: {
+          judgeUserId: userId,
+          submissionId,
+        },
+      },
+      update: {
+        score,
+        note,
+        source: TeamSubmissionJudgeReviewSource.HUMAN,
+        scoredAt: new Date(),
+      },
+      create: {
         judgeUserId: userId,
         submissionId,
+        score,
+        note,
+        source: TeamSubmissionJudgeReviewSource.HUMAN,
+        scoredAt: new Date(),
       },
-    },
-    update: {
-      score,
-      note,
-      scoredAt: new Date(),
-    },
-    create: {
-      judgeUserId: userId,
-      submissionId,
-      score,
-      note,
-      scoredAt: new Date(),
-    },
+    });
+
+    if (detail.data.round === "round-2") {
+      await tx.round2AiReportReview.updateMany({
+        where: { submissionId },
+        data: {
+          humanOverriddenAt: new Date(),
+        },
+      });
+    }
   });
 
   return ok({ reviewSaved: true });

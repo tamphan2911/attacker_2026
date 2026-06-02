@@ -1,4 +1,4 @@
-import { SubmissionRound, TeamSubmissionResourceSource, UserRole } from "@prisma/client";
+import { Round2AiReportScoringStatus, SubmissionRound, TeamSubmissionResourceSource, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { readAdminRound2JudgeOptions } from "@/server/admin-round2-submissions";
@@ -8,6 +8,7 @@ import {
 } from "@/server/round2-judge-assignment";
 import type { AdminRound2JudgeOption } from "@/types/admin-round2-submissions";
 import type {
+  AdminRound2AiScoringRecord,
   AdminRound2JudgeScoreRecord,
   AdminRound2ScoreRow,
   AdminRound2ScoreStatus,
@@ -23,6 +24,22 @@ function createStatus(scoredCount: number): AdminRound2ScoreStatus {
   }
 
   return "not-scored";
+}
+
+function serializeAiStatus(status?: Round2AiReportScoringStatus | null): AdminRound2AiScoringRecord["status"] {
+  switch (status) {
+    case Round2AiReportScoringStatus.SCORING:
+      return "scoring";
+    case Round2AiReportScoringStatus.SCORED:
+      return "scored";
+    case Round2AiReportScoringStatus.FAILED:
+      return "failed";
+    case Round2AiReportScoringStatus.SKIPPED_HUMAN:
+      return "skipped-human";
+    case Round2AiReportScoringStatus.NOT_STARTED:
+    default:
+      return "not-started";
+  }
 }
 
 export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]> {
@@ -65,6 +82,7 @@ export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]>
           },
         },
       },
+      aiReportReview: true,
     },
   });
 
@@ -124,6 +142,13 @@ export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]>
         status: createStatus(scoredReviews.length),
         averageScore,
         judges,
+        aiScoring: {
+          status: serializeAiStatus(submission.aiReportReview?.status),
+          score: submission.aiReportReview?.score ?? undefined,
+          model: submission.aiReportReview?.model || undefined,
+          error: submission.aiReportReview?.error ?? undefined,
+          scoredAt: submission.aiReportReview?.scoredAt?.toISOString(),
+        },
       };
     })
     .sort((left, right) => {
