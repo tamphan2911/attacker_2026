@@ -141,9 +141,6 @@ export function FinalistsPage() {
                   <Surface key={`finalist-slot-${index}`} className="overflow-hidden border-dashed px-5 py-5 md:px-6">
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="flex items-start gap-4">
-                        <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.15rem] border border-slate-500/18 bg-[var(--panel-subtle)] text-sm font-semibold theme-text-soft">
-                          {String(index + 1).padStart(2, "0")}
-                        </div>
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="theme-heading text-xl font-semibold theme-text-strong">
@@ -159,8 +156,8 @@ export function FinalistsPage() {
                         </div>
                       </div>
 
-                      <div className="rounded-[1.2rem] border theme-border bg-white/82 px-4 py-3 dark:bg-white/[0.05]">
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                      <div className="w-full shrink-0 rounded-[1.2rem] border theme-border bg-white/82 px-4 py-3 dark:bg-white/[0.05] md:w-[18.5rem]">
+                        <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow sm:tracking-[0.22em]">
                           {pickText(locale, pageContent.finalists.presentationDayLabel)}
                         </p>
                         <p className="mt-2 text-sm font-semibold theme-text-strong">
@@ -189,14 +186,11 @@ export function FinalistsPage() {
                 >
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex items-start gap-4">
-                      <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.15rem] border border-sky-600/18 bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(37,99,235,0.12))] text-sm font-semibold text-slate-950 dark:border-sky-300/18 dark:bg-sky-300/12 dark:text-sky-100">
-                        {String(index + 1).padStart(2, "0")}
-                      </div>
                       <GradientAvatar
                         label={team.name}
                         tone={team.avatarTone}
                         imageSrc={team.avatarImageSrc}
-                        className="h-14 w-14 rounded-[1.2rem]"
+                        className="h-16 w-16 rounded-[1.2rem]"
                       />
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -224,8 +218,8 @@ export function FinalistsPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-[1.2rem] border theme-border bg-white/82 px-4 py-3 dark:bg-white/[0.05]">
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                    <div className="w-full shrink-0 rounded-[1.2rem] border theme-border bg-white/82 px-4 py-3 dark:bg-white/[0.05] md:w-[18.5rem]">
+                      <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-[0.18em] theme-eyebrow sm:tracking-[0.22em]">
                         {pickText(locale, pageContent.finalists.presentationDayLabel)}
                       </p>
                       <p className="mt-2 text-sm font-semibold theme-text-strong">
