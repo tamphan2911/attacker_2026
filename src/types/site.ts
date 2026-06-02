@@ -875,7 +875,9 @@ export interface SitePageContent {
     teamMembersLabel: LocalizedText;
     finalStandingsEyebrow: LocalizedText;
     presentationDayLabel: LocalizedText;
+    presentationDateValue: LocalizedText;
     presentationPlaceLabel: LocalizedText;
+    presentationPlaceValue: LocalizedText;
     toBeAnnouncedLabel: LocalizedText;
   };
   forum: {

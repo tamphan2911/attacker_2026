@@ -4898,7 +4898,9 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 ["Final results / Team members label", draft.finalResults.teamMembersLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.teamMembersLabel[language] = value; }],
                 ["Final results / Final standings eyebrow", draft.finalResults.finalStandingsEyebrow, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.finalStandingsEyebrow[language] = value; }],
                 ["Final results / Presentation day label", draft.finalResults.presentationDayLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.presentationDayLabel[language] = value; }],
+                ["Final results / Presentation date text", draft.finalResults.presentationDateValue, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.presentationDateValue[language] = value; }],
                 ["Final results / Presentation place label", draft.finalResults.presentationPlaceLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.presentationPlaceLabel[language] = value; }],
+                ["Final results / Presentation place text", draft.finalResults.presentationPlaceValue, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.presentationPlaceValue[language] = value; }],
                 ["Final results / To be announced", draft.finalResults.toBeAnnouncedLabel, (language: Locale, value: string, next: SitePageContent) => { next.finalResults.toBeAnnouncedLabel[language] = value; }],
               ].map(([title, value, updater]) => (
                 <LocalizedTextEditorCard

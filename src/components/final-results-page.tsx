@@ -353,6 +353,24 @@ function PlaceCard({
 export function FinalResultsPage() {
   const { locale, teams, users, currentTeam, timelineItems, pageContent } = useSiteState();
   const finalPresentationItem = timelineItems.find((item) => item.id === "round-3-final-presentation");
+  const editablePresentationDate = pickText(locale, pageContent.finalResults.presentationDateValue).trim();
+  const presentationDateText =
+    editablePresentationDate ||
+    (finalPresentationItem
+      ? formatDateRangeLabel(
+          locale,
+          finalPresentationItem.startDate,
+          finalPresentationItem.endDate,
+          finalPresentationItem.startTime,
+          finalPresentationItem.endTime,
+        )
+      : pickText(locale, pageContent.finalResults.toBeAnnouncedLabel));
+  const editablePresentationPlace = pickText(locale, pageContent.finalResults.presentationPlaceValue).trim();
+  const presentationPlaceText =
+    editablePresentationPlace ||
+    (finalPresentationItem
+      ? pickText(locale, finalPresentationItem.location)
+      : pickText(locale, pageContent.finalResults.toBeAnnouncedLabel));
 
   const championMeta = outcomeMeta.find((meta) => meta.outcome === "champion")!;
   const runnerUpMeta = outcomeMeta.find((meta) => meta.outcome === "runner-up")!;
@@ -387,15 +405,7 @@ export function FinalResultsPage() {
                   {pickText(locale, pageContent.finalResults.presentationDayLabel)}
                 </p>
                 <p className="mt-1 text-sm font-semibold theme-text-strong">
-                  {finalPresentationItem
-                    ? formatDateRangeLabel(
-                        locale,
-                        finalPresentationItem.startDate,
-                        finalPresentationItem.endDate,
-                        finalPresentationItem.startTime,
-                        finalPresentationItem.endTime,
-                      )
-                    : pickText(locale, pageContent.finalResults.toBeAnnouncedLabel)}
+                  {presentationDateText}
                 </p>
               </div>
             </div>
@@ -410,9 +420,7 @@ export function FinalResultsPage() {
                   {pickText(locale, pageContent.finalResults.presentationPlaceLabel)}
                 </p>
                 <p className="mt-1 text-sm font-semibold theme-text-strong">
-                  {finalPresentationItem
-                    ? pickText(locale, finalPresentationItem.location)
-                    : pickText(locale, pageContent.finalResults.toBeAnnouncedLabel)}
+                  {presentationPlaceText}
                 </p>
               </div>
             </div>
