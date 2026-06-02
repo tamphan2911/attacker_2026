@@ -389,10 +389,14 @@ export function FinalResultsPage() {
   return (
     <div className="space-y-8 md:space-y-10">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div>
+        <div className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
             {pickText(locale, pageContent.finalResults.finalStandingsEyebrow)}
           </p>
+          <h1 className="theme-heading mt-3 text-3xl font-semibold uppercase leading-tight tracking-[0.08em] theme-text-strong sm:text-[2.7rem]">
+            {pickText(locale, pageContent.finalResults.finalStandingsTitle)}
+          </h1>
+          <div className="mt-4 h-px w-28 bg-[linear-gradient(90deg,rgba(56,189,248,0.95),rgba(250,204,21,0.72),rgba(56,189,248,0))]" />
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <Surface className="rounded-[1.3rem] px-4 py-4">

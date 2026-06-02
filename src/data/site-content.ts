@@ -2481,6 +2481,7 @@ export const defaultPageContent: SitePageContent = {
     leaderInfoPending: { en: "Leader info pending", vi: "Chờ cập nhật đội trưởng" },
     teamMembersLabel: { en: "Team members", vi: "Thành viên đội" },
     finalStandingsEyebrow: { en: "Final standings", vi: "Xếp hạng chung cuộc" },
+    finalStandingsTitle: { en: "Final results", vi: "KẾT QUẢ CHUNG KẾT" },
     presentationDayLabel: { en: "Presentation day", vi: "Ngày thuyết trình" },
     presentationDateValue: { en: "Jul 04, 2026", vi: "04 thg 7, 2026" },
     presentationPlaceLabel: { en: "Presentation place", vi: "Địa điểm thuyết trình" },

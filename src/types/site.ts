@@ -874,6 +874,7 @@ export interface SitePageContent {
     leaderInfoPending: LocalizedText;
     teamMembersLabel: LocalizedText;
     finalStandingsEyebrow: LocalizedText;
+    finalStandingsTitle: LocalizedText;
     presentationDayLabel: LocalizedText;
     presentationDateValue: LocalizedText;
     presentationPlaceLabel: LocalizedText;
