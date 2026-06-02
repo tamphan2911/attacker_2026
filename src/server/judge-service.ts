@@ -44,6 +44,23 @@ function fail(status: number, error: string): ServiceFailure {
   return { ok: false, status, error };
 }
 
+function parseStringMap(raw: string | null | undefined) {
+  try {
+    const parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+    if (!parsed || typeof parsed !== "object") {
+      return {} as Record<string, string>;
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).flatMap(([key, value]) =>
+        typeof value === "string" && value.trim() ? [[key, value.trim()]] : [],
+      ),
+    );
+  } catch {
+    return {} as Record<string, string>;
+  }
+}
+
 function isValidRound1EssayQuestionScore(score: number) {
   return (
     Number.isFinite(score) &&
@@ -368,6 +385,11 @@ export async function getJudgeRound1Detail(
         },
         take: 1,
       },
+      aiEssayReview: {
+        select: {
+          questionComments: true,
+        },
+      },
     },
   });
 
@@ -390,6 +412,7 @@ export async function getJudgeRound1Detail(
     questions: archive.questions,
     answers: archive.answers,
   };
+  const aiQuestionComments = parseStringMap(submission.aiEssayReview?.questionComments);
   const essays = (payload.questions ?? [])
     .filter((question) => String(question.type).toLowerCase() === "essay")
     .map((question, index) => {
@@ -406,6 +429,7 @@ export async function getJudgeRound1Detail(
         answerText,
         wordCount: countWords(answerText),
         score: archive.essayQuestionScores[question.id] ?? null,
+        aiComment: aiQuestionComments[question.id] ?? null,
       };
     })
     .sort((left, right) => left.order - right.order);

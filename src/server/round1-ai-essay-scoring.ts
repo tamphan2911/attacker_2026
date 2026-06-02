@@ -389,33 +389,6 @@ async function scoreEssaysWithOpenAi({
   return validateOpenAiScoringResult(JSON.parse(responseText), essays.map((essay) => essay.questionId));
 }
 
-function buildAiJudgeNote({
-  essays,
-  result,
-}: {
-  essays: Array<{ questionId: string; order: number }>;
-  result: OpenAiEssayScoringResult;
-}) {
-  const essayById = new Map(essays.map((essay) => [essay.questionId, essay]));
-  const lines = [
-    "Bản chấm gợi ý bởi GPT. Giám khảo vui lòng rà soát và có thể chỉnh sửa trước khi lưu xác nhận.",
-  ];
-
-  for (const scoredEssay of result.essays) {
-    const essay = essayById.get(scoredEssay.questionId);
-    lines.push("");
-    lines.push(`Câu ${essay?.order ?? scoredEssay.questionId}: ${scoredEssay.score}/10`);
-    lines.push(scoredEssay.comment);
-  }
-
-  if (result.summary) {
-    lines.push("");
-    lines.push(`Tổng nhận xét: ${result.summary}`);
-  }
-
-  return lines.join("\n").trim();
-}
-
 async function findNextCandidate(jobMode: Round1AiEssayScoringJobMode) {
   await ensureRound1JudgeAssignments(prisma);
   return prisma.round1Submission.findFirst({
@@ -662,6 +635,7 @@ export async function processNextRound1AiEssayScoringJobItem(
       essays,
     });
     const questionScores = Object.fromEntries(result.essays.map((essay) => [essay.questionId, essay.score]));
+    const questionComments = Object.fromEntries(result.essays.map((essay) => [essay.questionId, essay.comment]));
     const essayScore = Math.round(
       result.essays.reduce((total, essay) => total + essay.score, 0) * 10,
     ) / 10;
@@ -670,7 +644,6 @@ export async function processNextRound1AiEssayScoringJobItem(
       throw new Error("OpenAI returned an invalid total essay score.");
     }
 
-    const note = buildAiJudgeNote({ essays, result });
     const scoredAt = new Date();
 
     await prisma.$transaction(async (tx) => {
@@ -723,7 +696,7 @@ export async function processNextRound1AiEssayScoringJobItem(
         },
         data: {
           score: essayScore,
-          note,
+          note: "",
           source: Round1JudgeReviewSource.AI,
           scoredAt,
         },
@@ -747,7 +720,8 @@ export async function processNextRound1AiEssayScoringJobItem(
           status: Round1AiEssayScoringStatus.SCORED,
           score: essayScore,
           questionScores: JSON.stringify(questionScores),
-          note,
+          questionComments: JSON.stringify(questionComments),
+          note: result.summary,
           error: null,
           scoredAt,
         },

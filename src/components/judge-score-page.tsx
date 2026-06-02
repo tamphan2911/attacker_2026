@@ -370,6 +370,14 @@ export function JudgeRound1ScorePage({
                         <p className="mt-3 text-sm leading-7 theme-text-muted">{pickRound1QuestionText(essay.rubricNote)}</p>
                       </div>
                     ) : null}
+                    {essay.aiComment ? (
+                      <div className="mt-4 rounded-[1.35rem] border border-sky-500/20 bg-[linear-gradient(135deg,rgba(239,246,255,0.96),rgba(224,242,254,0.86))] px-4 py-4 text-slate-900 dark:border-sky-300/24 dark:bg-[linear-gradient(135deg,rgba(12,74,110,0.36),rgba(15,23,42,0.26))] dark:text-sky-50">
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-700 dark:text-sky-200">
+                          {locale === "en" ? "GPT suggested comment" : "Nhận xét gợi ý từ GPT"}
+                        </p>
+                        <p className="mt-3 whitespace-pre-wrap text-sm leading-7">{essay.aiComment}</p>
+                      </div>
+                    ) : null}
                     <EssayAiEstimatePanel answerText={essay.answerText} locale={locale} />
                     <div className="mt-4 rounded-[1.5rem] border theme-border bg-white/78 px-4 py-4 dark:bg-white/[0.04]">
                       <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">

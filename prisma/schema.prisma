@@ -457,6 +457,7 @@ model Round1AiEssayReview {
   status            Round1AiEssayScoringStatus @default(NOT_STARTED)
   score             Float?
   questionScores    String                      @default("{}")
+  questionComments  String                      @default("{}")
   note              String                      @default("")
   error             String?
   scoredAt          DateTime?

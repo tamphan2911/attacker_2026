@@ -374,6 +374,7 @@ export interface JudgeRound1EssayAnswer {
   answerText: string;
   wordCount: number;
   score?: number | null;
+  aiComment?: string | null;
 }
 
 export interface JudgeRound1Detail {
