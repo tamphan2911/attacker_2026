@@ -258,7 +258,7 @@ export function AdminRound3SubmissionsManager() {
           <p className="mt-3 text-sm leading-7 theme-text-muted">
             {locale === "en"
               ? "Review final and Emerging round report versions, submitted file details, team information, and direct downloads."
-              : "Rà soát các phiên bản báo cáo Chung kết và Vòng Đội ươm mầm, thông tin tệp, đội nộp bài và tải trực tiếp."}
+              : "Rà soát các phiên bản báo cáo Chung kết và Vòng Đội Ươm mầm, thông tin tệp, đội nộp bài và tải trực tiếp."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

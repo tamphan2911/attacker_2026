@@ -821,7 +821,7 @@ export const defaultPageContent: SitePageContent = {
         },
         highlights: [
           { en: "30M champion prize", vi: "30 triệu cho quán quân" },
-          { en: "Top 20 Emerging round qualifiers", vi: "Top 20 đội vào Vòng Đội ươm mầm" },
+          { en: "Top 20 Emerging round qualifiers", vi: "Top 20 đội vào Vòng Đội Ươm mầm" },
           { en: "Gifts and scholarships", vi: "Quà tặng và học bổng" },
         ],
         primaryCta: {
@@ -2330,7 +2330,7 @@ export const defaultPageContent: SitePageContent = {
       },
     },
     emergingHeader: {
-      eyebrow: { en: "Incubation bracket", vi: "Vòng Đội ươm mầm" },
+      eyebrow: { en: "Incubation bracket", vi: "Vòng Đội Ươm mầm" },
       title: { en: "20 teams shortlisted for the Potential bracket", vi: "20 đội lọt vào bảng Tiềm năng" },
       description: {
         en: "This list is for reference only and does not indicate ranking.",
@@ -2358,7 +2358,7 @@ export const defaultPageContent: SitePageContent = {
     leaderColumnLabel: { en: "Leader", vi: "Đội trưởng" },
     keywordColumnLabel: { en: "Keyword", vi: "Từ khóa" },
     recognitionColumnLabel: { en: "Incubation bracket", vi: "Bảng ươm mầm" },
-    emergingTeamSlotLabel: { en: "Potential bracket slot", vi: "Vị trí vào Vòng Đội ươm mầm" },
+    emergingTeamSlotLabel: { en: "Potential bracket slot", vi: "Vị trí vào Vòng Đội Ươm mầm" },
     awaitingOfficialUpdate: { en: "Awaiting official update", vi: "Chờ cập nhật chính thức" },
     reservedLabel: { en: "Reserved", vi: "Giữ chỗ" },
     emergingTeamLabel: { en: "Incubation bracket", vi: "Bảng ươm mầm" },
@@ -2387,12 +2387,12 @@ export const defaultPageContent: SitePageContent = {
     emergingGuidance: {
       title: {
         en: "Next steps for Emerging round qualifiers",
-        vi: "Việc cần làm cho 20 đội vào Vòng Đội ươm mầm",
+        vi: "Việc cần làm cho 20 đội vào Vòng Đội Ươm mầm",
       },
       items: [
         {
           en: "Submit the final version of the report in your Team Workspace for Emerging round rescoring.",
-          vi: "Nộp phiên bản báo cáo cuối cùng trong trang Đội thi để được chấm lại ở Vòng Đội ươm mầm.",
+          vi: "Nộp phiên bản báo cáo cuối cùng trong trang Đội thi để được chấm lại ở Vòng Đội Ươm mầm.",
         },
         {
           en: "Submit the poster/standee design file via email to the organizer, or contact the organizer for support.",
@@ -2400,7 +2400,7 @@ export const defaultPageContent: SitePageContent = {
         },
       ],
       emailLabel: { en: "Organizer email", vi: "Email ban tổ chức" },
-      reportLabel: { en: "Submit Emerging round report", vi: "Nộp báo cáo Vòng Đội ươm mầm" },
+      reportLabel: { en: "Submit Emerging round report", vi: "Nộp báo cáo Vòng Đội Ươm mầm" },
     },
   },
   emergingResults: {
@@ -3384,7 +3384,7 @@ export const timelineItems: TimelineItem[] = [
     title: { en: "Round 02 results", vi: "Kết quả Vòng 02" },
     description: {
       en: "The top 5 teams advance to the final round and the next 20 teams qualify for the Emerging round.",
-      vi: "Top 5 đội vào chung kết và 20 đội tiếp theo vào Vòng Đội ươm mầm.",
+      vi: "Top 5 đội vào chung kết và 20 đội tiếp theo vào Vòng Đội Ươm mầm.",
     },
     location: {
       en: "Newsroom, email, and official social channels",
@@ -3392,7 +3392,7 @@ export const timelineItems: TimelineItem[] = [
     },
     method: {
       en: "Judge result release with finalist shortlist and Emerging round qualifier list",
-      vi: "Công bố kết quả giám khảo với danh sách chung kết và danh sách vào Vòng Đội ươm mầm",
+      vi: "Công bố kết quả giám khảo với danh sách chung kết và danh sách vào Vòng Đội Ươm mầm",
     },
     supportLinks: [
       { href: "/news", label: { en: "Read result update", vi: "Đọc cập nhật kết quả" } },
@@ -3404,10 +3404,10 @@ export const timelineItems: TimelineItem[] = [
     phase: "round-3",
     startDate: round3FinalReportWindow.startDate,
     endDate: round3FinalReportWindow.endDate,
-    title: { en: "Final and Emerging round report deadline", vi: "Hạn nộp báo cáo Chung kết và Vòng Đội ươm mầm" },
+    title: { en: "Final and Emerging round report deadline", vi: "Hạn nộp báo cáo Chung kết và Vòng Đội Ươm mầm" },
     description: {
       en: "The Top 5 finalist teams submit final reports, while the 20 Emerging round qualifiers submit their updated Emerging round reports for rescoring.",
-      vi: "Top 5 đội chung kết nộp báo cáo Chung kết, còn 20 đội vào Vòng Đội ươm mầm nộp báo cáo cập nhật để được chấm lại.",
+      vi: "Top 5 đội chung kết nộp báo cáo Chung kết, còn 20 đội vào Vòng Đội Ươm mầm nộp báo cáo cập nhật để được chấm lại.",
     },
     location: {
       en: "Team workspace submission center",
@@ -3452,7 +3452,7 @@ export const timelineItems: TimelineItem[] = [
     title: { en: "Announcing 10 Emerging award teams", vi: "Công bố 10 đội nhận giải Đội ươm mầm" },
     description: {
       en: "The 10 highest-scoring teams from the Emerging round are announced as Emerging award recipients.",
-      vi: "10 đội có điểm cao nhất trong Vòng Đội ươm mầm được công bố nhận giải Đội ươm mầm.",
+      vi: "10 đội có điểm cao nhất trong Vòng Đội Ươm mầm được công bố nhận giải Đội ươm mầm.",
     },
     location: {
       en: "Official website and organizer announcement channels",
@@ -3460,7 +3460,7 @@ export const timelineItems: TimelineItem[] = [
     },
     method: {
       en: "Final Emerging round score ranking and award announcement",
-      vi: "Công bố xếp hạng điểm cuối cùng của Vòng Đội ươm mầm và danh sách nhận giải",
+      vi: "Công bố xếp hạng điểm cuối cùng của Vòng Đội Ươm mầm và danh sách nhận giải",
     },
     supportLinks: [
       { href: "/competition/emerging-results", label: { en: "Emerging results", vi: "Kết quả Đội ươm mầm" } },

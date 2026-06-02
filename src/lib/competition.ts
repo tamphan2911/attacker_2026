@@ -281,7 +281,7 @@ function pickRound2AdvancementStatusLabel(locale: Locale, team: TeamProfile, now
       return locale === "en" ? "Stopped at Emerging round" : "Dừng chân tại vòng Ươm mầm";
     }
 
-    return locale === "en" ? "Emerging round" : "Vòng Đội ươm mầm";
+    return locale === "en" ? "Emerging round" : "Vòng Đội Ươm mầm";
   }
 
   return undefined;
@@ -309,7 +309,7 @@ function pickRound2AdvancementStatusDescription(locale: Locale, team: TeamProfil
 
     return locale === "en"
       ? "This team advanced from Round 2 and is competing in the Emerging round."
-      : "Đội này đã vượt qua Vòng 2 và đang thi đấu ở Vòng Đội ươm mầm.";
+      : "Đội này đã vượt qua Vòng 2 và đang thi đấu ở Vòng Đội Ươm mầm.";
   }
 
   return undefined;

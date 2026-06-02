@@ -512,7 +512,7 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
       : "Rà soát hình ảnh đang nằm trên storage của service. Admin có thể xóa ảnh không còn dùng; ảnh đang được website tham chiếu sẽ được bảo vệ."
     : locale === "en"
       ? "Review uploaded team submission PDFs from Round 2, Final round, and Emerging round. Attached files are protected from direct deletion."
-      : "Rà soát PDF bài nộp của đội ở Vòng 2, chung kết và Vòng Đội ươm mầm. Tệp còn gắn với bài nộp sẽ không thể xóa trực tiếp.";
+      : "Rà soát PDF bài nộp của đội ở Vòng 2, chung kết và Vòng Đội Ươm mầm. Tệp còn gắn với bài nộp sẽ không thể xóa trực tiếp.";
 
   if (loading) {
     return (

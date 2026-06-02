@@ -3392,7 +3392,7 @@ function SubmissionRoundCard({
     round === "round-3" && round3Bracket === "emerging"
       ? locale === "en"
         ? "Emerging round"
-        : "Vòng Đội ươm mầm"
+        : "Vòng Đội Ươm mầm"
       : round === "round-3"
         ? locale === "en"
           ? "Final round"
@@ -3406,7 +3406,7 @@ function SubmissionRoundCard({
       : round3Bracket === "emerging"
         ? locale === "en"
           ? "Emerging round report submission"
-          : "Nộp báo cáo Vòng Đội ươm mầm"
+          : "Nộp báo cáo Vòng Đội Ươm mầm"
       : locale === "en"
         ? "Final report submission"
         : "Nộp báo cáo Chung kết";
@@ -3424,11 +3424,13 @@ function SubmissionRoundCard({
           ? "Emerging round report deadline closed"
           : "Final report deadline closed"
         : `${pickRoundLabel(locale, round)} finished`
-      : round === "round-3"
-        ? round3Bracket === "emerging"
-          ? "Đã đóng hạn báo cáo Vòng Đội ươm mầm"
-          : "Đã đóng hạn báo cáo Chung kết"
-        : `${pickRoundLabel(locale, round)} đã kết thúc`
+        : round === "round-3"
+          ? round3Bracket === "emerging"
+            ? "Đã đóng hạn báo cáo Vòng Đội Ươm mầm"
+            : "Đã đóng hạn báo cáo Chung kết"
+        : round === "round-2"
+          ? "Vòng 2 đã kết thúc"
+          : `${pickRoundLabel(locale, round)} đã kết thúc`
     : hasPassedRound
       ? locale === "en"
         ? `${pickRoundLabel(locale, round)} passed`
@@ -3453,7 +3455,7 @@ function SubmissionRoundCard({
         : "The Round 2 report submission section is closed because the official Round 2 submission deadline has passed. Your latest valid version remains visible for review, and no new report versions can be uploaded."
       : round === "round-3"
         ? round3Bracket === "emerging"
-          ? "Hạn nộp báo cáo Vòng Đội ươm mầm đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
+          ? "Hạn nộp báo cáo Vòng Đội Ươm mầm đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
           : "Hạn nộp báo cáo Chung kết đã kết thúc. Bạn không còn thể nộp phiên bản mới cho giai đoạn này."
         : "Khu vực nộp báo cáo Vòng 2 đã đóng vì hạn nộp chính thức của Vòng 2 đã kết thúc. Phiên bản hợp lệ mới nhất của đội vẫn được hiển thị để theo dõi, và đội không thể tải thêm phiên bản báo cáo mới."
     : hasPassedRound
@@ -3644,7 +3646,7 @@ function SubmissionRoundCard({
                       : round3Bracket === "emerging"
                         ? locale === "en"
                           ? "Emerging round report submission is finished."
-                          : "Đã kết thúc nộp báo cáo Vòng Đội ươm mầm."
+                          : "Đã kết thúc nộp báo cáo Vòng Đội Ươm mầm."
                         : locale === "en"
                           ? "Final report submission is finished."
                           : "Đã kết thúc nộp báo cáo Chung kết."}

@@ -3175,7 +3175,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     const result = uploadResult.payload;
     await syncWorkspace();
     const uploadedRoundLabelEn = payload.round === "round-2" ? "Round 2" : "Final/Emerging round";
-    const uploadedRoundLabelVi = payload.round === "round-2" ? "Vòng 2" : "chung kết/Vòng Đội ươm mầm";
+    const uploadedRoundLabelVi = payload.round === "round-2" ? "Vòng 2" : "chung kết/Vòng Đội Ươm mầm";
     pushToast(
       {
         en: `The report uploaded successfully. Version ${result?.version ?? "new"} is now the final valid version for ${uploadedRoundLabelEn}.`,
