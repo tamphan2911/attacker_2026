@@ -76,6 +76,12 @@ const avatarTones = [
   "from-amber-500 via-orange-400 to-rose-400",
 ];
 
+const invitationAcceptButtonClass =
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-sky-300/65 bg-[linear-gradient(135deg,#38bdf8,#2563eb)] px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_34px_rgba(37,99,235,0.22)] transition duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-[0_20px_42px_rgba(37,99,235,0.3)] active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-200/24 dark:shadow-none";
+
+const invitationDeclineButtonClass =
+  "inline-flex min-h-12 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-slate-300/70 bg-white/86 px-4 py-3 text-sm font-semibold text-slate-700 shadow-[0_12px_28px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-0.5 hover:border-rose-300/80 hover:bg-rose-50 hover:text-rose-700 hover:shadow-[0_16px_34px_rgba(244,63,94,0.12)] active:translate-y-0 dark:border-white/12 dark:bg-white/8 dark:text-slate-100 dark:shadow-none dark:hover:border-rose-200/28 dark:hover:bg-rose-300/12 dark:hover:text-rose-100";
+
 interface TeamFormState {
   name: string;
   tag: string;
@@ -1203,7 +1209,7 @@ export function DashboardPage() {
                             type="button"
                             disabled={isTargetTeamFull || isTargetTeamLocked}
                             onClick={() => respondToInvitation(invitation.id, "accept")}
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+                            className={`${invitationAcceptButtonClass} min-w-[10rem]`}
                           >
                             <Check className="h-4 w-4" />
                             {locale === "en" ? "Accept invite" : "Chấp nhận lời mời"}
@@ -1211,8 +1217,9 @@ export function DashboardPage() {
                           <button
                             type="button"
                             onClick={() => respondToInvitation(invitation.id, "decline")}
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
+                            className={`${invitationDeclineButtonClass} min-w-[8.75rem]`}
                           >
+                            <X className="h-4 w-4" />
                             {locale === "en" ? "Decline" : "Từ chối"}
                           </button>
                         </div>
@@ -2895,11 +2902,11 @@ export function DashboardPage() {
                             ? "Accepting works only if this account is not already in another team."
                             : "Chỉ có thể chấp nhận nếu tài khoản này hiện không ở đội nào khác."}
                       </p>
-                      <div className="mt-4 flex gap-3">
+                      <div className="mt-4 grid grid-cols-2 gap-3">
                         <button
                           type="button"
                           onClick={() => respondToInvitation(invitation.id, "accept")}
-                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950"
+                          className={`${invitationAcceptButtonClass} w-full`}
                         >
                           <Check className="h-4 w-4" />
                           {locale === "en" ? "Accept" : "Chấp nhận"}
@@ -2907,8 +2914,9 @@ export function DashboardPage() {
                         <button
                           type="button"
                           onClick={() => respondToInvitation(invitation.id, "decline")}
-                          className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl border theme-border-strong theme-panel px-4 py-3 text-sm font-semibold theme-text-strong"
+                          className={`${invitationDeclineButtonClass} w-full`}
                         >
+                          <X className="h-4 w-4" />
                           {locale === "en" ? "Decline" : "Từ chối"}
                         </button>
                       </div>
