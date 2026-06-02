@@ -269,7 +269,7 @@ function Round1ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-[90] overflow-y-auto bg-[rgba(7,18,35,0.56)] px-4 py-5 backdrop-blur-sm md:px-6 md:py-8">
-      <div className="mx-auto flex min-h-full w-full max-w-xl items-center justify-center">
+      <div className="mx-auto flex min-h-full w-full max-w-[52rem] items-center justify-center">
         <div className="theme-card-shadow flex w-full max-h-[calc(100vh-2.5rem)] flex-col overflow-hidden rounded-[2rem] border theme-border bg-[rgba(255,255,255,0.98)] shadow-[0_28px_70px_rgba(10,22,40,0.2)] dark:bg-[rgba(10,20,36,0.98)] md:max-h-[calc(100vh-4rem)]">
         <div className="flex items-start justify-between gap-4 border-b theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(234,244,255,0.94))] px-6 py-5 dark:bg-[linear-gradient(135deg,rgba(12,26,47,0.98),rgba(15,39,72,0.92))]">
           <div className="space-y-3">
@@ -341,19 +341,19 @@ function Round1ConfirmDialog({
 
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
+              <p className="whitespace-nowrap text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
                 {locale === "en" ? "Answered" : "Đã trả lời"}
               </p>
               <p className="mt-2 text-2xl font-semibold theme-text-strong">{answeredCount}</p>
             </div>
             <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
+              <p className="whitespace-nowrap text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
                 {locale === "en" ? "Remaining" : "Chưa trả lời"}
               </p>
               <p className="mt-2 text-2xl font-semibold theme-text-strong">{unansweredCount}</p>
             </div>
             <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-4">
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
+              <p className="whitespace-nowrap text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-soft">
                 {locale === "en" ? "Question total" : "Tổng số câu"}
               </p>
               <p className="mt-2 text-2xl font-semibold theme-text-strong">{totalCount}</p>
@@ -387,10 +387,10 @@ function Round1ConfirmDialog({
             ).map((item) => (
               <div
                 key={item}
-                className="flex items-start gap-3 rounded-[1.4rem] border theme-border theme-panel px-4 py-3.5 text-sm leading-7 theme-text-body"
+                className="flex items-center gap-3 overflow-x-auto rounded-[1.4rem] border theme-border theme-panel px-4 py-3.5 text-sm leading-6 theme-text-body"
               >
-                <span className="mt-2 h-2.5 w-2.5 shrink-0 rounded-full bg-[linear-gradient(135deg,#1772d0,#0ea5e9)]" />
-                <span>{item}</span>
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[linear-gradient(135deg,#1772d0,#0ea5e9)]" />
+                <span className="whitespace-nowrap">{item}</span>
               </div>
             ))}
           </div>
@@ -403,10 +403,12 @@ function Round1ConfirmDialog({
             </div>
           ) : null}
 
-          <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-3.5 text-sm leading-7 theme-text-muted">
-            {locale === "en"
-              ? `Technical support: ${contactInfo.email} · ${ROUND1_SUPPORT_PHONE}`
-              : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${ROUND1_SUPPORT_PHONE}`}
+          <div className="overflow-x-auto rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-3.5 text-sm leading-6 theme-text-muted">
+            <span className="whitespace-nowrap">
+              {locale === "en"
+                ? `Technical support: ${contactInfo.email} · ${ROUND1_SUPPORT_PHONE}`
+                : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${ROUND1_SUPPORT_PHONE}`}
+            </span>
           </div>
         </div>
 
