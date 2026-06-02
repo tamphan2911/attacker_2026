@@ -1,5 +1,7 @@
 import type { LocalizedText } from "@/types/site";
 
+export const ROUND2_REPORT_FINAL_MAX_SCORE = 100;
+
 export interface JudgeRubricCriterion {
   id: string;
   label: LocalizedText;

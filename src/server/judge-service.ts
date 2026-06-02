@@ -2,7 +2,7 @@ import { Round1JudgeReviewSource, SubmissionRound, UserRole } from "@prisma/clie
 
 import { ROUND1_ESSAY_MAX_SCORE, ROUND1_ESSAY_POINT_VALUE, countWords } from "@/lib/round1";
 import { prisma } from "@/lib/db";
-import { ROUND2_REPORT_RUBRIC, getRubricMaxScore } from "@/lib/judge-rubrics";
+import { ROUND2_REPORT_FINAL_MAX_SCORE, ROUND2_REPORT_RUBRIC } from "@/lib/judge-rubrics";
 import { readStoredJudges } from "@/server/admin-service";
 import { ensureRound1JudgeAssignments } from "@/server/round1-judge-assignment";
 import { ensureRound2JudgeAssignments, isRound2SubmissionClosed } from "@/server/round2-judge-assignment";
@@ -648,7 +648,7 @@ export async function getJudgeTeamSubmissionDetail(
       scoredAt: review?.scoredAt?.toISOString(),
       rubricScores: decodedReview.rubricScores,
     },
-    maxScore: rubric ? getRubricMaxScore(rubric) : 100,
+    maxScore: rubric ? ROUND2_REPORT_FINAL_MAX_SCORE : 100,
     rubric,
   });
 }
@@ -689,7 +689,10 @@ export async function saveJudgeTeamSubmissionReview(
       rubricScores[criterion.id] = criterionScore;
     }
 
-    score = Object.values(rubricScores).reduce((total, criterionScore) => total + criterionScore, 0);
+    score = Math.min(
+      ROUND2_REPORT_FINAL_MAX_SCORE,
+      Object.values(rubricScores).reduce((total, criterionScore) => total + criterionScore, 0),
+    );
     note = encodeTeamReviewNote(note, rubricScores);
   }
 

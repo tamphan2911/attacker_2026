@@ -18,6 +18,7 @@ import {
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { Surface, StatusPill } from "@/components/site-ui";
 import { estimateEssayAiLikelihood } from "@/lib/essay-ai-guard";
+import { ROUND2_REPORT_FINAL_MAX_SCORE } from "@/lib/judge-rubrics";
 import { ROUND1_ESSAY_POINT_VALUE, pickRound1QuestionText } from "@/lib/round1";
 import { formatDateLabel } from "@/lib/site";
 import type { JudgeRound1Detail, JudgeTeamSubmissionDetail, Locale } from "@/types/site";
@@ -546,6 +547,7 @@ export function JudgeTeamSubmissionScorePage({
       }, 0),
     [detail.rubric, rubricScores],
   );
+  const cappedRubricTotal = isRound2 ? Math.min(ROUND2_REPORT_FINAL_MAX_SCORE, rubricTotal) : rubricTotal;
 
   const handleSubmit = async () => {
     let requestBody: { score?: number; rubricScores?: Record<string, number>; note: string };
@@ -714,8 +716,15 @@ export function JudgeTeamSubmissionScorePage({
                     {locale === "en" ? "Auto total" : "Tổng tự động"}
                   </p>
                   <p className="mt-1 text-2xl font-semibold theme-text-strong">
-                    {`${formatScoreNumber(rubricTotal)} / ${detail.maxScore}`}
+                    {`${formatScoreNumber(cappedRubricTotal)} / ${detail.maxScore}`}
                   </p>
+                  {isRound2 && rubricTotal > ROUND2_REPORT_FINAL_MAX_SCORE ? (
+                    <p className="mt-1 text-xs font-medium theme-text-soft">
+                      {locale === "en"
+                        ? `Raw rubric total ${formatScoreNumber(rubricTotal)} is capped at ${ROUND2_REPORT_FINAL_MAX_SCORE}.`
+                        : `Tổng rubric ${formatScoreNumber(rubricTotal)} được giới hạn ở ${ROUND2_REPORT_FINAL_MAX_SCORE}.`}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
@@ -723,7 +732,7 @@ export function JudgeTeamSubmissionScorePage({
                 <table className="min-w-[1120px] w-full text-left text-xs">
                   <thead className="theme-panel-subtle">
                     <tr className="border-b theme-border">
-                      <th className="w-[190px] px-4 py-3 font-semibold uppercase tracking-[0.16em] theme-text-soft">
+                      <th className="theme-admin-sticky-head sticky left-0 z-20 w-[190px] px-4 py-3 font-semibold uppercase tracking-[0.16em] theme-text-soft shadow-[12px_0_24px_rgba(15,23,42,0.08)]">
                         {locale === "en" ? "Criterion" : "Tiêu chí"}
                       </th>
                       {["weak", "average", "good", "excellent"].map((level, index) => (
@@ -745,7 +754,7 @@ export function JudgeTeamSubmissionScorePage({
                   <tbody>
                     {(detail.rubric ?? []).map((criterion) => (
                       <tr key={criterion.id} className="border-b theme-border align-top last:border-b-0">
-                        <td className="px-4 py-4">
+                        <td className="theme-admin-sticky-cell sticky left-0 z-10 px-4 py-4 shadow-[12px_0_24px_rgba(15,23,42,0.08)]">
                           <p className="font-semibold theme-text-strong">
                             {pickLocalizedText(criterion.label, locale)}
                           </p>
@@ -868,8 +877,15 @@ export function JudgeTeamSubmissionScorePage({
                   {locale === "en" ? "Auto total" : "Tổng tự động"}
                 </p>
                 <p className="mt-2 text-3xl font-semibold theme-text-strong">
-                  {`${formatScoreNumber(rubricTotal)} / ${detail.maxScore}`}
+                  {`${formatScoreNumber(cappedRubricTotal)} / ${detail.maxScore}`}
                 </p>
+                {isRound2 && rubricTotal > ROUND2_REPORT_FINAL_MAX_SCORE ? (
+                  <p className="mt-1 text-xs font-medium theme-text-soft">
+                    {locale === "en"
+                      ? `Raw rubric total ${formatScoreNumber(rubricTotal)} is capped at ${ROUND2_REPORT_FINAL_MAX_SCORE}.`
+                      : `Tổng rubric ${formatScoreNumber(rubricTotal)} được giới hạn ở ${ROUND2_REPORT_FINAL_MAX_SCORE}.`}
+                  </p>
+                ) : null}
               </div>
 
               <label className="mt-4 block space-y-2">
