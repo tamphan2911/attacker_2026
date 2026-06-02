@@ -80,6 +80,7 @@ const ESSAY_BLOCKED_INPUT_TYPES = new Set([
   "insertFromPasteAsQuotation",
   "insertFromYank",
 ]);
+const ROUND1_SUPPORT_PHONE = "0769 675 647 (Mr. Khôi)";
 
 function isRound1EssayAnswerTarget(target: EventTarget | null) {
   return target instanceof HTMLElement && target.dataset.round1EssayAnswer === "true";
@@ -265,7 +266,6 @@ function Round1ConfirmDialog({
   }
 
   const isStart = mode === "start";
-  const round1DialogSupportPhone = "0769 675 647 (Mr. Khôi)";
 
   return (
     <div className="fixed inset-0 z-[90] overflow-y-auto bg-[rgba(7,18,35,0.56)] px-4 py-5 backdrop-blur-sm md:px-6 md:py-8">
@@ -405,8 +405,8 @@ function Round1ConfirmDialog({
 
           <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-3.5 text-sm leading-7 theme-text-muted">
             {locale === "en"
-              ? `Technical support: ${contactInfo.email} · ${round1DialogSupportPhone}`
-              : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${round1DialogSupportPhone}`}
+              ? `Technical support: ${contactInfo.email} · ${ROUND1_SUPPORT_PHONE}`
+              : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${ROUND1_SUPPORT_PHONE}`}
           </div>
         </div>
 
@@ -1628,8 +1628,8 @@ export function Round1ExamPage() {
             </p>
             <div className="mt-4 rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4 text-sm leading-7 theme-text-muted">
               {locale === "en"
-                ? `Technical support: ${contactInfo.email} · ${contactInfo.phone}`
-                : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${contactInfo.phone}`}
+                ? `Technical support: ${contactInfo.email} · ${ROUND1_SUPPORT_PHONE}`
+                : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${ROUND1_SUPPORT_PHONE}`}
             </div>
           </Surface>
         </section>
@@ -2182,8 +2182,8 @@ export function Round1ExamPage() {
             </button>
             <p className="mt-4 text-sm leading-7 theme-text-muted">
               {locale === "en"
-                ? `If anything goes wrong, contact the organizer immediately at ${contactInfo.email} or ${contactInfo.phone}.`
-                : `Nếu có sự cố, hãy liên hệ ban tổ chức ngay qua ${contactInfo.email} hoặc ${contactInfo.phone}.`}
+                ? `If anything goes wrong, contact the organizer immediately at ${contactInfo.email} or ${ROUND1_SUPPORT_PHONE}.`
+                : `Nếu có sự cố, hãy liên hệ ban tổ chức ngay qua ${contactInfo.email} hoặc ${ROUND1_SUPPORT_PHONE}.`}
             </p>
           </Surface>
 
