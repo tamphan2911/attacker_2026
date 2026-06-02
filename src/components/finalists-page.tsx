@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { GradientAvatar, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 import type { EditableFinalistsGuidancePanel } from "@/types/site";
 
@@ -30,6 +30,42 @@ interface Round2FinalistsPayload {
 
 function createEmptySlots<T>(items: T[], count: number) {
   return Array.from({ length: count }, (_, index) => items[index] ?? null);
+}
+
+function getTeamInitials(label: string) {
+  return label
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+function TeamRectangleAvatar({
+  label,
+  tone,
+  imageSrc,
+  className,
+}: {
+  label: string;
+  tone: string;
+  imageSrc?: string;
+  className: string;
+}) {
+  return (
+    <div
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[0.85rem] bg-gradient-to-br text-sm font-semibold text-white ${tone} ${className}`}
+    >
+      {imageSrc ? (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${imageSrc})` }}
+        />
+      ) : null}
+      <span className={imageSrc ? "hidden" : "relative z-10"}>{getTeamInitials(label)}</span>
+    </div>
+  );
 }
 
 function GuidancePanel({
@@ -186,11 +222,11 @@ export function FinalistsPage() {
                 >
                   <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                     <div className="flex items-start gap-4">
-                      <GradientAvatar
+                      <TeamRectangleAvatar
                         label={team.name}
                         tone={team.avatarTone}
                         imageSrc={team.avatarImageSrc}
-                        className="h-16 w-16 rounded-[1.2rem]"
+                        className="h-16 w-24"
                       />
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -316,11 +352,11 @@ export function FinalistsPage() {
                         <td className="px-5 py-4 font-semibold theme-text-strong">{String(index + 1).padStart(2, "0")}</td>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <GradientAvatar
+                            <TeamRectangleAvatar
                               label={team.name}
                               tone={team.avatarTone}
                               imageSrc={team.avatarImageSrc}
-                              className="h-11 w-11 rounded-[1rem]"
+                              className="h-11 w-16"
                             />
                             <div className="min-w-0">
                               <p className="font-semibold theme-text-strong">{team.name}</p>
