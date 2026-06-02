@@ -10,6 +10,7 @@ import {
   Clock3,
   FileCheck2,
   FileDown,
+  FileText,
   Flag,
   GraduationCap,
   Medal,
@@ -25,6 +26,10 @@ import {
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import { getCompetitionRoundWindow } from "@/lib/competition";
+import {
+  reportTemplateFileDefinitions,
+  type ReportTemplateFileId,
+} from "@/lib/report-template-files";
 import { rubricFileDefinitions, type RubricFileId } from "@/lib/rubric-files";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 
@@ -96,6 +101,10 @@ const roundRubricLinks: Record<"01" | "02" | "03", RubricFileId> = {
   "01": "round-1-essay",
   "02": "round-2-report",
   "03": "round-3-final-presentation",
+};
+
+const roundTemplateLinks: Partial<Record<"01" | "02" | "03", ReportTemplateFileId>> = {
+  "02": "round-2-report-template",
 };
 
 function renderInlineRichText(text: string) {
@@ -193,6 +202,11 @@ function RichRulesText({ body }: { body: string }) {
 
 type PublicRubricRecord = {
   id: RubricFileId;
+  downloadUrl: string;
+};
+
+type PublicReportTemplateRecord = {
+  id: ReportTemplateFileId;
   downloadUrl: string;
 };
 
@@ -328,12 +342,16 @@ const roundRuleMeta = {
 export function RulesPage() {
   const { locale, pageContent, timelineItems } = useSiteState();
   const [rubricRecords, setRubricRecords] = useState<PublicRubricRecord[]>([]);
+  const [reportTemplateRecords, setReportTemplateRecords] = useState<PublicReportTemplateRecord[]>([]);
   const jumpItems = pageContent.rules.introJumpItems;
   const generalHighlights = pageContent.rules.generalHighlights;
   const generalPolicyChecks = pageContent.rules.generalPolicyChecks;
   const rulesRounds = pageContent.rules.rounds;
   const rubricRecordById = new Map<RubricFileId, PublicRubricRecord>(
     rubricRecords.map((rubric) => [rubric.id, rubric]),
+  );
+  const reportTemplateRecordById = new Map<ReportTemplateFileId, PublicReportTemplateRecord>(
+    reportTemplateRecords.map((template) => [template.id, template]),
   );
 
   useEffect(() => {
@@ -351,6 +369,21 @@ export function RulesPage() {
     void loadRubricRecords().catch(() => {
       if (active) {
         setRubricRecords([]);
+      }
+    });
+
+    async function loadReportTemplateRecords() {
+      const response = await fetch("/api/report-templates", { cache: "no-store" });
+      const payload = (await response.json().catch(() => null)) as { templates?: PublicReportTemplateRecord[] } | null;
+
+      if (active && response.ok) {
+        setReportTemplateRecords(payload?.templates ?? []);
+      }
+    }
+
+    void loadReportTemplateRecords().catch(() => {
+      if (active) {
+        setReportTemplateRecords([]);
       }
     });
 
@@ -504,6 +537,11 @@ export function RulesPage() {
           const rubricId = roundRubricLinks[round.id as keyof typeof roundRubricLinks];
           const rubricDefinition = rubricFileDefinitions.find((definition) => definition.id === rubricId)!;
           const rubricRecord = rubricRecordById.get(rubricId);
+          const templateId = roundTemplateLinks[round.id as keyof typeof roundTemplateLinks];
+          const templateDefinition = templateId
+            ? reportTemplateFileDefinitions.find((definition) => definition.id === templateId)
+            : undefined;
+          const templateRecord = templateId ? reportTemplateRecordById.get(templateId) : undefined;
 
           return (
             <section
@@ -552,6 +590,35 @@ export function RulesPage() {
                                 : "Chưa có file rubric PDF"}
                           </span>
                         </div>
+                        {templateDefinition ? (
+                          <div className="group relative">
+                            {templateRecord ? (
+                              <a
+                                href={templateRecord.downloadUrl}
+                                aria-label={pickText(locale, templateDefinition.publicDownloadLabel)}
+                                className={`inline-flex h-11 w-11 items-center justify-center rounded-full border transition hover:-translate-y-0.5 active:translate-y-0 ${meta.chipClass}`}
+                              >
+                                <FileText className="h-4.5 w-4.5" />
+                              </a>
+                            ) : (
+                              <button
+                                type="button"
+                                aria-disabled="true"
+                                aria-label={pickText(locale, templateDefinition.publicDownloadLabel)}
+                                className={`inline-flex h-11 w-11 cursor-not-allowed items-center justify-center rounded-full border opacity-60 ${meta.chipClass}`}
+                              >
+                                <FileText className="h-4.5 w-4.5" />
+                              </button>
+                            )}
+                            <span className="theme-header-tooltip pointer-events-none absolute right-0 top-full z-20 mt-3 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
+                              {templateRecord
+                                ? pickText(locale, templateDefinition.publicDownloadLabel)
+                                : locale === "en"
+                                  ? "Round 2 report template is not uploaded yet"
+                                  : "Chưa có file mẫu báo cáo Vòng 2"}
+                            </span>
+                          </div>
+                        ) : null}
                         <div className="group relative">
                           <Link
                             href={`/competition/timeline#${roundKey}-timeline`}
