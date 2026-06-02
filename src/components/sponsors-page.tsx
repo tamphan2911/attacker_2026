@@ -51,15 +51,17 @@ export function SponsorsPage() {
           <Surface key={`${sponsor.name}-${index}`} className="overflow-hidden px-6 py-6">
             <div className="space-y-5">
               <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="w-full max-w-[290px] rounded-[1.5rem] border theme-border bg-white px-4 py-4 shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
-                  <Image
-                    src={sponsor.logoSrc}
-                    alt={sponsor.name}
-                    width={320}
-                    height={96}
-                    unoptimized={sponsor.logoSrc.startsWith("/api/sponsor-images/")}
-                    className="h-16 w-full object-contain object-left"
-                  />
+                <div className="relative flex h-32 w-full max-w-[32rem] items-center justify-center overflow-hidden rounded-[1.5rem] border theme-border bg-white px-6 py-5 shadow-[0_18px_40px_rgba(148,163,184,0.12)]">
+                  <div className="relative h-full w-full">
+                    <Image
+                      src={sponsor.logoSrc}
+                      alt={sponsor.name}
+                      fill
+                      sizes="(max-width: 768px) calc(100vw - 5rem), 32rem"
+                      unoptimized={sponsor.logoSrc.startsWith("/api/sponsor-images/")}
+                      className="object-contain object-center"
+                    />
+                  </div>
                 </div>
                 <div
                   className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] ${getSponsorTierStyle(sponsor.tier)}`}
