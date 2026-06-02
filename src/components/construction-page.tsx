@@ -99,8 +99,8 @@ export function ConstructionPage({
       />
 
       <section className="relative mx-auto w-full max-w-5xl text-center">
-        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-sky-200/18 bg-white/[0.08] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-sky-100 shadow-[0_20px_60px_rgba(14,165,233,0.18)] backdrop-blur-xl">
-          <Sparkles className="h-4 w-4" />
+        <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-sky-200/28 bg-white/[0.12] px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-slate-100 shadow-[0_20px_60px_rgba(14,165,233,0.18)] backdrop-blur-xl">
+          <Sparkles className="h-4 w-4 text-sky-200" />
           {pickText(locale, content.eyebrow)}
         </div>
 
@@ -118,9 +118,9 @@ export function ConstructionPage({
           <CountdownBlock content={content} locale={locale} targetAt={targetAt} />
         </div>
 
-        <p className="mx-auto mt-7 max-w-2xl text-sm leading-7 text-slate-300">
+        <p className="mx-auto mt-7 max-w-2xl text-sm leading-7 text-slate-200">
           {pickText(locale, content.waitPrefix)}{" "}
-          <span className="font-semibold text-sky-100">{formatLaunchDate(targetAt, locale)}</span>
+          <span className="font-semibold text-white">{formatLaunchDate(targetAt, locale)}</span>
         </p>
       </section>
     </div>
@@ -154,11 +154,11 @@ export function ConstructionAuthGate({
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(56,189,248,0.24),transparent_30%),linear-gradient(180deg,rgba(15,23,42,0.12),rgba(2,6,23,0.86))]" />
       <div className="relative w-full max-w-lg rounded-[2rem] border border-white/14 bg-white/[0.08] p-6 shadow-[0_34px_100px_rgba(2,6,23,0.46)] backdrop-blur-2xl md:p-8">
         <div className="flex items-start gap-4">
-          <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-300/22 bg-sky-300/12 text-sky-100">
+          <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-sky-300/30 bg-sky-300/16 text-sky-100">
             <LockKeyhole className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-sky-100/74">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-100">
               {pickText(locale, content.eyebrow)}
             </p>
             <h1 className="mt-3 text-2xl font-semibold text-white">
@@ -205,8 +205,9 @@ export function ConstructionAuthGate({
           {pickText(locale, content.passwordSubmitLabel)}
         </button>
 
-        <p className="mt-5 text-center text-xs leading-6 text-slate-400">
-          {pickText(locale, content.waitPrefix)} {formatLaunchDate(targetAt, locale)}
+        <p className="mt-5 text-center text-xs leading-6 text-slate-200">
+          {pickText(locale, content.waitPrefix)}{" "}
+          <span className="font-semibold text-white">{formatLaunchDate(targetAt, locale)}</span>
         </p>
       </div>
     </div>
