@@ -719,71 +719,107 @@ export function TimelinePage() {
               id={phase.anchor}
               className="theme-timeline-shell scroll-mt-36 rounded-[2rem] border px-5 py-6 md:px-7 md:py-7"
             >
-              <div className="grid gap-6 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
-                <div className="space-y-4 xl:sticky xl:top-32 xl:self-start">
-                  <div className={`inline-flex h-12 w-12 items-center justify-center rounded-[1.25rem] border ${phase.iconClass}`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
+              {phase.phase === "round-3" ? (
+                <div className="space-y-8">
+                  <div className="grid gap-6 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
+                    <div className="space-y-4">
+                      <div className={`inline-flex h-12 w-12 items-center justify-center rounded-[1.25rem] border ${phase.iconClass}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
 
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-                      {pickText(locale, phase.eyebrow)}
-                    </p>
-                    <h2 className="theme-heading mt-3 text-2xl font-semibold theme-text-strong md:text-[2.25rem] md:leading-[1.08]">
-                      {pickText(locale, phase.title)}
-                    </h2>
-                    <p className="mt-4 text-sm leading-8 theme-text-muted">
-                      {pickText(locale, phase.description)}
-                    </p>
-                  </div>
-
-                  <Link
-                    href={phase.ruleHref}
-                    className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-[0.98] ${phase.buttonClass}`}
-                  >
-                    {pickText(locale, pageContent.timelinePage.openRuleBlockLabel)}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-
-                <div className="space-y-4">
-                  {phase.phase === "round-3" ? (
-                    <>
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                           {pickText(locale, phase.eyebrow)}
                         </p>
-                        <p className="theme-heading text-xl font-semibold theme-text-strong">
+                        <h2 className="theme-heading mt-3 text-2xl font-semibold theme-text-strong md:text-[2.25rem] md:leading-[1.08]">
                           {pickText(locale, phase.title)}
-                        </p>
-                        <p className="text-sm leading-7 theme-text-muted">
+                        </h2>
+                        <p className="mt-4 text-sm leading-8 theme-text-muted">
                           {pickText(locale, phase.description)}
                         </p>
                       </div>
+
+                      <Link
+                        href={phase.ruleHref}
+                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-[0.98] ${phase.buttonClass}`}
+                      >
+                        {pickText(locale, pageContent.timelinePage.openRuleBlockLabel)}
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+
+                    <div className="space-y-4">
                       <div className="space-y-4">
                         {round3ReportItems.map(renderTimelineCard)}
                       </div>
-                      <div className="border-t theme-border pt-2" />
-                      <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                    </div>
+                  </div>
+
+                  <div className="-mx-5 border-t theme-border md:-mx-7" />
+
+                  <div className="grid gap-6 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                           {pickText(locale, pageContent.timelinePage.round3Presentation.eyebrow)}
                         </p>
-                        <p className="theme-heading text-xl font-semibold theme-text-strong">
+                        <h2 className="theme-heading mt-3 text-3xl font-semibold theme-text-strong md:text-[2.75rem] md:leading-[1.05] xl:text-[3.35rem]">
                           {pickText(locale, pageContent.timelinePage.round3Presentation.title)}
-                        </p>
-                        <p className="text-sm leading-7 theme-text-muted">
+                        </h2>
+                        <p className="mt-4 text-sm leading-8 theme-text-muted">
                           {pickText(locale, pageContent.timelinePage.round3Presentation.description)}
                         </p>
                       </div>
+
+                      <Link
+                        href={phase.ruleHref}
+                        className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-[0.98] ${phase.buttonClass}`}
+                      >
+                        {pickText(locale, pageContent.timelinePage.openRuleBlockLabel)}
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+
+                    <div className="space-y-4">
                       <div className="space-y-4">
                         {round3PresentationItems.map(renderTimelineCard)}
                       </div>
-                    </>
-                  ) : (
-                    items.map(renderTimelineCard)
-                  )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="grid gap-6 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
+                  <div className="space-y-4 xl:sticky xl:top-32 xl:self-start">
+                    <div className={`inline-flex h-12 w-12 items-center justify-center rounded-[1.25rem] border ${phase.iconClass}`}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                        {pickText(locale, phase.eyebrow)}
+                      </p>
+                      <h2 className="theme-heading mt-3 text-2xl font-semibold theme-text-strong md:text-[2.25rem] md:leading-[1.08]">
+                        {pickText(locale, phase.title)}
+                      </h2>
+                      <p className="mt-4 text-sm leading-8 theme-text-muted">
+                        {pickText(locale, phase.description)}
+                      </p>
+                    </div>
+
+                    <Link
+                      href={phase.ruleHref}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-[0.98] ${phase.buttonClass}`}
+                    >
+                      {pickText(locale, pageContent.timelinePage.openRuleBlockLabel)}
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+
+                  <div className="space-y-4">
+                    {items.map(renderTimelineCard)}
+                  </div>
+                </div>
+              )}
             </section>
           );
         })}

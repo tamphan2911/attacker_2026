@@ -2329,10 +2329,10 @@ export const defaultPageContent: SitePageContent = {
     },
     round3Presentation: {
       eyebrow: { en: "Round 3", vi: "Vòng 3" },
-      title: { en: "Final presentation and awards", vi: "Thuyết trình chung kết và trao giải" },
+      title: { en: "Final report, presentation, and awards", vi: "Báo cáo cuối, thuyết trình và trao giải" },
       description: {
-        en: "Round 3 continues with the live presentation, judge Q&A, and final award decision for the finalist teams.",
-        vi: "Vòng chung kết bước vào phần thuyết trình trực tiếp, hỏi đáp cùng Ban giám khảo và quyết định trao giải cho các đội vào chung kết.",
+        en: "Round 3 commences with the submission of final reports by the Top 5 teams. Participants will then deliver live presentations and engage in a Q&A session with the judging panel to determine the final rankings and award recipients.",
+        vi: "Vòng 3 bắt đầu với việc 5 đội chung kết nộp báo cáo cuối. Các đội sau đó thuyết trình trực tiếp, tham gia phần hỏi đáp cùng Ban giám khảo để xác định thứ hạng cuối cùng và các đội đạt giải.",
       },
     },
   },
