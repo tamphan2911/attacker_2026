@@ -265,6 +265,7 @@ function Round1ConfirmDialog({
   }
 
   const isStart = mode === "start";
+  const round1DialogSupportPhone = "0769 675 647 (Mr. Khôi)";
 
   return (
     <div className="fixed inset-0 z-[90] overflow-y-auto bg-[rgba(7,18,35,0.56)] px-4 py-5 backdrop-blur-sm md:px-6 md:py-8">
@@ -364,13 +365,13 @@ function Round1ConfirmDialog({
               ? [
                   locale === "en"
                     ? "The timer starts immediately and keeps running across refresh, tab close, sign out, and re-login."
-                    : "Đồng hồ bắt đầu ngay lập tức và vẫn tiếp tục chạy dù bạn tải lại trang, đóng tab, đăng xuất hay đăng nhập lại.",
+                    : "Thời gian làm bài sẽ bắt đầu đếm ngược ngay lập tức và vẫn tiếp tục chạy dù bạn tải lại trang, đóng tab, đăng xuất hay đăng nhập lại.",
                   locale === "en"
                     ? "This is one official attempt only. The paper order is fixed for this attempt and cannot be regenerated."
-                    : "Đây là lượt thi chính thức duy nhất. Thứ tự câu hỏi của lượt thi này được cố định và không thể tạo lại.",
+                    : "Đây là lượt thi chính thức duy nhất của bạn. Thứ tự câu hỏi của lượt thi này là cố định và không thể tạo lại.",
                   locale === "en"
                     ? "If time expires, the latest saved answers will be submitted automatically."
-                    : "Khi hết giờ, các câu trả lời đã lưu gần nhất sẽ được tự động nộp.",
+                    : "Bài thi sẽ tự động nộp khi thời gian đếm ngược kết thúc.",
                 ]
               : [
                   locale === "en"
@@ -404,8 +405,8 @@ function Round1ConfirmDialog({
 
           <div className="rounded-[1.4rem] border theme-border theme-panel-subtle px-4 py-3.5 text-sm leading-7 theme-text-muted">
             {locale === "en"
-              ? `Technical support: ${contactInfo.email} · ${contactInfo.phone}`
-              : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${contactInfo.phone}`}
+              ? `Technical support: ${contactInfo.email} · ${round1DialogSupportPhone}`
+              : `Hỗ trợ kỹ thuật: ${contactInfo.email} hoặc hotline: ${round1DialogSupportPhone}`}
           </div>
         </div>
 
