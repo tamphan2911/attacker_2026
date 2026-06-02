@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { FileText, ImageIcon, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, FileText, ImageIcon, Search, Trash2, X } from "lucide-react";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
@@ -19,6 +19,11 @@ import type {
 } from "@/types/admin-storage";
 
 type StorageMode = "images" | "submission-files";
+type StorageRow = AdminStorageImageRow | AdminStorageSubmissionFileRow;
+type DeleteDialogState =
+  | { kind: "confirm"; row: StorageRow }
+  | { kind: "blocked"; row: StorageRow; message: string; references: AdminStorageReference[] }
+  | null;
 
 function cn(...values: Array<string | undefined | false>) {
   return values.filter(Boolean).join(" ");
@@ -105,6 +110,226 @@ function buildBlockedMessage(
     : `${error}\n\nĐang được dùng bởi:\n${referenceLines.join("\n")}`;
 }
 
+function getRowIdentity(row: StorageRow) {
+  return "category" in row
+    ? `${row.category}/${row.storageKey}`
+    : row.storageKey;
+}
+
+function buildStorageTotals(rows: StorageRow[]) {
+  const totalBytes = rows.reduce((sum, row) => sum + row.sizeBytes, 0);
+  const usedRows = rows.filter((row) => row.usedBy.length > 0);
+  const deletableRows = rows.filter((row) => row.usedBy.length === 0);
+
+  return {
+    totalCount: rows.length,
+    totalBytes,
+    usedCount: usedRows.length,
+    usedBytes: usedRows.reduce((sum, row) => sum + row.sizeBytes, 0),
+    deletableCount: deletableRows.length,
+    deletableBytes: deletableRows.reduce((sum, row) => sum + row.sizeBytes, 0),
+  };
+}
+
+function StorageStatCard({
+  label,
+  value,
+  detail,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  tone?: "default" | "used" | "deletable";
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-[1.25rem] border px-4 py-3",
+        tone === "used"
+          ? "border-amber-300/45 bg-amber-50/80 dark:border-amber-200/20 dark:bg-amber-300/10"
+          : tone === "deletable"
+            ? "border-emerald-300/45 bg-emerald-50/80 dark:border-emerald-200/20 dark:bg-emerald-300/10"
+            : "theme-border theme-panel-strong",
+      )}
+    >
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] theme-text-soft">{label}</p>
+      <p className="mt-2 text-2xl font-semibold theme-text-strong">{value}</p>
+      <p className="mt-1 text-xs font-medium theme-text-muted">{detail}</p>
+    </div>
+  );
+}
+
+function DeleteDialog({
+  state,
+  locale,
+  mode,
+  deleting,
+  onClose,
+  onConfirm,
+}: {
+  state: DeleteDialogState;
+  locale: "en" | "vi";
+  mode: StorageMode;
+  deleting: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  if (!state) {
+    return null;
+  }
+
+  const isImage = mode === "images";
+  const blocked = state.kind === "blocked";
+  const references = state.kind === "blocked" ? state.references : state.row.usedBy;
+  const rowIdentity = getRowIdentity(state.row);
+  const title = blocked
+    ? locale === "en"
+      ? "This file cannot be deleted"
+      : "Không thể xóa tệp này"
+    : isImage
+      ? locale === "en"
+        ? "Delete uploaded image?"
+        : "Xóa hình ảnh đã tải lên?"
+      : locale === "en"
+        ? "Delete uploaded PDF?"
+        : "Xóa tệp PDF đã tải lên?";
+  const description = blocked
+    ? state.message
+    : isImage
+      ? locale === "en"
+        ? "This image is not referenced by the site right now. Deleting it will permanently remove the file from service storage and it cannot be restored from this admin page."
+        : "Hình ảnh này hiện không được website tham chiếu. Khi xóa, tệp sẽ bị gỡ vĩnh viễn khỏi storage của service và không thể khôi phục từ trang admin này."
+      : locale === "en"
+        ? "This PDF is not attached to any team submission right now. Deleting it will permanently remove the file from service storage and it cannot be restored from this admin page."
+        : "Tệp PDF này hiện không gắn với bài nộp nào của đội. Khi xóa, tệp sẽ bị gỡ vĩnh viễn khỏi storage của service và không thể khôi phục từ trang admin này.";
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6">
+      <button
+        type="button"
+        aria-label={locale === "en" ? "Close dialog" : "Đóng hộp thoại"}
+        className="absolute inset-0 bg-slate-950/48 backdrop-blur-sm"
+        onClick={deleting ? undefined : onClose}
+      />
+      <div className="theme-panel theme-card-shadow relative w-full max-w-2xl overflow-hidden rounded-[1.75rem] border theme-border">
+        <div className={cn(
+          "border-b px-5 py-5 theme-border md:px-6",
+          blocked
+            ? "bg-amber-50/80 dark:bg-amber-300/10"
+            : "bg-red-50/80 dark:bg-red-400/10",
+        )}>
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex gap-3">
+              <div className={cn(
+                "mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border",
+                blocked
+                  ? "border-amber-300/50 bg-amber-100 text-amber-800 dark:border-amber-200/20 dark:bg-amber-300/15 dark:text-amber-100"
+                  : "border-red-300/50 bg-red-100 text-red-800 dark:border-red-200/20 dark:bg-red-400/15 dark:text-red-100",
+              )}>
+                {blocked ? <AlertTriangle className="h-5 w-5" /> : <Trash2 className="h-5 w-5" />}
+              </div>
+              <div>
+                <h2 className="theme-heading text-xl font-semibold theme-text-strong">{title}</h2>
+                <p className="mt-2 text-sm leading-6 theme-text-muted">{description}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={deleting}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border theme-border theme-panel-strong disabled:opacity-50"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-4 px-5 py-5 md:px-6">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="rounded-[1.15rem] border theme-border theme-panel-strong px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                {isImage ? (locale === "en" ? "Image key" : "Mã hình ảnh") : (locale === "en" ? "PDF key" : "Mã PDF")}
+              </p>
+              <p className="mt-2 break-all font-mono text-xs theme-text-body">{rowIdentity}</p>
+            </div>
+            <div className="rounded-[1.15rem] border theme-border theme-panel-strong px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
+                {locale === "en" ? "Storage size" : "Dung lượng"}
+              </p>
+              <p className="mt-2 text-lg font-semibold theme-text-strong">{formatFileSize(state.row.sizeBytes)}</p>
+              <p className="mt-1 text-xs theme-text-muted">
+                {locale === "en" ? "Last updated " : "Cập nhật lần cuối "}
+                {formatDateTime(locale, state.row.updatedAt)}
+              </p>
+            </div>
+          </div>
+
+          {references.length ? (
+            <div className="rounded-[1.15rem] border border-amber-300/45 bg-amber-50/80 px-4 py-4 dark:border-amber-200/20 dark:bg-amber-300/10">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
+                {locale === "en" ? "Current references" : "Nơi đang sử dụng"}
+              </p>
+              <div className="mt-3 space-y-2">
+                {references.slice(0, 8).map((reference, index) => (
+                  reference.href ? (
+                    <Link
+                      key={`${reference.label}-${reference.detail ?? ""}-${index}`}
+                      href={reference.href}
+                      className="block rounded-xl border border-amber-300/35 bg-white/65 px-3 py-2 text-sm font-semibold text-amber-900 transition hover:opacity-75 dark:border-amber-200/15 dark:bg-white/5 dark:text-amber-100"
+                    >
+                      {referenceText(reference)}
+                    </Link>
+                  ) : (
+                    <p
+                      key={`${reference.label}-${reference.detail ?? ""}-${index}`}
+                      className="rounded-xl border border-amber-300/35 bg-white/65 px-3 py-2 text-sm font-semibold text-amber-900 dark:border-amber-200/15 dark:bg-white/5 dark:text-amber-100"
+                    >
+                      {referenceText(reference)}
+                    </p>
+                  )
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-[1.15rem] border border-emerald-300/45 bg-emerald-50/80 px-4 py-4 dark:border-emerald-200/20 dark:bg-emerald-300/10">
+              <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
+                {locale === "en"
+                  ? "No active references were found for this file."
+                  : "Không tìm thấy tham chiếu đang dùng cho tệp này."}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-col-reverse gap-3 border-t theme-border px-5 py-4 sm:flex-row sm:justify-end md:px-6">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={deleting}
+            className="theme-button-secondary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-50"
+          >
+            {locale === "en" ? "Cancel" : "Hủy"}
+          </button>
+          {!blocked ? (
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={deleting}
+              className="theme-button-danger inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-55"
+            >
+              <Trash2 className={cn("h-4 w-4", deleting && "animate-pulse")} />
+              {deleting
+                ? locale === "en" ? "Deleting..." : "Đang xóa..."
+                : locale === "en" ? "Delete permanently" : "Xóa vĩnh viễn"}
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminStorageManager({ mode }: { mode: StorageMode }) {
   const { locale, currentUser } = useSiteState();
   const [imageRows, setImageRows] = useState<AdminStorageImageRow[]>([]);
@@ -113,6 +338,7 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>(null);
 
   useAdminTitleScroll();
 
@@ -182,6 +408,8 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
   }, [fileRows, search]);
 
   const activeRows = isImageMode ? filteredImages : filteredFiles;
+  const allRows = isImageMode ? imageRows : fileRows;
+  const storageTotals = useMemo(() => buildStorageTotals(allRows), [allRows]);
   const {
     page,
     setPage,
@@ -191,36 +419,41 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
     paginatedRows,
   } = useAdminTablePagination(activeRows, ADMIN_LIST_TABLE_PAGE_SIZE);
 
-  async function deleteImage(row: AdminStorageImageRow) {
-    const confirmed = window.confirm(
-      locale === "en"
-        ? `Delete this image from service storage?\n\n${row.storageKey}`
-        : `Xóa hình ảnh này khỏi storage của service?\n\n${row.storageKey}`,
-    );
-    if (!confirmed) {
+  function openDeleteDialog(row: StorageRow) {
+    if (!canDelete) {
       return;
     }
 
-    await deleteStoredFile(
-      `/api/admin/storage/images?category=${encodeURIComponent(row.category)}&key=${encodeURIComponent(row.storageKey)}`,
-      row.storageKey,
-    );
+    if (row.usedBy.length) {
+      setDeleteDialog({
+        kind: "blocked",
+        row,
+        message: isImageMode
+          ? locale === "en"
+            ? "This image is currently used by the website. Replace or remove the reference below before deleting this file from service storage."
+            : "Hình ảnh này đang được website sử dụng. Hãy thay thế hoặc gỡ tham chiếu bên dưới trước khi xóa tệp khỏi storage của service."
+          : locale === "en"
+            ? "This PDF is currently attached to a team submission. Delete the submission record first so the site does not keep a broken download link."
+            : "Tệp PDF này đang gắn với bài nộp của đội. Hãy xóa bài nộp trước để website không giữ đường dẫn tải xuống bị hỏng.",
+        references: row.usedBy,
+      });
+      return;
+    }
+
+    setDeleteDialog({ kind: "confirm", row });
   }
 
-  async function deleteSubmissionFile(row: AdminStorageSubmissionFileRow) {
-    const confirmed = window.confirm(
-      locale === "en"
-        ? `Delete this PDF from service storage?\n\n${row.storageKey}`
-        : `Xóa tệp PDF này khỏi storage của service?\n\n${row.storageKey}`,
-    );
-    if (!confirmed) {
+  async function confirmDeleteFromDialog() {
+    if (!deleteDialog || deleteDialog.kind !== "confirm") {
       return;
     }
 
-    await deleteStoredFile(
-      `/api/admin/storage/submission-files?key=${encodeURIComponent(row.storageKey)}`,
-      row.storageKey,
-    );
+    const row = deleteDialog.row;
+    const endpoint = "category" in row
+      ? `/api/admin/storage/images?category=${encodeURIComponent(row.category)}&key=${encodeURIComponent(row.storageKey)}`
+      : `/api/admin/storage/submission-files?key=${encodeURIComponent(row.storageKey)}`;
+
+    await deleteStoredFile(endpoint, row.storageKey);
   }
 
   async function deleteStoredFile(endpoint: string, storageKey: string) {
@@ -235,25 +468,31 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
         | null;
 
       if (!response.ok) {
-        throw new Error(
-          buildBlockedMessage(
-            locale,
+        setDeleteDialog({
+          kind: "blocked",
+          row: deleteDialog?.kind === "confirm" ? deleteDialog.row : { storageKey, sizeBytes: 0, updatedAt: "", usedBy: [] },
+          message:
             payload?.error ??
-              (locale === "en" ? "Could not delete this file." : "Không thể xóa tệp này."),
-            payload?.references ?? [],
-          ),
-        );
+            (locale === "en" ? "Could not delete this file." : "Không thể xóa tệp này."),
+          references: payload?.references ?? [],
+        });
+        return;
       }
 
       await loadRows();
+      setDeleteDialog(null);
     } catch (nextError) {
-      window.alert(
-        nextError instanceof Error
-          ? nextError.message
-          : locale === "en"
-            ? "Could not delete this file."
-            : "Không thể xóa tệp này.",
-      );
+      setDeleteDialog({
+        kind: "blocked",
+        row: deleteDialog?.kind === "confirm" ? deleteDialog.row : { storageKey, sizeBytes: 0, updatedAt: "", usedBy: [] },
+        message:
+          nextError instanceof Error
+            ? buildBlockedMessage(locale, nextError.message, [])
+            : locale === "en"
+              ? "Could not delete this file."
+              : "Không thể xóa tệp này.",
+        references: [],
+      });
     } finally {
       setDeletingKey(null);
     }
@@ -296,21 +535,36 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
             </h1>
             <p className="theme-text-muted text-base leading-8">{description}</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:min-w-[280px]">
-            <div className="rounded-[1.25rem] border theme-border theme-panel-strong px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] theme-text-soft">
-                {locale === "en" ? "Files" : "Số tệp"}
-              </p>
-              <p className="mt-2 text-2xl font-semibold theme-text-strong">{activeRows.length}</p>
-            </div>
-            <div className="rounded-[1.25rem] border theme-border theme-panel-strong px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] theme-text-soft">
-                {locale === "en" ? "Used" : "Đang dùng"}
-              </p>
-              <p className="mt-2 text-2xl font-semibold theme-text-strong">
-                {activeRows.filter((row) => row.usedBy.length > 0).length}
-              </p>
-            </div>
+          <div className="grid gap-3 sm:min-w-[560px] sm:grid-cols-3">
+            <StorageStatCard
+              label={locale === "en" ? "Total storage" : "Tổng storage"}
+              value={formatFileSize(storageTotals.totalBytes)}
+              detail={
+                locale === "en"
+                  ? `${storageTotals.totalCount} file${storageTotals.totalCount === 1 ? "" : "s"}`
+                  : `${storageTotals.totalCount} tệp`
+              }
+            />
+            <StorageStatCard
+              label={locale === "en" ? "In use" : "Đang dùng"}
+              value={formatFileSize(storageTotals.usedBytes)}
+              detail={
+                locale === "en"
+                  ? `${storageTotals.usedCount} protected file${storageTotals.usedCount === 1 ? "" : "s"}`
+                  : `${storageTotals.usedCount} tệp được bảo vệ`
+              }
+              tone="used"
+            />
+            <StorageStatCard
+              label={locale === "en" ? "Deletable" : "Có thể xóa"}
+              value={formatFileSize(storageTotals.deletableBytes)}
+              detail={
+                locale === "en"
+                  ? `${storageTotals.deletableCount} unused file${storageTotals.deletableCount === 1 ? "" : "s"}`
+                  : `${storageTotals.deletableCount} tệp không còn dùng`
+              }
+              tone="deletable"
+            />
           </div>
         </div>
       </section>
@@ -386,7 +640,7 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
                     <td className="px-4 py-4">
                       <button
                         type="button"
-                        onClick={() => void deleteImage(row)}
+                        onClick={() => openDeleteDialog(row)}
                         disabled={!canDelete || deletingKey === row.storageKey}
                         title={locale === "en" ? "Delete image" : "Xóa hình ảnh"}
                         aria-label={locale === "en" ? "Delete image" : "Xóa hình ảnh"}
@@ -438,7 +692,7 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
                     <td className="px-4 py-4">
                       <button
                         type="button"
-                        onClick={() => void deleteSubmissionFile(row)}
+                        onClick={() => openDeleteDialog(row)}
                         disabled={!canDelete || deletingKey === row.storageKey}
                         title={locale === "en" ? "Delete PDF file" : "Xóa tệp PDF"}
                         aria-label={locale === "en" ? "Delete PDF file" : "Xóa tệp PDF"}
@@ -477,6 +731,20 @@ export function AdminStorageManager({ mode }: { mode: StorageMode }) {
           onPageChange={setPage}
         />
       </Surface>
+      <DeleteDialog
+        state={deleteDialog}
+        locale={locale}
+        mode={mode}
+        deleting={Boolean(deletingKey)}
+        onClose={() => {
+          if (!deletingKey) {
+            setDeleteDialog(null);
+          }
+        }}
+        onConfirm={() => {
+          void confirmDeleteFromDialog();
+        }}
+      />
     </div>
   );
 }
