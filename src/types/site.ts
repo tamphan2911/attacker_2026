@@ -575,6 +575,24 @@ export interface EditableHeroSlide {
   cards: EditableHeroSlideCard[];
 }
 
+export interface EditableFooterSnapshotItem {
+  label: LocalizedText;
+  value: LocalizedText;
+}
+
+export interface EditableSiteFooterContent {
+  description: LocalizedText;
+  ctaLabel: LocalizedText;
+  navigateHeading: LocalizedText;
+  contactHeading: LocalizedText;
+  attackerFacebookLabel: LocalizedText;
+  ftcFacebookLabel: LocalizedText;
+  snapshotHeading: LocalizedText;
+  snapshotItems: EditableFooterSnapshotItem[];
+  timelineLinkLabel: LocalizedText;
+  copyright: LocalizedText;
+}
+
 export interface EditableRound1ResultsPageContent {
   releasedHeader: EditableSectionCopy;
   unreleasedHeader: EditableSectionCopy;
@@ -606,6 +624,7 @@ export interface SitePageContent {
     facebookLabel: LocalizedText;
     facebookUrl: string;
   };
+  footer: EditableSiteFooterContent;
   home: {
     heroSlides: EditableHeroSlide[];
     testimonials: TestimonialItem[];

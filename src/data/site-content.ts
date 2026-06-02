@@ -704,6 +704,40 @@ export const defaultPageContent: SitePageContent = {
     facebookLabel: { en: "Facebook", vi: "Facebook" },
     facebookUrl: contactInfo.attackerFacebook,
   },
+  footer: {
+    description: {
+      en: "Attacker 2026 is an annual academic fintech competition for university students, built to create an energetic and high-quality learning arena for students interested in fintech in Vietnam.",
+      vi: "Attacker 2026 là cuộc thi học thuật trong lĩnh vực Fintech dành cho sinh viên, được tổ chức thường niên, với mục tiêu tạo sân chơi học thuật năng động và chất lượng cho sinh viên yêu thích lĩnh vực Fintech tại Việt Nam.",
+    },
+    ctaLabel: { en: "Explore the competition", vi: "Khám phá cuộc thi" },
+    navigateHeading: { en: "Navigate", vi: "Điều hướng" },
+    contactHeading: { en: "Contact", vi: "Liên hệ" },
+    attackerFacebookLabel: { en: "Attacker Facebook page", vi: "Fanpage Attacker" },
+    ftcFacebookLabel: { en: "FTC Facebook page", vi: "Fanpage FTC" },
+    snapshotHeading: { en: "Competition snapshot", vi: "Tóm tắt cuộc thi" },
+    snapshotItems: [
+      {
+        label: { en: "Participants", vi: "Đối tượng" },
+        value: {
+          en: "University students interested in fintech",
+          vi: "Sinh viên đại học quan tâm đến fintech",
+        },
+      },
+      {
+        label: { en: "Format", vi: "Hình thức" },
+        value: {
+          en: "3 rounds from qualifier to final presentation",
+          vi: "3 vòng thi từ vòng loại đến thuyết trình chung kết",
+        },
+      },
+      {
+        label: { en: "Timeline", vi: "Thời gian" },
+        value: { en: "May-August 2026", vi: "Tháng 5 - tháng 8 năm 2026" },
+      },
+    ],
+    timelineLinkLabel: { en: "View full timeline", vi: "Xem lịch trình đầy đủ" },
+    copyright: { en: "(c) Attacker 2026 - Fintech Challenge", vi: "(c) Attacker 2026 - Fintech Challenge" },
+  },
   home: {
     heroSlides: [
       {

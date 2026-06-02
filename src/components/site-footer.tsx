@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { CalendarRange, Mail, PhoneCall } from "lucide-react";
 
-import { contactInfo, navItems } from "@/data/site-content";
+import { navItems } from "@/data/site-content";
 import { pickText } from "@/lib/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { BrandMark } from "@/components/site-ui";
-
-const ATTACKER_FOOTER_FACEBOOK_URL = "https://www.facebook.com/share/g/1Z784MYC6A/?mibextid=wwXIfr";
 
 function FacebookIcon({ className }: { className?: string }) {
   return (
@@ -19,7 +17,9 @@ function FacebookIcon({ className }: { className?: string }) {
 }
 
 export function SiteFooter() {
-  const { locale } = useSiteState();
+  const { locale, pageContent } = useSiteState();
+  const footer = pageContent.footer;
+  const contact = pageContent.contact;
   const footerNavItems = navItems.filter((item) => item.href !== "/organizer");
 
   return (
@@ -29,18 +29,16 @@ export function SiteFooter() {
           <div className="space-y-5">
             <BrandMark />
             <p className="max-w-xl text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "Attacker 2026 is an annual academic fintech competition for university students, built to create an energetic and high-quality learning arena for students interested in fintech in Vietnam."
-                : "Attacker 2026 là cuộc thi học thuật trong lĩnh vực Fintech dành cho sinh viên, được tổ chức thường niên, với mục tiêu tạo sân chơi học thuật năng động và chất lượng cho sinh viên yêu thích lĩnh vực Fintech tại Việt Nam."}
+              {pickText(locale, footer.description)}
             </p>
             <Link href="/competition" className="theme-button-primary inline-flex rounded-full px-5 py-2.5 text-sm font-semibold transition hover:brightness-110">
-              {locale === "en" ? "Explore the competition" : "Khám phá cuộc thi"}
+              {pickText(locale, footer.ctaLabel)}
             </Link>
           </div>
 
           <div>
             <p className="theme-eyebrow mb-4 text-xs font-semibold uppercase tracking-[0.3em]">
-              {locale === "en" ? "Navigate" : "Điều hướng"}
+              {pickText(locale, footer.navigateHeading)}
             </p>
             <div className="space-y-3">
               {footerNavItems.map((item) => (
@@ -57,95 +55,75 @@ export function SiteFooter() {
 
           <div>
             <p className="theme-eyebrow mb-4 text-xs font-semibold uppercase tracking-[0.3em]">
-              {locale === "en" ? "Contact" : "Liên hệ"}
+              {pickText(locale, footer.contactHeading)}
             </p>
             <div className="space-y-3 text-sm theme-text-muted">
               <a
                 className="inline-flex items-center gap-3 transition hover:text-[var(--text-strong)]"
-                href={`mailto:${contactInfo.email}`}
+                href={`mailto:${contact.officialEmailValue}`}
               >
                 <Mail className="h-4 w-4 theme-accent" />
-                <span>{contactInfo.email}</span>
+                <span>{contact.officialEmailValue}</span>
               </a>
               <a
                 className="inline-flex items-center gap-3 transition hover:text-[var(--text-strong)]"
-                href={`tel:${contactInfo.phone}`}
+                href={`tel:${contact.primaryHotlineValue}`}
               >
                 <PhoneCall className="h-4 w-4 theme-accent" />
-                <span>{contactInfo.phone}</span>
+                <span>{contact.primaryHotlineValue}</span>
               </a>
               <a
                 className="inline-flex items-center gap-3 transition hover:text-[var(--text-strong)]"
-                href={ATTACKER_FOOTER_FACEBOOK_URL}
+                href={contact.attackerFacebookUrl}
                 target="_blank"
                 rel="noreferrer"
               >
                 <FacebookIcon className="h-4 w-4 theme-accent" />
-                <span>{locale === "en" ? "Attacker Facebook page" : "Fanpage Attacker"}</span>
+                <span>{pickText(locale, footer.attackerFacebookLabel)}</span>
               </a>
               <a
                 className="inline-flex items-center gap-3 transition hover:text-[var(--text-strong)]"
-                href={contactInfo.ftcFacebook}
+                href={contact.ftcFacebookUrl}
                 target="_blank"
                 rel="noreferrer"
               >
                 <FacebookIcon className="h-4 w-4 theme-accent" />
-                <span>{locale === "en" ? "FTC Facebook page" : "Fanpage FTC"}</span>
+                <span>{pickText(locale, footer.ftcFacebookLabel)}</span>
               </a>
             </div>
           </div>
 
           <div>
             <p className="theme-eyebrow mb-4 text-xs font-semibold uppercase tracking-[0.3em]">
-              {locale === "en" ? "Competition snapshot" : "Tóm tắt cuộc thi"}
+              {pickText(locale, footer.snapshotHeading)}
             </p>
             <div className="space-y-3">
-              {[
-                {
-                  label: locale === "en" ? "Participants" : "Đối tượng",
-                  value:
-                    locale === "en"
-                      ? "University students interested in fintech"
-                      : "Sinh viên đại học quan tâm đến fintech",
-                },
-                {
-                  label: locale === "en" ? "Format" : "Hình thức",
-                  value:
-                    locale === "en"
-                      ? "3 rounds from qualifier to final presentation"
-                      : "3 vòng thi từ vòng loại đến thuyết trình chung kết",
-                },
-                {
-                  label: locale === "en" ? "Timeline" : "Thời gian",
-                  value:
-                    locale === "en"
-                      ? "May-August 2026"
-                      : "Tháng 5 - tháng 8 năm 2026",
-                },
-              ].map((item) => (
+              {footer.snapshotItems.map((item, index) => (
                 <div
-                  key={item.label}
+                  key={`${index}-${pickText(locale, item.label)}`}
                   className="theme-panel-subtle rounded-[1.15rem] border theme-border px-4 py-3"
                 >
                   <p className="text-[0.7rem] font-semibold uppercase tracking-[0.24em] theme-eyebrow">
-                    {item.label}
+                    {pickText(locale, item.label)}
                   </p>
-                  <p className="mt-2 text-sm leading-6 theme-text-muted">{item.value}</p>
+                  <p className="mt-2 text-sm leading-6 theme-text-muted">
+                    {pickText(locale, item.value)}
+                  </p>
                 </div>
               ))}
             </div>
             <Link
-              href="/rules"
+              href="/competition/timeline"
               className="mt-5 inline-flex items-center gap-2 text-sm font-semibold theme-accent"
             >
               <CalendarRange className="h-4 w-4" />
-              {locale === "en" ? "View full timeline" : "Xem lịch trình đầy đủ"}
+              {pickText(locale, footer.timelineLinkLabel)}
             </Link>
           </div>
         </div>
 
         <div className="mt-10 flex flex-col gap-3 border-t theme-border pt-6 text-sm theme-text-soft md:flex-row md:items-center md:justify-between">
-          <p>(c) Attacker 2026 - Fintech Challenge</p>
+          <p>{pickText(locale, footer.copyright)}</p>
         </div>
       </div>
     </footer>

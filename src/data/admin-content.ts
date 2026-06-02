@@ -22,7 +22,8 @@ export type ContentPageId =
   | "season-2024"
   | "season-2025"
   | "season-2026"
-  | "contact";
+  | "contact"
+  | "footer";
 
 export type ContentTypeId = "hero-slides" | "home-testimonials" | "auth-notes" | "workspace-states";
 
@@ -236,6 +237,15 @@ export const contentPageConfigs: ContentPageConfig[] = [
     description: {
       en: "Contact-page labels, support copy, and official-channel headings.",
       vi: "Các nhãn của trang liên hệ, nội dung hỗ trợ và heading cho các kênh chính thức.",
+    },
+  },
+  {
+    id: "footer",
+    href: "/admin/content/pages/footer",
+    label: { en: "Footer", vi: "Footer" },
+    description: {
+      en: "Footer description, navigation/contact headings, snapshot cards, and copyright text.",
+      vi: "Mô tả footer, heading điều hướng/liên hệ, thẻ tóm tắt và dòng bản quyền.",
     },
   },
 ];

@@ -408,6 +408,8 @@ function iconForPage(pageId: ContentPageId) {
       return Images;
     case "contact":
       return Mail;
+    case "footer":
+      return LayoutDashboard;
   }
 }
 
@@ -477,6 +479,7 @@ const contentPageTree: Array<{
     children: seasonContentYears.map((year) => ({ kind: "page", id: `season-${year}` as ContentPageId })),
   },
   { id: "contact" },
+  { id: "footer" },
 ];
 
 function getSeasonYearFromContentPageId(pageId: ContentPageId) {
@@ -3757,6 +3760,132 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                         setDraft((current) =>
                           updateDraftContent(current, (next) => {
                             next.contact.phoneContacts[index].responsibility[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                  </Surface>
+                ))}
+              </div>
+            </Surface>
+          </>
+        ) : null}
+
+        {pageId === "footer" ? (
+          <>
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Footer / Main copy"
+                description="Edit the brand description, CTA, column headings, timeline link, and copyright text shown in the global footer."
+              />
+              <LocalizedFieldEditor
+                label="Footer description"
+                rows={5}
+                value={draft.footer.description}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.footer.description[language] = value;
+                    }),
+                  )
+                }
+              />
+              <div className="grid gap-4 xl:grid-cols-2">
+                {[
+                  ["CTA label", draft.footer.ctaLabel, (language: Locale, value: string, next: SitePageContent) => { next.footer.ctaLabel[language] = value; }],
+                  ["Navigate heading", draft.footer.navigateHeading, (language: Locale, value: string, next: SitePageContent) => { next.footer.navigateHeading[language] = value; }],
+                  ["Contact heading", draft.footer.contactHeading, (language: Locale, value: string, next: SitePageContent) => { next.footer.contactHeading[language] = value; }],
+                  ["Attacker Facebook label", draft.footer.attackerFacebookLabel, (language: Locale, value: string, next: SitePageContent) => { next.footer.attackerFacebookLabel[language] = value; }],
+                  ["FTC Facebook label", draft.footer.ftcFacebookLabel, (language: Locale, value: string, next: SitePageContent) => { next.footer.ftcFacebookLabel[language] = value; }],
+                  ["Snapshot heading", draft.footer.snapshotHeading, (language: Locale, value: string, next: SitePageContent) => { next.footer.snapshotHeading[language] = value; }],
+                  ["Timeline link label", draft.footer.timelineLinkLabel, (language: Locale, value: string, next: SitePageContent) => { next.footer.timelineLinkLabel[language] = value; }],
+                  ["Copyright", draft.footer.copyright, (language: Locale, value: string, next: SitePageContent) => { next.footer.copyright[language] = value; }],
+                ].map(([title, value, updater]) => (
+                  <LocalizedTextEditorCard
+                    key={title as string}
+                    title={`Footer / ${title as string}`}
+                    value={value as LocalizedText}
+                    onChange={(language, nextValue) =>
+                      setDraft((current) =>
+                        updateDraftContent(current, (next) => {
+                          (updater as (language: Locale, value: string, next: SitePageContent) => void)(language, nextValue, next);
+                        }),
+                      )
+                    }
+                  />
+                ))}
+              </div>
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <BlockIntro
+                  title="Footer / Competition snapshot"
+                  description="These cards appear in the right column of the footer."
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.footer.snapshotItems.push({
+                          label: createBlankLocalizedText(),
+                          value: createBlankLocalizedText(),
+                        });
+                      }),
+                    )
+                  }
+                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                >
+                  <Plus className="h-4 w-4" />
+                  {locale === "en" ? "Add snapshot item" : "Thêm mục tóm tắt"}
+                </button>
+              </div>
+              <div className="space-y-4">
+                {draft.footer.snapshotItems.map((item, index) => (
+                  <Surface key={`footer-snapshot-${index}`} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-lg font-semibold theme-text-strong">
+                        {locale === "en" ? `Snapshot item ${index + 1}` : `Mục tóm tắt ${index + 1}`}
+                      </p>
+                      <button
+                        type="button"
+                        disabled={draft.footer.snapshotItems.length <= 1}
+                        onClick={() =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.footer.snapshotItems = next.footer.snapshotItems.filter(
+                                (_, currentIndex) => currentIndex !== index,
+                              );
+                            }),
+                          )
+                        }
+                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={locale === "en" ? "Delete snapshot item" : "Xóa mục tóm tắt"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <LocalizedFieldEditor
+                      label="Snapshot label"
+                      rows={2}
+                      value={item.label}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.footer.snapshotItems[index].label[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <LocalizedFieldEditor
+                      label="Snapshot value"
+                      rows={3}
+                      value={item.value}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.footer.snapshotItems[index].value[language] = value;
                           }),
                         )
                       }
