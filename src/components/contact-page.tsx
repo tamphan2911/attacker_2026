@@ -119,10 +119,9 @@ export function ContactPage() {
                       item.internal ? (
                         <Link
                           href={item.href}
-                          className="mt-2 inline-flex items-center gap-2 text-sm font-semibold leading-7 theme-accent transition hover:text-[var(--brand)]"
+                          className="mt-2 inline-flex text-sm font-semibold leading-7 theme-accent transition hover:text-[var(--brand)]"
                         >
                           {item.value}
-                          <ExternalLink className="h-3.5 w-3.5" />
                         </Link>
                       ) : (
                         <a
