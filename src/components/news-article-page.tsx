@@ -11,6 +11,122 @@ import type { NewsPost } from "@/types/site";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 
+function renderInlineRichText(text: string) {
+  const parts: React.ReactNode[] = [];
+  const pattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)\]\((https?:\/\/[^)\s]+)\))/gu;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    if (match[2]) {
+      parts.push(<strong key={`strong-${match.index}`}>{match[2]}</strong>);
+    } else if (match[3]) {
+      parts.push(<em key={`em-${match.index}`}>{match[3]}</em>);
+    } else if (match[4] && match[5]) {
+      parts.push(
+        <a
+          key={`link-${match.index}`}
+          href={match[5]}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-[var(--brand)] underline-offset-4 hover:underline"
+        >
+          {match[4]}
+        </a>,
+      );
+    }
+
+    lastIndex = pattern.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts;
+}
+
+function RichParagraphBlock({ body }: { body: string }) {
+  const lines = body.split(/\n+/u).map((line) => line.trim()).filter(Boolean);
+  const elements: React.ReactNode[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+
+    if (line.startsWith("## ")) {
+      elements.push(
+        <h3 key={`heading-${index}`} className="theme-heading pt-2 text-2xl font-semibold theme-text-strong">
+          {renderInlineRichText(line.slice(3).trim())}
+        </h3>,
+      );
+      index += 1;
+      continue;
+    }
+
+    if (line.startsWith("> ")) {
+      const quoteLines: string[] = [];
+      while (index < lines.length && lines[index].startsWith("> ")) {
+        quoteLines.push(lines[index].slice(2).trim());
+        index += 1;
+      }
+      elements.push(
+        <blockquote key={`quote-${index}`} className="rounded-[1.5rem] border-l-4 border-sky-400/70 bg-sky-100/50 px-5 py-4 text-base leading-8 theme-text-body dark:bg-sky-300/10">
+          {quoteLines.map((quoteLine, quoteIndex) => (
+            <p key={`quote-line-${quoteIndex}`}>{renderInlineRichText(quoteLine)}</p>
+          ))}
+        </blockquote>,
+      );
+      continue;
+    }
+
+    if (line.startsWith("- ")) {
+      const items: string[] = [];
+      while (index < lines.length && lines[index].startsWith("- ")) {
+        items.push(lines[index].slice(2).trim());
+        index += 1;
+      }
+      elements.push(
+        <ul key={`list-${index}`} className="list-disc space-y-2 pl-6 text-base leading-8 theme-text-body">
+          {items.map((item, itemIndex) => (
+            <li key={`list-item-${itemIndex}`}>{renderInlineRichText(item)}</li>
+          ))}
+        </ul>,
+      );
+      continue;
+    }
+
+    if (/^\d+\.\s/u.test(line)) {
+      const items: string[] = [];
+      while (index < lines.length && /^\d+\.\s/u.test(lines[index])) {
+        items.push(lines[index].replace(/^\d+\.\s/u, "").trim());
+        index += 1;
+      }
+      elements.push(
+        <ol key={`ordered-${index}`} className="list-decimal space-y-2 pl-6 text-base leading-8 theme-text-body">
+          {items.map((item, itemIndex) => (
+            <li key={`ordered-item-${itemIndex}`}>{renderInlineRichText(item)}</li>
+          ))}
+        </ol>,
+      );
+      continue;
+    }
+
+    elements.push(
+      <p key={`paragraph-${index}`} className="text-base leading-8 theme-text-body">
+        {renderInlineRichText(line)}
+      </p>,
+    );
+    index += 1;
+  }
+
+  return <>{elements}</>;
+}
+
 export function NewsArticlePage({ post }: { post: NewsPost }) {
   const { locale, newsPosts, pageContent } = useSiteState();
   const relatedPosts = newsPosts.filter((item) => item.slug !== post.slug).slice(0, 3);
@@ -93,9 +209,7 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
           <div className="space-y-8">
             {post.content.map((block, index) =>
               block.type === "paragraph" ? (
-                <p key={index} className="text-base leading-8 theme-text-body">
-                  {pickText(locale, block.body)}
-                </p>
+                <RichParagraphBlock key={index} body={pickText(locale, block.body)} />
               ) : (
                 <figure key={index} className="space-y-4">
                   <div
