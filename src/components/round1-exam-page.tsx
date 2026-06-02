@@ -1508,7 +1508,7 @@ export function Round1ExamPage() {
                     title:
                       locale === "en"
                         ? "Objective block"
-                        : "Khối trắc nghiệm",
+                        : "Phần trắc nghiệm",
                     body:
                       locale === "en"
                         ? `${ROUND1_OBJECTIVE_TOTAL} questions: ${ROUND1_OBJECTIVE_QUESTIONS_PER_TOPIC} per topic across ${ROUND1_TOPIC_COUNT} topics, with 2 easy, 2 medium, and 2 hard questions in each topic, plus 4 extra random questions from the full bank.`
@@ -1519,7 +1519,7 @@ export function Round1ExamPage() {
                     title:
                       locale === "en"
                         ? "Essay block"
-                        : "Khối tự luận",
+                        : "Phần tự luận",
                     body:
                       locale === "en"
                         ? `${ROUND1_ESSAY_TOTAL} essay questions stay at the end of the paper. Each answer can be shorter than 300 words, cannot exceed ${round1WordLimit} words, and is reviewed manually later.`
@@ -1799,8 +1799,8 @@ export function Round1ExamPage() {
                 />
               </div>
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] theme-text-soft">
-                <span>{locale === "en" ? "Objective block" : "Khối trắc nghiệm"} · {objectiveAnsweredCount}/{ROUND1_OBJECTIVE_TOTAL}</span>
-                <span>{locale === "en" ? "Essay block" : "Khối tự luận"} · {essayAnsweredCount}/{ROUND1_ESSAY_TOTAL}</span>
+                <span>{locale === "en" ? "Objective block" : "Phần trắc nghiệm"} · {objectiveAnsweredCount}/{ROUND1_OBJECTIVE_TOTAL}</span>
+                <span>{locale === "en" ? "Essay block" : "Phần tự luận"} · {essayAnsweredCount}/{ROUND1_ESSAY_TOTAL}</span>
               </div>
             </div>
           </div>
