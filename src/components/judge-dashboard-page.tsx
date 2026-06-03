@@ -76,11 +76,11 @@ const roundMeta: Record<
       "bg-[linear-gradient(135deg,#0f766e,#22c55e)] text-white shadow-[0_16px_32px_rgba(34,197,94,0.18)]",
   },
   "round-3": {
-    label: { en: "Final round", vi: "Chung kết" },
-    title: { en: "Final-round scoring queue", vi: "Hàng chờ chấm chung kết" },
+    label: { en: "Final/Emerging", vi: "Chung kết/Ươm mầm" },
+    title: { en: "Final and Emerging scoring queue", vi: "Hàng chờ chấm Chung kết/Ươm mầm" },
     description: {
-      en: "Open the finalist submissions, download the deck/report, and record the score.",
-      vi: "Mở hồ sơ của đội chung kết, tải deck/báo cáo và ghi lại điểm chấm.",
+      en: "Open assigned final or Emerging submissions, download the report, and record the score.",
+      vi: "Mở bài nộp chung kết hoặc Ươm mầm được phân công, tải báo cáo và ghi lại điểm chấm.",
     },
     icon: Medal,
     iconClassName:

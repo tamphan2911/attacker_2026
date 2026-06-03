@@ -8,6 +8,8 @@ import {
 import { ROUND1_ESSAY_MAX_SCORE, ROUND1_ESSAY_POINT_VALUE, countWords } from "@/lib/round1";
 import { prisma } from "@/lib/db";
 import { ROUND2_REPORT_FINAL_MAX_SCORE, ROUND2_REPORT_RUBRIC } from "@/lib/judge-rubrics";
+import { readRound2FinalistResults } from "@/server/round2-finalists";
+import { ensureEmergingJudgeAssignments, readEmergingSubmissionLockState } from "@/server/emerging-judge-assignment";
 import { readStoredJudges } from "@/server/admin-service";
 import { ensureRound1JudgeAssignments } from "@/server/round1-judge-assignment";
 import { ensureRound2JudgeAssignments, isRound2SubmissionClosed } from "@/server/round2-judge-assignment";
@@ -245,9 +247,19 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
     const round2Closed = requestedSubmissionRounds.includes(SubmissionRound.ROUND_2)
       ? await isRound2SubmissionClosed()
       : false;
+    const emergingClosed = requestedSubmissionRounds.includes(SubmissionRound.ROUND_3)
+      ? (await readEmergingSubmissionLockState()).closed
+      : false;
+    const round2Results = requestedSubmissionRounds.includes(SubmissionRound.ROUND_3)
+      ? await readRound2FinalistResults()
+      : null;
+    const emergingTeamIds = new Set(round2Results?.emergingTeams.map((team) => team.id) ?? []);
 
     if (round2Closed) {
       await ensureRound2JudgeAssignments(prisma);
+    }
+    if (emergingClosed) {
+      await ensureEmergingJudgeAssignments(prisma);
     }
 
     const submissions = await prisma.teamSubmission.findMany({
@@ -308,6 +320,10 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
 
           if (round === "round-2") {
             return round2Closed && submission.judgeReviews.length > 0;
+          }
+
+          if (emergingTeamIds.has(submission.teamId)) {
+            return emergingClosed && submission.judgeReviews.length > 0;
           }
 
           return true;
@@ -564,6 +580,9 @@ export async function getJudgeTeamSubmissionDetail(
   if (assignment.data.rounds.includes("round-2")) {
     await ensureRound2JudgeAssignments(prisma);
   }
+  if (assignment.data.rounds.includes("round-3")) {
+    await ensureEmergingJudgeAssignments(prisma);
+  }
 
   const submission = await prisma.teamSubmission.findUnique({
     where: { id: submissionId },
@@ -610,27 +629,48 @@ export async function getJudgeTeamSubmissionDetail(
     return fail(403, "This judge is not assigned to this Round 2 submission.");
   }
 
-  if (round === "round-2") {
+  const round2Results = round === "round-3" ? await readRound2FinalistResults() : null;
+  const round3Bracket = round2Results?.finalists.some((team) => team.id === submission.teamId)
+    ? "finalist"
+    : round2Results?.emergingTeams.some((team) => team.id === submission.teamId)
+      ? "emerging"
+      : null;
+
+  if (round === "round-3" && round3Bracket === "emerging") {
+    if (!(await readEmergingSubmissionLockState()).closed) {
+      return fail(409, "Emerging round scoring opens only after the Emerging report submission deadline.");
+    }
+
+    if (submission.judgeReviews.length === 0) {
+      return fail(403, "This judge is not assigned to this Emerging round submission.");
+    }
+  }
+
+  if (round === "round-2" || (round === "round-3" && round3Bracket === "emerging")) {
     const latestSubmission = await prisma.teamSubmission.findFirst({
       where: {
         teamId: submission.teamId,
-        round: SubmissionRound.ROUND_2,
+        round: submission.round,
       },
       orderBy: [{ version: "desc" }, { submittedAt: "desc" }],
       select: { id: true },
     });
 
     if (!latestSubmission || latestSubmission.id !== submission.id) {
-      return fail(409, "Round 2 judges can only score the latest locked report version.");
+      return fail(409, round === "round-2"
+        ? "Round 2 judges can only score the latest locked report version."
+        : "Emerging round judges can only score the latest locked report version.");
     }
   }
 
   const review = submission.judgeReviews[0];
   const decodedReview = decodeTeamReviewNote(review?.note);
-  const rubric = round === "round-2" ? ROUND2_REPORT_RUBRIC : undefined;
+  const usesReportRubric = round === "round-2" || round3Bracket === "emerging";
+  const rubric = usesReportRubric ? ROUND2_REPORT_RUBRIC : undefined;
 
   return ok({
     round,
+    round3Bracket,
     submissionId: submission.id,
     teamId: submission.team.id,
     teamName: submission.team.name,
@@ -675,7 +715,9 @@ export async function saveJudgeTeamSubmissionReview(
   let score = payload.score;
   let note = payload.note?.trim() ?? "";
 
-  if (detail.data.round === "round-2") {
+  const usesReportRubric = detail.data.round === "round-2" || detail.data.round3Bracket === "emerging";
+
+  if (usesReportRubric) {
     const rubricScores: Record<string, number> = {};
     for (const criterion of ROUND2_REPORT_RUBRIC) {
       const criterionScore = payload.rubricScores?.[criterion.id];
@@ -687,7 +729,7 @@ export async function saveJudgeTeamSubmissionReview(
       ) {
         return fail(
           400,
-          `Invalid Round 2 rubric score for "${criterion.label.en}". Enter a number from 0 to ${criterion.maxScore}.`,
+          `Invalid report rubric score for "${criterion.label.en}". Enter a number from 0 to ${criterion.maxScore}.`,
         );
       }
 
@@ -729,11 +771,21 @@ export async function saveJudgeTeamSubmissionReview(
       },
     });
 
-    if (detail.data.round === "round-2") {
+    if (usesReportRubric) {
       await tx.round2AiReportReview.updateMany({
         where: { submissionId },
         data: {
           humanOverriddenAt: new Date(),
+        },
+      });
+    }
+
+    if (detail.data.round === "round-3" && detail.data.round3Bracket === "emerging") {
+      await tx.team.update({
+        where: { id: detail.data.teamId },
+        data: {
+          finalScore: score,
+          finalScoreUpdatedAt: new Date(),
         },
       });
     }
@@ -755,6 +807,7 @@ export async function canJudgeAccessTeamSubmissionFile(
     where: { id: submissionId },
     select: {
       round: true,
+      teamId: true,
     },
   });
 
@@ -772,6 +825,34 @@ export async function canJudgeAccessTeamSubmissionFile(
     }
 
     await ensureRound2JudgeAssignments(prisma);
+
+    const review = await prisma.teamSubmissionJudgeReview.findUnique({
+      where: {
+        judgeUserId_submissionId: {
+          judgeUserId: userId,
+          submissionId,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return Boolean(review);
+  }
+
+  if (normalizeRoundFromSubmission(submission.round) === "round-3") {
+    const round2Results = await readRound2FinalistResults();
+    const isEmergingSubmission = round2Results.emergingTeams.some((team) => team.id === submission.teamId);
+    if (!isEmergingSubmission) {
+      return true;
+    }
+
+    if (!(await readEmergingSubmissionLockState()).closed) {
+      return false;
+    }
+
+    await ensureEmergingJudgeAssignments(prisma);
 
     const review = await prisma.teamSubmissionJudgeReview.findUnique({
       where: {

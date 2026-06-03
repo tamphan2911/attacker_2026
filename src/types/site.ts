@@ -422,6 +422,7 @@ export interface JudgeRubricCriterion {
 
 export interface JudgeTeamSubmissionDetail {
   round: SubmissionRound;
+  round3Bracket?: "finalist" | "emerging" | null;
   submissionId: string;
   teamId: string;
   teamName: string;

@@ -523,6 +523,8 @@ export function JudgeTeamSubmissionScorePage({
   const { locale } = useSiteState();
   const router = useRouter();
   const isRound2 = detail.round === "round-2";
+  const isEmerging = detail.round === "round-3" && detail.round3Bracket === "emerging";
+  const isReportRubric = isRound2 || isEmerging;
   const [score, setScore] = useState(detail.review.score == null ? "" : String(detail.review.score));
   const [rubricScores, setRubricScores] = useState<Record<string, string>>(() =>
     Object.fromEntries(
@@ -547,12 +549,12 @@ export function JudgeTeamSubmissionScorePage({
       }, 0),
     [detail.rubric, rubricScores],
   );
-  const cappedRubricTotal = isRound2 ? Math.min(ROUND2_REPORT_FINAL_MAX_SCORE, rubricTotal) : rubricTotal;
+  const cappedRubricTotal = isReportRubric ? Math.min(ROUND2_REPORT_FINAL_MAX_SCORE, rubricTotal) : rubricTotal;
 
   const handleSubmit = async () => {
     let requestBody: { score?: number; rubricScores?: Record<string, number>; note: string };
 
-    if (isRound2) {
+    if (isReportRubric) {
       const parsedRubricScores: Record<string, number> = {};
       for (const criterion of detail.rubric ?? []) {
         const rawScore = rubricScores[criterion.id]?.trim() ?? "";
@@ -646,6 +648,10 @@ export function JudgeTeamSubmissionScorePage({
                 ? locale === "en"
                   ? "Judge dashboard / Round 2"
                   : "Bảng chấm / Vòng 2"
+                : isEmerging
+                  ? locale === "en"
+                    ? "Judge dashboard / Emerging round"
+                    : "Bảng chấm / Vòng Đội ươm mầm"
                 : locale === "en"
                   ? "Judge dashboard / Final round"
                   : "Bảng chấm / Chung kết"}
@@ -669,11 +675,15 @@ export function JudgeTeamSubmissionScorePage({
         </div>
 
         <div className="mt-6 flex flex-wrap gap-2">
-          <StatusPill tone={detail.round === "round-2" ? "success" : "warning"}>
+          <StatusPill tone={detail.round === "round-2" ? "success" : isEmerging ? "info" : "warning"}>
             {detail.round === "round-2"
               ? locale === "en"
                 ? "Round 2"
                 : "Vòng 2"
+              : isEmerging
+                ? locale === "en"
+                  ? "Emerging round"
+                  : "Vòng Đội ươm mầm"
               : locale === "en"
                 ? "Final round"
                 : "Chung kết"}
@@ -695,10 +705,16 @@ export function JudgeTeamSubmissionScorePage({
             </div>
           </Surface>
 
-          {isRound2 ? (
+          {isReportRubric ? (
             <Surface className="px-4 py-4 md:px-5 md:py-5">
               <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-text-soft">
-                {locale === "en" ? "Round 2 rubric table" : "Bảng rubric Vòng 2"}
+                {isEmerging
+                  ? locale === "en"
+                    ? "Emerging rubric table"
+                    : "Bảng rubric Vòng Đội ươm mầm"
+                  : locale === "en"
+                    ? "Round 2 rubric table"
+                    : "Bảng rubric Vòng 2"}
               </p>
               <div className="mt-3 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                 <div>
@@ -706,7 +722,11 @@ export function JudgeTeamSubmissionScorePage({
                     {locale === "en" ? "Report scoring" : "Chấm điểm báo cáo"}
                   </h2>
                   <p className="mt-2 max-w-3xl text-sm leading-7 theme-text-muted">
-                    {locale === "en"
+                    {isEmerging
+                      ? locale === "en"
+                        ? "Use the same official report rubric as Round 2. Focus on concrete improvement compared with the team’s Round 2 report."
+                        : "Dùng cùng rubric chính thức như Vòng 2. Tập trung vào cải thiện cụ thể so với báo cáo Vòng 2 của đội."
+                      : locale === "en"
                       ? "Use the guide bands from the official Round 2 rubric. Each score must stay within the maximum for its own criterion."
                       : "Dùng các mức hướng dẫn từ rubric chính thức Vòng 2. Điểm từng tiêu chí phải nằm trong mức tối đa riêng của tiêu chí đó."}
                   </p>
@@ -718,7 +738,7 @@ export function JudgeTeamSubmissionScorePage({
                   <p className="mt-1 text-2xl font-semibold theme-text-strong">
                     {`${formatScoreNumber(cappedRubricTotal)} / ${detail.maxScore}`}
                   </p>
-                  {isRound2 && rubricTotal > ROUND2_REPORT_FINAL_MAX_SCORE ? (
+                  {isReportRubric && rubricTotal > ROUND2_REPORT_FINAL_MAX_SCORE ? (
                     <p className="mt-1 text-xs font-medium theme-text-soft">
                       {locale === "en"
                         ? `Raw rubric total ${formatScoreNumber(rubricTotal)} is capped at ${ROUND2_REPORT_FINAL_MAX_SCORE}.`
@@ -810,7 +830,7 @@ export function JudgeTeamSubmissionScorePage({
           ) : null}
         </div>
 
-        {isRound2 ? (
+        {isReportRubric ? (
           <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
             <Surface className="px-5 py-5">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
@@ -879,7 +899,7 @@ export function JudgeTeamSubmissionScorePage({
                 <p className="mt-2 text-3xl font-semibold theme-text-strong">
                   {`${formatScoreNumber(cappedRubricTotal)} / ${detail.maxScore}`}
                 </p>
-                {isRound2 && rubricTotal > ROUND2_REPORT_FINAL_MAX_SCORE ? (
+                {isReportRubric && rubricTotal > ROUND2_REPORT_FINAL_MAX_SCORE ? (
                   <p className="mt-1 text-xs font-medium theme-text-soft">
                     {locale === "en"
                       ? `Raw rubric total ${formatScoreNumber(rubricTotal)} is capped at ${ROUND2_REPORT_FINAL_MAX_SCORE}.`
@@ -896,7 +916,15 @@ export function JudgeTeamSubmissionScorePage({
                   rows={5}
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
-                  placeholder={locale === "en" ? "Explain bonus points or key scoring rationale." : "Nêu lý do điểm thưởng hoặc lập luận chấm chính."}
+                  placeholder={
+                    isEmerging
+                      ? locale === "en"
+                        ? "Explain score changes versus Round 2 and the improvement evidence."
+                        : "Nêu rõ thay đổi điểm so với Vòng 2 và bằng chứng cải thiện."
+                      : locale === "en"
+                        ? "Explain bonus points or key scoring rationale."
+                        : "Nêu lý do điểm thưởng hoặc lập luận chấm chính."
+                  }
                   className="theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm leading-7 theme-text-strong outline-none"
                 />
               </label>

@@ -1,7 +1,9 @@
-import { SubmissionRound, TeamSubmissionResourceSource } from "@prisma/client";
+import { SubmissionRound, TeamSubmissionJudgeReviewSource, TeamSubmissionResourceSource, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { readRound2FinalistResults, type Round2AdvancementBracket } from "@/server/round2-finalists";
+import { ensureEmergingJudgeAssignments } from "@/server/emerging-judge-assignment";
+import { decodeTeamReviewNote } from "@/server/judge-service";
 import { deleteTeamSubmissionFile } from "@/server/team-submission-storage";
 import type { AdminRound3SubmissionRow } from "@/types/admin-round3-submissions";
 
@@ -28,6 +30,8 @@ function fail(status: number, error: string): ServiceFailure {
 }
 
 export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRound3SubmissionRow[] }> {
+  await ensureEmergingJudgeAssignments(prisma);
+
   const [submissions, round2Results] = await Promise.all([
     prisma.teamSubmission.findMany({
       where: {
@@ -44,6 +48,17 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
             finalScoreUpdatedAt: true,
           },
         },
+        judgeReviews: {
+          include: {
+            judgeUser: {
+              select: {
+                role: true,
+              },
+            },
+          },
+          orderBy: [{ scoredAt: "desc" }, { updatedAt: "desc" }],
+        },
+        aiReportReview: true,
         submittedByUser: {
           select: {
             id: true,
@@ -80,15 +95,93 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
   }
 
   const finalRankByTeamId = new Map<string, number>();
+  const emergingScoreByTeamId = new Map<string, {
+    score?: number;
+    source: "human" | "gpt" | "none";
+    scoredAt?: string;
+    rubricScores: Record<string, number>;
+  }>();
+  for (const submission of latestByTeam.values()) {
+    if (bracketByTeamId.get(submission.teamId) !== "emerging") {
+      continue;
+    }
+
+    const humanReview = submission.judgeReviews.find(
+      (review) =>
+        review.judgeUser.role === UserRole.JUDGE &&
+        review.source === TeamSubmissionJudgeReviewSource.HUMAN &&
+        typeof review.score === "number" &&
+        review.scoredAt,
+    );
+    const scoredReview = humanReview ?? submission.judgeReviews.find(
+      (review) =>
+        review.judgeUser.role === UserRole.JUDGE &&
+        typeof review.score === "number" &&
+        review.scoredAt,
+    );
+    const decoded = decodeTeamReviewNote(scoredReview?.note);
+
+    emergingScoreByTeamId.set(submission.teamId, {
+      score: scoredReview?.score ?? undefined,
+      source: humanReview
+        ? "human"
+        : scoredReview?.source === TeamSubmissionJudgeReviewSource.AI
+          ? "gpt"
+          : "none",
+      scoredAt: scoredReview?.scoredAt?.toISOString(),
+      rubricScores: decoded.rubricScores,
+    });
+  }
+
+  const latestRound2Submissions = await prisma.teamSubmission.findMany({
+    where: {
+      round: SubmissionRound.ROUND_2,
+      teamId: { in: Array.from(bracketByTeamId.keys()) },
+    },
+    include: {
+      judgeReviews: {
+        include: {
+          judgeUser: {
+            select: {
+              role: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: [{ submittedAt: "desc" }, { version: "desc" }],
+  });
+  const latestRound2ByTeamId = new Map<string, (typeof latestRound2Submissions)[number]>();
+  for (const submission of latestRound2Submissions) {
+    const currentLatest = latestRound2ByTeamId.get(submission.teamId);
+    if (!currentLatest || submission.version > currentLatest.version || (submission.version === currentLatest.version && submission.submittedAt.getTime() > currentLatest.submittedAt.getTime())) {
+      latestRound2ByTeamId.set(submission.teamId, submission);
+    }
+  }
+  const round2ScoreByTeamId = new Map<string, number>();
+  for (const [teamId, submission] of latestRound2ByTeamId) {
+    const scoredReviews = submission.judgeReviews.filter(
+      (review) => review.judgeUser.role === UserRole.JUDGE && typeof review.score === "number" && review.scoredAt,
+    );
+    if (scoredReviews.length > 0) {
+      round2ScoreByTeamId.set(
+        teamId,
+        Math.round((scoredReviews.reduce((total, review) => total + (review.score ?? 0), 0) / scoredReviews.length) * 100) / 100,
+      );
+    }
+  }
+
   for (const bracket of ["finalist", "emerging"] as const) {
     Array.from(latestByTeam.values())
       .filter(
         (submission) =>
           bracketByTeamId.get(submission.teamId) === bracket &&
-          typeof submission.team.finalScore === "number",
+          typeof (bracket === "emerging" ? emergingScoreByTeamId.get(submission.teamId)?.score : submission.team.finalScore) === "number",
       )
       .sort((left, right) => {
-        const scoreDelta = (right.team.finalScore ?? 0) - (left.team.finalScore ?? 0);
+        const leftScore = bracket === "emerging" ? emergingScoreByTeamId.get(left.teamId)?.score : left.team.finalScore;
+        const rightScore = bracket === "emerging" ? emergingScoreByTeamId.get(right.teamId)?.score : right.team.finalScore;
+        const scoreDelta = (rightScore ?? 0) - (leftScore ?? 0);
         if (scoreDelta !== 0) {
           return scoreDelta;
         }
@@ -101,14 +194,27 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
   }
 
   return {
-    rows: submissions.map<AdminRound3SubmissionRow>((submission) => ({
+    rows: submissions.map<AdminRound3SubmissionRow>((submission) => {
+      const bracket = bracketByTeamId.get(submission.teamId);
+      const emergingScore = emergingScoreByTeamId.get(submission.teamId);
+      const displayedFinalScore = bracket === "emerging" ? emergingScore?.score : submission.team.finalScore ?? undefined;
+      const round2Score = round2ScoreByTeamId.get(submission.teamId);
+
+      return {
       submissionId: submission.id,
       teamId: submission.team.id,
       teamName: submission.team.name,
       teamTag: submission.team.tag,
-      round2Bracket: bracketByTeamId.get(submission.teamId),
-      finalScore: submission.team.finalScore ?? undefined,
-      finalScoreUpdatedAt: submission.team.finalScoreUpdatedAt?.toISOString(),
+      round2Bracket: bracket,
+      finalScore: displayedFinalScore,
+      finalScoreUpdatedAt: bracket === "emerging" ? emergingScore?.scoredAt : submission.team.finalScoreUpdatedAt?.toISOString(),
+      round2Score,
+      scoreDifference:
+        typeof displayedFinalScore === "number" && typeof round2Score === "number"
+          ? Math.round((displayedFinalScore - round2Score) * 100) / 100
+          : undefined,
+      emergingScoreSource: bracket === "emerging" ? emergingScore?.source ?? "none" : undefined,
+      emergingScoredAt: bracket === "emerging" ? emergingScore?.scoredAt : undefined,
       finalRank:
         latestByTeam.get(submission.teamId)?.id === submission.id
           ? finalRankByTeamId.get(submission.teamId)
@@ -127,7 +233,8 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
       submittedByUserId: submission.submittedByUser.id,
       submittedByName: submission.submittedByUser.name,
       submittedByLoginId: submission.submittedByUser.loginId,
-    })),
+      };
+    }),
   };
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, FileText, Filter, Save, Search, Sprout, Trash2, Trophy } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Bot, Download, FileText, Filter, LoaderCircle, RotateCcw, Save, Search, Sparkles, Sprout, Trash2, Trophy } from "lucide-react";
 
 import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -9,6 +9,34 @@ import { StatusPill, Surface } from "@/components/site-ui";
 import type { AdminRound3SubmissionRow } from "@/types/admin-round3-submissions";
 
 type Round3AdminTab = "finalist" | "emerging";
+
+type EmergingAiScoringJobSnapshot = {
+  id: string;
+  mode: "run-all" | "retry-failed";
+  status: "pending" | "running" | "completed" | "failed";
+  model: string;
+  totalEligible: number;
+  processedCount: number;
+  scoredCount: number;
+  failedCount: number;
+  skippedHumanCount: number;
+  skippedExistingCount: number;
+  lastError?: string;
+};
+
+type EmergingAiScoringOverview = {
+  emergingClosed: boolean;
+  deadlineAt?: string;
+  activeJob: EmergingAiScoringJobSnapshot | null;
+  totals: {
+    latestReports: number;
+    humanScored: number;
+    gptScored: number;
+    failed: number;
+    needsGptScore: number;
+    gptScoringPercent: number;
+  };
+};
 
 const round3Tabs: Array<{
   id: Round3AdminTab;
@@ -41,6 +69,17 @@ function formatFileSize(bytes?: number) {
   }
 
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+function formatScore(value?: number) {
+  if (typeof value !== "number") {
+    return "-";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
 }
 
 function matchesSearch(row: AdminRound3SubmissionRow, search: string) {
@@ -97,6 +136,17 @@ export function AdminRound3SubmissionsManager() {
   const [versionFilter, setVersionFilter] = useState<"all" | "latest" | "history">("all");
   const [scoreFilter, setScoreFilter] = useState<"all" | "scored" | "unscored">("all");
   const [emergingRankFilter, setEmergingRankFilter] = useState<"all" | "awarded" | "not-awarded">("all");
+  const [aiOverview, setAiOverview] = useState<EmergingAiScoringOverview | null>(null);
+  const [aiActionLoading, setAiActionLoading] = useState<"run-all" | "retry-failed" | null>(null);
+  const [aiError, setAiError] = useState("");
+  const aiProcessBusyRef = useRef(false);
+  const activeAiJob = aiOverview?.activeJob ?? null;
+  const activeAiProgressPercent =
+    activeAiJob && activeAiJob.totalEligible > 0
+      ? Math.min(100, Math.max(0, Math.round((activeAiJob.processedCount / activeAiJob.totalEligible) * 100)))
+      : activeAiJob?.status === "completed"
+        ? 100
+        : 0;
 
   const loadRows = useCallback(
     async (active = true) => {
@@ -144,6 +194,90 @@ export function AdminRound3SubmissionsManager() {
       active = false;
     };
   }, [loadRows]);
+
+  const loadAiOverview = useCallback(async () => {
+    const response = await fetch("/api/admin/round-3/ai-report-scoring", { cache: "no-store" });
+    const payload = (await response.json().catch(() => null)) as { overview?: EmergingAiScoringOverview; error?: string } | null;
+    if (!response.ok || !payload?.overview) {
+      throw new Error(payload?.error ?? (locale === "en" ? "Could not load Emerging GPT scoring progress." : "Không thể tải tiến độ chấm GPT Vòng Đội ươm mầm."));
+    }
+    setAiOverview(payload.overview);
+  }, [locale]);
+
+  useEffect(() => {
+    void loadAiOverview().catch((nextError) => {
+      setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected Emerging GPT scoring error." : "Có lỗi bất ngờ khi tải tiến độ GPT Vòng Đội ươm mầm.");
+    });
+  }, [loadAiOverview, locale]);
+
+  const startAiScoring = async (mode: "run-all" | "retry-failed") => {
+    try {
+      setAiError("");
+      setAiActionLoading(mode);
+      const response = await fetch("/api/admin/round-3/ai-report-scoring", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ mode }),
+      });
+      const payload = (await response.json().catch(() => null)) as { overview?: EmergingAiScoringOverview; error?: string } | null;
+      if (!response.ok || !payload?.overview) {
+        throw new Error(payload?.error ?? (locale === "en" ? "Could not start Emerging GPT scoring." : "Không thể bắt đầu chấm GPT Vòng Đội ươm mầm."));
+      }
+      setAiOverview(payload.overview);
+      await loadRows();
+    } catch (nextError) {
+      setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected Emerging GPT scoring error." : "Có lỗi bất ngờ khi chấm GPT Vòng Đội ươm mầm.");
+    } finally {
+      setAiActionLoading(null);
+    }
+  };
+
+  useEffect(() => {
+    const activeJobId = activeAiJob?.id ?? "";
+    if (!activeJobId || activeAiJob?.status === "completed" || activeAiJob?.status === "failed") {
+      return;
+    }
+
+    let cancelled = false;
+    const processNext = async () => {
+      if (aiProcessBusyRef.current) {
+        return;
+      }
+
+      try {
+        aiProcessBusyRef.current = true;
+        const response = await fetch(`/api/admin/round-3/ai-report-scoring/${activeJobId}/process`, {
+          method: "POST",
+          credentials: "same-origin",
+        });
+        const payload = (await response.json().catch(() => null)) as { overview?: EmergingAiScoringOverview; error?: string } | null;
+        if (!response.ok || !payload?.overview) {
+          throw new Error(payload?.error ?? (locale === "en" ? "Could not process the next Emerging GPT score." : "Không thể xử lý lượt chấm GPT tiếp theo."));
+        }
+        if (!cancelled) {
+          setAiOverview(payload.overview);
+          await loadRows();
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected Emerging GPT scoring error." : "Có lỗi bất ngờ khi chấm GPT.");
+          await loadAiOverview().catch(() => {});
+        }
+      } finally {
+        if (!cancelled) {
+          aiProcessBusyRef.current = false;
+        }
+      }
+    };
+
+    void processNext();
+    const timer = window.setInterval(() => void processNext(), 2200);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [activeAiJob?.id, activeAiJob?.status, loadAiOverview, loadRows, locale]);
 
   async function saveFinalScore(teamId: string) {
     const draft = scoreDrafts[teamId]?.trim() ?? "";
@@ -290,7 +424,7 @@ export function AdminRound3SubmissionsManager() {
       ? "Emerging"
       : "Đội ươm mầm";
   const canDeleteSubmission = currentUser?.role === "admin";
-  const tableColumnCount = canDeleteSubmission ? 12 : 10;
+  const tableColumnCount = (canDeleteSubmission ? 12 : 10) + (activeTab === "emerging" ? 1 : 0);
 
   function toggleSubmissionSelection(submissionId: string, checked: boolean) {
     setSelectedSubmissionIds((current) =>
@@ -433,6 +567,92 @@ export function AdminRound3SubmissionsManager() {
         </div>
       </Surface>
 
+      {activeTab === "emerging" ? (
+        <Surface className="px-5 py-5 md:px-6">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+            <div className="max-w-4xl">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border border-emerald-500/24 bg-emerald-500/12 text-emerald-700 dark:text-emerald-100">
+                  <Bot className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+                    {locale === "en" ? "Emerging GPT scoring" : "Chấm GPT Vòng Đội ươm mầm"}
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold theme-text-strong">
+                    {locale === "en" ? "Score latest Emerging reports by improvement" : "Chấm báo cáo Ươm mầm mới nhất theo mức cải thiện"}
+                  </h2>
+                </div>
+              </div>
+              <p className="mt-3 text-sm leading-7 theme-text-muted">
+                {locale === "en"
+                  ? "GPT scoring opens after the Emerging report deadline. It uses the Round 2 rubric and compares each report with the team’s Round 2 scores/comments."
+                  : "Chấm GPT mở sau hạn nộp báo cáo Ươm mầm. Hệ thống dùng rubric Vòng 2 và so sánh từng báo cáo với điểm/nhận xét Vòng 2 của đội."}
+              </p>
+              {aiError ? (
+                <div className="mt-3 rounded-[1.1rem] border border-amber-300/40 bg-amber-400/12 px-4 py-3 text-sm leading-6 text-amber-900 dark:border-amber-200/24 dark:bg-amber-300/12 dark:text-amber-100">
+                  {aiError}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="min-w-0 space-y-3 xl:min-w-[360px]">
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {[
+                  { label: locale === "en" ? "Latest reports" : "Báo cáo mới nhất", value: aiOverview?.totals.latestReports ?? currentCounts.latest },
+                  { label: locale === "en" ? "Needs GPT" : "Cần GPT chấm", value: aiOverview?.totals.needsGptScore ?? "--" },
+                  { label: locale === "en" ? "GPT scored" : "GPT đã chấm", value: aiOverview?.totals.gptScored ?? "--" },
+                  { label: locale === "en" ? "Failed" : "Lỗi", value: aiOverview?.totals.failed ?? "--" },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-[1rem] border theme-border theme-panel-subtle px-3 py-3">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.18em] theme-text-soft">{item.label}</p>
+                    <p className="mt-1 text-lg font-semibold theme-text-strong">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {activeAiJob ? (
+                <div className="rounded-[1rem] border border-emerald-500/22 bg-emerald-500/10 px-3 py-3 text-sm leading-6 text-emerald-900 dark:border-emerald-300/20 dark:bg-emerald-300/12 dark:text-emerald-100">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-2 font-semibold">
+                      <LoaderCircle className="h-4 w-4 animate-spin" />
+                      {locale === "en" ? "Live scoring progress" : "Tiến độ chấm GPT"}
+                    </span>
+                    <span className="shrink-0 rounded-full border border-white/50 bg-white/70 px-2.5 py-1 text-xs font-semibold text-emerald-950 dark:border-white/12 dark:bg-white/10 dark:text-emerald-100">
+                      {activeAiJob.processedCount}/{activeAiJob.totalEligible} · {activeAiProgressPercent}%
+                    </span>
+                  </div>
+                  <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-950/10 dark:bg-white/10">
+                    <div className="h-full rounded-full bg-[linear-gradient(90deg,#86efac,#22c55e,#059669)] transition-[width] duration-700 ease-out" style={{ width: `${activeAiProgressPercent}%` }} />
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => void startAiScoring("run-all")}
+                  disabled={!aiOverview?.emergingClosed || Boolean(activeAiJob) || aiActionLoading != null}
+                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {aiActionLoading === "run-all" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {locale === "en" ? "Score with GPT" : "Chấm bằng GPT"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void startAiScoring("retry-failed")}
+                  disabled={!aiOverview?.emergingClosed || Boolean(activeAiJob) || aiActionLoading != null || (aiOverview?.totals.failed ?? 0) === 0}
+                  className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {aiActionLoading === "retry-failed" ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                  {locale === "en" ? "Retry failed" : "Chạy lại lỗi"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Surface>
+      ) : null}
+
       <Surface className="px-5 py-5 md:px-6">
         <div className={`grid gap-3 ${activeTab === "emerging" ? "lg:grid-cols-[minmax(0,1.35fr)_210px_210px_230px]" : "lg:grid-cols-[minmax(0,1.35fr)_210px_210px]"}`}>
           <label className="space-y-2">
@@ -528,6 +748,7 @@ export function AdminRound3SubmissionsManager() {
                   locale === "en" ? "Submitted by" : "Người nộp",
                   locale === "en" ? "Submitted at" : "Nộp lúc",
                   locale === "en" ? "Final score" : "Điểm chung kết",
+                  ...(activeTab === "emerging" ? [locale === "en" ? "Round 2 comparison" : "So sánh Vòng 2"] : []),
                   locale === "en" ? "Rank" : "Xếp hạng",
                   locale === "en" ? "Download" : "Tải xuống",
                   ...(canDeleteSubmission ? [locale === "en" ? "Delete" : "Xóa"] : []),
@@ -597,7 +818,31 @@ export function AdminRound3SubmissionsManager() {
                   </td>
                   <td className="px-4 py-4 theme-text-muted">{formatDateTime(locale, row.submittedAt)}</td>
                   <td className="px-4 py-4">
-                    {row.isLatest === "valid latest" ? (
+                    {activeTab === "emerging" ? (
+                      <div className="space-y-1">
+                        {typeof row.finalScore === "number" ? (
+                          <>
+                            <p className="text-lg font-semibold theme-text-strong">{formatScore(row.finalScore)}</p>
+                            <StatusPill tone={row.emergingScoreSource === "human" ? "success" : row.emergingScoreSource === "gpt" ? "info" : "default"}>
+                              {row.emergingScoreSource === "human"
+                                ? locale === "en"
+                                  ? "Human judge"
+                                  : "Giám khảo"
+                                : row.emergingScoreSource === "gpt"
+                                  ? "GPT"
+                                  : locale === "en"
+                                    ? "Not scored"
+                                    : "Chưa chấm"}
+                            </StatusPill>
+                            {row.emergingScoredAt ? (
+                              <p className="text-xs theme-text-soft">{formatDateTime(locale, row.emergingScoredAt)}</p>
+                            ) : null}
+                          </>
+                        ) : (
+                          <StatusPill tone="warning">{locale === "en" ? "Not scored" : "Chưa chấm"}</StatusPill>
+                        )}
+                      </div>
+                    ) : row.isLatest === "valid latest" ? (
                       <div className="flex items-center gap-2">
                         <input
                           type="number"
@@ -628,6 +873,22 @@ export function AdminRound3SubmissionsManager() {
                       <span className="text-xs theme-text-soft">-</span>
                     )}
                   </td>
+                  {activeTab === "emerging" ? (
+                    <td className="px-4 py-4">
+                      {typeof row.finalScore === "number" && typeof row.round2Score === "number" && typeof row.scoreDifference === "number" ? (
+                        <div className="space-y-1">
+                          <p className="text-sm theme-text-body">
+                            {locale === "en" ? "Round 2" : "Vòng 2"}: <span className="font-semibold">{formatScore(row.round2Score)}</span>
+                          </p>
+                          <StatusPill tone={row.scoreDifference > 0 ? "success" : row.scoreDifference < 0 ? "warning" : "default"}>
+                            {row.scoreDifference > 0 ? "+" : ""}{formatScore(row.scoreDifference)}
+                          </StatusPill>
+                        </div>
+                      ) : (
+                        <StatusPill tone="warning">{locale === "en" ? "Not score" : "Chưa có điểm"}</StatusPill>
+                      )}
+                    </td>
+                  ) : null}
                   <td className="px-4 py-4">
                     {row.finalRank ? (
                       <StatusPill tone={row.round2Bracket === "finalist" ? "success" : row.finalRank <= 10 ? "info" : "default"}>

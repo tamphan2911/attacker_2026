@@ -6,6 +6,10 @@ export interface AdminRound3SubmissionRow {
   round2Bracket?: "finalist" | "emerging";
   finalScore?: number;
   finalScoreUpdatedAt?: string;
+  round2Score?: number;
+  scoreDifference?: number;
+  emergingScoreSource?: "human" | "gpt" | "none";
+  emergingScoredAt?: string;
   finalRank?: number;
   title: string;
   version: number;
