@@ -242,7 +242,7 @@ export function SeasonLinksContentEditor({ locale, draft }: { locale: Locale; dr
           const displayYear = getSeasonSlotDisplayYear(draft, slotYear);
 
           return (
-          <Link key={slotYear} href={`/admin/content/pages/season-${slotYear}`} className="block">
+          <Link key={slotYear} href={`/admin/seasons/${slotYear}`} className="block">
             <div className="group rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4 transition hover:border-sky-300/40 hover:bg-[rgba(23,114,208,0.06)]">
               <div className="flex items-center gap-3">
                 <span className="theme-brand-gradient flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_16px_34px_rgba(23,114,208,0.18)]">

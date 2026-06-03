@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Bold,
   BriefcaseBusiness,
-  CalendarRange,
   ChevronDown,
   CheckCircle2,
   CircleHelp,
@@ -15,7 +14,6 @@ import {
   FileText,
   Heading2,
   ImageIcon,
-  Images,
   Italic,
   LayoutDashboard,
   Link2,
@@ -58,12 +56,6 @@ import {
 } from "@/lib/header-brand-image";
 import { pickText } from "@/lib/site";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
-import {
-  getSeasonSlotDisplayYear,
-  SeasonArchiveContentEditor,
-  SeasonLinksContentEditor,
-  seasonContentYears,
-} from "@/components/admin-season-content-editor";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import type {
@@ -194,17 +186,6 @@ function createPhoneContactDraft(index: number) {
       en: `Phone contact ${index + 1} responsibility`,
       vi: `Phạm vi hỗ trợ đầu mối ${index + 1}`,
     },
-  };
-}
-
-function createOrganizerSeasonStoryDraft(index: number) {
-  return {
-    year: `${2027 + index}`,
-    image: "",
-    label: createBlankLocalizedText(),
-    title: createBlankLocalizedText(),
-    body: createBlankLocalizedText(),
-    stats: [createBlankLocalizedText(), createBlankLocalizedText()],
   };
 }
 
@@ -539,13 +520,6 @@ function iconForPage(pageId: ContentPageId) {
       return Users2;
     case "organizer":
       return LayoutDashboard;
-    case "seasons":
-      return CalendarRange;
-    case "season-2023":
-    case "season-2024":
-    case "season-2025":
-    case "season-2026":
-      return Images;
     case "contact":
       return Mail;
     case "footer":
@@ -615,37 +589,15 @@ const contentPageTree: Array<{
     children: [{ kind: "type", id: "workspace-states" }],
   },
   { id: "organizer" },
-  {
-    id: "seasons",
-    children: seasonContentYears.map((year) => ({ kind: "page", id: `season-${year}` as ContentPageId })),
-  },
   { id: "contact" },
   { id: "footer" },
 ];
 
-function getSeasonYearFromContentPageId(pageId: ContentPageId) {
-  return pageId.startsWith("season-") ? pageId.replace("season-", "") : null;
-}
-
-function getContentPageLabel(locale: Locale, pageId: ContentPageId, content: SitePageContent) {
-  const seasonYear = getSeasonYearFromContentPageId(pageId);
-  if (seasonYear) {
-    const displayYear = getSeasonSlotDisplayYear(content, seasonYear);
-    return locale === "en" ? `Season ${displayYear}` : `Mùa ${displayYear}`;
-  }
-
+function getContentPageLabel(locale: Locale, pageId: ContentPageId) {
   return pickText(locale, contentPageMap[pageId].label);
 }
 
-function getContentPageDescription(locale: Locale, pageId: ContentPageId, content: SitePageContent) {
-  const seasonYear = getSeasonYearFromContentPageId(pageId);
-  if (seasonYear) {
-    const displayYear = getSeasonSlotDisplayYear(content, seasonYear);
-    return locale === "en"
-      ? `Edit every public text block and slider image for the ${displayYear} season detail page.`
-      : `Chỉnh toàn bộ nội dung chữ và ảnh slider của trang chi tiết mùa ${displayYear}.`;
-  }
-
+function getContentPageDescription(locale: Locale, pageId: ContentPageId) {
   return pickText(locale, contentPageMap[pageId].description);
 }
 
@@ -726,7 +678,7 @@ function EditorTopBar({
 }
 
 export function ContentIndexSection() {
-  const { locale, pageContent } = useSiteState();
+  const { locale } = useSiteState();
   useAdminTitleScroll();
 
   return (
@@ -752,10 +704,10 @@ export function ContentIndexSection() {
                     </div>
                     <div className="min-w-0">
                       <p className="theme-heading text-xl font-semibold theme-text-strong">
-                        {getContentPageLabel(locale, item.id, pageContent)}
+                        {getContentPageLabel(locale, item.id)}
                       </p>
                       <p className="mt-1 text-sm leading-7 theme-text-muted">
-                        {getContentPageDescription(locale, item.id, pageContent)}
+                        {getContentPageDescription(locale, item.id)}
                       </p>
                     </div>
                   </div>
@@ -783,7 +735,7 @@ export function ContentIndexSection() {
                               <div className="flex flex-wrap items-center gap-2">
                                 <p className="text-base font-semibold theme-text-strong">
                                   {childEntry.kind === "page"
-                                    ? getContentPageLabel(locale, childEntry.id, pageContent)
+                                    ? getContentPageLabel(locale, childEntry.id)
                                     : pickText(locale, child.label)}
                                 </p>
                                 {childEntry.kind === "type" ? (
@@ -794,7 +746,7 @@ export function ContentIndexSection() {
                               </div>
                               <p className="mt-1 text-sm leading-6 theme-text-soft">
                                 {childEntry.kind === "page"
-                                  ? getContentPageDescription(locale, childEntry.id, pageContent)
+                                  ? getContentPageDescription(locale, childEntry.id)
                                   : pickText(locale, child.description)}
                               </p>
                             </div>
@@ -1268,7 +1220,6 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
   );
   const isDirty = pageContentDirty || timelineDirty;
 
-  const seasonYear = pageId.startsWith("season-") ? pageId.replace("season-", "") : null;
   const faqTopics = draft.rules.faqTopics;
   const firstFaqTopicId = faqTopics[0]?.id ?? "";
   const pickFaqTopicTitle = (topicId: string) => {
@@ -1403,8 +1354,8 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
     <div className="space-y-8">
       <EditorTopBar
         eyebrow={locale === "en" ? "Admin / Content / Page" : "Admin / Nội dung / Trang"}
-        title={getContentPageLabel(locale, pageId, draft)}
-        description={getContentPageDescription(locale, pageId, draft)}
+        title={getContentPageLabel(locale, pageId)}
+        description={getContentPageDescription(locale, pageId)}
         isDirty={isDirty}
         onReset={resetDrafts}
         onSave={() => {
@@ -2312,171 +2263,6 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                 )
               }
             />
-
-            <LocalizedTextEditorCard
-              title="Competition / Season badge label"
-              value={draft.organizer.seasonBadgeLabel}
-              onChange={(language, value) =>
-                setDraft((current) =>
-                  updateDraftContent(current, (next) => {
-                    next.organizer.seasonBadgeLabel[language] = value;
-                  }),
-                )
-              }
-            />
-
-            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                <BlockIntro
-                  title="Competition / Season highlight cards"
-                  description="Each block controls one visible season card: image, badge year, eyebrow, title, body, and bottom stat chips."
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setDraft((current) =>
-                      updateDraftContent(current, (next) => {
-                        next.organizer.seasonStories.push(
-                          createOrganizerSeasonStoryDraft(next.organizer.seasonStories.length),
-                        );
-                      }),
-                    )
-                  }
-                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-                >
-                  <Plus className="h-4 w-4" />
-                  {locale === "en" ? "Add season card" : "Thêm thẻ mùa thi"}
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {draft.organizer.seasonStories.map((story, index) => (
-                  <Surface key={`competition-season-story-${index}`} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-lg font-semibold theme-text-strong">
-                        {locale === "en" ? `Season highlight card ${index + 1}` : `Thẻ mùa thi ${index + 1}`}
-                      </p>
-                      <button
-                        type="button"
-                        disabled={draft.organizer.seasonStories.length <= 1}
-                        onClick={() =>
-                          setDraft((current) =>
-                            updateDraftContent(current, (next) => {
-                              next.organizer.seasonStories = next.organizer.seasonStories.filter(
-                                (_, currentIndex) => currentIndex !== index,
-                              );
-                            }),
-                          )
-                        }
-                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={locale === "en" ? "Delete season highlight card" : "Xóa thẻ mùa thi"}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-[140px_minmax(0,1fr)]">
-                      <label className="space-y-2">
-                        <span className="text-sm theme-text-muted">Year</span>
-                        <input
-                          value={story.year}
-                          onChange={(event) =>
-                            setDraft((current) =>
-                              updateDraftContent(current, (next) => {
-                                next.organizer.seasonStories[index].year = event.target.value;
-                              }),
-                            )
-                          }
-                          className={fieldClassName}
-                        />
-                      </label>
-                      <label className="space-y-2">
-                        <span className="text-sm theme-text-muted">Image path</span>
-                        <input
-                          value={story.image}
-                          onChange={(event) =>
-                            setDraft((current) =>
-                              updateDraftContent(current, (next) => {
-                                next.organizer.seasonStories[index].image = event.target.value;
-                              }),
-                            )
-                          }
-                          className={fieldClassName}
-                        />
-                      </label>
-                    </div>
-                    <LocalizedFieldEditor
-                      label="Card eyebrow"
-                      rows={2}
-                      value={story.label}
-                      onChange={(language, value) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].label[language] = value;
-                          }),
-                        )
-                      }
-                    />
-                    <LocalizedFieldEditor
-                      label="Card title"
-                      rows={3}
-                      value={story.title}
-                      onChange={(language, value) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].title[language] = value;
-                          }),
-                        )
-                      }
-                    />
-                    <LocalizedFieldEditor
-                      label="Card body"
-                      rows={5}
-                      value={story.body}
-                      onChange={(language, value) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].body[language] = value;
-                          }),
-                        )
-                      }
-                    />
-                    <LocalizedListBlockEditor
-                      title="Card stat chips"
-                      description="These chips appear at the bottom of this season highlight card."
-                      items={story.stats}
-                      itemLabelPrefix="Stat chip"
-                      rows={2}
-                      onChange={(itemIndex, language, value) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].stats[itemIndex][language] = value;
-                          }),
-                        )
-                      }
-                      onAdd={() =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].stats.push(createBlankLocalizedText());
-                          }),
-                        )
-                      }
-                      addLabel={locale === "en" ? "Add stat chip" : "Thêm chip"}
-                      onRemove={(itemIndex) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].stats = next.organizer.seasonStories[index].stats.filter(
-                              (_, currentIndex) => currentIndex !== itemIndex,
-                            );
-                          }),
-                        )
-                      }
-                      removeLabel={locale === "en" ? "Remove stat chip" : "Xóa chip"}
-                      minItems={1}
-                    />
-                  </Surface>
-                ))}
-              </div>
-            </Surface>
 
             <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
               <BlockIntro
@@ -3791,171 +3577,6 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
               }
             />
 
-            <LocalizedTextEditorCard
-              title="Organizer / Season badge label"
-              value={draft.organizer.seasonBadgeLabel}
-              onChange={(language, value) =>
-                setDraft((current) =>
-                  updateDraftContent(current, (next) => {
-                    next.organizer.seasonBadgeLabel[language] = value;
-                  }),
-                )
-              }
-            />
-
-            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
-              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-                <BlockIntro
-                  title="Organizer / Season story blocks"
-                  description="Each block controls one season card in the highlights grid."
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setDraft((current) =>
-                      updateDraftContent(current, (next) => {
-                        next.organizer.seasonStories.push(
-                          createOrganizerSeasonStoryDraft(next.organizer.seasonStories.length),
-                        );
-                      }),
-                    )
-                  }
-                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
-                >
-                  <Plus className="h-4 w-4" />
-                  {locale === "en" ? "Add season story" : "Thêm block mùa thi"}
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {draft.organizer.seasonStories.map((story, index) => (
-                  <Surface key={`organizer-season-${index}`} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-lg font-semibold theme-text-strong">
-                        {locale === "en" ? `Season block ${index + 1}` : `Block mùa ${index + 1}`}
-                      </p>
-                      <button
-                        type="button"
-                        disabled={draft.organizer.seasonStories.length <= 1}
-                        onClick={() =>
-                          setDraft((current) =>
-                            updateDraftContent(current, (next) => {
-                              next.organizer.seasonStories = next.organizer.seasonStories.filter(
-                                (_, currentIndex) => currentIndex !== index,
-                              );
-                            }),
-                          )
-                        }
-                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={locale === "en" ? "Delete season block" : "Xóa block mùa"}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="grid gap-4 md:grid-cols-[140px_minmax(0,1fr)]">
-                      <label className="space-y-2">
-                        <span className="text-sm theme-text-muted">Year</span>
-                        <input
-                          value={story.year}
-                          onChange={(event) =>
-                            setDraft((current) =>
-                              updateDraftContent(current, (next) => {
-                                next.organizer.seasonStories[index].year = event.target.value;
-                              }),
-                            )
-                          }
-                          className={fieldClassName}
-                        />
-                      </label>
-                      <label className="space-y-2">
-                        <span className="text-sm theme-text-muted">Image path</span>
-                        <input
-                          value={story.image}
-                          onChange={(event) =>
-                            setDraft((current) =>
-                              updateDraftContent(current, (next) => {
-                                next.organizer.seasonStories[index].image = event.target.value;
-                              }),
-                            )
-                          }
-                          className={fieldClassName}
-                        />
-                      </label>
-                    </div>
-                    <LocalizedFieldEditor
-                      label="Label"
-                      rows={2}
-                      value={story.label}
-                      onChange={(language, value) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].label[language] = value;
-                          }),
-                        )
-                      }
-                    />
-                    <LocalizedFieldEditor
-                      label="Title"
-                      rows={3}
-                      value={story.title}
-                      onChange={(language, value) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].title[language] = value;
-                          }),
-                        )
-                      }
-                    />
-                    <LocalizedFieldEditor
-                      label="Body"
-                      rows={5}
-                      value={story.body}
-                      onChange={(language, value) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].body[language] = value;
-                          }),
-                        )
-                      }
-                    />
-                    <LocalizedListBlockEditor
-                      title="Stats"
-                      description="Short chips shown at the bottom of this season block."
-                      items={story.stats}
-                      itemLabelPrefix="Stat"
-                      rows={2}
-                      onChange={(itemIndex, language, value) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].stats[itemIndex][language] = value;
-                          }),
-                        )
-                      }
-                      onAdd={() =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].stats.push(createBlankLocalizedText());
-                          }),
-                        )
-                      }
-                      addLabel={locale === "en" ? "Add stat" : "Thêm nhãn"}
-                      onRemove={(itemIndex) =>
-                        setDraft((current) =>
-                          updateDraftContent(current, (next) => {
-                            next.organizer.seasonStories[index].stats = next.organizer.seasonStories[index].stats.filter(
-                              (_, currentIndex) => currentIndex !== itemIndex,
-                            );
-                          }),
-                        )
-                      }
-                      removeLabel={locale === "en" ? "Remove stat" : "Xóa nhãn"}
-                      minItems={1}
-                    />
-                  </Surface>
-                ))}
-              </div>
-            </Surface>
-
             <CopySectionEditor
               title="Organizer / Photo slider heading"
               section={draft.organizer.flags}
@@ -4161,12 +3782,6 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
               </div>
             </Surface>
           </>
-        ) : null}
-
-        {pageId === "seasons" ? <SeasonLinksContentEditor locale={locale} draft={draft} /> : null}
-
-        {seasonYear ? (
-          <SeasonArchiveContentEditor locale={locale} draft={draft} setDraft={setDraft} year={seasonYear} />
         ) : null}
 
         {pageId === "contact" ? (

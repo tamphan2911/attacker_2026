@@ -217,6 +217,7 @@ interface SiteStateValue {
   signOutCurrentUser: () => Promise<void>;
   resetDemoData: () => void;
   savePageContent: (nextPageContent: SitePageContent) => Promise<boolean>;
+  saveSeasonContent: (seasonContent: Pick<SitePageContent["organizer"], "seasonBadgeLabel" | "seasonStories" | "seasonArchives">) => Promise<boolean>;
   saveSponsorsByAdmin: (nextSponsors: SponsorProfile[]) => void;
   createNewsPostByAdmin: (payload: NewsPost) => void;
   updateNewsPostByAdmin: (slug: string, payload: NewsPost) => void;
@@ -685,6 +686,57 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
         {
           en: "Could not save the page content right now.",
           vi: "Hiện không thể lưu nội dung trang.",
+        },
+        "warning",
+      );
+      return false;
+    }
+  };
+
+  const saveSeasonContent = async (
+    seasonContent: Pick<SitePageContent["organizer"], "seasonBadgeLabel" | "seasonStories" | "seasonArchives">,
+  ) => {
+    if (!canAccessAdminMode) {
+      pushToast(
+        {
+          en: "Only admin and moderator accounts can update season content.",
+          vi: "Chỉ tài khoản admin và moderator mới có thể cập nhật nội dung mùa thi.",
+        },
+        "warning",
+      );
+      return false;
+    }
+
+    try {
+      const response = await fetch("/api/admin/seasons-content", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "same-origin",
+        body: JSON.stringify(seasonContent),
+      });
+
+      if (!response.ok) {
+        const error = await extractResponseError(response, "Could not save season content.");
+        pushToast({ en: error, vi: error }, "warning");
+        return false;
+      }
+
+      await syncSiteData();
+      pushToast(
+        {
+          en: "Season content updated independently.",
+          vi: "Nội dung mùa thi đã được lưu độc lập.",
+        },
+        "success",
+      );
+      return true;
+    } catch {
+      pushToast(
+        {
+          en: "Could not save season content right now.",
+          vi: "Hiện không thể lưu nội dung mùa thi.",
         },
         "warning",
       );
@@ -3218,6 +3270,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     signOutCurrentUser,
     resetDemoData,
     savePageContent,
+    saveSeasonContent,
     saveSponsorsByAdmin,
     createNewsPostByAdmin,
     updateNewsPostByAdmin,

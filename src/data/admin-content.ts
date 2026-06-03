@@ -18,11 +18,6 @@ export type ContentPageId =
   | "auth"
   | "workspace"
   | "organizer"
-  | "seasons"
-  | "season-2023"
-  | "season-2024"
-  | "season-2025"
-  | "season-2026"
   | "contact"
   | "footer";
 
@@ -193,51 +188,6 @@ export const contentPageConfigs: ContentPageConfig[] = [
     description: {
       en: "Organizer header, content modules, and flags sections.",
       vi: "Header, content modules và flags của trang organizer.",
-    },
-  },
-  {
-    id: "seasons",
-    href: "/admin/content/pages/seasons",
-    label: { en: "Seasons", vi: "Mùa thi" },
-    description: {
-      en: "Open a season editor to manage archive text, top teams, statistics, and slider images.",
-      vi: "Mở từng trang mùa thi để chỉnh nội dung lưu trữ, top đội, thống kê và ảnh slider.",
-    },
-  },
-  {
-    id: "season-2023",
-    href: "/admin/content/pages/season-2023",
-    label: { en: "Season 2023", vi: "Mùa 2023" },
-    description: {
-      en: "Edit every public text block and slider image for the 2023 season detail page.",
-      vi: "Chỉnh toàn bộ nội dung chữ và ảnh slider của trang chi tiết mùa 2023.",
-    },
-  },
-  {
-    id: "season-2024",
-    href: "/admin/content/pages/season-2024",
-    label: { en: "Season 2024", vi: "Mùa 2024" },
-    description: {
-      en: "Edit every public text block and slider image for the 2024 season detail page.",
-      vi: "Chỉnh toàn bộ nội dung chữ và ảnh slider của trang chi tiết mùa 2024.",
-    },
-  },
-  {
-    id: "season-2025",
-    href: "/admin/content/pages/season-2025",
-    label: { en: "Season 2025", vi: "Mùa 2025" },
-    description: {
-      en: "Edit every public text block and slider image for the 2025 season detail page.",
-      vi: "Chỉnh toàn bộ nội dung chữ và ảnh slider của trang chi tiết mùa 2025.",
-    },
-  },
-  {
-    id: "season-2026",
-    href: "/admin/content/pages/season-2026",
-    label: { en: "Season 2026", vi: "Mùa 2026" },
-    description: {
-      en: "Edit every public text block and slider image for the 2026 season detail page.",
-      vi: "Chỉnh toàn bộ nội dung chữ và ảnh slider của trang chi tiết mùa 2026.",
     },
   },
   {

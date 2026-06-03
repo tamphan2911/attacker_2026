@@ -30,6 +30,8 @@ import { DEFAULT_JUDGE_PASSWORD, getJudgeLoginIdFromProfileId } from "@/server/j
 import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/news-image-storage";
 import { ensureRound1SubmissionArchive } from "@/server/round1-submission-archive";
 import type {
+  EditableOrganizerSeasonArchive,
+  EditableOrganizerSeasonStory,
   JudgeProfile,
   LocalizedText,
   NewsPost,
@@ -142,12 +144,41 @@ export function buildJudgeEmail(loginId: string) {
 export async function savePageContentByAdmin(
   payload: SitePageContent,
 ): Promise<ServiceResult<{ saved: true }>> {
+  const existing = await readPageContent();
+  const nextContent = mergePageContentWithDefaults(payload);
+  nextContent.organizer.seasonBadgeLabel = existing.organizer.seasonBadgeLabel;
+  nextContent.organizer.seasonStories = existing.organizer.seasonStories;
+  nextContent.organizer.seasonArchives = existing.organizer.seasonArchives;
+
   await prisma.cmsEntry.upsert({
     where: { scope: "site-page-content" },
-    update: { payload: JSON.stringify(payload) },
+    update: { payload: JSON.stringify(nextContent) },
     create: {
       scope: "site-page-content",
-      payload: JSON.stringify(payload),
+      payload: JSON.stringify(nextContent),
+    },
+  });
+
+  return ok({ saved: true });
+}
+
+export async function saveSeasonContentByAdmin(payload: {
+  seasonBadgeLabel: LocalizedText;
+  seasonStories: EditableOrganizerSeasonStory[];
+  seasonArchives: EditableOrganizerSeasonArchive[];
+}): Promise<ServiceResult<{ saved: true }>> {
+  const currentContent = await readPageContent();
+  const nextContent = mergePageContentWithDefaults(currentContent);
+  nextContent.organizer.seasonBadgeLabel = normalizeLocalizedText(payload.seasonBadgeLabel);
+  nextContent.organizer.seasonStories = payload.seasonStories;
+  nextContent.organizer.seasonArchives = payload.seasonArchives;
+
+  await prisma.cmsEntry.upsert({
+    where: { scope: "site-page-content" },
+    update: { payload: JSON.stringify(nextContent) },
+    create: {
+      scope: "site-page-content",
+      payload: JSON.stringify(nextContent),
     },
   });
 

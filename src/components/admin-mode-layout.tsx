@@ -8,6 +8,7 @@ import {
   FileQuestion,
   Files,
   Images,
+  Landmark,
   LayoutDashboard,
   Mail,
   MessageCircle,
@@ -62,6 +63,19 @@ const adminNavGroups: Array<{
         children: [
           { href: "/admin/content", label: { en: "Pages & types", vi: "Trang và nhóm nội dung" } },
           { href: "/admin/content/sponsors", label: { en: "Sponsors", vi: "Nhà tài trợ" } },
+        ],
+      },
+      {
+        href: "/admin/seasons",
+        icon: Landmark,
+        label: { en: "Seasons", vi: "Mùa thi" },
+        description: { en: "Independent season archive editor", vi: "Trình chỉnh sửa mùa thi độc lập" },
+        children: [
+          { href: "/admin/seasons", label: { en: "Season list", vi: "Danh sách mùa thi" } },
+          { href: "/admin/seasons/2023", label: { en: "Season 2023", vi: "Mùa 2023" } },
+          { href: "/admin/seasons/2024", label: { en: "Season 2024", vi: "Mùa 2024" } },
+          { href: "/admin/seasons/2025", label: { en: "Season 2025", vi: "Mùa 2025" } },
+          { href: "/admin/seasons/2026", label: { en: "Season 2026", vi: "Mùa 2026" } },
         ],
       },
       {
