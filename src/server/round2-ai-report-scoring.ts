@@ -26,6 +26,18 @@ const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const MAX_REPORT_BYTES = 10 * 1024 * 1024;
 const PDF_DATA_URL_PREFIX = "data:application/pdf;base64,";
+const ROUND2_AI_JUDGE_PERSPECTIVES = [
+  {
+    label: "Giám khảo GPT 1",
+    focus:
+      "Ưu tiên đánh giá độ rõ của vấn đề, giá trị thị trường/người dùng, tác động tài chính-xã hội, dữ liệu kiểm chứng và mức độ thuyết phục của mô hình.",
+  },
+  {
+    label: "Giám khảo GPT 2",
+    focus:
+      "Ưu tiên đánh giá tính khả thi triển khai, công nghệ, nguyên mẫu/demo, rủi ro vận hành-pháp lý, lộ trình mở rộng và bằng chứng thực thi.",
+  },
+] as const;
 
 const ROUND2_REPORT_TEMPLATE_GUIDE = `
 Báo cáo Vòng 2 thường theo mẫu Attacker 2026 với các phần:
@@ -324,10 +336,12 @@ async function scoreReportWithOpenAi({
   model,
   submission,
   reportBuffer,
+  judgePerspective,
 }: {
   model: string;
   submission: Round2LatestSubmission;
   reportBuffer: Buffer;
+  judgePerspective: (typeof ROUND2_AI_JUDGE_PERSPECTIVES)[number];
 }) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -351,9 +365,11 @@ async function scoreReportWithOpenAi({
           role: "system",
           content: [
             "Bạn là trợ lý chấm báo cáo Vòng 2 cho cuộc thi Attacker 2026.",
+            `Bạn đang đóng vai ${judgePerspective.label}. ${judgePerspective.focus}`,
             "Hãy đọc file PDF báo cáo, chấm theo rubric được cung cấp, và trả về JSON đúng schema.",
             "Điểm từng tiêu chí phải nằm trong giới hạn tối đa của chính tiêu chí đó, cho phép một chữ số thập phân.",
             "Nhận xét phải bằng tiếng Việt, cụ thể, chuyên nghiệp, tránh văn phong chung chung.",
+            "Đây là một lượt chấm độc lập; không cố làm giống giám khảo khác và không sao chép nhận xét mẫu.",
             "Không phóng đại. Nếu báo cáo thiếu dữ liệu, nguyên mẫu, dẫn chứng hoặc kế hoạch triển khai, hãy trừ điểm rõ ràng.",
             "Khuyến khích đội có sản phẩm, prototype, MVP, pilot, demo, đường link sản phẩm, người dùng thử hoặc bằng chứng triển khai thực tế.",
             "Tuy nhiên, chỉ cộng điểm cho sản phẩm khi báo cáo có bằng chứng đủ rõ; không cộng chỉ vì đội tự nói đã có sản phẩm.",
@@ -376,6 +392,7 @@ async function scoreReportWithOpenAi({
               text: JSON.stringify({
                 task:
                   "Chấm báo cáo Vòng 2 mới nhất của đội theo rubric. Tổng điểm không cần trả về vì hệ thống tự cộng từ từng tiêu chí.",
+                judgePerspective,
                 team: {
                   name: submission.team.name,
                   tag: submission.team.tag,
@@ -463,6 +480,40 @@ async function scoreReportWithOpenAi({
   }
 
   return validateOpenAiScoringResult(JSON.parse(responseText));
+}
+
+function buildDetailedComment(result: OpenAiReportScoringResult) {
+  return [
+    result.comment,
+    "",
+    "Nhận xét theo rubric:",
+    ...result.criteria.map((criterion) => {
+      const rubric = ROUND2_REPORT_RUBRIC.find((item) => item.id === criterion.criterionId);
+      const label = rubric?.label.vi || rubric?.label.en || criterion.criterionId;
+      return `- ${label}: ${criterion.score}/${rubric?.maxScore ?? ""}. ${criterion.rationale}`;
+    }),
+  ].join("\n");
+}
+
+function calculateResultScore(result: OpenAiReportScoringResult) {
+  const rawScore = result.criteria.reduce((total, criterion) => total + criterion.score, 0);
+  return Math.min(ROUND2_REPORT_FINAL_MAX_SCORE, Math.round(rawScore * 10) / 10);
+}
+
+function createRubricScoreMap(result: OpenAiReportScoringResult) {
+  return Object.fromEntries(result.criteria.map((criterion) => [criterion.criterionId, criterion.score]));
+}
+
+function averageRubricScores(results: OpenAiReportScoringResult[]) {
+  return Object.fromEntries(
+    ROUND2_REPORT_RUBRIC.map((criterion) => {
+      const scores = results
+        .map((result) => result.criteria.find((item) => item.criterionId === criterion.id)?.score)
+        .filter((score): score is number => typeof score === "number");
+      const average = scores.length ? scores.reduce((total, score) => total + score, 0) / scores.length : 0;
+      return [criterion.id, Math.round(average * 10) / 10];
+    }),
+  );
 }
 
 async function readLatestRound2Submissions() {
@@ -776,24 +827,31 @@ export async function processNextRound2AiReportScoringJobItem(
     }
 
     const reportBuffer = await readTeamSubmissionFile(candidate.resourceStorageKey);
-    const result = await scoreReportWithOpenAi({
-      model: job.model,
-      submission: candidate,
-      reportBuffer,
-    });
-    const rubricScores = Object.fromEntries(result.criteria.map((criterion) => [criterion.criterionId, criterion.score]));
-    const rawScore = result.criteria.reduce((total, criterion) => total + criterion.score, 0);
-    const totalScore = Math.min(ROUND2_REPORT_FINAL_MAX_SCORE, Math.round(rawScore * 10) / 10);
-    const detailedComment = [
-      result.comment,
-      "",
-      "Nhận xét theo rubric:",
-      ...result.criteria.map((criterion) => {
-        const rubric = ROUND2_REPORT_RUBRIC.find((item) => item.id === criterion.criterionId);
-        const label = rubric?.label.vi || rubric?.label.en || criterion.criterionId;
-        return `- ${label}: ${criterion.score}/${rubric?.maxScore ?? ""}. ${criterion.rationale}`;
+    const aiJudgeResults = await Promise.all(
+      assignedJudgeReviews.map(async (_review, index) => {
+        const perspective = ROUND2_AI_JUDGE_PERSPECTIVES[index] ?? ROUND2_AI_JUDGE_PERSPECTIVES[0];
+        const result = await scoreReportWithOpenAi({
+          model: job.model,
+          submission: candidate,
+          reportBuffer,
+          judgePerspective: perspective,
+        });
+
+        return {
+          perspective,
+          result,
+          score: calculateResultScore(result),
+          rubricScores: createRubricScoreMap(result),
+          detailedComment: buildDetailedComment(result),
+        };
       }),
-    ].join("\n");
+    );
+    const totalScore =
+      Math.round((aiJudgeResults.reduce((total, item) => total + item.score, 0) / aiJudgeResults.length) * 10) / 10;
+    const averageRubricScoreMap = averageRubricScores(aiJudgeResults.map((item) => item.result));
+    const combinedComment = aiJudgeResults
+      .map((item) => [`${item.perspective.label}: ${item.score}/${ROUND2_REPORT_FINAL_MAX_SCORE}`, item.detailedComment].join("\n"))
+      .join("\n\n---\n\n");
     const scoredAt = new Date();
 
     await prisma.$transaction(async (tx) => {
@@ -835,8 +893,9 @@ export async function processNextRound2AiReportScoringJobItem(
         return;
       }
 
-      const encodedNote = encodeTeamReviewNote(detailedComment, rubricScores);
-      for (const review of assignedJudgeReviews) {
+      for (const [index, review] of assignedJudgeReviews.entries()) {
+        const aiJudgeResult = aiJudgeResults[index];
+        const encodedNote = encodeTeamReviewNote(aiJudgeResult.detailedComment, aiJudgeResult.rubricScores);
         await tx.teamSubmissionJudgeReview.update({
           where: {
             judgeUserId_submissionId: {
@@ -845,7 +904,7 @@ export async function processNextRound2AiReportScoringJobItem(
             },
           },
           data: {
-            score: totalScore,
+            score: aiJudgeResult.score,
             note: encodedNote,
             source: TeamSubmissionJudgeReviewSource.AI,
             scoredAt,
@@ -859,8 +918,8 @@ export async function processNextRound2AiReportScoringJobItem(
           model: job.model,
           status: Round2AiReportScoringStatus.SCORED,
           score: totalScore,
-          rubricScores: JSON.stringify(rubricScores),
-          comment: detailedComment,
+          rubricScores: JSON.stringify(averageRubricScoreMap),
+          comment: combinedComment,
           error: null,
           scoredAt,
         },
