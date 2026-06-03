@@ -160,6 +160,58 @@ type PublicReportTemplateRecord = {
   downloadUrl: string;
 };
 
+function RoundDownloadCard({
+  locale,
+  title,
+  description,
+  buttonLabel,
+  unavailableLabel,
+  downloadUrl,
+  kind,
+}: {
+  locale: "en" | "vi";
+  title: string;
+  description: string;
+  buttonLabel: string;
+  unavailableLabel: string;
+  downloadUrl?: string;
+  kind: "rubric" | "template";
+}) {
+  const Icon = kind === "rubric" ? FileDown : FileText;
+
+  return (
+    <div className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4">
+      <div className="flex items-start gap-3">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.24),rgba(59,130,246,0.14))] text-sky-950 dark:border-sky-300/20 dark:bg-sky-300/[0.12] dark:text-sky-100">
+          <Icon className="h-4.5 w-4.5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold theme-text-strong">{title}</p>
+          <p className="mt-1 text-sm leading-6 theme-text-soft">{description}</p>
+          {downloadUrl ? (
+            <a
+              href={downloadUrl}
+              className="theme-button-primary mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
+            >
+              <Icon className="h-4 w-4" />
+              {buttonLabel}
+            </a>
+          ) : (
+            <p className="mt-4 rounded-[1rem] border border-amber-300/38 bg-amber-300/12 px-3 py-2 text-sm font-semibold text-amber-800 dark:border-amber-200/24 dark:text-amber-100">
+              {unavailableLabel}
+            </p>
+          )}
+          <p className="mt-2 text-xs leading-5 theme-text-faint">
+            {locale === "en"
+              ? "Open this file before preparing your submission."
+              : "Hãy mở tệp này trước khi chuẩn bị bài nộp."}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const roundRuleMeta = {
   "01": {
     anchor: "round-1-rules",
@@ -634,6 +686,55 @@ export function RulesPage() {
                             </div>
                           </div>
                         ))}
+                      </div>
+                    </div>
+                  </Surface>
+                  <Surface className="theme-rules-shell relative overflow-hidden px-5 py-5">
+                    <div
+                      className={`absolute inset-x-0 top-0 h-20 bg-[linear-gradient(135deg,var(--tw-gradient-stops))] ${meta.statTone}`}
+                    />
+                    <div className="relative">
+                      <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
+                        {locale === "en" ? "Download files" : "Tải tệp cần thiết"}
+                      </p>
+                      <div className="mt-5 space-y-3">
+                        <RoundDownloadCard
+                          locale={locale}
+                          kind="rubric"
+                          title={pickText(locale, rubricDefinition.label)}
+                          description={
+                            locale === "en"
+                              ? `Review this rubric to understand how ${pickText(locale, round.title)} is evaluated.`
+                              : `Xem rubric này để hiểu cách đánh giá ${pickText(locale, round.title)}.`
+                          }
+                          buttonLabel={pickText(locale, rubricDefinition.publicDownloadLabel)}
+                          unavailableLabel={
+                            locale === "en"
+                              ? "Rubric PDF is not uploaded yet."
+                              : "Chưa có file rubric PDF."
+                          }
+                          downloadUrl={rubricRecord?.downloadUrl}
+                        />
+
+                        {templateDefinition ? (
+                          <RoundDownloadCard
+                            locale={locale}
+                            kind="template"
+                            title={pickText(locale, templateDefinition.label)}
+                            description={
+                              locale === "en"
+                                ? "Use this template when preparing the official report file for this round."
+                                : "Dùng mẫu này khi chuẩn bị tệp báo cáo chính thức cho vòng này."
+                            }
+                            buttonLabel={pickText(locale, templateDefinition.publicDownloadLabel)}
+                            unavailableLabel={
+                              locale === "en"
+                                ? "Report template is not uploaded yet."
+                                : "Chưa có file mẫu báo cáo."
+                            }
+                            downloadUrl={templateRecord?.downloadUrl}
+                          />
+                        ) : null}
                       </div>
                     </div>
                   </Surface>
