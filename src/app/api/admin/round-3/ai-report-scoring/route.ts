@@ -17,7 +17,19 @@ export async function GET() {
     return NextResponse.json({ error: "Only admin accounts can view Emerging GPT scoring." }, { status: 403 });
   }
 
-  return NextResponse.json({ overview: await readEmergingAiReportScoringOverview() }, { status: 200 });
+  try {
+    return NextResponse.json({ overview: await readEmergingAiReportScoringOverview() }, { status: 200 });
+  } catch (error) {
+    console.error("[admin/round-3/ai-report-scoring] Failed to load Emerging GPT scoring overview", error);
+    const detail = error instanceof Error ? error.message : "Unknown server error.";
+
+    return NextResponse.json(
+      {
+        error: `Could not load Emerging GPT scoring progress. Server detail: ${detail}`,
+      },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: Request) {
@@ -31,10 +43,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid Emerging GPT scoring mode." }, { status: 400 });
   }
 
-  const result = await createEmergingAiReportScoringJob(payload.data.mode, user.id);
-  if (!result.ok) {
-    return NextResponse.json({ error: result.error }, { status: result.status });
-  }
+  try {
+    const result = await createEmergingAiReportScoringJob(payload.data.mode, user.id);
+    if (!result.ok) {
+      return NextResponse.json({ error: result.error }, { status: result.status });
+    }
 
-  return NextResponse.json(result.data, { status: result.status });
+    return NextResponse.json(result.data, { status: result.status });
+  } catch (error) {
+    console.error("[admin/round-3/ai-report-scoring] Failed to start Emerging GPT scoring", error);
+    const detail = error instanceof Error ? error.message : "Unknown server error.";
+
+    return NextResponse.json(
+      {
+        error: `Could not start Emerging GPT scoring. Server detail: ${detail}`,
+      },
+      { status: 500 },
+    );
+  }
 }
