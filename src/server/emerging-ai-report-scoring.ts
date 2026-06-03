@@ -18,6 +18,7 @@ import { readTeamSubmissionFile } from "@/server/team-submission-storage";
 const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const MAX_REPORT_BYTES = 10 * 1024 * 1024;
+const PDF_DATA_URL_PREFIX = "data:application/pdf;base64,";
 
 type EmergingAiReportScoringMode = "run-all" | "retry-failed";
 
@@ -349,7 +350,7 @@ async function scoreEmergingReportWithOpenAi({
             {
               type: "input_file",
               filename: submission.resourceLabel || "emerging-report.pdf",
-              file_data: reportBuffer.toString("base64"),
+              file_data: `${PDF_DATA_URL_PREFIX}${reportBuffer.toString("base64")}`,
             },
           ],
         },

@@ -25,6 +25,7 @@ import { readTeamSubmissionFile } from "@/server/team-submission-storage";
 const DEFAULT_OPENAI_MODEL = "gpt-4o-mini";
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
 const MAX_REPORT_BYTES = 10 * 1024 * 1024;
+const PDF_DATA_URL_PREFIX = "data:application/pdf;base64,";
 
 const ROUND2_REPORT_TEMPLATE_GUIDE = `
 Báo cáo Vòng 2 thường theo mẫu Attacker 2026 với các phần:
@@ -390,7 +391,7 @@ async function scoreReportWithOpenAi({
             {
               type: "input_file",
               filename: submission.resourceLabel || "round-2-report.pdf",
-              file_data: reportBuffer.toString("base64"),
+              file_data: `${PDF_DATA_URL_PREFIX}${reportBuffer.toString("base64")}`,
             },
           ],
         },
