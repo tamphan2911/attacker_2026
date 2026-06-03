@@ -561,6 +561,11 @@ export function serializeNewsPost(post: PrismaNewsPost): AppNewsPost {
       en: post.coverImageAltEn,
       vi: post.coverImageAltVi,
     },
+    featuredImageSrc: post.featuredImageSrc || post.coverImageSrc,
+    featuredImageAlt: {
+      en: post.featuredImageAltEn || post.coverImageAltEn,
+      vi: post.featuredImageAltVi || post.coverImageAltVi,
+    },
     highlights: JSON.parse(post.highlights) as AppNewsPost["highlights"],
     content: JSON.parse(post.content) as AppNewsPost["content"],
     tags: JSON.parse(post.tags) as AppNewsPost["tags"],

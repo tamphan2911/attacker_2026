@@ -574,6 +574,9 @@ export async function createNewsPostByAdmin(
       coverImageSrc: payload.coverImageSrc,
       coverImageAltEn: payload.coverImageAlt.en,
       coverImageAltVi: payload.coverImageAlt.vi,
+      featuredImageSrc: payload.featuredImageSrc || payload.coverImageSrc,
+      featuredImageAltEn: payload.featuredImageAlt?.en || payload.coverImageAlt.en,
+      featuredImageAltVi: payload.featuredImageAlt?.vi || payload.coverImageAlt.vi,
       highlights: JSON.stringify(payload.highlights),
       content: JSON.stringify(payload.content),
       tags: JSON.stringify(payload.tags),
@@ -589,7 +592,7 @@ export async function updateNewsPostByAdmin(
 ): Promise<ServiceResult<{ slug: string }>> {
   const existing = await prisma.newsPost.findUnique({
     where: { slug },
-    select: { slug: true, coverImageSrc: true },
+    select: { slug: true, coverImageSrc: true, featuredImageSrc: true },
   });
 
   if (!existing) {
@@ -626,18 +629,30 @@ export async function updateNewsPostByAdmin(
       coverImageSrc: payload.coverImageSrc,
       coverImageAltEn: payload.coverImageAlt.en,
       coverImageAltVi: payload.coverImageAlt.vi,
+      featuredImageSrc: payload.featuredImageSrc || payload.coverImageSrc,
+      featuredImageAltEn: payload.featuredImageAlt?.en || payload.coverImageAlt.en,
+      featuredImageAltVi: payload.featuredImageAlt?.vi || payload.coverImageAlt.vi,
       highlights: JSON.stringify(payload.highlights),
       content: JSON.stringify(payload.content),
       tags: JSON.stringify(payload.tags),
     },
   });
 
-  if (existing.coverImageSrc !== payload.coverImageSrc) {
-    const previousStorageKey = getNewsImageStorageKeyFromUrl(existing.coverImageSrc);
-    if (previousStorageKey) {
-      await deleteNewsImageFile(previousStorageKey).catch(() => {});
-    }
-  }
+  const nextImageUrls = new Set([payload.coverImageSrc, payload.featuredImageSrc || payload.coverImageSrc]);
+  const previousImageUrls = new Set([existing.coverImageSrc, existing.featuredImageSrc].filter(Boolean) as string[]);
+
+  await Promise.all(
+    [...previousImageUrls].map(async (imageUrl) => {
+      if (nextImageUrls.has(imageUrl)) {
+        return;
+      }
+
+      const previousStorageKey = getNewsImageStorageKeyFromUrl(imageUrl);
+      if (previousStorageKey) {
+        await deleteNewsImageFile(previousStorageKey).catch(() => {});
+      }
+    }),
+  );
 
   return ok({ slug: payload.slug });
 }
@@ -645,7 +660,7 @@ export async function updateNewsPostByAdmin(
 export async function deleteNewsPostByAdmin(slug: string): Promise<ServiceResult<{ slug: string }>> {
   const existing = await prisma.newsPost.findUnique({
     where: { slug },
-    select: { slug: true, coverImageSrc: true },
+    select: { slug: true, coverImageSrc: true, featuredImageSrc: true },
   });
 
   if (!existing) {
@@ -654,10 +669,15 @@ export async function deleteNewsPostByAdmin(slug: string): Promise<ServiceResult
 
   await prisma.newsPost.delete({ where: { slug } });
 
-  const storageKey = getNewsImageStorageKeyFromUrl(existing.coverImageSrc);
-  if (storageKey) {
-    await deleteNewsImageFile(storageKey).catch(() => {});
-  }
+  const imageUrls = new Set([existing.coverImageSrc, existing.featuredImageSrc].filter(Boolean) as string[]);
+  await Promise.all(
+    [...imageUrls].map(async (imageUrl) => {
+      const storageKey = getNewsImageStorageKeyFromUrl(imageUrl);
+      if (storageKey) {
+        await deleteNewsImageFile(storageKey).catch(() => {});
+      }
+    }),
+  );
 
   return ok({ slug });
 }

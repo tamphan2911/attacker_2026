@@ -146,7 +146,12 @@ async function findImageReferences(category: AdminStorageImageCategory, storageK
       take: 25,
     }),
     prisma.newsPost.findMany({
-      where: { coverImageSrc: url },
+      where: {
+        OR: [
+          { coverImageSrc: url },
+          { featuredImageSrc: url },
+        ],
+      },
       select: { slug: true, titleEn: true, titleVi: true },
       take: 25,
     }),
@@ -177,7 +182,7 @@ async function findImageReferences(category: AdminStorageImageCategory, storageK
 
   newsPosts.forEach((post) => {
     references.push({
-      label: "News cover",
+      label: "News image",
       detail: post.titleEn || post.titleVi || post.slug,
       href: `/admin/news/${post.slug}`,
     });

@@ -635,6 +635,9 @@ model NewsPost {
   coverImageSrc   String
   coverImageAltEn String
   coverImageAltVi String
+  featuredImageSrc   String?
+  featuredImageAltEn String?
+  featuredImageAltVi String?
   highlights      String
   content         String
   tags            String

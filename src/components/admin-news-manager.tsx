@@ -50,6 +50,8 @@ function cloneNewsPost(post: NewsPost): NewsPost {
 
 function createDraftNewsPost(post: NewsPost): NewsPost {
   const nextPost = cloneNewsPost(post);
+  nextPost.featuredImageSrc = nextPost.featuredImageSrc || nextPost.coverImageSrc;
+  nextPost.featuredImageAlt = nextPost.featuredImageAlt ?? nextPost.coverImageAlt;
   nextPost.content = nextPost.content.filter(
     (block) => !(block.type === "image" && block.origin === "cover"),
   );
@@ -86,6 +88,8 @@ function createEmptyNewsPost(): NewsPost {
     coverLabel: { en: "Latest update", vi: "Cập nhật mới" },
     coverImageSrc: "/theme-feature-1.jpg",
     coverImageAlt: { en: "", vi: "" },
+    featuredImageSrc: "/theme-feature-1.jpg",
+    featuredImageAlt: { en: "", vi: "" },
     highlights: [{ en: "", vi: "" }],
     content: [createParagraphBlock()],
     tags: [],
@@ -105,6 +109,8 @@ function normalizeVietnameseOnlyNewsPost(post: NewsPost): NewsPost {
     excerpt: vietnameseOnlyText(post.excerpt),
     coverLabel: vietnameseOnlyText(post.coverLabel),
     coverImageAlt: vietnameseOnlyText(post.coverImageAlt),
+    featuredImageSrc: post.featuredImageSrc || post.coverImageSrc,
+    featuredImageAlt: vietnameseOnlyText(post.featuredImageAlt ?? post.coverImageAlt),
     highlights: post.highlights.map(vietnameseOnlyText),
     content: post.content.map((block) =>
       block.type === "paragraph"
@@ -470,8 +476,8 @@ function NewsDeleteConfirmDialog({
           <div className="flex gap-4 rounded-[1.4rem] border theme-border theme-panel-subtle p-4">
             <div className="h-20 w-28 shrink-0 overflow-hidden rounded-[1rem] border theme-border bg-[var(--panel-strong)]">
               <img
-                src={post.coverImageSrc}
-                alt={pickText(locale, post.coverImageAlt) || articleTitle}
+                src={post.featuredImageSrc || post.coverImageSrc}
+                alt={pickText(locale, post.featuredImageAlt ?? post.coverImageAlt) || articleTitle}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -740,8 +746,8 @@ export function AdminNewsList() {
                     <td className="px-4 py-4">
                       <div className="h-16 w-24 overflow-hidden rounded-[1rem] border theme-border bg-[var(--panel-strong)]">
                         <img
-                          src={post.coverImageSrc}
-                          alt={pickText(locale, post.coverImageAlt) || pickText(locale, post.title)}
+                          src={post.featuredImageSrc || post.coverImageSrc}
+                          alt={pickText(locale, post.featuredImageAlt ?? post.coverImageAlt) || pickText(locale, post.title)}
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -936,12 +942,14 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
   );
   const [editorMessage, setEditorMessage] = useState("");
   const [coverUploadMessage, setCoverUploadMessage] = useState("");
+  const [featuredUploadMessage, setFeaturedUploadMessage] = useState("");
   const [contentUploadFeedback, setContentUploadFeedback] = useState<{
     index: number;
     message: string;
     tone: "info" | "error";
   } | null>(null);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const [isUploadingFeatured, setIsUploadingFeatured] = useState(false);
   const [uploadingContentIndex, setUploadingContentIndex] = useState<number | null>(null);
   const [collapsedContentBlockIndexes, setCollapsedContentBlockIndexes] = useState<Set<number>>(() => new Set());
   const contentBlockRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -1027,6 +1035,33 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
     );
   };
 
+  const uploadFeaturedImage = async (file: File) => {
+    setIsUploadingFeatured(true);
+    setFeaturedUploadMessage("");
+
+    const result = await uploadNewsImageFile(file, locale);
+    setIsUploadingFeatured(false);
+
+    if (!result.ok) {
+      setFeaturedUploadMessage(result.message);
+      return;
+    }
+
+    setDraft((current) =>
+      current
+        ? {
+            ...current,
+            featuredImageSrc: result.imageUrl,
+          }
+        : current,
+    );
+    setFeaturedUploadMessage(
+      locale === "en"
+        ? "Featured image uploaded successfully."
+        : "Ảnh nổi bật đã được tải lên thành công.",
+    );
+  };
+
   const uploadContentImage = async (index: number, file: File) => {
     setUploadingContentIndex(index);
     setContentUploadFeedback(null);
@@ -1100,6 +1135,8 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
       slug: nextSlug,
       publishedAt: normalizedDraft.publishedAt || new Date().toISOString().slice(0, 10),
       readTime: normalizedDraft.readTime || "3 min",
+      featuredImageSrc: normalizedDraft.featuredImageSrc || normalizedDraft.coverImageSrc,
+      featuredImageAlt: normalizedDraft.featuredImageAlt ?? normalizedDraft.coverImageAlt,
       tags: normalizedDraft.tags.filter(Boolean),
       highlights: normalizedDraft.highlights.filter((item) => item.vi.trim()),
       content: normalizedDraft.content.filter((block) =>
@@ -1417,6 +1454,108 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
                     {coverUploadMessage ? (
                       <div className="rounded-[1.3rem] border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-sm leading-7 text-sky-700 dark:text-sky-100">
                         {coverUploadMessage}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </label>
+
+              <label className="space-y-2 md:col-span-2">
+                <span className="text-sm theme-text-muted">
+                  {locale === "en" ? "Featured image" : "Ảnh nổi bật"}
+                </span>
+                <div className="rounded-[1.8rem] border theme-border theme-panel px-4 py-4">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold theme-text-strong">
+                        {locale === "en" ? "Upload the featured image" : "Tải ảnh nổi bật lên"}
+                      </p>
+                      <p className="mt-2 text-sm leading-7 theme-text-soft">
+                        {locale === "en"
+                          ? "Used in the newsroom list and article previews. JPG, PNG, or WEBP only. Maximum size: 2MB."
+                          : "Dùng trong danh sách newsroom và phần xem trước bài viết. Chỉ chấp nhận JPG, PNG hoặc WEBP. Dung lượng tối đa: 2MB."}
+                      </p>
+                      <p className="mt-2 text-xs uppercase tracking-[0.18em] theme-text-faint">
+                        {draft.featuredImageSrc || draft.coverImageSrc}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <label className="theme-button-secondary inline-flex cursor-pointer items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold">
+                        <ImagePlus className="h-4 w-4" />
+                        {isUploadingFeatured
+                          ? locale === "en"
+                            ? "Uploading..."
+                            : "Đang tải..."
+                          : locale === "en"
+                            ? "Upload image"
+                            : "Tải ảnh"}
+                        <input
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                          className="hidden"
+                          disabled={isUploadingFeatured}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (!file) {
+                              return;
+                            }
+
+                            void uploadFeaturedImage(file);
+                            event.target.value = "";
+                          }}
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDraft((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  featuredImageSrc: current.coverImageSrc,
+                                  featuredImageAlt: current.coverImageAlt,
+                                }
+                              : current,
+                          )
+                        }
+                        className="theme-button-secondary inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold"
+                      >
+                        {locale === "en" ? "Use cover image" : "Dùng ảnh bìa"}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 space-y-5">
+                    <LocalizedFieldEditor
+                      label={locale === "en" ? "Featured image alt" : "Mô tả ảnh nổi bật"}
+                      rows={2}
+                      value={draft.featuredImageAlt ?? draft.coverImageAlt}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          current
+                            ? {
+                                ...current,
+                                featuredImageAlt: {
+                                  ...(current.featuredImageAlt ?? current.coverImageAlt),
+                                  [language]: value,
+                                },
+                              }
+                            : current,
+                        )
+                      }
+                    />
+
+                    <div className="overflow-hidden rounded-[1.4rem] border theme-border">
+                      <img
+                        src={draft.featuredImageSrc || draft.coverImageSrc}
+                        alt={pickText(locale, draft.featuredImageAlt ?? draft.coverImageAlt) || "Featured preview"}
+                        className="h-52 w-full object-cover"
+                      />
+                    </div>
+
+                    {featuredUploadMessage ? (
+                      <div className="rounded-[1.3rem] border border-sky-300/20 bg-sky-300/10 px-4 py-3 text-sm leading-7 text-sky-700 dark:text-sky-100">
+                        {featuredUploadMessage}
                       </div>
                     ) : null}
                   </div>

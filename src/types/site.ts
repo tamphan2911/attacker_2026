@@ -199,6 +199,8 @@ export interface NewsPost {
   coverLabel: LocalizedText;
   coverImageSrc: string;
   coverImageAlt: LocalizedText;
+  featuredImageSrc?: string;
+  featuredImageAlt?: LocalizedText;
   highlights: LocalizedText[];
   content: NewsContentBlock[];
   tags: string[];

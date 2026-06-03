@@ -223,8 +223,8 @@ export function NewsPage() {
                 <div className="grid gap-0 lg:grid-cols-[360px_minmax(0,1fr)]">
                   <div className="relative min-h-[280px] overflow-hidden">
                     <Image
-                      src={post.coverImageSrc}
-                      alt={pickText(locale, post.coverImageAlt)}
+                      src={post.featuredImageSrc || post.coverImageSrc}
+                      alt={pickText(locale, post.featuredImageAlt ?? post.coverImageAlt)}
                       fill
                       sizes="(min-width: 1024px) 360px, 100vw"
                       className="object-cover transition duration-700 group-hover:scale-[1.02]"
