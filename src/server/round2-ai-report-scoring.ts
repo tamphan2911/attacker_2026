@@ -526,32 +526,40 @@ async function readLatestRound2Submissions() {
 function isEligibleSubmission(
   submission: Round2LatestSubmission,
   mode: Round2AiReportScoringJobMode,
+  retryJobCreatedAt?: Date,
 ) {
   if (hasHumanScoredReview(submission.judgeReviews)) {
     return false;
   }
 
   if (mode === Round2AiReportScoringJobMode.RETRY_FAILED) {
-    return submission.aiReportReview?.status === Round2AiReportScoringStatus.FAILED;
+    return (
+      submission.aiReportReview?.status === Round2AiReportScoringStatus.FAILED &&
+      (!retryJobCreatedAt || submission.aiReportReview.updatedAt.getTime() <= retryJobCreatedAt.getTime())
+    );
   }
 
   return !submission.aiReportReview;
 }
 
-async function countEligibleSubmissions(mode: Round2AiReportScoringJobMode) {
+async function countEligibleSubmissions(mode: Round2AiReportScoringJobMode, retryJobCreatedAt?: Date) {
   const { submissions } = await readLatestRound2Submissions();
-  return submissions.filter((submission) => isEligibleSubmission(submission, mode)).length;
+  return submissions.filter((submission) => isEligibleSubmission(submission, mode, retryJobCreatedAt)).length;
 }
 
-async function findNextCandidate(mode: Round2AiReportScoringJobMode) {
+async function findNextCandidate(mode: Round2AiReportScoringJobMode, retryJobCreatedAt?: Date) {
   const { submissions } = await readLatestRound2Submissions();
   return submissions
-    .filter((submission) => isEligibleSubmission(submission, mode))
+    .filter((submission) => isEligibleSubmission(submission, mode, retryJobCreatedAt))
     .sort((left, right) => right.submittedAt.getTime() - left.submittedAt.getTime())[0];
 }
 
-async function completeJobIfNoCandidates(jobId: string, mode: Round2AiReportScoringJobMode) {
-  const remaining = await countEligibleSubmissions(mode);
+async function completeJobIfNoCandidates(
+  jobId: string,
+  mode: Round2AiReportScoringJobMode,
+  retryJobCreatedAt?: Date,
+) {
+  const remaining = await countEligibleSubmissions(mode, retryJobCreatedAt);
   if (remaining > 0) {
     return false;
   }
@@ -714,9 +722,10 @@ export async function processNextRound2AiReportScoringJobItem(
     },
   });
 
-  const candidate = await findNextCandidate(job.mode);
+  const retryJobCreatedAt = job.mode === Round2AiReportScoringJobMode.RETRY_FAILED ? job.createdAt : undefined;
+  const candidate = await findNextCandidate(job.mode, retryJobCreatedAt);
   if (!candidate) {
-    await completeJobIfNoCandidates(job.id, job.mode);
+    await completeJobIfNoCandidates(job.id, job.mode, retryJobCreatedAt);
     const completedJob = await prisma.round2AiReportScoringJob.findUniqueOrThrow({ where: { id: job.id } });
     return ok({
       job: serializeJob(completedJob),
@@ -875,7 +884,7 @@ export async function processNextRound2AiReportScoringJobItem(
     ]);
   }
 
-  await completeJobIfNoCandidates(job.id, job.mode);
+  await completeJobIfNoCandidates(job.id, job.mode, retryJobCreatedAt);
   const updatedJob = await prisma.round2AiReportScoringJob.findUniqueOrThrow({ where: { id: job.id } });
 
   return ok({
