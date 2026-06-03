@@ -19,6 +19,7 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
@@ -69,6 +70,17 @@ function formatScore(value?: number) {
     minimumFractionDigits: 1,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+function exportRowsToWorkbook(
+  fileName: string,
+  sheetName: string,
+  rows: Record<string, string | number>[],
+) {
+  const workbook = XLSX.utils.book_new();
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  XLSX.writeFile(workbook, fileName);
 }
 
 function matchesFilter(value: string, query: string) {
@@ -261,6 +273,34 @@ function createAiStatusMeta(locale: "en" | "vi", status: AdminRound2ScoreRow["ai
         tone: "default" as const,
       };
   }
+}
+
+function AiScoreCell({ locale, row }: { locale: "en" | "vi"; row: AdminRound2ScoreRow }) {
+  const meta = createAiStatusMeta(locale, row.aiScoring.status);
+
+  return (
+    <div className="space-y-2">
+      <StatusPill tone={meta.tone}>{meta.label}</StatusPill>
+      <div className="space-y-1 text-xs leading-5">
+        <p className="font-semibold theme-text-strong">
+          {locale === "en" ? "Score" : "Điểm"}: {formatScore(row.aiScoring.score)}
+        </p>
+        <p className="theme-text-soft">
+          {locale === "en" ? "Time" : "Thời gian"}: {formatDateTime(locale, row.aiScoring.scoredAt)}
+        </p>
+        {row.aiScoring.model ? (
+          <p className="theme-text-soft">
+            {locale === "en" ? "Model" : "Model"}: {row.aiScoring.model}
+          </p>
+        ) : null}
+        {row.aiScoring.error ? (
+          <p className="max-w-[240px] font-medium text-amber-700 dark:text-amber-200">
+            {row.aiScoring.error}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 function StatusIconCell({
@@ -668,6 +708,10 @@ export function AdminRound2ScoresManager() {
           row.resourceLabel,
           row.submittedByName,
           row.submittedByLoginId,
+          row.aiScoring.status,
+          row.aiScoring.model ?? "",
+          row.aiScoring.error ?? "",
+          typeof row.aiScoring.score === "number" ? String(row.aiScoring.score) : "",
           ...row.judges.map((judge) => judge.judgeName),
         ].join(" ");
 
@@ -757,6 +801,33 @@ export function AdminRound2ScoresManager() {
     () => sortedRows.filter((row) => selectedSubmissionIds.includes(row.submissionId)),
     [selectedSubmissionIds, sortedRows],
   );
+  const exportRows = useMemo(
+    () =>
+      sortedRows.map((row) => ({
+        Team: row.teamName,
+        Tag: row.teamTag,
+        Title: row.title,
+        Version: row.version,
+        Judge1: row.judges[0]?.judgeName ?? "",
+        Judge1Score: row.judges[0]?.score ?? "",
+        Judge1ScoredAt: row.judges[0]?.scoredAt ?? "",
+        Judge2: row.judges[1]?.judgeName ?? "",
+        Judge2Score: row.judges[1]?.score ?? "",
+        Judge2ScoredAt: row.judges[1]?.scoredAt ?? "",
+        AverageScore: row.averageScore ?? "",
+        ScoreStatus: createStatusMeta(locale, row.status).label,
+        GptStatus: createAiStatusMeta(locale, row.aiScoring.status).label,
+        GptScore: row.aiScoring.score ?? "",
+        GptModel: row.aiScoring.model ?? "",
+        GptScoredAt: row.aiScoring.scoredAt ?? "",
+        GptError: row.aiScoring.error ?? "",
+        SubmittedBy: row.submittedByName,
+        SubmittedByLoginId: row.submittedByLoginId,
+        SubmittedAt: row.submittedAt,
+        File: row.resourceLabel,
+      })),
+    [locale, sortedRows],
+  );
 
   function toggleScoreSelection(submissionId: string, checked: boolean) {
     setSelectedSubmissionIds((current) =>
@@ -819,6 +890,20 @@ export function AdminRound2ScoresManager() {
           <StatusPill tone="info">
             {locale === "en" ? `${rows.length} teams` : `${rows.length} đội`}
           </StatusPill>
+          <button
+            type="button"
+            onClick={() =>
+              exportRowsToWorkbook(
+                "attacker-2026-round2-scores.xlsx",
+                "Round 2 scores",
+                exportRows,
+              )
+            }
+            className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+          >
+            <Download className="h-4 w-4" />
+            {locale === "en" ? "Export round2-scores.xlsx" : "Xuất round2-scores.xlsx"}
+          </button>
           <button
             type="button"
             onClick={() => setBatchDeleteOpen(true)}
@@ -1013,7 +1098,7 @@ export function AdminRound2ScoresManager() {
 
       <Surface className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-[1480px] text-left text-sm">
+          <table className="min-w-[1680px] text-left text-sm">
             <thead className="border-b theme-border bg-[var(--panel-strong)] theme-text-soft">
               <tr>
                 <th className="px-4 py-3">
@@ -1067,6 +1152,9 @@ export function AdminRound2ScoresManager() {
                   />
                 </th>
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
+                  {locale === "en" ? "GPT score" : "Điểm GPT"}
+                </th>
+                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em]">
                   <SortableHeader
                     label={locale === "en" ? "Status" : "Trạng thái"}
                     active={sortKey === "status"}
@@ -1100,7 +1188,6 @@ export function AdminRound2ScoresManager() {
             </thead>
             <tbody>
               {paginatedRows.map((row, index) => {
-                const aiStatusMeta = createAiStatusMeta(locale, row.aiScoring.status);
                 const draft = drafts[row.submissionId] ?? createDraftFromRow(row);
                 const draftScores = draft.scores
                   .map((score) => parseDraftScore(score))
@@ -1180,15 +1267,10 @@ export function AdminRound2ScoresManager() {
                               ? "Awaiting scores"
                               : "Đang chờ điểm"}
                         </p>
-                        <div className="pt-1">
-                          <StatusPill tone={aiStatusMeta.tone}>{aiStatusMeta.label}</StatusPill>
-                        </div>
-                        {row.aiScoring.error ? (
-                          <p className="max-w-[220px] text-[0.68rem] leading-5 text-amber-700 dark:text-amber-200">
-                            {row.aiScoring.error}
-                          </p>
-                        ) : null}
                       </div>
+                    </td>
+                    <td className="px-4 py-4 align-top">
+                      <AiScoreCell locale={locale} row={row} />
                     </td>
                     <td className="px-4 py-4 align-top">
                       <StatusIconCell locale={locale} status={row.status} />
