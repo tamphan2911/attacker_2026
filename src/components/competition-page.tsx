@@ -1,12 +1,12 @@
 "use client";
 
-import { Award, Badge, BadgeCheck, Crown, Sparkles, Star, Trophy, Users2 } from "lucide-react";
+import { Award, Badge, BadgeCheck, Crown, Sparkles, Star } from "lucide-react";
 
 import { getCompetitionRoundWindow } from "@/lib/competition";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 import { OrganizerContent } from "@/components/organizer-page";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { InfoKicker, PageIntro, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { InfoKicker, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 
 const competitionRewardItems = [
   {
@@ -105,10 +105,6 @@ export function CompetitionPage() {
     locale,
     pickText(locale, pageContent.competition.intro.title),
   );
-  const competitionIntroDescription =
-    locale === "en"
-      ? "Attacker 2026 challenges student teams to turn fintech ideas into clear, testable solutions through individual assessment, team reports, and live judging."
-      : "Attacker 2026 thử thách các đội sinh viên biến ý tưởng fintech thành giải pháp rõ ràng, có thể kiểm chứng qua bài thi cá nhân, báo cáo đội và phần chấm trực tiếp.";
   const rewardSectionTitle = locale === "vi" ? "Cơ cấu giải thưởng" : "Prize structure";
   const emergingReward = pageContent.competition.emergingReward;
   const emergingRewardEyebrow = locale === "vi" ? "Danh hiệu bổ sung" : "Side recognition";
@@ -120,46 +116,15 @@ export function CompetitionPage() {
     locale === "vi"
       ? "Tùy theo chương trình đồng hành tại ngày thuyết trình chung kết, các đội nổi bật có thể nhận thêm quà tặng, học bổng, cố vấn chuyên môn, tuyển dụng hoặc cơ hội trao đổi đầu tư từ giám khảo, nhà tài trợ và khách mời."
       : "Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.";
-  const pillars = pageContent.competition.pillars;
 
   return (
     <div className="space-y-20">
-      <PageIntro
-        eyebrow={pickText(locale, pageContent.competition.intro.eyebrow)}
-        title={competitionIntroTitle}
-        description={competitionIntroDescription}
-        aside={
-          <Surface className="px-5 py-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-              {pickText(locale, pageContent.competition.pillarsTitle)}
-            </p>
-            <div className="mt-5 space-y-3">
-              {[
-                {
-                  icon: <Sparkles className="h-4 w-4 text-cyan-300" />,
-                  label: pickText(locale, pillars[0]),
-                },
-                {
-                  icon: <Users2 className="h-4 w-4 text-emerald-300" />,
-                  label: pickText(locale, pillars[1]),
-                },
-                {
-                  icon: <Trophy className="h-4 w-4 text-orange-300" />,
-                  label: pickText(locale, pillars[2]),
-                },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center gap-3 rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-body"
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </Surface>
-        }
-      />
+      <section className="scroll-mt-28 pt-4">
+        <SectionHeading
+          eyebrow={pickText(locale, pageContent.competition.intro.eyebrow)}
+          title={competitionIntroTitle}
+        />
+      </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
         {highlightItems.map((item) => (

@@ -30,7 +30,7 @@ export function AdminBulkDeleteDialog({
   busy: boolean;
   passwordRequired?: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (password?: string) => void;
 }) {
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -46,7 +46,7 @@ export function AdminBulkDeleteDialog({
       return;
     }
 
-    onConfirm();
+    onConfirm(password);
   };
 
   return (

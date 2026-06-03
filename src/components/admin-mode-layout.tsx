@@ -185,6 +185,7 @@ const adminNavGroups: Array<{
         children: [
           { href: "/admin/submissions", label: { en: "Round 2 submissions", vi: "Bài nộp Vòng 2" } },
           { href: "/admin/submissions/scores", label: { en: "Round 2 scores", vi: "Điểm Vòng 2" } },
+          { href: "/admin/submissions/gpt-scores", label: { en: "GPT scores", vi: "Điểm GPT" } },
           { href: "/admin/submissions/rubrics", label: { en: "Rubric", vi: "Rubric" } },
           { href: "/admin/submissions/round-3", label: { en: "Final/Emerging submissions", vi: "Bài nộp chung kết/Đội ươm mầm" } },
         ],
