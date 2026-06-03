@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Download, FileText, Save, Search, Sprout, Trash2, Trophy } from "lucide-react";
+import { Download, FileText, Filter, Save, Search, Sprout, Trash2, Trophy } from "lucide-react";
 
 import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import { useSiteState } from "@/components/providers/site-state-provider";
@@ -62,6 +62,25 @@ function matchesSearch(row: AdminRound3SubmissionRow, search: string) {
     .includes(keyword);
 }
 
+function compareRowsByScore(left: AdminRound3SubmissionRow, right: AdminRound3SubmissionRow) {
+  const leftScore = left.finalScore ?? Number.NEGATIVE_INFINITY;
+  const rightScore = right.finalScore ?? Number.NEGATIVE_INFINITY;
+
+  if (leftScore !== rightScore) {
+    return rightScore - leftScore;
+  }
+
+  if ((left.finalRank ?? Number.POSITIVE_INFINITY) !== (right.finalRank ?? Number.POSITIVE_INFINITY)) {
+    return (left.finalRank ?? Number.POSITIVE_INFINITY) - (right.finalRank ?? Number.POSITIVE_INFINITY);
+  }
+
+  if (left.isLatest !== right.isLatest) {
+    return left.isLatest === "valid latest" ? -1 : 1;
+  }
+
+  return new Date(right.submittedAt).getTime() - new Date(left.submittedAt).getTime();
+}
+
 export function AdminRound3SubmissionsManager() {
   const { locale, currentUser } = useSiteState();
   const [rows, setRows] = useState<AdminRound3SubmissionRow[]>([]);
@@ -75,6 +94,9 @@ export function AdminRound3SubmissionsManager() {
   const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
   const [batchDeleting, setBatchDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<Round3AdminTab>("finalist");
+  const [versionFilter, setVersionFilter] = useState<"all" | "latest" | "history">("all");
+  const [scoreFilter, setScoreFilter] = useState<"all" | "scored" | "unscored">("all");
+  const [emergingRankFilter, setEmergingRankFilter] = useState<"all" | "awarded" | "not-awarded">("all");
 
   const loadRows = useCallback(
     async (active = true) => {
@@ -206,8 +228,38 @@ export function AdminRound3SubmissionsManager() {
     [activeTab, rows],
   );
   const filteredRows = useMemo(
-    () => tabRows.filter((row) => matchesSearch(row, search)),
-    [tabRows, search],
+    () =>
+      tabRows
+        .filter((row) => matchesSearch(row, search))
+        .filter((row) => {
+          if (versionFilter === "latest" && row.isLatest !== "valid latest") {
+            return false;
+          }
+
+          if (versionFilter === "history" && row.isLatest !== "history only") {
+            return false;
+          }
+
+          if (scoreFilter === "scored" && typeof row.finalScore !== "number") {
+            return false;
+          }
+
+          if (scoreFilter === "unscored" && typeof row.finalScore === "number") {
+            return false;
+          }
+
+          if (activeTab === "emerging" && emergingRankFilter === "awarded" && (!row.finalRank || row.finalRank > 10)) {
+            return false;
+          }
+
+          if (activeTab === "emerging" && emergingRankFilter === "not-awarded" && row.finalRank && row.finalRank <= 10) {
+            return false;
+          }
+
+          return true;
+        })
+        .sort(compareRowsByScore),
+    [activeTab, emergingRankFilter, scoreFilter, tabRows, search, versionFilter],
   );
   const selectedRows = useMemo(
     () => filteredRows.filter((row) => selectedSubmissionIds.includes(row.submissionId)),
@@ -382,21 +434,73 @@ export function AdminRound3SubmissionsManager() {
       </Surface>
 
       <Surface className="px-5 py-5 md:px-6">
-        <label className="space-y-2">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
-            <Search className="h-3.5 w-3.5" />
-            {locale === "en" ? "Search" : "Tìm kiếm"}
-          </span>
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={locale === "en" ? "Search by team, title, submitter, or file..." : "Tìm theo đội, tiêu đề, người nộp hoặc tệp..."}
-              className="theme-field h-12 w-full rounded-[1rem] border pl-10 pr-4 text-sm outline-none"
-            />
-          </div>
-        </label>
+        <div className={`grid gap-3 ${activeTab === "emerging" ? "lg:grid-cols-[minmax(0,1.35fr)_210px_210px_230px]" : "lg:grid-cols-[minmax(0,1.35fr)_210px_210px]"}`}>
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Search className="h-3.5 w-3.5" />
+              {locale === "en" ? "Search" : "Tìm kiếm"}
+            </span>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 theme-text-soft" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={locale === "en" ? "Search by team, title, submitter, or file..." : "Tìm theo đội, tiêu đề, người nộp hoặc tệp..."}
+                className="theme-field h-12 w-full rounded-[1rem] border pl-10 pr-4 text-sm outline-none"
+              />
+            </div>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Version" : "Phiên bản"}
+            </span>
+            <select
+              value={versionFilter}
+              onChange={(event) => setVersionFilter(event.target.value as "all" | "latest" | "history")}
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All versions" : "Tất cả phiên bản"}</option>
+              <option value="latest">{locale === "en" ? "Latest only" : "Chỉ bản mới nhất"}</option>
+              <option value="history">{locale === "en" ? "History only" : "Chỉ bản lịch sử"}</option>
+            </select>
+          </label>
+
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+              <Filter className="h-3.5 w-3.5" />
+              {locale === "en" ? "Score" : "Điểm"}
+            </span>
+            <select
+              value={scoreFilter}
+              onChange={(event) => setScoreFilter(event.target.value as "all" | "scored" | "unscored")}
+              className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+            >
+              <option value="all">{locale === "en" ? "All score states" : "Tất cả trạng thái điểm"}</option>
+              <option value="scored">{locale === "en" ? "Scored" : "Đã nhập điểm"}</option>
+              <option value="unscored">{locale === "en" ? "Unscored" : "Chưa nhập điểm"}</option>
+            </select>
+          </label>
+
+          {activeTab === "emerging" ? (
+            <label className="space-y-2">
+              <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                <Filter className="h-3.5 w-3.5" />
+                {locale === "en" ? "Emerging result" : "Kết quả Ươm mầm"}
+              </span>
+              <select
+                value={emergingRankFilter}
+                onChange={(event) => setEmergingRankFilter(event.target.value as "all" | "awarded" | "not-awarded")}
+                className="theme-admin-select theme-field h-12 w-full rounded-[1rem] border px-4 text-sm outline-none"
+              >
+                <option value="all">{locale === "en" ? "All Emerging teams" : "Tất cả đội Ươm mầm"}</option>
+                <option value="awarded">{locale === "en" ? "Awarded top 10" : "Top 10 đạt giải"}</option>
+                <option value="not-awarded">{locale === "en" ? "Outside top 10" : "Ngoài top 10"}</option>
+              </select>
+            </label>
+          ) : null}
+        </div>
       </Surface>
 
       <Surface className="overflow-hidden">
