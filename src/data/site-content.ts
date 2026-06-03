@@ -1429,19 +1429,19 @@ export const defaultPageContent: SitePageContent = {
     },
     introJumpItems: [
       {
-        shortLabel: { en: "General", vi: "Chung" },
+        shortLabel: { en: "Core rules", vi: "Quy định chung" },
         hoverLabel: { en: "Jump to general rules", vi: "Đi đến thể lệ chung" },
       },
       {
-        shortLabel: { en: "R1", vi: "V1" },
+        shortLabel: { en: "Round 1 exam", vi: "Bài thi Vòng 1" },
         hoverLabel: { en: "Jump to Round 1 rules", vi: "Đi đến thể lệ Vòng 1" },
       },
       {
-        shortLabel: { en: "R2", vi: "V2" },
+        shortLabel: { en: "Round 2 report", vi: "Báo cáo Vòng 2" },
         hoverLabel: { en: "Jump to Round 2 rules", vi: "Đi đến thể lệ Vòng 2" },
       },
       {
-        shortLabel: { en: "R3", vi: "V3" },
+        shortLabel: { en: "Round 3 finals", vi: "Vòng 3" },
         hoverLabel: { en: "Jump to Final round rules", vi: "Đi đến thể lệ Chung kết" },
       },
     ],

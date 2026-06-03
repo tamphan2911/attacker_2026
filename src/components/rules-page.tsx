@@ -16,7 +16,6 @@ import {
   Medal,
   NotebookPen,
   Orbit,
-  Radar,
   ShieldAlert,
   Sparkles,
   Trophy,
@@ -47,26 +46,12 @@ const policyIconClasses = [
   "border-emerald-700/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.24),rgba(52,211,153,0.16))] text-emerald-950 shadow-[0_10px_24px_rgba(16,185,129,0.08)] dark:text-emerald-100",
 ] as const;
 const specificRuleIcons = [Sparkles, ShieldAlert, Medal] as const;
-const quickPolicyItems = [
-  {
-    icon: UsersRound,
-    iconClass: "border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.3),rgba(59,130,246,0.2))] text-sky-950 shadow-[0_10px_22px_rgba(14,165,233,0.08)] dark:text-sky-100",
-  },
-  {
-    icon: ShieldAlert,
-    iconClass: "border-amber-700/24 bg-[linear-gradient(135deg,rgba(245,158,11,0.28),rgba(251,191,36,0.18))] text-amber-950 shadow-[0_10px_22px_rgba(245,158,11,0.08)] dark:text-amber-100",
-  },
-  {
-    icon: Radar,
-    iconClass: "border-emerald-700/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.28),rgba(52,211,153,0.18))] text-emerald-950 shadow-[0_10px_22px_rgba(16,185,129,0.08)] dark:text-emerald-100",
-  },
-] as const;
 
 const introJumpItems = [
   {
     href: "#general-rules",
     icon: Flag,
-    shortLabel: { en: "General", vi: "Chung" },
+    shortLabel: { en: "Core rules", vi: "Quy định chung" },
     hoverLabel: { en: "Jump to general rules", vi: "Đi đến thể lệ chung" },
     className:
       "border-violet-700/22 bg-[linear-gradient(135deg,rgba(124,58,237,0.16),rgba(168,85,247,0.1))] text-violet-900 shadow-[0_14px_30px_rgba(124,58,237,0.08)] dark:border-violet-300/20 dark:bg-violet-300/[0.12] dark:text-violet-100",
@@ -74,7 +59,7 @@ const introJumpItems = [
   {
     href: "#round-1-rules",
     icon: FileCheck2,
-    shortLabel: { en: "R1", vi: "V1" },
+    shortLabel: { en: "Round 1 exam", vi: "Bài thi Vòng 1" },
     hoverLabel: { en: "Jump to Round 1 rules", vi: "Đi đến thể lệ Vòng 1" },
     className:
       "border-sky-700/22 bg-[linear-gradient(135deg,rgba(14,165,233,0.16),rgba(59,130,246,0.1))] text-sky-900 shadow-[0_14px_30px_rgba(14,165,233,0.08)] dark:border-sky-300/20 dark:bg-sky-300/[0.12] dark:text-sky-100",
@@ -82,7 +67,7 @@ const introJumpItems = [
   {
     href: "#round-2-rules",
     icon: BadgeCheck,
-    shortLabel: { en: "R2", vi: "V2" },
+    shortLabel: { en: "Round 2 report", vi: "Báo cáo Vòng 2" },
     hoverLabel: { en: "Jump to Round 2 rules", vi: "Đi đến thể lệ Vòng 2" },
     className:
       "border-emerald-700/22 bg-[linear-gradient(135deg,rgba(16,185,129,0.16),rgba(52,211,153,0.1))] text-emerald-900 shadow-[0_14px_30px_rgba(16,185,129,0.08)] dark:border-emerald-300/20 dark:bg-emerald-300/[0.12] dark:text-emerald-100",
@@ -90,7 +75,7 @@ const introJumpItems = [
   {
     href: "#round-3-rules",
     icon: Trophy,
-    shortLabel: { en: "R3", vi: "V3" },
+    shortLabel: { en: "Round 3 finals", vi: "Vòng 3" },
     hoverLabel: { en: "Jump to Final round rules", vi: "Đi đến thể lệ Chung kết" },
     className:
       "border-amber-700/22 bg-[linear-gradient(135deg,rgba(245,158,11,0.16),rgba(249,115,22,0.1))] text-amber-900 shadow-[0_14px_30px_rgba(245,158,11,0.08)] dark:border-amber-300/20 dark:bg-amber-300/[0.12] dark:text-amber-100",
@@ -394,62 +379,29 @@ export function RulesPage() {
 
   return (
     <div className="space-y-16 md:space-y-20">
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
-        <div className="space-y-5">
-          <SectionHeading
-            eyebrow={pickText(locale, pageContent.rules.header.eyebrow)}
-            title={pickText(locale, pageContent.rules.header.title)}
-            description={pickText(locale, pageContent.rules.header.description)}
-          />
+      <section className="mx-auto max-w-5xl">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {introJumpItems.map((item, index) => {
+            const Icon = item.icon;
+            const copy = jumpItems[index];
 
-          <div className="flex flex-wrap gap-3">
-            {introJumpItems.map((item, index) => {
-              const Icon = item.icon;
-              const copy = jumpItems[index];
-
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`group relative inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold transition hover:-translate-y-0.5 active:scale-[0.98] ${item.className}`}
-                >
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-current/14 bg-white/55 dark:bg-white/[0.08]">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span>{pickText(locale, copy.shortLabel)}</span>
-                  <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-20 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
-                    {pickText(locale, copy.hoverLabel)}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <Surface className="theme-rules-shell relative overflow-hidden px-5 py-5">
-          <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,rgba(23,114,208,0),rgba(23,114,208,0.92),rgba(23,114,208,0))]" />
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
-            {pickText(locale, pageContent.rules.quickReadLabel)}
-          </p>
-          <div className="mt-5 space-y-3">
-            {pageContent.rules.quickReadItems.map((item, index) => {
-              const Icon = quickPolicyItems[index]?.icon ?? BadgeCheck;
-              const iconClass = quickPolicyItems[index]?.iconClass ?? "border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.28),rgba(59,130,246,0.18))] text-sky-950 dark:text-sky-100";
-
-              return (
-              <div
-                key={item.en}
-                className="theme-rules-note-card flex items-start gap-3 rounded-2xl border px-4 py-3 text-sm leading-7 theme-text-body"
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`group relative flex min-h-[5.75rem] items-center gap-3 rounded-[1.35rem] border px-4 py-4 text-left text-sm font-semibold transition hover:-translate-y-0.5 active:scale-[0.98] ${item.className}`}
               >
-                <span className={`mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border ${iconClass}`}>
-                  <Icon className="h-4 w-4" />
+                <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] border border-current/14 bg-white/55 dark:bg-white/[0.08]">
+                  <Icon className="h-5 w-5" />
                 </span>
-                <span>{pickText(locale, item)}</span>
-              </div>
-              );
-            })}
-          </div>
-        </Surface>
+                <span className="min-w-0 leading-5">{pickText(locale, copy.shortLabel)}</span>
+                <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-20 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100">
+                  {pickText(locale, copy.hoverLabel)}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </section>
 
       <section id="general-rules" className="scroll-mt-36 space-y-7">
