@@ -192,8 +192,6 @@ function SeasonDetailContent({
 
   return (
     <div className="space-y-14">
-      <BackToOrganizerLink locale={locale} />
-
       <section className="theme-card-shadow-soft relative overflow-hidden rounded-[2rem] border theme-border-strong">
         <Image
           src={story.image}
