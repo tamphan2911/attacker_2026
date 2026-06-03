@@ -88,6 +88,7 @@ function pickRewardAmount(locale: "en" | "vi", amount: { en: string; vi: string 
 export function HomePage() {
   const { locale, pageContent, sponsors } = useSiteState();
   const [activeSlide, setActiveSlide] = useState(0);
+  const [expandedTestimonials, setExpandedTestimonials] = useState<Set<string>>(() => new Set());
   const heroSlides =
     pageContent.home.heroSlides.length > 0
       ? pageContent.home.heroSlides
@@ -139,6 +140,18 @@ export function HomePage() {
   const sponsorMarqueeItems = [...visibleSponsors, ...visibleSponsors];
   const testimonialItems = pageContent.home.testimonials;
   const testimonialMarqueeItems = [...testimonialItems, ...testimonialItems];
+
+  const toggleTestimonial = (key: string) => {
+    setExpandedTestimonials((current) => {
+      const next = new Set(current);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (heroDeck.length <= 1) {
@@ -354,6 +367,11 @@ export function HomePage() {
                 const currentEmploymentText = item.currentEmployment
                   ? pickText(locale, item.currentEmployment).trim()
                   : "";
+                const sourceIndex = index % testimonialItems.length;
+                const testimonialKey = `${item.name}-${sourceIndex}`;
+                const quoteText = pickText(locale, item.quote);
+                const isLongQuote = quoteText.length > 220;
+                const isExpanded = expandedTestimonials.has(testimonialKey);
 
                 return (
                   <div
@@ -380,9 +398,26 @@ export function HomePage() {
                   </div>
                 </div>
 
-                <p className="mt-5 flex-1 text-sm leading-7 theme-text-body">
-                  &ldquo;{pickText(locale, item.quote)}&rdquo;
-                </p>
+                <div className="mt-5 flex-1">
+                  <p className={`text-sm leading-7 theme-text-body ${!isExpanded ? "line-clamp-4" : ""}`}>
+                    &ldquo;{quoteText}&rdquo;
+                  </p>
+                  {isLongQuote ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleTestimonial(testimonialKey)}
+                      className="mt-3 inline-flex text-sm font-semibold theme-accent"
+                    >
+                      {isExpanded
+                        ? locale === "en"
+                          ? "Show less"
+                          : "Thu gọn"
+                        : locale === "en"
+                          ? "See more"
+                          : "Xem thêm"}
+                    </button>
+                  ) : null}
+                </div>
 
                 <div className="mt-5 flex flex-wrap gap-2">
                   <div className="theme-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium">
