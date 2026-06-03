@@ -22,6 +22,12 @@ const PDF_DATA_URL_PREFIX = "data:application/pdf;base64,";
 
 type EmergingAiReportScoringMode = "run-all" | "retry-failed";
 
+type CriterionScore = {
+  criterionId: string;
+  score: number;
+  rationale: string;
+};
+
 type EmergingCandidate = Prisma.TeamSubmissionGetPayload<{
   include: {
     judgeReviews: {
@@ -189,6 +195,19 @@ function clampCriterionScore(value: unknown, maxScore: number) {
   return rounded >= 0 && rounded <= maxScore ? rounded : null;
 }
 
+function buildFallbackComment(criteria: CriterionScore[]) {
+  return [
+    "Tổng quan cải thiện: GPT đã hoàn tất phần chấm điểm theo rubric, nhưng nhận xét tổng hợp trả về quá ngắn nên hệ thống dùng phần nhận xét theo từng tiêu chí làm nội dung chính.",
+    "",
+    "Nhận xét theo rubric:",
+    ...criteria.map((criterion) => {
+      const rubric = ROUND2_REPORT_RUBRIC.find((item) => item.id === criterion.criterionId);
+      const label = rubric?.label.vi || rubric?.label.en || criterion.criterionId;
+      return `- ${label}: ${criterion.rationale}`;
+    }),
+  ].join("\n");
+}
+
 function validateOpenAiScoringResult(raw: unknown) {
   if (!raw || typeof raw !== "object") {
     throw new Error("OpenAI did not return a valid Emerging scoring object.");
@@ -223,11 +242,9 @@ function validateOpenAiScoringResult(raw: unknown) {
   }
 
   const comment = String((raw as { comment?: unknown }).comment ?? "").trim();
-  if (comment.length < 600) {
-    throw new Error("OpenAI returned an Emerging comment that is too short.");
-  }
+  const normalizedComment = comment.length >= 80 ? comment : buildFallbackComment(criteria);
 
-  return { criteria, comment: comment.slice(0, 14000) };
+  return { criteria, comment: normalizedComment.slice(0, 14000) };
 }
 
 async function readRound2Baseline(submission: EmergingCandidate) {
@@ -332,6 +349,11 @@ async function scoreEmergingReportWithOpenAi({
           role: "user",
           content: [
             {
+              type: "input_file",
+              filename: submission.resourceLabel || "emerging-report.pdf",
+              file_data: `${PDF_DATA_URL_PREFIX}${reportBuffer.toString("base64")}`,
+            },
+            {
               type: "input_text",
               text: JSON.stringify({
                 task: "Chấm báo cáo Vòng Đội ươm mầm theo rubric, so sánh với điểm và nhận xét Vòng 2.",
@@ -353,11 +375,6 @@ async function scoreEmergingReportWithOpenAi({
                   "Comment tổng thể cần có các phần: Tổng quan cải thiện, Cải thiện nổi bật, Điểm chưa cải thiện, Rủi ro còn lại, Gợi ý tiếp theo, Nhận xét theo rubric.",
                 ],
               }),
-            },
-            {
-              type: "input_file",
-              filename: submission.resourceLabel || "emerging-report.pdf",
-              file_data: `${PDF_DATA_URL_PREFIX}${reportBuffer.toString("base64")}`,
             },
           ],
         },

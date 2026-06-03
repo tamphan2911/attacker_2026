@@ -219,6 +219,19 @@ function clampCriterionScore(value: unknown, maxScore: number) {
   return rounded;
 }
 
+function buildFallbackComment(criteria: CriterionScore[]) {
+  return [
+    "Tổng quan: GPT đã hoàn tất phần chấm điểm theo rubric, nhưng nhận xét tổng hợp trả về quá ngắn nên hệ thống dùng phần nhận xét theo từng tiêu chí làm nội dung chính.",
+    "",
+    "Nhận xét theo rubric:",
+    ...criteria.map((criterion) => {
+      const rubric = ROUND2_REPORT_RUBRIC.find((item) => item.id === criterion.criterionId);
+      const label = rubric?.label.vi || rubric?.label.en || criterion.criterionId;
+      return `- ${label}: ${criterion.rationale}`;
+    }),
+  ].join("\n");
+}
+
 function extractResponseText(payload: unknown) {
   if (!payload || typeof payload !== "object") {
     return "";
@@ -299,13 +312,11 @@ function validateOpenAiScoringResult(raw: unknown): OpenAiReportScoringResult {
   }
 
   const comment = String((raw as { comment?: unknown }).comment ?? "").trim();
-  if (comment.length < 1200) {
-    throw new Error("OpenAI returned a Round 2 comment that is too short.");
-  }
+  const normalizedComment = comment.length >= 80 ? comment : buildFallbackComment(criteria);
 
   return {
     criteria,
-    comment: comment.slice(0, 12000),
+    comment: normalizedComment.slice(0, 12000),
   };
 }
 
@@ -356,6 +367,11 @@ async function scoreReportWithOpenAi({
           role: "user",
           content: [
             {
+              type: "input_file",
+              filename: submission.resourceLabel || "round-2-report.pdf",
+              file_data: `${PDF_DATA_URL_PREFIX}${reportBuffer.toString("base64")}`,
+            },
+            {
               type: "input_text",
               text: JSON.stringify({
                 task:
@@ -387,11 +403,6 @@ async function scoreReportWithOpenAi({
                   "Nếu không thấy bằng chứng sản phẩm, hãy nói rõ là chưa thấy bằng chứng sản phẩm trong báo cáo.",
                 ],
               }),
-            },
-            {
-              type: "input_file",
-              filename: submission.resourceLabel || "round-2-report.pdf",
-              file_data: `${PDF_DATA_URL_PREFIX}${reportBuffer.toString("base64")}`,
             },
           ],
         },
