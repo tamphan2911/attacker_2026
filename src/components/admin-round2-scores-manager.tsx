@@ -483,6 +483,9 @@ export function AdminRound2ScoresManager() {
         : 0;
   const activeAiJobId = activeAiJob?.id ?? "";
   const activeAiJobStatus = activeAiJob?.status;
+  const overallAiProgressPercent = aiOverview
+    ? Math.min(100, Math.max(0, Math.round(aiOverview.totals.gptScoringPercent)))
+    : 0;
   useAdminTitleScroll();
 
   const loadData = useCallback(async () => {
@@ -517,6 +520,7 @@ export function AdminRound2ScoresManager() {
     }
 
     setAiOverview(payload.overview);
+    return payload.overview;
   }, [locale]);
 
   const startAiScoring = async (mode: "run-all" | "retry-failed") => {
@@ -577,6 +581,32 @@ export function AdminRound2ScoresManager() {
       setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected Round 2 GPT scoring error." : "Có lỗi bất ngờ khi tải tiến độ GPT Vòng 2.");
     });
   }, [loadAiOverview, locale]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const refreshProgress = async () => {
+      try {
+        const overview = await loadAiOverview();
+        if (!cancelled && overview.activeJob) {
+          await loadData();
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setAiError(nextError instanceof Error ? nextError.message : locale === "en" ? "Unexpected Round 2 GPT scoring error." : "Có lỗi bất ngờ khi tải tiến độ GPT Vòng 2.");
+        }
+      }
+    };
+
+    const timer = window.setInterval(() => {
+      void refreshProgress();
+    }, 3000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [loadAiOverview, loadData, locale]);
 
   useEffect(() => {
     if (!activeAiJobId || activeAiJobStatus === "completed" || activeAiJobStatus === "failed") {
@@ -1032,6 +1062,38 @@ export function AdminRound2ScoresManager() {
                     </span>
                   ) : null}
                 </div>
+              </div>
+            ) : null}
+
+            {aiOverview ? (
+              <div className="rounded-[1rem] border theme-border theme-panel-subtle px-3 py-3 text-sm leading-6">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="inline-flex items-center gap-2 font-semibold theme-text-strong">
+                    <CircleDashed className="h-4 w-4" />
+                    {locale === "en" ? "Overall GPT coverage" : "Tổng tiến độ GPT"}
+                  </span>
+                  <span className="shrink-0 rounded-full border theme-border bg-white/70 px-2.5 py-1 text-xs font-semibold theme-text-strong dark:bg-white/10">
+                    {overallAiProgressPercent}%
+                  </span>
+                </div>
+                <div
+                  role="progressbar"
+                  aria-label={locale === "en" ? "Overall Round 2 GPT scoring coverage" : "Tổng tiến độ chấm GPT Vòng 2"}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={overallAiProgressPercent}
+                  className="mt-3 h-2 overflow-hidden rounded-full bg-slate-950/10 dark:bg-white/10"
+                >
+                  <div
+                    className="h-full rounded-full bg-[linear-gradient(90deg,#bae6fd,#38bdf8,#0ea5e9)] transition-[width] duration-700 ease-out"
+                    style={{ width: `${overallAiProgressPercent}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-xs theme-text-muted">
+                  {locale === "en"
+                    ? "Refreshes automatically while this page is open."
+                    : "Tự cập nhật khi trang này đang mở."}
+                </p>
               </div>
             ) : null}
 
