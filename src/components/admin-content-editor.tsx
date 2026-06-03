@@ -2184,6 +2184,300 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
               />
             </Surface>
 
+            <CopySectionEditor
+              title="Competition / Legacy journey heading"
+              section={draft.organizer.header}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.organizer.header[field][language] = value;
+                  }),
+                )
+              }
+            />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Competition / Legacy journey hero"
+                description="These controls edit the visible badges and card text inside the Hành trình cuộc thi hero block on the competition page."
+              />
+              <LocalizedListBlockEditor
+                title="Legacy hero badges"
+                description="These badges appear below the large Hành trình cuộc thi title."
+                items={draft.organizer.heroBadges}
+                itemLabelPrefix="Hero badge"
+                rows={2}
+                onChange={(itemIndex, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.heroBadges[itemIndex][language] = value;
+                    }),
+                  )
+                }
+                onAdd={() =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.heroBadges.push(createBlankLocalizedText());
+                    }),
+                  )
+                }
+                addLabel={locale === "en" ? "Add badge" : "Thêm badge"}
+                onRemove={(itemIndex) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.heroBadges = next.organizer.heroBadges.filter(
+                        (_, currentIndex) => currentIndex !== itemIndex,
+                      );
+                    }),
+                  )
+                }
+                removeLabel={locale === "en" ? "Remove badge" : "Xóa badge"}
+                minItems={1}
+              />
+              <CopySectionEditor
+                title="Competition / Legacy journey inner card"
+                section={draft.organizer.heroCard}
+                className="px-0 py-0 shadow-none"
+                onChange={(field, language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.organizer.heroCard[field][language] = value;
+                    }),
+                  )
+                }
+              />
+            </Surface>
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <BlockIntro
+                title="Competition / Legacy journey metric boxes"
+                description="These metric boxes appear directly below the Hành trình cuộc thi hero block."
+              />
+              <div className="space-y-4">
+                {draft.organizer.metrics.map((metric, index) => (
+                  <div key={`competition-legacy-metric-${index}`} className="rounded-[1.5rem] border theme-border px-4 py-4">
+                    <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)]">
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Value</span>
+                        <input
+                          value={metric.value}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.organizer.metrics[index].value = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                      <LocalizedFieldEditor
+                        label={`Metric ${index + 1} label`}
+                        rows={2}
+                        value={metric.label}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.organizer.metrics[index].label[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Surface>
+
+            <CopySectionEditor
+              title="Competition / Season highlights heading"
+              section={draft.organizer.contentModules}
+              onChange={(field, language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.organizer.contentModules[field][language] = value;
+                  }),
+                )
+              }
+            />
+
+            <LocalizedTextEditorCard
+              title="Competition / Season highlights link label"
+              value={draft.organizer.competitionLinkLabel}
+              onChange={(language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.organizer.competitionLinkLabel[language] = value;
+                  }),
+                )
+              }
+            />
+
+            <LocalizedTextEditorCard
+              title="Competition / Season badge label"
+              value={draft.organizer.seasonBadgeLabel}
+              onChange={(language, value) =>
+                setDraft((current) =>
+                  updateDraftContent(current, (next) => {
+                    next.organizer.seasonBadgeLabel[language] = value;
+                  }),
+                )
+              }
+            />
+
+            <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+              <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <BlockIntro
+                  title="Competition / Season highlight cards"
+                  description="Each block controls one visible season card: image, badge year, eyebrow, title, body, and bottom stat chips."
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.organizer.seasonStories.push(
+                          createOrganizerSeasonStoryDraft(next.organizer.seasonStories.length),
+                        );
+                      }),
+                    )
+                  }
+                  className="theme-button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold"
+                >
+                  <Plus className="h-4 w-4" />
+                  {locale === "en" ? "Add season card" : "Thêm thẻ mùa thi"}
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {draft.organizer.seasonStories.map((story, index) => (
+                  <Surface key={`competition-season-story-${index}`} className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-lg font-semibold theme-text-strong">
+                        {locale === "en" ? `Season highlight card ${index + 1}` : `Thẻ mùa thi ${index + 1}`}
+                      </p>
+                      <button
+                        type="button"
+                        disabled={draft.organizer.seasonStories.length <= 1}
+                        onClick={() =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              next.organizer.seasonStories = next.organizer.seasonStories.filter(
+                                (_, currentIndex) => currentIndex !== index,
+                              );
+                            }),
+                          )
+                        }
+                        className="theme-button-danger inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                        aria-label={locale === "en" ? "Delete season highlight card" : "Xóa thẻ mùa thi"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-[140px_minmax(0,1fr)]">
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Year</span>
+                        <input
+                          value={story.year}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.organizer.seasonStories[index].year = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                      <label className="space-y-2">
+                        <span className="text-sm theme-text-muted">Image path</span>
+                        <input
+                          value={story.image}
+                          onChange={(event) =>
+                            setDraft((current) =>
+                              updateDraftContent(current, (next) => {
+                                next.organizer.seasonStories[index].image = event.target.value;
+                              }),
+                            )
+                          }
+                          className={fieldClassName}
+                        />
+                      </label>
+                    </div>
+                    <LocalizedFieldEditor
+                      label="Card eyebrow"
+                      rows={2}
+                      value={story.label}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].label[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <LocalizedFieldEditor
+                      label="Card title"
+                      rows={3}
+                      value={story.title}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].title[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <LocalizedFieldEditor
+                      label="Card body"
+                      rows={5}
+                      value={story.body}
+                      onChange={(language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].body[language] = value;
+                          }),
+                        )
+                      }
+                    />
+                    <LocalizedListBlockEditor
+                      title="Card stat chips"
+                      description="These chips appear at the bottom of this season highlight card."
+                      items={story.stats}
+                      itemLabelPrefix="Stat chip"
+                      rows={2}
+                      onChange={(itemIndex, language, value) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].stats[itemIndex][language] = value;
+                          }),
+                        )
+                      }
+                      onAdd={() =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].stats.push(createBlankLocalizedText());
+                          }),
+                        )
+                      }
+                      addLabel={locale === "en" ? "Add stat chip" : "Thêm chip"}
+                      onRemove={(itemIndex) =>
+                        setDraft((current) =>
+                          updateDraftContent(current, (next) => {
+                            next.organizer.seasonStories[index].stats = next.organizer.seasonStories[index].stats.filter(
+                              (_, currentIndex) => currentIndex !== itemIndex,
+                            );
+                          }),
+                        )
+                      }
+                      removeLabel={locale === "en" ? "Remove stat chip" : "Xóa chip"}
+                      minItems={1}
+                    />
+                  </Surface>
+                ))}
+              </div>
+            </Surface>
+
             <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
               <BlockIntro
                 title="Competition / Legacy hero background"
