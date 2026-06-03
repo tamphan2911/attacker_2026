@@ -120,6 +120,48 @@ function compareRowsByScore(left: AdminRound3SubmissionRow, right: AdminRound3Su
   return new Date(right.submittedAt).getTime() - new Date(left.submittedAt).getTime();
 }
 
+function createGptStatusMeta(locale: "en" | "vi", status?: AdminRound3SubmissionRow["emergingGptStatus"]) {
+  switch (status) {
+    case "scoring":
+      return { label: locale === "en" ? "GPT scoring" : "GPT đang chấm", tone: "info" as const };
+    case "scored":
+      return { label: locale === "en" ? "GPT scored" : "GPT đã chấm", tone: "success" as const };
+    case "failed":
+      return { label: locale === "en" ? "GPT failed" : "GPT lỗi", tone: "warning" as const };
+    case "skipped-human":
+      return { label: locale === "en" ? "Human locked" : "Đã có giám khảo", tone: "default" as const };
+    case "not-started":
+    default:
+      return { label: locale === "en" ? "GPT not run" : "Chưa chạy GPT", tone: "default" as const };
+  }
+}
+
+function EmergingGptScoreCell({ locale, row }: { locale: "en" | "vi"; row: AdminRound3SubmissionRow }) {
+  const meta = createGptStatusMeta(locale, row.emergingGptStatus);
+
+  return (
+    <div className="space-y-2">
+      <StatusPill tone={meta.tone}>{meta.label}</StatusPill>
+      <div className="space-y-1 text-xs leading-5">
+        <p className="font-semibold theme-text-strong">
+          {locale === "en" ? "Score" : "Điểm"}: {formatScore(row.emergingGptScore)}
+        </p>
+        <p className="theme-text-soft">
+          {locale === "en" ? "Time" : "Thời gian"}: {row.emergingGptScoredAt ? formatDateTime(locale, row.emergingGptScoredAt) : "-"}
+        </p>
+        {row.emergingGptModel ? (
+          <p className="theme-text-soft">Model: {row.emergingGptModel}</p>
+        ) : null}
+        {row.emergingGptError ? (
+          <p className="max-w-[240px] font-medium text-amber-700 dark:text-amber-200">
+            {row.emergingGptError}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function AdminRound3SubmissionsManager() {
   const { locale, currentUser } = useSiteState();
   const [rows, setRows] = useState<AdminRound3SubmissionRow[]>([]);
@@ -424,7 +466,7 @@ export function AdminRound3SubmissionsManager() {
       ? "Emerging"
       : "Đội ươm mầm";
   const canDeleteSubmission = currentUser?.role === "admin";
-  const tableColumnCount = (canDeleteSubmission ? 12 : 10) + (activeTab === "emerging" ? 1 : 0);
+  const tableColumnCount = (canDeleteSubmission ? 12 : 10) + (activeTab === "emerging" ? 2 : 0);
 
   function toggleSubmissionSelection(submissionId: string, checked: boolean) {
     setSelectedSubmissionIds((current) =>
@@ -748,6 +790,7 @@ export function AdminRound3SubmissionsManager() {
                   locale === "en" ? "Submitted by" : "Người nộp",
                   locale === "en" ? "Submitted at" : "Nộp lúc",
                   locale === "en" ? "Final score" : "Điểm chung kết",
+                  ...(activeTab === "emerging" ? [locale === "en" ? "GPT score" : "Điểm GPT"] : []),
                   ...(activeTab === "emerging" ? [locale === "en" ? "Round 2 comparison" : "So sánh Vòng 2"] : []),
                   locale === "en" ? "Rank" : "Xếp hạng",
                   locale === "en" ? "Download" : "Tải xuống",
@@ -873,6 +916,11 @@ export function AdminRound3SubmissionsManager() {
                       <span className="text-xs theme-text-soft">-</span>
                     )}
                   </td>
+                  {activeTab === "emerging" ? (
+                    <td className="px-4 py-4 align-top">
+                      <EmergingGptScoreCell locale={locale} row={row} />
+                    </td>
+                  ) : null}
                   {activeTab === "emerging" ? (
                     <td className="px-4 py-4">
                       {typeof row.finalScore === "number" && typeof row.round2Score === "number" && typeof row.scoreDifference === "number" ? (

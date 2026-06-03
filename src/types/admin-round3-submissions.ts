@@ -10,6 +10,11 @@ export interface AdminRound3SubmissionRow {
   scoreDifference?: number;
   emergingScoreSource?: "human" | "gpt" | "none";
   emergingScoredAt?: string;
+  emergingGptStatus?: "not-started" | "scoring" | "scored" | "failed" | "skipped-human";
+  emergingGptScore?: number;
+  emergingGptModel?: string;
+  emergingGptScoredAt?: string;
+  emergingGptError?: string;
   finalRank?: number;
   title: string;
   version: number;

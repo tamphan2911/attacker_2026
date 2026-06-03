@@ -1,4 +1,4 @@
-import { SubmissionRound, TeamSubmissionJudgeReviewSource, TeamSubmissionResourceSource, UserRole } from "@prisma/client";
+import { Round2AiReportScoringStatus, SubmissionRound, TeamSubmissionJudgeReviewSource, TeamSubmissionResourceSource, UserRole } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 import { readRound2FinalistResults, type Round2AdvancementBracket } from "@/server/round2-finalists";
@@ -27,6 +27,22 @@ function ok<T>(data: T, status = 200): ServiceSuccess<T> {
 
 function fail(status: number, error: string): ServiceFailure {
   return { ok: false, status, error };
+}
+
+function serializeAiStatus(status?: Round2AiReportScoringStatus | null): NonNullable<AdminRound3SubmissionRow["emergingGptStatus"]> {
+  switch (status) {
+    case Round2AiReportScoringStatus.SCORING:
+      return "scoring";
+    case Round2AiReportScoringStatus.SCORED:
+      return "scored";
+    case Round2AiReportScoringStatus.FAILED:
+      return "failed";
+    case Round2AiReportScoringStatus.SKIPPED_HUMAN:
+      return "skipped-human";
+    case Round2AiReportScoringStatus.NOT_STARTED:
+    default:
+      return "not-started";
+  }
 }
 
 export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRound3SubmissionRow[] }> {
@@ -215,6 +231,11 @@ export async function readAdminRound3SubmissionRows(): Promise<{ rows: AdminRoun
           : undefined,
       emergingScoreSource: bracket === "emerging" ? emergingScore?.source ?? "none" : undefined,
       emergingScoredAt: bracket === "emerging" ? emergingScore?.scoredAt : undefined,
+      emergingGptStatus: bracket === "emerging" ? serializeAiStatus(submission.aiReportReview?.status) : undefined,
+      emergingGptScore: bracket === "emerging" ? submission.aiReportReview?.score ?? undefined : undefined,
+      emergingGptModel: bracket === "emerging" ? submission.aiReportReview?.model || undefined : undefined,
+      emergingGptScoredAt: bracket === "emerging" ? submission.aiReportReview?.scoredAt?.toISOString() : undefined,
+      emergingGptError: bracket === "emerging" ? submission.aiReportReview?.error ?? undefined : undefined,
       finalRank:
         latestByTeam.get(submission.teamId)?.id === submission.id
           ? finalRankByTeamId.get(submission.teamId)
