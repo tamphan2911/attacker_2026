@@ -314,6 +314,10 @@ async function scoreEmergingReportWithOpenAi({
             "Nếu một tiêu chí không cải thiện rõ, giữ điểm gần bằng hoặc bằng điểm Vòng 2 của tiêu chí đó.",
             "Chỉ tăng điểm khi báo cáo mới có bằng chứng cải thiện cụ thể; không vượt quá điểm tối đa của tiêu chí.",
             "Nhận xét phải bằng tiếng Việt, cụ thể, chuyên nghiệp, tập trung vào cải thiện hoặc chưa cải thiện.",
+            "Áp dụng chuẩn chấm nghiêm hơn khoảng 30% so với trước: điểm tăng phải khó hơn, chỉ khi cải thiện rõ, có ý nghĩa và có bằng chứng.",
+            "Nếu cải thiện nhỏ, chỉ chỉnh hình thức, viết lại nội dung cũ hoặc chưa xử lý vấn đề từ Vòng 2, giữ nguyên điểm hoặc giảm điểm nếu chất lượng/bằng chứng yếu.",
+            "Không tăng điểm chỉ vì báo cáo dài hơn hoặc trình bày đẹp hơn; khi phân vân, chọn điểm thấp hơn trừ khi có bằng chứng cải thiện mạnh.",
+            "Không ép điểm thấp nếu báo cáo mới thật sự cải thiện rõ và có bằng chứng cụ thể.",
           ].join(" "),
         },
         {
@@ -335,6 +339,9 @@ async function scoreEmergingReportWithOpenAi({
                 scoringGuidance: [
                   "Mỗi tiêu chí cần nêu rõ: điểm Vòng 2, điểm Vòng Đội ươm mầm, và cải thiện hoặc chưa cải thiện ở đâu.",
                   "Nếu thiếu bằng chứng cải thiện, không tăng điểm chỉ vì đội nộp phiên bản mới.",
+                  "Chỉ tăng hơn 10% điểm tối đa của một tiêu chí khi có cải thiện lớn, cụ thể và được chứng minh trong báo cáo mới.",
+                  "Nếu báo cáo mới không xử lý nhận xét hoặc vấn đề chính từ Vòng 2, điểm tiêu chí nên bằng hoặc thấp hơn điểm Vòng 2.",
+                  "Không cho điểm thưởng nếu không có bằng chứng triển khai, kiểm chứng hoặc sản phẩm mới sau Vòng 2.",
                   "Comment tổng thể cần có các phần: Tổng quan cải thiện, Cải thiện nổi bật, Điểm chưa cải thiện, Rủi ro còn lại, Gợi ý tiếp theo, Nhận xét theo rubric.",
                 ],
               }),

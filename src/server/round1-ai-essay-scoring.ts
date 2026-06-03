@@ -322,6 +322,10 @@ async function scoreEssaysWithOpenAi({
             "Điểm mỗi câu từ 0 đến 10, cho phép một chữ số thập phân.",
             "Nhận xét phải bằng tiếng Việt, giọng chuyên nghiệp, cụ thể, tự nhiên, tránh văn phong chung chung hoặc quá giống AI.",
             "Không phóng đại. Nếu bài thiếu ý, nêu rõ thiếu gì. Nếu bài tốt, chỉ ra điểm mạnh cụ thể.",
+            "Áp dụng chuẩn chấm nghiêm hơn khoảng 30% so với chấm hỗ trợ thông thường: không cho điểm cao chỉ vì câu trả lời đúng hướng nhưng còn chung chung.",
+            "Điểm 8-10 chỉ dành cho câu trả lời đầy đủ, trực tiếp trả lời câu hỏi, có lập luận rõ và ví dụ hoặc dẫn chứng cụ thể.",
+            "Câu trả lời trung bình, thiếu dẫn chứng hoặc mới nêu ý khái quát thường nằm khoảng 4-6; câu thiếu ý chính, lan man hoặc rất sơ sài thường dưới 4.",
+            "Khi phân vân giữa hai mức điểm, chọn mức thấp hơn nếu bằng chứng trong bài chưa đủ rõ; không ép điểm thấp nếu bài thật sự xuất sắc.",
           ].join(" "),
         },
         {
@@ -329,7 +333,7 @@ async function scoreEssaysWithOpenAi({
           content: JSON.stringify({
             rubric: ROUND1_ESSAY_RUBRIC,
             instruction:
-              "Chấm từng câu độc lập. Comment mỗi câu nên gồm nhận xét tổng quan, điểm tốt và điểm cần cải thiện, ngắn gọn nhưng cụ thể.",
+              "Chấm từng câu độc lập theo chuẩn nghiêm. Comment mỗi câu nên gồm nhận xét tổng quan, điểm tốt và điểm cần cải thiện, ngắn gọn nhưng cụ thể.",
             essays,
           }),
         },

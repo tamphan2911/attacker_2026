@@ -345,6 +345,10 @@ async function scoreReportWithOpenAi({
             "Không phóng đại. Nếu báo cáo thiếu dữ liệu, nguyên mẫu, dẫn chứng hoặc kế hoạch triển khai, hãy trừ điểm rõ ràng.",
             "Khuyến khích đội có sản phẩm, prototype, MVP, pilot, demo, đường link sản phẩm, người dùng thử hoặc bằng chứng triển khai thực tế.",
             "Tuy nhiên, chỉ cộng điểm cho sản phẩm khi báo cáo có bằng chứng đủ rõ; không cộng chỉ vì đội tự nói đã có sản phẩm.",
+            "Áp dụng chuẩn chấm nghiêm hơn khoảng 30% so với hiện tại: điểm mặc định phải thận trọng, không rộng tay.",
+            "Điểm cao chỉ dành cho báo cáo có bằng chứng cụ thể về vấn đề, thị trường, giải pháp, mô hình triển khai, kỹ thuật, rủi ro và tác động.",
+            "Báo cáo mô tả ý tưởng tốt nhưng thiếu kiểm chứng, prototype, dữ liệu hoặc kế hoạch triển khai rõ chỉ nên ở mức trung bình theo từng tiêu chí.",
+            "Khi phân vân giữa hai mức điểm, chọn mức thấp hơn nếu bằng chứng trong báo cáo chưa đủ mạnh; không ép điểm thấp nếu báo cáo thật sự xuất sắc.",
           ].join(" "),
         },
         {
@@ -372,7 +376,10 @@ async function scoreReportWithOpenAi({
                 rubric: createRubricForPrompt(ROUND2_REPORT_RUBRIC),
                 scoringGuidance: [
                   "Chấm từng tiêu chí độc lập theo nội dung thực sự có trong báo cáo.",
+                  "Dùng thang điểm khó: chỉ cho từ 80% điểm tối đa của một tiêu chí trở lên khi tiêu chí đó thật sự xuất sắc và có bằng chứng rõ.",
+                  "Nếu nội dung chỉ là tuyên bố chung, văn phong marketing hoặc kế hoạch chưa được kiểm chứng, không cho quá 60% điểm tối đa của tiêu chí đó.",
                   "Điểm thưởng tối đa 5 điểm chỉ dùng khi có lý do rõ ràng như prototype/MVP/pilot/demo, kiểm chứng người dùng, dữ liệu thị trường tốt, sản phẩm có link hoặc bằng chứng triển khai.",
+                  "Điểm thưởng phải hiếm; nếu không có bằng chứng triển khai hoặc kiểm chứng thật, điểm thưởng nên bằng 0.",
                   "Comment phải gồm các phần: Tổng quan, Điểm mạnh, Điểm yếu/Rủi ro, Cơ hội, Thách thức, Gợi ý cải thiện, và Nhận xét theo rubric.",
                   "Trong phần Nhận xét theo rubric, nhắc ngắn từng tiêu chí và lý do điểm.",
                   "Nếu báo cáo có sản phẩm hoặc demo đáng tin cậy, hãy nêu rõ sản phẩm đó ảnh hưởng thế nào đến điểm khả thi, công nghệ và điểm thưởng.",
