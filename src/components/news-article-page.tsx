@@ -132,6 +132,8 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
   const { locale, newsPosts, pageContent } = useSiteState();
   const articleLocale = "vi" as const;
   const relatedPosts = newsPosts.filter((item) => item.slug !== post.slug).slice(0, 3);
+  const articleHeroImage = pageContent.competition.legacyHeroImage || pageContent.organizer.heroImage || post.coverImageSrc;
+  const visibleContentBlocks = post.content.filter((block) => !(block.type === "image" && block.origin === "cover"));
 
   return (
     <div className="space-y-14">
@@ -142,7 +144,7 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
 
       <section className="theme-card-shadow-soft relative overflow-hidden rounded-[2rem] border">
         <Image
-          src={post.coverImageSrc}
+          src={articleHeroImage}
           alt={pickText(articleLocale, post.coverImageAlt)}
           fill
           sizes="100vw"
@@ -209,8 +211,8 @@ export function NewsArticlePage({ post }: { post: NewsPost }) {
       <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Surface className="px-6 py-6 md:px-8 md:py-8">
           <div className="space-y-5">
-            {post.content.map((block, index) => {
-              const previousBlock = post.content[index - 1];
+            {visibleContentBlocks.map((block, index) => {
+              const previousBlock = visibleContentBlocks[index - 1];
               const showParagraphDivider = block.type === "paragraph" && previousBlock?.type === "paragraph";
 
               return (

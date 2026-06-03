@@ -141,39 +141,6 @@ function matchesFilter(value: string, filterValue: string) {
   return value.toLowerCase().includes(filterValue.trim().toLowerCase());
 }
 
-function syncCoverImageBlock(post: NewsPost): NewsPost {
-  const manualBlocks = post.content.filter(
-    (block) => !(block.type === "image" && block.origin === "cover"),
-  );
-
-  const coverBlock: NewsContentBlock = {
-    type: "image",
-    src: post.coverImageSrc,
-    alt: post.coverImageAlt,
-    caption: post.coverLabel,
-    emphasis: "feature",
-    origin: "cover",
-  };
-
-  const firstParagraphIndex = manualBlocks.findIndex((block) => block.type === "paragraph");
-
-  if (firstParagraphIndex === -1) {
-    return {
-      ...post,
-      content: [coverBlock, ...manualBlocks],
-    };
-  }
-
-  return {
-    ...post,
-    content: [
-      ...manualBlocks.slice(0, firstParagraphIndex + 1),
-      coverBlock,
-      ...manualBlocks.slice(firstParagraphIndex + 1),
-    ],
-  };
-}
-
 function moveItem<T>(items: T[], index: number, direction: -1 | 1) {
   const targetIndex = index + direction;
   if (targetIndex < 0 || targetIndex >= items.length) {
@@ -1151,8 +1118,8 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
     if (!nextPostBase.coverLabel.vi.trim()) {
       setEditorMessage(
         locale === "en"
-          ? "Cover caption is required. It is also used as the caption for the cover image block inside the article."
-          : "Cần nhập chú thích ảnh bìa. Nội dung này cũng được dùng làm chú thích cho ảnh bìa trong thân bài viết.",
+          ? "Cover caption is required."
+          : "Cần nhập chú thích ảnh bìa.",
       );
       return;
     }
@@ -1165,7 +1132,7 @@ function AdminNewsEditorInner({ slug }: { slug: string }) {
       nextPostBase.content = [createParagraphBlock()];
     }
 
-    const nextPost = syncCoverImageBlock(nextPostBase);
+    const nextPost = nextPostBase;
 
     const hasConflictingSlug = newsPosts.some((post) =>
       isCreateMode ? post.slug === nextSlug : post.slug === nextSlug && post.slug !== slug,
