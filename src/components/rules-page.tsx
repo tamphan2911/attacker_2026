@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
+  Download,
   FileCheck2,
   FileDown,
   FileText,
@@ -161,17 +162,13 @@ type PublicReportTemplateRecord = {
 };
 
 function RoundDownloadCard({
-  locale,
   title,
-  description,
   buttonLabel,
   unavailableLabel,
   downloadUrl,
   kind,
 }: {
-  locale: "en" | "vi";
   title: string;
-  description: string;
   buttonLabel: string;
   unavailableLabel: string;
   downloadUrl?: string;
@@ -187,25 +184,20 @@ function RoundDownloadCard({
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold theme-text-strong">{title}</p>
-          <p className="mt-1 text-sm leading-6 theme-text-soft">{description}</p>
           {downloadUrl ? (
             <a
               href={downloadUrl}
-              className="theme-button-primary mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold"
+              aria-label={buttonLabel}
+              title={buttonLabel}
+              className="theme-button-primary mt-4 inline-flex h-11 w-11 items-center justify-center rounded-full p-0 transition hover:-translate-y-0.5 active:translate-y-0"
             >
-              <Icon className="h-4 w-4" />
-              {buttonLabel}
+              <Download className="h-5 w-5" />
             </a>
           ) : (
             <p className="mt-4 rounded-[1rem] border border-amber-300/38 bg-amber-300/12 px-3 py-2 text-sm font-semibold text-amber-800 dark:border-amber-200/24 dark:text-amber-100">
               {unavailableLabel}
             </p>
           )}
-          <p className="mt-2 text-xs leading-5 theme-text-faint">
-            {locale === "en"
-              ? "Open this file before preparing your submission."
-              : "Hãy mở tệp này trước khi chuẩn bị bài nộp."}
-          </p>
         </div>
       </div>
     </div>
@@ -699,14 +691,8 @@ export function RulesPage() {
                       </p>
                       <div className="mt-5 space-y-3">
                         <RoundDownloadCard
-                          locale={locale}
                           kind="rubric"
                           title={pickText(locale, rubricDefinition.label)}
-                          description={
-                            locale === "en"
-                              ? `Review this rubric to understand how ${pickText(locale, round.title)} is evaluated.`
-                              : `Xem rubric này để hiểu cách đánh giá ${pickText(locale, round.title)}.`
-                          }
                           buttonLabel={pickText(locale, rubricDefinition.publicDownloadLabel)}
                           unavailableLabel={
                             locale === "en"
@@ -718,14 +704,8 @@ export function RulesPage() {
 
                         {templateDefinition ? (
                           <RoundDownloadCard
-                            locale={locale}
                             kind="template"
                             title={pickText(locale, templateDefinition.label)}
-                            description={
-                              locale === "en"
-                                ? "Use this template when preparing the official report file for this round."
-                                : "Dùng mẫu này khi chuẩn bị tệp báo cáo chính thức cho vòng này."
-                            }
                             buttonLabel={pickText(locale, templateDefinition.publicDownloadLabel)}
                             unavailableLabel={
                               locale === "en"
