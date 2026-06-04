@@ -34,6 +34,10 @@ import {
 } from "lucide-react";
 
 import { pickText } from "@/lib/site";
+import {
+  getSeasonContentYears,
+  getSeasonSlotDisplayYear,
+} from "@/components/admin-season-content-editor";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
 import type { LocalizedText } from "@/types/site";
@@ -290,12 +294,39 @@ function AccessDenied() {
 
 export function AdminModeLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { locale, canAccessAdminMode, currentUser } = useSiteState();
+  const { locale, canAccessAdminMode, currentUser, pageContent } = useSiteState();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   if (!canAccessAdminMode) {
     return <AccessDenied />;
   }
+
+  const navGroups = adminNavGroups.map((group) => ({
+    ...group,
+    items: group.items.map((item) => {
+      if (item.href !== "/admin/seasons") {
+        return item;
+      }
+
+      return {
+        ...item,
+        children: [
+          { href: "/admin/seasons", icon: Archive, label: { en: "Season list", vi: "Danh sách mùa thi" } },
+          ...getSeasonContentYears(pageContent).map((slotYear) => {
+            const displayYear = getSeasonSlotDisplayYear(pageContent, slotYear);
+            return {
+              href: `/admin/seasons/${encodeURIComponent(slotYear)}`,
+              icon: CalendarClock,
+              label: {
+                en: `Season ${displayYear}`,
+                vi: `Mùa ${displayYear}`,
+              },
+            };
+          }),
+        ],
+      };
+    }),
+  }));
 
   return (
     <div
@@ -352,7 +383,7 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className={cn("space-y-5 transition-all duration-300 ease-out", isSidebarCollapsed ? "mt-3" : "mt-5")}>
-            {adminNavGroups.map((group) => (
+            {navGroups.map((group) => (
               <div key={group.label.en} className={cn("space-y-2", isSidebarCollapsed && "flex flex-col items-center")}>
                 {!isSidebarCollapsed ? (
                   <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-muted">

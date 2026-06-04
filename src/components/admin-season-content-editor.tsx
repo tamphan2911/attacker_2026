@@ -125,9 +125,17 @@ function compareSeasonYears(left: string, right: string) {
 }
 
 export function getSeasonContentYears(content: SitePageContent) {
-  const years = new Set<string>(defaultSeasonContentYears);
+  const years = new Set<string>();
+  const slotCount = Math.max(defaultSeasonContentYears.length, content.organizer.seasonStories.length);
 
-  content.organizer.seasonStories.forEach((item) => {
+  for (let index = 0; index < slotCount; index += 1) {
+    const year = content.organizer.seasonStories[index]?.year.trim() || defaultSeasonContentYears[index];
+    if (year) {
+      years.add(year);
+    }
+  }
+
+  content.organizer.seasonStories.slice(slotCount).forEach((item) => {
     if (item.year.trim()) {
       years.add(item.year.trim());
     }
