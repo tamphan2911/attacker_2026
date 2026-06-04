@@ -96,7 +96,6 @@ export function CompetitionPage() {
     locale === "vi" ? "Hành trình đồng hành cùng chuyên gia" : "A journey guided by experts";
   const rewardSectionTitle = locale === "vi" ? "Cơ cấu giải thưởng" : "Prize structure";
   const emergingReward = pageContent.competition.emergingReward;
-  const emergingRewardEyebrow = locale === "vi" ? "Danh hiệu bổ sung" : "Side recognition";
   const emergingRewardNote =
     locale === "vi"
       ? "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác."
@@ -237,14 +236,9 @@ export function CompetitionPage() {
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#34d399,#10b981)] text-slate-950">
                   <Sparkles className="h-5 w-5" />
                 </div>
-                <div>
-                  <p className="theme-text-soft text-[0.72rem] font-semibold uppercase tracking-[0.24em]">
-                    {emergingRewardEyebrow}
-                  </p>
-                  <p className="theme-text-strong mt-1 text-lg font-semibold">
-                    {pickText(locale, emergingReward.title)}
-                  </p>
-                </div>
+                <p className="theme-text-strong text-lg font-semibold leading-tight">
+                  {pickText(locale, emergingReward.title)}
+                </p>
               </div>
               <p className="theme-text-strong mt-5 text-2xl font-semibold">
                 {pickText(locale, emergingReward.amount)}
