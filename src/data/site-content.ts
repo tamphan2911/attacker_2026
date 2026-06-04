@@ -1144,8 +1144,8 @@ export const defaultPageContent: SitePageContent = {
     intro: {
       eyebrow: { en: "Competition", vi: "Cuộc thi" },
       title: {
-        en: "A competition structure built around how fintech ideas actually mature.",
-        vi: "Cấu trúc cuộc thi được xây dựng theo cách một ý tưởng fintech trưởng thành trong thực tế.",
+        en: "Vietnamese student fintech idea competition",
+        vi: "Cuộc thi ý tưởng Fintech sinh viên Việt Nam",
       },
       description: {
         en: "Attacker 2026 starts with an individual qualifier built from 40 objective questions plus 2 essay questions, then moves the best teams into judge-scored project evaluation and a live final defense. Progression is determined by team results, not solo participation alone.",
@@ -1185,8 +1185,8 @@ export const defaultPageContent: SitePageContent = {
     rounds: {
       eyebrow: { en: "Round architecture", vi: "Kiến trúc vòng thi" },
       title: {
-        en: "From individual qualifier to judge-scored team execution.",
-        vi: "Từ vòng loại cá nhân đến năng lực thực thi của đội được giám khảo chấm điểm.",
+        en: "A journey guided by experts",
+        vi: "Hành trình đồng hành cùng chuyên gia",
       },
       description: {
         en: "Members first complete an individual paper with 40 objective questions and 2 essays, then qualified teams submit reports, and finalists defend their project live in front of the judges.",

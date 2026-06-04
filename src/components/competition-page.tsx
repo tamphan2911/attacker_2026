@@ -67,17 +67,6 @@ function pickRewardAmount(locale: "en" | "vi", amount: { en: string; vi: string 
   return pickText(locale, amount);
 }
 
-function sanitizeCompetitionIntroTitle(locale: "en" | "vi", value: string) {
-  if (
-    locale === "en" &&
-    (value.includes("Cuộc thi tìm kiếm ý tưởng") || value.includes("Fintech dành cho sinh viên"))
-  ) {
-    return "A fintech idea competition for students in Vietnam";
-  }
-
-  return value;
-}
-
 export function CompetitionPage() {
   const { locale, pageContent, timelineItems } = useSiteState();
   const competitionHighlightItems =
@@ -101,10 +90,10 @@ export function CompetitionPage() {
       ? pageContent.competition.rewardCards
       : [];
   const rewardSection = pageContent.competition.rewards;
-  const competitionIntroTitle = sanitizeCompetitionIntroTitle(
-    locale,
-    pickText(locale, pageContent.competition.intro.title),
-  );
+  const competitionDisplayTitle =
+    locale === "vi" ? "Cuộc thi ý tưởng Fintech sinh viên Việt Nam" : "Vietnamese student fintech idea competition";
+  const competitionJourneyTitle =
+    locale === "vi" ? "Hành trình đồng hành cùng chuyên gia" : "A journey guided by experts";
   const rewardSectionTitle = locale === "vi" ? "Cơ cấu giải thưởng" : "Prize structure";
   const emergingReward = pageContent.competition.emergingReward;
   const emergingRewardEyebrow = locale === "vi" ? "Danh hiệu bổ sung" : "Side recognition";
@@ -122,7 +111,7 @@ export function CompetitionPage() {
       <section className="scroll-mt-28 pt-4">
         <SectionHeading
           eyebrow={pickText(locale, pageContent.competition.intro.eyebrow)}
-          title={competitionIntroTitle}
+          title={competitionDisplayTitle}
         />
       </section>
 
@@ -138,7 +127,7 @@ export function CompetitionPage() {
       <section id="competition-journey" className="scroll-mt-28 space-y-8">
         <SectionHeading
           eyebrow={pickText(locale, pageContent.competition.rounds.eyebrow)}
-          title={pickText(locale, pageContent.competition.rounds.title)}
+          title={competitionJourneyTitle}
           description={pickText(locale, pageContent.competition.rounds.description)}
         />
 
