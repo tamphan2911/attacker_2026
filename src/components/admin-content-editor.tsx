@@ -943,7 +943,7 @@ export function ContentHeaderEditor() {
         isDirty={isDirty}
         onReset={() => setDraft(clonePageContent(pageContent))}
         onSave={() => {
-          void savePageContent(draft);
+          void savePageContent(draft, "site-header");
         }}
       />
 
@@ -1238,7 +1238,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
     });
   };
   const saveFaqBlock = async (messageKey: string, message: string) => {
-    const saved = await savePageContent(draft);
+    const saved = await savePageContent(draft, `page:${pageId}`);
     if (saved) {
       setFaqSaveMessage({ key: messageKey, text: message });
     }
@@ -1277,7 +1277,7 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
     setTimelineDraft(cloneTimelineItems(timelineItems));
   };
   const saveDrafts = async () => {
-    const savedContent = pageContentDirty ? await savePageContent(draft) : true;
+    const savedContent = pageContentDirty ? await savePageContent(draft, `page:${pageId}`) : true;
     if (!savedContent) {
       return;
     }
@@ -5441,7 +5441,7 @@ export function ContentTypeEditor({ typeId }: { typeId: ContentTypeId }) {
         isDirty={isDirty}
         onReset={() => setDraft(clonePageContent(pageContent))}
         onSave={() => {
-          void savePageContent(draft);
+          void savePageContent(draft, `type:${typeId}`);
         }}
       />
 

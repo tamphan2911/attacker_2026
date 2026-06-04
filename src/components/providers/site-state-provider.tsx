@@ -216,7 +216,7 @@ interface SiteStateValue {
   setActiveUserId: (userId: string) => void;
   signOutCurrentUser: () => Promise<void>;
   resetDemoData: () => void;
-  savePageContent: (nextPageContent: SitePageContent) => Promise<boolean>;
+  savePageContent: (nextPageContent: SitePageContent, scope?: string) => Promise<boolean>;
   saveSeasonContent: (seasonContent: Pick<SitePageContent["organizer"], "seasonBadgeLabel" | "seasonStories" | "seasonArchives">) => Promise<boolean>;
   saveSponsorsByAdmin: (nextSponsors: SponsorProfile[]) => void;
   createNewsPostByAdmin: (payload: NewsPost) => void;
@@ -644,7 +644,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const savePageContent = async (nextPageContent: SitePageContent) => {
+  const savePageContent = async (nextPageContent: SitePageContent, scope?: string) => {
     if (!canAccessAdminMode) {
       pushToast(
         {
@@ -663,7 +663,7 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
           "Content-Type": "application/json",
         },
         credentials: "same-origin",
-        body: JSON.stringify(nextPageContent),
+        body: JSON.stringify(scope ? { pageContent: nextPageContent, scope } : nextPageContent),
       });
 
       if (!response.ok) {

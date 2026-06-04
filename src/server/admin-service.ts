@@ -143,9 +143,18 @@ export function buildJudgeEmail(loginId: string) {
 
 export async function savePageContentByAdmin(
   payload: SitePageContent,
+  scope?: string,
 ): Promise<ServiceResult<{ saved: true }>> {
   const existing = await readPageContent();
-  const nextContent = mergePageContentWithDefaults(payload);
+  const incomingContent = mergePageContentWithDefaults(payload);
+  const nextContent = scope
+    ? mergeScopedPageContent(existing, incomingContent, scope)
+    : incomingContent;
+
+  if (!nextContent) {
+    return fail(400, "Unknown content save scope.");
+  }
+
   nextContent.organizer.seasonBadgeLabel = existing.organizer.seasonBadgeLabel;
   nextContent.organizer.seasonStories = existing.organizer.seasonStories;
   nextContent.organizer.seasonArchives = existing.organizer.seasonArchives;
@@ -160,6 +169,111 @@ export async function savePageContentByAdmin(
   });
 
   return ok({ saved: true });
+}
+
+function mergeScopedPageContent(
+  existing: SitePageContent,
+  incoming: SitePageContent,
+  scope: string,
+): SitePageContent | null {
+  const nextContent = mergePageContentWithDefaults(existing);
+
+  switch (scope) {
+    case "site-header":
+      nextContent.siteHeader = incoming.siteHeader;
+      return nextContent;
+    case "page:home":
+      nextContent.home = incoming.home;
+      nextContent.home.heroSlides = existing.home.heroSlides;
+      nextContent.home.testimonials = existing.home.testimonials;
+      return nextContent;
+    case "page:construction":
+      nextContent.construction = incoming.construction;
+      return nextContent;
+    case "page:competition":
+      nextContent.competition = incoming.competition;
+      nextContent.organizer.competitionLinkLabel = incoming.organizer.competitionLinkLabel;
+      return nextContent;
+    case "page:faq":
+      nextContent.rules.faq = incoming.rules.faq;
+      nextContent.rules.faqQuickAnswersLabel = incoming.rules.faqQuickAnswersLabel;
+      nextContent.rules.faqQuickAnswers = incoming.rules.faqQuickAnswers;
+      nextContent.rules.faqTopics = incoming.rules.faqTopics;
+      nextContent.rules.faqItems = incoming.rules.faqItems;
+      return nextContent;
+    case "page:rules":
+      nextContent.rules = incoming.rules;
+      nextContent.rules.faq = existing.rules.faq;
+      nextContent.rules.faqQuickAnswersLabel = existing.rules.faqQuickAnswersLabel;
+      nextContent.rules.faqQuickAnswers = existing.rules.faqQuickAnswers;
+      nextContent.rules.faqTopics = existing.rules.faqTopics;
+      nextContent.rules.faqItems = existing.rules.faqItems;
+      return nextContent;
+    case "page:timeline":
+      nextContent.timelinePage = incoming.timelinePage;
+      return nextContent;
+    case "page:round-1-results":
+      nextContent.round1Results = incoming.round1Results;
+      return nextContent;
+    case "page:finalists":
+      nextContent.finalists = incoming.finalists;
+      return nextContent;
+    case "page:emerging-results":
+      nextContent.emergingResults = incoming.emergingResults;
+      return nextContent;
+    case "page:final-results":
+      nextContent.finalResults = incoming.finalResults;
+      return nextContent;
+    case "page:news":
+      nextContent.news = incoming.news;
+      return nextContent;
+    case "page:forum":
+      nextContent.forum = incoming.forum;
+      return nextContent;
+    case "page:sponsors":
+      nextContent.sponsors = incoming.sponsors;
+      return nextContent;
+    case "page:judges":
+      nextContent.judges = incoming.judges;
+      return nextContent;
+    case "page:auth":
+      nextContent.auth = incoming.auth;
+      nextContent.auth.registerNote = existing.auth.registerNote;
+      nextContent.auth.signinNote = existing.auth.signinNote;
+      return nextContent;
+    case "page:workspace":
+      nextContent.workspace = incoming.workspace;
+      nextContent.workspace.noTeamTitle = existing.workspace.noTeamTitle;
+      nextContent.workspace.noTeamDescription = existing.workspace.noTeamDescription;
+      nextContent.workspace.teamDescription = existing.workspace.teamDescription;
+      return nextContent;
+    case "page:organizer":
+      nextContent.organizer = incoming.organizer;
+      return nextContent;
+    case "page:contact":
+      nextContent.contact = incoming.contact;
+      return nextContent;
+    case "page:footer":
+      nextContent.footer = incoming.footer;
+      return nextContent;
+    case "type:hero-slides":
+      nextContent.home.heroSlides = incoming.home.heroSlides;
+      return nextContent;
+    case "type:home-testimonials":
+      nextContent.home.testimonials = incoming.home.testimonials;
+      return nextContent;
+    case "type:auth-notes":
+      nextContent.auth.registerNote = incoming.auth.registerNote;
+      nextContent.auth.signinNote = incoming.auth.signinNote;
+      return nextContent;
+    case "type:workspace-states":
+      nextContent.workspace.noTeamTitle = incoming.workspace.noTeamTitle;
+      nextContent.workspace.noTeamDescription = incoming.workspace.noTeamDescription;
+      nextContent.workspace.teamDescription = incoming.workspace.teamDescription;
+      return nextContent;
+    default:
+      return null;
+  }
 }
 
 export async function saveSeasonContentByAdmin(payload: {

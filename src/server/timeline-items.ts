@@ -1,7 +1,8 @@
 import { timelineItems as defaultTimelineItems } from "@/data/site-content";
 import { prisma } from "@/lib/db";
+import { normalizeLocalizedText } from "@/lib/site";
 import { normalizeTimelineTime } from "@/lib/timeline-dates";
-import type { TimelineItem } from "@/types/site";
+import type { LocalizedText, NavItem, TimelineItem } from "@/types/site";
 
 const TIMELINE_ITEMS_SCOPE = "site-timeline-items";
 
@@ -11,6 +12,32 @@ function cloneTimelineItems(items: TimelineItem[]) {
 
 export function getDefaultTimelineItems() {
   return cloneTimelineItems(defaultTimelineItems);
+}
+
+function normalizeTimelineLocalizedText(value: LocalizedText | undefined, fallback: LocalizedText) {
+  if (!value) {
+    return fallback;
+  }
+
+  return {
+    ...fallback,
+    ...normalizeLocalizedText(value),
+  };
+}
+
+function normalizeTimelineSupportLinks(value: NavItem[] | undefined, fallback?: NavItem[]) {
+  if (!Array.isArray(value)) {
+    return fallback;
+  }
+
+  return value.map((link, index) => {
+    const fallbackLink = fallback?.[index];
+
+    return {
+      href: link.href || fallbackLink?.href || "",
+      label: normalizeTimelineLocalizedText(link.label, fallbackLink?.label ?? { en: "", vi: "" }),
+    };
+  });
 }
 
 function normalizeTimelineItems(items: TimelineItem[]) {
@@ -31,6 +58,11 @@ function normalizeTimelineItems(items: TimelineItem[]) {
       endDate: storedItem.endDate || defaultItem.endDate,
       startTime: normalizeTimelineTime(storedItem.startTime) ?? defaultItem.startTime,
       endTime: normalizeTimelineTime(storedItem.endTime) ?? defaultItem.endTime,
+      title: normalizeTimelineLocalizedText(storedItem.title, defaultItem.title),
+      description: normalizeTimelineLocalizedText(storedItem.description, defaultItem.description),
+      location: normalizeTimelineLocalizedText(storedItem.location, defaultItem.location),
+      method: normalizeTimelineLocalizedText(storedItem.method, defaultItem.method),
+      supportLinks: normalizeTimelineSupportLinks(storedItem.supportLinks, defaultItem.supportLinks),
     };
   });
 }
