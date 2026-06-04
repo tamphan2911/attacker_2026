@@ -159,10 +159,6 @@ export function OrganizerContent({
               {pickText(locale, pageContent.organizer.contentModules.eyebrow)}
             </p>
           )}
-          <Link href="/competition" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {pickText(locale, organizerContent.competitionLinkLabel)}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
         </div>
 
         <div className="grid gap-5 xl:grid-cols-2">
