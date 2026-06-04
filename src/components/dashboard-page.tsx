@@ -2258,8 +2258,8 @@ export function DashboardPage() {
                   </p>
                   <p className="mt-2 text-sm theme-text-soft">
                     {locale === "en"
-                      ? "The full current roster must approve this lock."
-                      : "Toàn bộ đội hình hiện tại phải cùng đồng ý khóa đội."}
+                      ? "This team has passed Round 1, so the roster is finalized and can no longer be edited."
+                      : "Đội đã qua Vòng 1 nên đội hình đã được chốt và không thể chỉnh sửa."}
                   </p>
                 </div>
                 <div className="rounded-[1.5rem] border theme-border theme-panel-subtle px-4 py-4">
@@ -2320,8 +2320,8 @@ export function DashboardPage() {
                         ? "Members can enter the exam one time each."
                         : "Các thành viên có thể vào bài thi, mỗi người một lần."
                       : locale === "en"
-                        ? "Nobody can start Round 1 while the team is still unlocked."
-                        : "Chưa thành viên nào được vào Vòng 1 khi đội vẫn chưa khóa."}
+                        ? "If the team is still unlocked, all members are not eligible to take Round 1."
+                        : "Nếu đội vẫn chưa khóa thì tất cả thành viên không đủ điều kiện dự thi Vòng 1."}
                   </p>
                 </div>
               </div>
