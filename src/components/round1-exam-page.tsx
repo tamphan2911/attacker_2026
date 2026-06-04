@@ -1480,13 +1480,13 @@ export function Round1ExamPage() {
               </p>
               <h1 className="theme-heading mt-4 max-w-4xl text-3xl font-semibold theme-text-strong md:text-[3rem] md:leading-[1.06]">
                 {locale === "en"
-                  ? "Structured randomized delivery with one official attempt per student."
-                  : "Bài thi ngẫu nhiên theo cấu trúc, mỗi sinh viên chỉ có một lượt chính thức."}
+                  ? "Each candidate receives a randomized exam from the question bank."
+                  : "Mỗi thí sinh nhận một đề thi ngẫu nhiên từ ngân hàng đề"}
               </h1>
               <p className="mt-4 max-w-3xl text-sm leading-7 theme-text-muted md:text-base">
                 {locale === "en"
-                  ? "Each student receives 40 objective questions generated from the topic mix plus 4 extra random bank questions, and 2 essay questions placed at the end. The timer runs for 60 minutes, the exam cannot be paused, and the result returns to Team Workspace after submission."
-                  : "Mỗi thí sinh nhận 40 câu trắc nghiệm gồm phần theo chủ đề và 4 câu ngẫu nhiên bổ sung từ ngân hàng, cùng 2 câu tự luận luôn đặt ở cuối đề. Đồng hồ chạy trong 60 phút, bài thi không thể tạm dừng và kết quả sẽ quay về Đội thi sau khi nộp."}
+                  ? "Candidates complete the exam through their personal account and have only one official attempt. The randomized exam from the question bank includes 40 multiple-choice questions across 6 topics and 2 essay questions at the end. The exam time is 60 minutes and cannot be paused. When time runs out, the system automatically records the result. Member scores are aggregated to determine the team's Round 1 result."
+                  : "Thí sinh thực hiện bài thi trên tài khoản cá nhân và chỉ có một lượt dự thi chính thức. Đề thi ngẫu nhiên từ ngân hàng đề bao gồm 40 câu hỏi trắc nghiệm thuộc 6 chủ đề và 2 câu tự luận ở cuối bài. Thời gian làm bài trong 60 phút, bài thi không thể tạm dừng. Khi hết thời gian làm bài, hệ thống sẽ tự động ghi nhận kết quả. Điểm số của các thành viên sẽ được tổng hợp để xác định kết quả của đội tại Vòng 1."}
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 <StatusPill>{`${ROUND1_OBJECTIVE_TOTAL} + ${ROUND1_ESSAY_TOTAL} ${locale === "en" ? "questions" : "câu hỏi"}`}</StatusPill>
