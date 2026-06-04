@@ -19,7 +19,7 @@ import type {
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
 const MAX_SEASON_IMAGE_BYTES = 2 * 1024 * 1024;
-export const seasonContentYears = ["2023", "2024", "2025", "2026"] as const;
+export const defaultSeasonContentYears = ["2023", "2024", "2025", "2026"] as const;
 
 function formatFileSize(bytes: number) {
   if (bytes >= 1024 * 1024) {
@@ -102,7 +102,7 @@ function createOrganizerSeasonArchiveDraft(year: string): EditableOrganizerSeaso
   };
 }
 
-function ensureSeasonDraftRecords(draft: SitePageContent, year: string) {
+export function ensureSeasonDraftRecords(draft: SitePageContent, year: string) {
   if (!draft.organizer.seasonStories.some((item) => item.year === year)) {
     draft.organizer.seasonStories.push(createSeasonStoryDraft(year));
   }
@@ -113,6 +113,35 @@ function ensureSeasonDraftRecords(draft: SitePageContent, year: string) {
   }
 }
 
+function compareSeasonYears(left: string, right: string) {
+  const leftNumber = Number(left);
+  const rightNumber = Number(right);
+
+  if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) {
+    return leftNumber - rightNumber;
+  }
+
+  return left.localeCompare(right);
+}
+
+export function getSeasonContentYears(content: SitePageContent) {
+  const years = new Set<string>(defaultSeasonContentYears);
+
+  content.organizer.seasonStories.forEach((item) => {
+    if (item.year.trim()) {
+      years.add(item.year.trim());
+    }
+  });
+
+  (content.organizer.seasonArchives ?? []).forEach((item) => {
+    if (item.year.trim()) {
+      years.add(item.year.trim());
+    }
+  });
+
+  return Array.from(years).sort(compareSeasonYears);
+}
+
 export function findSeasonRecordIndex(records: Array<{ year: string }>, slotYear: string) {
   const directIndex = records.findIndex((item) => item.year === slotYear);
 
@@ -120,7 +149,7 @@ export function findSeasonRecordIndex(records: Array<{ year: string }>, slotYear
     return directIndex;
   }
 
-  const slotIndex = seasonContentYears.findIndex((item) => item === slotYear);
+  const slotIndex = defaultSeasonContentYears.findIndex((item) => item === slotYear);
   return slotIndex >= 0 && slotIndex < records.length ? slotIndex : -1;
 }
 
@@ -238,7 +267,7 @@ export function SeasonLinksContentEditor({ locale, draft }: { locale: Locale; dr
         description="Open one season editor to update the public detail page, including text, top teams, statistics, and slider images."
       />
       <div className="grid gap-3 md:grid-cols-2">
-        {seasonContentYears.map((slotYear) => {
+        {getSeasonContentYears(draft).map((slotYear) => {
           const displayYear = getSeasonSlotDisplayYear(draft, slotYear);
 
           return (

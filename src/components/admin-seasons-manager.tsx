@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Images } from "lucide-react";
+import { ArrowLeft, Images, Plus } from "lucide-react";
 
 import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
 import {
+  ensureSeasonDraftRecords,
+  getSeasonContentYears,
   getSeasonSlotDisplayYear,
   SeasonArchiveContentEditor,
-  seasonContentYears,
 } from "@/components/admin-season-content-editor";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, Surface } from "@/components/site-ui";
@@ -79,8 +81,12 @@ function SeasonEditorTopBar({
 
 export function AdminSeasonsManager({ year }: { year?: string }) {
   const { locale, pageContent, saveSeasonContent } = useSiteState();
+  const router = useRouter();
   useAdminTitleScroll();
   const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
+  const [newSeasonYear, setNewSeasonYear] = useState("");
+  const [newSeasonError, setNewSeasonError] = useState("");
+  const [isAddingSeason, setIsAddingSeason] = useState(false);
 
   useEffect(() => {
     setDraft(clonePageContent(pageContent));
@@ -93,6 +99,53 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
 
   const saveDraft = async () => {
     await saveSeasonContent(pickSeasonContent(draft));
+  };
+
+  const seasonYears = useMemo(() => getSeasonContentYears(draft), [draft]);
+
+  const addSeason = async () => {
+    const normalizedYear = newSeasonYear.trim();
+    setNewSeasonError("");
+
+    if (!/^\d{4}$/.test(normalizedYear)) {
+      setNewSeasonError(
+        locale === "en"
+          ? "Enter a 4-digit season year."
+          : "Nhập năm mùa thi gồm 4 chữ số.",
+      );
+      return;
+    }
+
+    if (seasonYears.includes(normalizedYear)) {
+      setNewSeasonError(
+        locale === "en"
+          ? "This season already exists."
+          : "Mùa thi này đã tồn tại.",
+      );
+      return;
+    }
+
+    const nextDraft = clonePageContent(draft);
+    ensureSeasonDraftRecords(nextDraft, normalizedYear);
+    setIsAddingSeason(true);
+
+    try {
+      const saved = await saveSeasonContent(pickSeasonContent(nextDraft));
+      if (!saved) {
+        setNewSeasonError(
+          locale === "en"
+            ? "Could not save the new season."
+            : "Không thể lưu mùa thi mới.",
+        );
+        return;
+      }
+
+      setDraft(nextDraft);
+      setNewSeasonYear("");
+      router.push(`/admin/seasons/${encodeURIComponent(normalizedYear)}`);
+    } finally {
+      setIsAddingSeason(false);
+    }
   };
 
   if (year) {
@@ -144,8 +197,56 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
       />
 
       <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+        <div className="rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold theme-text-strong">
+                {locale === "en" ? "Add a season" : "Thêm mùa thi"}
+              </p>
+              <p className="mt-2 text-sm leading-6 theme-text-muted">
+                {locale === "en"
+                  ? "Create a new season archive record, save it, then open its editor."
+                  : "Tạo bản ghi mùa thi mới, lưu lại, rồi mở trình chỉnh sửa của mùa đó."}
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:min-w-[22rem]">
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={newSeasonYear}
+                  onChange={(event) => setNewSeasonYear(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      void addSeason();
+                    }
+                  }}
+                  placeholder={locale === "en" ? "e.g. 2027" : "Ví dụ: 2027"}
+                  className="theme-placeholder min-h-12 flex-1 rounded-2xl border theme-border theme-panel px-4 py-3 text-sm font-semibold theme-text-strong outline-none"
+                />
+                <button
+                  type="button"
+                  disabled={isAddingSeason}
+                  onClick={() => {
+                    void addSeason();
+                  }}
+                  className="theme-button-primary inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Plus className="h-4 w-4" />
+                  {locale === "en" ? "Add season" : "Thêm mùa"}
+                </button>
+              </div>
+              {newSeasonError ? (
+                <p className="text-xs font-semibold text-rose-600 dark:text-rose-200">{newSeasonError}</p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
         <div className="grid gap-3 md:grid-cols-2">
-          {seasonContentYears.map((slotYear) => {
+          {seasonYears.map((slotYear) => {
             const displayYear = getSeasonSlotDisplayYear(draft, slotYear);
 
             return (

@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 import { AdminShell } from "@/components/admin-page";
 import { AdminSeasonsManager } from "@/components/admin-seasons-manager";
 
-const seasonContentYears = ["2023", "2024", "2025", "2026"] as const;
+export const dynamicParams = true;
+const defaultSeasonContentYears = ["2023", "2024", "2025", "2026"] as const;
 
 export function generateStaticParams() {
-  return seasonContentYears.map((year) => ({ year }));
+  return defaultSeasonContentYears.map((year) => ({ year }));
 }
 
 export async function generateMetadata({
@@ -27,9 +27,6 @@ export default async function AdminSeasonDetailRoute({
   params: Promise<{ year: string }>;
 }) {
   const { year } = await params;
-  if (!seasonContentYears.includes(year as (typeof seasonContentYears)[number])) {
-    notFound();
-  }
 
   return (
     <AdminShell section="content">
