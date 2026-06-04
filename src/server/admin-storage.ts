@@ -123,13 +123,112 @@ function pushCmsReferences(
 ) {
   for (const entry of cmsEntries) {
     if (entry.payload.includes(url)) {
-      references.push({
-        label: "CMS content",
-        detail: entry.scope,
-        href: entry.scope === "site-page-content" ? "/admin/content" : undefined,
-      });
+      const specificReferences = findSpecificCmsImageReferences(entry, url);
+      if (specificReferences.length) {
+        references.push(...specificReferences);
+      } else {
+        references.push({
+          label: "CMS content",
+          detail: entry.scope,
+          href: entry.scope === "site-page-content" ? "/admin/content" : undefined,
+        });
+      }
     }
   }
+}
+
+function parseJsonPayload<T>(payload: string): T | null {
+  try {
+    return JSON.parse(payload) as T;
+  } catch {
+    return null;
+  }
+}
+
+function findSpecificCmsImageReferences(
+  entry: { scope: string; payload: string },
+  url: string,
+): AdminStorageReference[] {
+  if (entry.scope !== "site-page-content") {
+    return [];
+  }
+
+  const pageContent = parseJsonPayload<{
+    home?: {
+      testimonials?: Array<{
+        id?: string;
+        name?: string;
+        avatarImageSrc?: string;
+      }>;
+    };
+  }>(entry.payload);
+
+  if (!pageContent?.home?.testimonials) {
+    return [];
+  }
+
+  return pageContent.home.testimonials
+    .filter((testimonial) => testimonial.avatarImageSrc === url)
+    .map((testimonial) => ({
+      label: "Homepage testimonial avatar",
+      detail: testimonial.name || testimonial.id || "Testimonial",
+      href: "/admin/content/types/home-testimonials",
+    }));
+}
+
+function findNewsPostImageReferences(
+  post: {
+    slug: string;
+    titleEn: string;
+    titleVi: string;
+    coverImageSrc: string;
+    featuredImageSrc: string | null;
+    content: string;
+  },
+  url: string,
+): AdminStorageReference[] {
+  const detail = post.titleEn || post.titleVi || post.slug;
+  const href = `/admin/news/${post.slug}`;
+  const references: AdminStorageReference[] = [];
+
+  if (post.coverImageSrc === url) {
+    references.push({
+      label: "News cover image",
+      detail,
+      href,
+    });
+  }
+
+  if (post.featuredImageSrc === url) {
+    references.push({
+      label: "News featured image",
+      detail,
+      href,
+    });
+  }
+
+  const contentBlocks = parseJsonPayload<Array<{ type?: string; src?: string }>>(post.content);
+  const matchingBodyImageIndexes = contentBlocks
+    ?.map((block, index) => (block.type === "image" && block.src === url ? index : -1))
+    .filter((index) => index >= 0) ?? [];
+
+  matchingBodyImageIndexes.forEach((index) => {
+    references.push({
+      label: "News main content image",
+      detail: `${detail} - image block ${index + 1}`,
+      href,
+    });
+  });
+
+  if (post.content.includes(url) && matchingBodyImageIndexes.length === 0) {
+    references.push({
+      label: "News main content image",
+      detail,
+      href,
+    });
+  }
+
+  return references;
 }
 
 async function findImageReferences(category: AdminStorageImageCategory, storageKey: string) {
@@ -150,9 +249,17 @@ async function findImageReferences(category: AdminStorageImageCategory, storageK
         OR: [
           { coverImageSrc: url },
           { featuredImageSrc: url },
+          { content: { contains: url } },
         ],
       },
-      select: { slug: true, titleEn: true, titleVi: true },
+      select: {
+        slug: true,
+        titleEn: true,
+        titleVi: true,
+        coverImageSrc: true,
+        featuredImageSrc: true,
+        content: true,
+      },
       take: 25,
     }),
     prisma.cmsEntry.findMany({
@@ -181,11 +288,7 @@ async function findImageReferences(category: AdminStorageImageCategory, storageK
   });
 
   newsPosts.forEach((post) => {
-    references.push({
-      label: "News image",
-      detail: post.titleEn || post.titleVi || post.slug,
-      href: `/admin/news/${post.slug}`,
-    });
+    references.push(...findNewsPostImageReferences(post, url));
   });
 
   pushCmsReferences(references, cmsEntries, url);
