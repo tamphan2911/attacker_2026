@@ -1145,13 +1145,13 @@ export function DashboardPage() {
             </p>
             <p className="mt-4 theme-heading text-2xl font-semibold theme-text-strong md:text-[2.1rem]">
               {locale === "en"
-                ? "Invitations, lock approvals, and leadership actions need your response."
-                : "Các lời mời, yêu cầu khóa đội và yêu cầu đội trưởng đang chờ bạn phản hồi."}
+                ? "You have invitations and requests waiting for your response."
+                : "Bạn có các lời mời và yêu cầu đang chờ xử lý."}
             </p>
             <p className="mt-3 max-w-5xl text-sm leading-7 theme-text-muted">
               {locale === "en"
-                ? "These requests stay pinned here so the current user can resolve team-critical actions before editing the rest of the workspace."
-                : "Các yêu cầu được ghim tại đây để bạn xử lý việc quan trọng của đội trước khi tiếp tục."}
+                ? "Team-related requests, such as invitations to join, team lock, or leadership transfer, are pinned here so you can easily track and respond."
+                : "Các yêu cầu liên quan đến đội, như lời mời tham gia, khóa đội hoặc chuyển quyền đội trưởng, được ghim tại đây để bạn tiện theo dõi và phản hồi."}
             </p>
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               {incomingInvitations.map((invitation) => {
