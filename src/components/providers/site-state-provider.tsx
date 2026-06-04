@@ -81,7 +81,14 @@ import type {
   UserProfile,
 } from "@/types/site";
 
-const STORAGE_KEY = "attacker-2026-site-state-v18";
+const LEGACY_STORAGE_KEY = "attacker-2026-site-state-v18";
+const PREFERENCES_STORAGE_KEY = "attacker-2026-client-preferences-v1";
+
+interface ClientPreferencesSnapshot {
+  locale?: Locale;
+  theme?: Theme;
+  activeUserId?: string;
+}
 
 const GUEST_USER: UserProfile = {
   id: "",
@@ -309,13 +316,6 @@ function normalizeSponsorProfiles(sponsors: SponsorProfile[]): SponsorProfile[] 
   return sponsors.map(normalizeSponsorProfile);
 }
 
-function stripRound1BankQuestions(banks: Round1TestBank[]) {
-  return banks.map((bank) => ({
-    ...bank,
-    questions: [],
-  }));
-}
-
 function mergeRound1BankMetadata(
   metadataBanks: Round1TestBank[],
   currentBanks: Round1TestBank[],
@@ -329,6 +329,57 @@ function mergeRound1BankMetadata(
       questions: currentBank?.questions.length ? currentBank.questions : bank.questions,
     };
   });
+}
+
+function isLocale(value: unknown): value is Locale {
+  return value === "en" || value === "vi";
+}
+
+function isTheme(value: unknown): value is Theme {
+  return value === "light" || value === "dark";
+}
+
+function removeLocalStorageItem(key: string) {
+  try {
+    window.localStorage.removeItem(key);
+  } catch {
+    // Storage can be unavailable in private browsing or restricted WebKit contexts.
+  }
+}
+
+function normalizeClientPreferences(snapshot: unknown): ClientPreferencesSnapshot {
+  if (!snapshot || typeof snapshot !== "object") {
+    return {};
+  }
+
+  const payload = snapshot as Partial<ClientPreferencesSnapshot>;
+  return {
+    locale: isLocale(payload.locale) ? payload.locale : undefined,
+    theme: isTheme(payload.theme) ? payload.theme : undefined,
+    activeUserId: typeof payload.activeUserId === "string" ? payload.activeUserId : undefined,
+  };
+}
+
+function readClientPreferences(): ClientPreferencesSnapshot {
+  try {
+    const rawPreferences = window.localStorage.getItem(PREFERENCES_STORAGE_KEY);
+    if (rawPreferences) {
+      return normalizeClientPreferences(JSON.parse(rawPreferences));
+    }
+
+    const rawLegacySnapshot = window.localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!rawLegacySnapshot) {
+      return {};
+    }
+
+    const preferences = normalizeClientPreferences(JSON.parse(rawLegacySnapshot));
+    removeLocalStorageItem(LEGACY_STORAGE_KEY);
+    return preferences;
+  } catch {
+    removeLocalStorageItem(PREFERENCES_STORAGE_KEY);
+    removeLocalStorageItem(LEGACY_STORAGE_KEY);
+    return {};
+  }
 }
 
 function createInitialSnapshot(): AppSnapshot {
@@ -379,46 +430,34 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
   const isAuthenticated = authStatus === "authenticated" && Boolean(session?.user?.id);
 
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        setHasHydrated(true);
-        return;
+    const preferences = readClientPreferences();
+    const timeoutId = window.setTimeout(() => {
+      if (preferences.locale) {
+        setLocaleState(preferences.locale);
       }
 
-      const snapshot = JSON.parse(raw) as AppSnapshot;
-      setLocaleState(snapshot.locale);
-      setThemeState(snapshot.theme ?? "light");
-      setActiveUserIdState(snapshot.activeUserId);
-      setUsers(snapshot.users.map(normalizeUserProfile));
-      setTeams(snapshot.teams);
-      setInvitations(snapshot.invitations);
-      setLeadershipTransferRequests(
-        snapshot.leadershipTransferRequests ?? mockLeadershipTransferRequests,
-      );
-      setTeamLockRequests(snapshot.teamLockRequests ?? mockRound1TeamLockRequests);
-      setSubmissions(snapshot.submissions ?? mockSubmissions);
-      setRound1TestBanks(stripRound1BankQuestions(snapshot.round1TestBanks ?? seedRound1TestBanks));
-      setRound1Topics(
-        normalizeRound1Topics(
-          snapshot.round1Topics ?? deriveRound1TopicsFromBanks(snapshot.round1TestBanks ?? seedRound1TestBanks),
-        ),
-      );
-      setRound1Submissions(snapshot.round1Submissions ?? seedRound1Submissions);
-      setNewsPosts(snapshot.newsPosts ?? seedNewsPosts);
-      setSponsors(normalizeSponsorProfiles(snapshot.sponsors ?? seedSponsorProfiles));
-      setJudges(snapshot.judges ?? seedJudgeProfiles);
-      setTimelineItems(snapshot.timelineItems ?? seedTimelineItems);
-      setPageContent(mergePageContentWithDefaults(snapshot.pageContent ?? clonePageContent(defaultPageContent)));
-    } catch {
-      window.localStorage.removeItem(STORAGE_KEY);
-    } finally {
+      if (preferences.theme) {
+        setThemeState(preferences.theme);
+      }
+
+      if (preferences.activeUserId) {
+        setActiveUserIdState(preferences.activeUserId);
+      }
+
       setHasHydrated(true);
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
-  const persistSnapshot = useEffectEvent((snapshot: AppSnapshot) => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  const persistPreferences = useEffectEvent((snapshot: ClientPreferencesSnapshot) => {
+    try {
+      window.localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(snapshot));
+      removeLocalStorageItem(LEGACY_STORAGE_KEY);
+    } catch {
+      removeLocalStorageItem(PREFERENCES_STORAGE_KEY);
+      removeLocalStorageItem(LEGACY_STORAGE_KEY);
+    }
   });
 
   useEffect(() => {
@@ -426,26 +465,12 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    persistSnapshot({
+    persistPreferences({
       locale,
       theme,
-      activeUserId,
-      users,
-      teams,
-      invitations,
-      leadershipTransferRequests,
-      teamLockRequests,
-      submissions,
-      round1TestBanks: stripRound1BankQuestions(round1TestBanks),
-      round1Topics,
-      round1Submissions,
-      newsPosts,
-      sponsors,
-      judges,
-      timelineItems,
-      pageContent,
+      activeUserId: isAuthenticated ? "" : activeUserId,
     });
-  }, [activeUserId, hasHydrated, invitations, judges, leadershipTransferRequests, locale, newsPosts, pageContent, round1Submissions, round1TestBanks, round1Topics, sponsors, submissions, teamLockRequests, theme, timelineItems, teams, users]);
+  }, [activeUserId, hasHydrated, isAuthenticated, locale, theme]);
 
   const pushToast = (message: LocalizedText, tone: ToastTone = "info") => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -533,15 +558,19 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    void syncSiteData().catch(() => {
-      pushToast(
-        {
-          en: "Could not load the latest public site data from the backend.",
-          vi: "Không thể tải dữ liệu công khai mới nhất từ backend.",
-        },
-        "warning",
-      );
-    });
+    const timeoutId = window.setTimeout(() => {
+      void syncSiteData().catch(() => {
+        pushToast(
+          {
+            en: "Could not load the latest public site data from the backend.",
+            vi: "Không thể tải dữ liệu công khai mới nhất từ backend.",
+          },
+          "warning",
+        );
+      });
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [hasHydrated, syncSiteData]);
 
   useEffect(() => {
@@ -550,19 +579,26 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
     }
 
     if (!isAuthenticated) {
-      setActiveUserIdState("");
-      return;
+      const timeoutId = window.setTimeout(() => {
+        setActiveUserIdState("");
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
     }
 
-    void syncWorkspace().catch(() => {
-      pushToast(
-        {
-          en: "Could not sync the latest account workspace from the backend.",
-          vi: "Không thể đồng bộ workspace tài khoản mới nhất từ backend.",
-        },
-        "warning",
-      );
-    });
+    const timeoutId = window.setTimeout(() => {
+      void syncWorkspace().catch(() => {
+        pushToast(
+          {
+            en: "Could not sync the latest account workspace from the backend.",
+            vi: "Không thể đồng bộ workspace tài khoản mới nhất từ backend.",
+          },
+          "warning",
+        );
+      });
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [hasHydrated, isAuthenticated, session?.user?.id, syncWorkspace]);
 
   const currentUser = users.find((user) => user.id === activeUserId) ?? GUEST_USER;
@@ -575,15 +611,19 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    void syncAdminRound1Banks().catch(() => {
-      pushToast(
-        {
-          en: "Could not load the full Round 1 bank data for admin mode.",
-          vi: "Không thể tải đầy đủ dữ liệu ngân hàng đề Vòng 1 cho admin mode.",
-        },
-        "warning",
-      );
-    });
+    const timeoutId = window.setTimeout(() => {
+      void syncAdminRound1Banks().catch(() => {
+        pushToast(
+          {
+            en: "Could not load the full Round 1 bank data for admin mode.",
+            vi: "Không thể tải đầy đủ dữ liệu ngân hàng đề Vòng 1 cho admin mode.",
+          },
+          "warning",
+        );
+      });
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [canAccessAdminMode, hasHydrated, syncAdminRound1Banks]);
 
   const getPendingTeamLockRequests = (teamId: string, protocolId?: string) =>
