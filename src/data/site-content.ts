@@ -1551,6 +1551,18 @@ export const defaultPageContent: SitePageContent = {
             vi: "Top 50 đội được chọn theo điểm trung bình của các thành viên đủ điều kiện trong đội.",
           },
         ],
+        specificRulesRichText: {
+          en: [
+            "Only locked teams with 3 to 5 members may enter the official exam.",
+            "Every member takes one timed paper consisting of 40 objective questions and 2 essay questions.",
+            "Top 50 teams are selected by the average score of eligible team members.",
+          ].join("\n"),
+          vi: [
+            "Chỉ các đội đã khóa đội và có từ 3 đến 5 thành viên mới được vào bài thi chính thức.",
+            "Mỗi thành viên làm bài vòng 1 gồm 40 câu trắc nghiệm và 2 câu tự luận.",
+            "Top 50 đội được chọn theo điểm trung bình của các thành viên đủ điều kiện trong đội.",
+          ].join("\n"),
+        },
         roundNotes: [
           {
             en: "Each student only has one official Round 1 attempt. Once the exam starts, it cannot be paused or restarted.",
@@ -1597,6 +1609,18 @@ export const defaultPageContent: SitePageContent = {
             vi: "Bài thi vòng 2 của mỗi đội được chấm bởi 02 giám khảo theo phân bổ của Ban tổ chức.",
           },
         ],
+        specificRulesRichText: {
+          en: [
+            "Only teams qualified from Round 1 can access the Round 2 submission center.",
+            "Team leaders submit the official report file, while all previous versions remain visible for tracking.",
+            "Judge scoring selects the top 5 teams for the final and qualifies the next 20 teams for the Emerging round.",
+          ].join("\n"),
+          vi: [
+            "Chỉ các đội vượt qua Vòng 1 mới được truy cập khu vực nộp bài Vòng 2.",
+            "Báo cáo vòng 2 được nộp bởi đội trưởng.",
+            "Bài thi vòng 2 của mỗi đội được chấm bởi 02 giám khảo theo phân bổ của Ban tổ chức.",
+          ].join("\n"),
+        },
         roundNotes: [
           {
             en: "The team leader is responsible for the official upload, but all members should align on the final report version before submission.",
