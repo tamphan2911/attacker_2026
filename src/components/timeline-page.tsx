@@ -604,13 +604,10 @@ export function TimelinePage() {
                       className="group relative flex h-full min-h-[15rem] flex-col rounded-[1.55rem] border theme-border bg-[linear-gradient(135deg,rgba(255,255,255,0.98),rgba(246,249,252,0.96))] px-4 py-4 text-left shadow-[0_18px_40px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_22px_46px_rgba(15,23,42,0.1)] active:scale-[0.99] dark:bg-[linear-gradient(135deg,rgba(11,20,34,0.92),rgba(17,24,39,0.88))] dark:shadow-none"
                     >
                       <span className={`absolute inset-x-5 bottom-0 h-1 rounded-full bg-current opacity-30 ${phase.phase === "general" ? "text-violet-500 dark:text-violet-300" : phase.phase === "round-1" ? "text-sky-500 dark:text-sky-300" : phase.phase === "round-2" ? "text-emerald-500 dark:text-emerald-300" : "text-amber-500 dark:text-amber-300"}`} />
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start">
                         <div className={`inline-flex h-11 w-11 items-center justify-center rounded-[1rem] border ${phase.iconClass}`}>
                           <Icon className="h-4.5 w-4.5" />
                         </div>
-                        <span className={`inline-flex items-center rounded-full border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] ${phase.statusClass}`}>
-                          {phase.items.length} {pickText(locale, pageContent.timelinePage.stepsLabel)}
-                        </span>
                       </div>
 
                       <p className="mt-4 text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
