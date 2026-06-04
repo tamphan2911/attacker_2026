@@ -310,9 +310,9 @@ function Round1ConfirmDialog({
 
         <div className="space-y-4 overflow-y-auto px-6 py-6">
           {blockingWarning ? (
-            <div className="rounded-[1.5rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-4 py-4 text-amber-950 shadow-[0_16px_38px_rgba(245,158,11,0.12)] dark:border-amber-300/24 dark:bg-[linear-gradient(135deg,rgba(120,53,15,0.38),rgba(113,63,18,0.28))] dark:text-amber-100">
+            <div className="round1-warning-card rounded-[1.5rem] px-4 py-4">
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-amber-700/18 bg-amber-400/20 dark:border-amber-200/20 dark:bg-amber-300/14">
+                <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-current/18 bg-current/10">
                   <AlertTriangle className="h-4.5 w-4.5" />
                 </span>
                 <div className="min-w-0">
@@ -1467,7 +1467,7 @@ export function Round1ExamPage() {
           </Link>
 
           {pageError ? (
-            <div className="rounded-[1.5rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-5 py-4 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+            <div className="round1-warning-card rounded-[1.5rem] px-5 py-4 text-sm leading-7">
               {pageError}
             </div>
           ) : null}
@@ -1729,7 +1729,7 @@ export function Round1ExamPage() {
       {session && !existingSubmission ? (
         <>
           {captureWarning ? (
-            <div className="pointer-events-none fixed bottom-5 right-5 z-[75] max-w-sm rounded-[1.4rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.98),rgba(255,237,213,0.96))] px-4 py-3.5 text-sm leading-7 text-amber-950 shadow-[0_18px_44px_rgba(122,74,12,0.16)] dark:border-amber-300/22 dark:bg-[linear-gradient(135deg,rgba(120,53,15,0.42),rgba(113,63,18,0.34))] dark:text-amber-100">
+            <div className="round1-warning-card pointer-events-none fixed bottom-5 right-5 z-[75] max-w-sm rounded-[1.4rem] px-4 py-3.5 text-sm leading-7">
               <div className="flex items-start gap-3">
                 <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
                 <p>{captureWarning}</p>
@@ -1760,7 +1760,7 @@ export function Round1ExamPage() {
       </div>
 
       {pageError ? (
-        <div className="rounded-[1.5rem] border border-amber-700/22 bg-[linear-gradient(135deg,rgba(255,251,235,0.98),rgba(254,243,199,0.94))] px-5 py-4 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+        <div className="round1-warning-card rounded-[1.5rem] px-5 py-4 text-sm leading-7">
           {pageError}
         </div>
       ) : null}
@@ -2048,7 +2048,7 @@ export function Round1ExamPage() {
                     className="theme-placeholder w-full rounded-[1.5rem] border theme-border theme-panel px-5 py-4 text-sm leading-7 theme-text-strong outline-none"
                   />
                   {essayPasteWarning ? (
-                    <div className="rounded-[1.35rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+                    <div className="round1-warning-card rounded-[1.35rem] px-4 py-3.5 text-sm leading-7">
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
                         <p className="font-medium">{essayPasteWarning}</p>
@@ -2056,7 +2056,7 @@ export function Round1ExamPage() {
                     </div>
                   ) : null}
                   {essayWordLimitWarning ? (
-                    <div className="rounded-[1.35rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+                    <div className="round1-warning-card rounded-[1.35rem] px-4 py-3.5 text-sm leading-7">
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
                         <p className="font-medium">{essayWordLimitWarning}</p>
@@ -2087,7 +2087,7 @@ export function Round1ExamPage() {
                     </div>
                   </div>
                   {currentEssayAiGuard.shouldWarn ? (
-                    <div className="rounded-[1.35rem] border border-amber-700/24 bg-[linear-gradient(135deg,rgba(255,249,219,0.96),rgba(255,237,213,0.92))] px-4 py-3.5 text-sm leading-7 text-amber-950 dark:border-amber-300/22 dark:bg-amber-300/12 dark:text-amber-100">
+                    <div className="round1-warning-card rounded-[1.35rem] px-4 py-3.5 text-sm leading-7">
                       <div className="flex items-start gap-3">
                         <AlertTriangle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
                         <div className="space-y-1.5">
