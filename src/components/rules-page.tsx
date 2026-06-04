@@ -624,7 +624,7 @@ export function RulesPage() {
                         <div className="mt-5 space-y-6">
                           <div>
                             <p className="theme-heading text-lg font-semibold theme-text-strong">
-                              {locale === "en" ? "Emerging round" : "Vòng Đội ươm mầm"}
+                              {locale === "en" ? "Emerging round" : "Bảng Ươm mầm"}
                             </p>
                             <div className="mt-3">
                               <RichRulesText
