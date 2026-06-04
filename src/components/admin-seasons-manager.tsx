@@ -3,9 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Images, Plus } from "lucide-react";
+import { ArrowLeft, Images, Plus, Trash2 } from "lucide-react";
 
-import { ADMIN_TITLE_ID, useAdminTitleScroll } from "@/components/admin-title-scroll";
+import {
+  ADMIN_TITLE_ID,
+  useAdminTitleScroll,
+} from "@/components/admin-title-scroll";
 import {
   ensureSeasonDraftRecords,
   getSeasonContentYears,
@@ -83,10 +86,16 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
   const { locale, pageContent, saveSeasonContent } = useSiteState();
   const router = useRouter();
   useAdminTitleScroll();
-  const [draft, setDraft] = useState<SitePageContent>(() => clonePageContent(pageContent));
+  const [draft, setDraft] = useState<SitePageContent>(() =>
+    clonePageContent(pageContent),
+  );
   const [newSeasonYear, setNewSeasonYear] = useState("");
   const [newSeasonError, setNewSeasonError] = useState("");
   const [isAddingSeason, setIsAddingSeason] = useState(false);
+  const [seasonActionError, setSeasonActionError] = useState("");
+  const [deletingSeasonYear, setDeletingSeasonYear] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     setDraft(clonePageContent(pageContent));
@@ -148,6 +157,48 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
     }
   };
 
+  const deleteSeason = async (slotYear: string) => {
+    const displayYear = getSeasonSlotDisplayYear(draft, slotYear);
+    setSeasonActionError("");
+
+    const confirmed = window.confirm(
+      locale === "en"
+        ? `Delete Season ${displayYear}? This removes the season card and its detail-page archive content.`
+        : `Xóa Mùa ${displayYear}? Thao tác này sẽ xóa thẻ mùa thi và nội dung lưu trữ của trang chi tiết.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const nextDraft = clonePageContent(draft);
+    nextDraft.organizer.seasonStories =
+      nextDraft.organizer.seasonStories.filter(
+        (item) => item.year !== slotYear,
+      );
+    nextDraft.organizer.seasonArchives = (
+      nextDraft.organizer.seasonArchives ?? []
+    ).filter((item) => item.year !== slotYear);
+
+    setDeletingSeasonYear(slotYear);
+
+    try {
+      const saved = await saveSeasonContent(pickSeasonContent(nextDraft));
+      if (!saved) {
+        setSeasonActionError(
+          locale === "en"
+            ? "Could not delete this season."
+            : "Không thể xóa mùa thi này.",
+        );
+        return;
+      }
+
+      setDraft(nextDraft);
+    } finally {
+      setDeletingSeasonYear(null);
+    }
+  };
+
   if (year) {
     const displayYear = getSeasonSlotDisplayYear(draft, year);
 
@@ -162,7 +213,9 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
         </Link>
 
         <SeasonEditorTopBar
-          title={locale === "en" ? `Season ${displayYear}` : `Mùa ${displayYear}`}
+          title={
+            locale === "en" ? `Season ${displayYear}` : `Mùa ${displayYear}`
+          }
           description={
             locale === "en"
               ? "Edit the public season detail page. This save action only updates season content and cannot overwrite other page copy."
@@ -175,7 +228,12 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
           }}
         />
 
-        <SeasonArchiveContentEditor locale={locale} draft={draft} setDraft={setDraft} year={year} />
+        <SeasonArchiveContentEditor
+          locale={locale}
+          draft={draft}
+          setDraft={setDraft}
+          year={year}
+        />
       </div>
     );
   }
@@ -216,7 +274,11 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
                   inputMode="numeric"
                   pattern="[0-9]*"
                   value={newSeasonYear}
-                  onChange={(event) => setNewSeasonYear(event.target.value.replace(/\D/g, "").slice(0, 4))}
+                  onChange={(event) =>
+                    setNewSeasonYear(
+                      event.target.value.replace(/\D/g, "").slice(0, 4),
+                    )
+                  }
                   onKeyDown={(event) => {
                     if (event.key === "Enter") {
                       event.preventDefault();
@@ -239,7 +301,14 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
                 </button>
               </div>
               {newSeasonError ? (
-                <p className="text-xs font-semibold text-rose-600 dark:text-rose-200">{newSeasonError}</p>
+                <p className="text-xs font-semibold text-rose-600 dark:text-rose-200">
+                  {newSeasonError}
+                </p>
+              ) : null}
+              {seasonActionError ? (
+                <p className="text-xs font-semibold text-rose-600 dark:text-rose-200">
+                  {seasonActionError}
+                </p>
               ) : null}
             </div>
           </div>
@@ -250,15 +319,23 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
             const displayYear = getSeasonSlotDisplayYear(draft, slotYear);
 
             return (
-              <Link key={slotYear} href={`/admin/seasons/${slotYear}`} className="block">
-                <div className="group rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4 transition hover:border-sky-300/40 hover:bg-[rgba(23,114,208,0.06)]">
-                  <div className="flex items-center gap-3">
+              <div
+                key={slotYear}
+                className="group rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4 transition hover:border-sky-300/40 hover:bg-[rgba(23,114,208,0.06)]"
+              >
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/admin/seasons/${slotYear}`}
+                    className="flex min-w-0 flex-1 items-center gap-3"
+                  >
                     <span className="theme-brand-gradient flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_16px_34px_rgba(23,114,208,0.18)]">
                       <Images className="h-5 w-5" />
                     </span>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold theme-text-strong">
-                        {locale === "en" ? `Season ${displayYear}` : `Mùa ${displayYear}`}
+                        {locale === "en"
+                          ? `Season ${displayYear}`
+                          : `Mùa ${displayYear}`}
                       </p>
                       <p className="mt-1 text-xs leading-5 theme-text-muted">
                         {locale === "en"
@@ -266,11 +343,34 @@ export function AdminSeasonsManager({ year }: { year?: string }) {
                           : "Chỉnh nội dung lưu trữ, top đội, thống kê và ảnh slider."}
                       </p>
                     </div>
-                  </div>
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={deletingSeasonYear === slotYear}
+                    onClick={() => {
+                      void deleteSeason(slotYear);
+                    }}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-rose-300/30 bg-rose-500/10 text-rose-600 transition hover:-translate-y-0.5 hover:border-rose-300/60 hover:bg-rose-500/15 disabled:cursor-not-allowed disabled:opacity-50 dark:text-rose-200"
+                    aria-label={
+                      locale === "en"
+                        ? `Delete season ${displayYear}`
+                        : `Xóa mùa ${displayYear}`
+                    }
+                    title={locale === "en" ? "Delete season" : "Xóa mùa thi"}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-              </Link>
+              </div>
             );
           })}
+          {seasonYears.length === 0 ? (
+            <div className="rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-5 text-sm theme-text-muted md:col-span-2">
+              {locale === "en"
+                ? "No seasons yet. Add the first season above."
+                : "Chưa có mùa thi. Hãy thêm mùa đầu tiên ở phía trên."}
+            </div>
+          ) : null}
         </div>
       </Surface>
     </div>

@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, type ChangeEvent, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useState,
+  type ChangeEvent,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { ArrowRight, Images, Plus, Trash2, Upload } from "lucide-react";
 
 import { pickText } from "@/lib/site";
@@ -18,8 +24,13 @@ import type {
 
 const fieldClassName =
   "theme-placeholder w-full rounded-2xl border theme-border theme-panel px-4 py-3 text-sm theme-text-strong outline-none";
-const MAX_SEASON_IMAGE_BYTES = 2 * 1024 * 1024;
-export const defaultSeasonContentYears = ["2023", "2024", "2025", "2026"] as const;
+const MAX_SEASON_IMAGE_BYTES = 10 * 1024 * 1024;
+export const defaultSeasonContentYears = [
+  "2023",
+  "2024",
+  "2025",
+  "2026",
+] as const;
 
 function formatFileSize(bytes: number) {
   if (bytes >= 1024 * 1024) {
@@ -33,7 +44,10 @@ function clonePageContent(content: SitePageContent): SitePageContent {
   return JSON.parse(JSON.stringify(content)) as SitePageContent;
 }
 
-function updateDraftContent(current: SitePageContent, recipe: (draft: SitePageContent) => void) {
+function updateDraftContent(
+  current: SitePageContent,
+  recipe: (draft: SitePageContent) => void,
+) {
   const next = clonePageContent(current);
   recipe(next);
   return next;
@@ -47,6 +61,7 @@ function createSeasonStoryDraft(year: string) {
   return {
     year,
     image: "",
+    featuredImage: "",
     label: createBlankLocalizedText(),
     title: createBlankLocalizedText(),
     body: createBlankLocalizedText(),
@@ -54,7 +69,10 @@ function createSeasonStoryDraft(year: string) {
   };
 }
 
-function createSeasonArchiveTeamDraft(index: number, year = "2026"): EditableOrganizerSeasonTeam {
+function createSeasonArchiveTeamDraft(
+  index: number,
+  year = "2026",
+): EditableOrganizerSeasonTeam {
   const rankLabels = [
     { en: "1st place", vi: "Hạng 1" },
     { en: "2nd place", vi: "Hạng 2" },
@@ -66,7 +84,10 @@ function createSeasonArchiveTeamDraft(index: number, year = "2026"): EditableOrg
   return {
     rank: rankLabels[index] ?? { en: "Finalist", vi: "Đội Chung kết" },
     name: { en: `Team ${index + 1}`, vi: `Đội ${index + 1}` },
-    projectName: { en: `Attacker ${year} project`, vi: `Dự án Attacker ${year}` },
+    projectName: {
+      en: `Attacker ${year} project`,
+      vi: `Dự án Attacker ${year}`,
+    },
     projectDescription: createBlankLocalizedText(),
     members: [
       { name: "", university: "", major: "" },
@@ -76,7 +97,10 @@ function createSeasonArchiveTeamDraft(index: number, year = "2026"): EditableOrg
   };
 }
 
-function createSeasonArchiveSlideDraft(index: number, year = "2026"): EditableOrganizerSeasonSlide {
+function createSeasonArchiveSlideDraft(
+  index: number,
+  year = "2026",
+): EditableOrganizerSeasonSlide {
   return {
     image: "",
     alt: {
@@ -86,7 +110,9 @@ function createSeasonArchiveSlideDraft(index: number, year = "2026"): EditableOr
   };
 }
 
-function createOrganizerSeasonArchiveDraft(year: string): EditableOrganizerSeasonArchive {
+function createOrganizerSeasonArchiveDraft(
+  year: string,
+): EditableOrganizerSeasonArchive {
   return {
     year,
     overviewTitle: createBlankLocalizedText(),
@@ -97,8 +123,12 @@ function createOrganizerSeasonArchiveDraft(year: string): EditableOrganizerSeaso
       { value: "", label: createBlankLocalizedText() },
       { value: "", label: { en: "cash reward", vi: "Hiện kim" } },
     ],
-    topTeams: Array.from({ length: 5 }, (_, index) => createSeasonArchiveTeamDraft(index, year)),
-    photoSlides: Array.from({ length: 10 }, (_, index) => createSeasonArchiveSlideDraft(index, year)),
+    topTeams: Array.from({ length: 5 }, (_, index) =>
+      createSeasonArchiveTeamDraft(index, year),
+    ),
+    photoSlides: Array.from({ length: 10 }, (_, index) =>
+      createSeasonArchiveSlideDraft(index, year),
+    ),
   };
 }
 
@@ -109,7 +139,9 @@ export function ensureSeasonDraftRecords(draft: SitePageContent, year: string) {
 
   draft.organizer.seasonArchives = draft.organizer.seasonArchives ?? [];
   if (!draft.organizer.seasonArchives.some((item) => item.year === year)) {
-    draft.organizer.seasonArchives.push(createOrganizerSeasonArchiveDraft(year));
+    draft.organizer.seasonArchives.push(
+      createOrganizerSeasonArchiveDraft(year),
+    );
   }
 }
 
@@ -126,16 +158,7 @@ function compareSeasonYears(left: string, right: string) {
 
 export function getSeasonContentYears(content: SitePageContent) {
   const years = new Set<string>();
-  const slotCount = Math.max(defaultSeasonContentYears.length, content.organizer.seasonStories.length);
-
-  for (let index = 0; index < slotCount; index += 1) {
-    const year = content.organizer.seasonStories[index]?.year.trim() || defaultSeasonContentYears[index];
-    if (year) {
-      years.add(year);
-    }
-  }
-
-  content.organizer.seasonStories.slice(slotCount).forEach((item) => {
+  content.organizer.seasonStories.forEach((item) => {
     if (item.year.trim()) {
       years.add(item.year.trim());
     }
@@ -150,19 +173,21 @@ export function getSeasonContentYears(content: SitePageContent) {
   return Array.from(years).sort(compareSeasonYears);
 }
 
-export function findSeasonRecordIndex(records: Array<{ year: string }>, slotYear: string) {
-  const directIndex = records.findIndex((item) => item.year === slotYear);
-
-  if (directIndex >= 0) {
-    return directIndex;
-  }
-
-  const slotIndex = defaultSeasonContentYears.findIndex((item) => item === slotYear);
-  return slotIndex >= 0 && slotIndex < records.length ? slotIndex : -1;
+export function findSeasonRecordIndex(
+  records: Array<{ year: string }>,
+  slotYear: string,
+) {
+  return records.findIndex((item) => item.year === slotYear);
 }
 
-export function getSeasonSlotDisplayYear(content: SitePageContent, slotYear: string) {
-  const storyIndex = findSeasonRecordIndex(content.organizer.seasonStories, slotYear);
+export function getSeasonSlotDisplayYear(
+  content: SitePageContent,
+  slotYear: string,
+) {
+  const storyIndex = findSeasonRecordIndex(
+    content.organizer.seasonStories,
+    slotYear,
+  );
   return content.organizer.seasonStories[storyIndex]?.year ?? slotYear;
 }
 
@@ -170,7 +195,13 @@ function unoptimizedImage(src: string) {
   return src.startsWith("/api/hero-slide-images/") || src.startsWith("data:");
 }
 
-function BlockIntro({ title, description }: { title: string; description: string }) {
+function BlockIntro({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
   return (
     <div>
       <p className="text-sm font-semibold theme-text-strong">{title}</p>
@@ -240,7 +271,10 @@ function LocalizedListEditor({
         </button>
       </div>
       {items.map((item, index) => (
-        <div key={`${itemLabel}-${index}`} className="space-y-3 rounded-2xl border theme-border theme-panel-subtle px-3 py-3">
+        <div
+          key={`${itemLabel}-${index}`}
+          className="space-y-3 rounded-2xl border theme-border theme-panel-subtle px-3 py-3"
+        >
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] theme-eyebrow">
               {itemLabel} {index + 1}
@@ -267,7 +301,13 @@ function LocalizedListEditor({
   );
 }
 
-export function SeasonLinksContentEditor({ locale, draft }: { locale: Locale; draft: SitePageContent }) {
+export function SeasonLinksContentEditor({
+  locale,
+  draft,
+}: {
+  locale: Locale;
+  draft: SitePageContent;
+}) {
   return (
     <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
       <BlockIntro
@@ -279,25 +319,31 @@ export function SeasonLinksContentEditor({ locale, draft }: { locale: Locale; dr
           const displayYear = getSeasonSlotDisplayYear(draft, slotYear);
 
           return (
-          <Link key={slotYear} href={`/admin/seasons/${slotYear}`} className="block">
-            <div className="group rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4 transition hover:border-sky-300/40 hover:bg-[rgba(23,114,208,0.06)]">
-              <div className="flex items-center gap-3">
-                <span className="theme-brand-gradient flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_16px_34px_rgba(23,114,208,0.18)]">
-                  <Images className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold theme-text-strong">
-                    {locale === "en" ? `Season ${displayYear}` : `Mùa ${displayYear}`}
-                  </p>
-                  <p className="mt-1 text-xs leading-5 theme-text-muted">
-                    {locale === "en"
-                      ? "Edit archive text, top team profiles, stats, and slider photos."
-                      : "Chỉnh nội dung lưu trữ, top đội, thống kê và ảnh slider."}
-                  </p>
+            <Link
+              key={slotYear}
+              href={`/admin/seasons/${slotYear}`}
+              className="block"
+            >
+              <div className="group rounded-[1.35rem] border theme-border theme-panel-subtle px-4 py-4 transition hover:border-sky-300/40 hover:bg-[rgba(23,114,208,0.06)]">
+                <div className="flex items-center gap-3">
+                  <span className="theme-brand-gradient flex h-11 w-11 items-center justify-center rounded-2xl text-white shadow-[0_16px_34px_rgba(23,114,208,0.18)]">
+                    <Images className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold theme-text-strong">
+                      {locale === "en"
+                        ? `Season ${displayYear}`
+                        : `Mùa ${displayYear}`}
+                    </p>
+                    <p className="mt-1 text-xs leading-5 theme-text-muted">
+                      {locale === "en"
+                        ? "Edit archive text, top team profiles, stats, and slider photos."
+                        : "Chỉnh nội dung lưu trữ, top đội, thống kê và ảnh slider."}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Link>
+            </Link>
           );
         })}
       </div>
@@ -317,7 +363,9 @@ export function SeasonArchiveContentEditor({
   year: string;
 }) {
   const [imageUploadError, setImageUploadError] = useState("");
-  const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
+  const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(
+    null,
+  );
   const storyIndex = findSeasonRecordIndex(draft.organizer.seasonStories, year);
   const seasonArchives = draft.organizer.seasonArchives ?? [];
   const archiveIndex = findSeasonRecordIndex(seasonArchives, year);
@@ -340,7 +388,11 @@ export function SeasonArchiveContentEditor({
     applyImageUrl: (next: SitePageContent, imageUrl: string) => void,
   ) => {
     if (!file.type.startsWith("image/")) {
-      setImageUploadError(locale === "en" ? "Only image files are allowed." : "Chỉ chấp nhận tệp hình ảnh.");
+      setImageUploadError(
+        locale === "en"
+          ? "Only image files are allowed."
+          : "Chỉ chấp nhận tệp hình ảnh.",
+      );
       return;
     }
     if (file.size > MAX_SEASON_IMAGE_BYTES) {
@@ -358,15 +410,21 @@ export function SeasonArchiveContentEditor({
     setImageUploadError("");
 
     try {
-      const response = await fetch("/api/admin/content/hero-slides/image", {
+      const response = await fetch("/api/admin/seasons/image", {
         method: "POST",
         body: formData,
       });
-      const payload = (await response.json().catch(() => null)) as { imageUrl?: string; error?: string } | null;
+      const payload = (await response.json().catch(() => null)) as {
+        imageUrl?: string;
+        error?: string;
+      } | null;
 
       if (!response.ok || !payload?.imageUrl) {
         throw new Error(
-          payload?.error || (locale === "en" ? "The image could not be uploaded." : "Không thể tải ảnh."),
+          payload?.error ||
+            (locale === "en"
+              ? "The image could not be uploaded."
+              : "Không thể tải ảnh."),
         );
       }
 
@@ -433,67 +491,164 @@ export function SeasonArchiveContentEditor({
       <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
         <BlockIntro
           title="Hero and season card"
-          description="These fields control the top hero and the season card on the organizer page."
+          description="Hero image controls the season detail page. Featured image controls the season cards on the competition and organizer pages."
         />
-        <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-          <div className="space-y-3">
-            <div className="overflow-hidden rounded-[1.35rem] border theme-border theme-panel-subtle">
-              <div className="relative aspect-[4/3]">
-                {story.image ? (
-                  <Image
-                    src={story.image}
-                    alt={pickText(locale, story.title)}
-                    fill
-                    sizes="260px"
-                    unoptimized={unoptimizedImage(story.image)}
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center text-sm theme-text-soft">
-                    {locale === "en" ? "No image" : "Chưa có ảnh"}
-                  </div>
-                )}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,560px)_minmax(0,1fr)]">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="space-y-3 rounded-[1.35rem] border theme-border theme-panel-subtle p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                {locale === "en" ? "Detail hero" : "Hero trang chi tiết"}
+              </p>
+              <div className="overflow-hidden rounded-[1.1rem] border theme-border theme-panel-subtle">
+                <div className="relative aspect-[4/3]">
+                  {story.image ? (
+                    <Image
+                      src={story.image}
+                      alt={pickText(locale, story.title)}
+                      fill
+                      sizes="280px"
+                      unoptimized={unoptimizedImage(story.image)}
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-sm theme-text-soft">
+                      {locale === "en" ? "No image" : "Chưa có ảnh"}
+                    </div>
+                  )}
+                </div>
               </div>
+              <label className="theme-button-secondary inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold">
+                <Upload className="h-4 w-4" />
+                {uploadingImageKey === "hero"
+                  ? locale === "en"
+                    ? "Uploading..."
+                    : "Đang tải..."
+                  : locale === "en"
+                    ? "Upload hero image"
+                    : "Tải ảnh hero"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingImageKey === "hero"}
+                  className="hidden"
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    if (!file) return;
+                    void uploadSeasonImage(file, "hero", (next, imageUrl) => {
+                      const nextStoryIndex = findSeasonRecordIndex(
+                        next.organizer.seasonStories,
+                        year,
+                      );
+                      if (nextStoryIndex >= 0)
+                        next.organizer.seasonStories[nextStoryIndex].image =
+                          imageUrl;
+                    });
+                  }}
+                />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm theme-text-muted">
+                  Hero image path
+                </span>
+                <input
+                  value={story.image}
+                  onChange={(event) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.organizer.seasonStories[storyIndex].image =
+                          event.target.value;
+                      }),
+                    )
+                  }
+                  className={fieldClassName}
+                />
+              </label>
             </div>
-            <label className="theme-button-secondary inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold">
-              <Upload className="h-4 w-4" />
-              {uploadingImageKey === "hero"
-                ? locale === "en"
-                  ? "Uploading..."
-                  : "Đang tải..."
-                : locale === "en"
-                  ? "Upload hero image"
-                  : "Tải ảnh hero"}
-              <input
-                type="file"
-                accept="image/*"
-                disabled={uploadingImageKey === "hero"}
-                className="hidden"
-                onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                  const file = event.target.files?.[0];
-                  event.target.value = "";
-                  if (!file) return;
-                  void uploadSeasonImage(file, "hero", (next, imageUrl) => {
-                    const nextStoryIndex = findSeasonRecordIndex(next.organizer.seasonStories, year);
-                    if (nextStoryIndex >= 0) next.organizer.seasonStories[nextStoryIndex].image = imageUrl;
-                  });
-                }}
-              />
-            </label>
-            <label className="space-y-2">
-              <span className="text-sm theme-text-muted">Hero image path</span>
-              <input
-                value={story.image}
-                onChange={(event) =>
-                  setDraft((current) =>
-                    updateDraftContent(current, (next) => {
-                      next.organizer.seasonStories[storyIndex].image = event.target.value;
-                    }),
-                  )
-                }
-                className={fieldClassName}
-              />
-            </label>
+            <div className="space-y-3 rounded-[1.35rem] border theme-border theme-panel-subtle p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] theme-eyebrow">
+                {locale === "en"
+                  ? "Competition featured image"
+                  : "Ảnh nổi bật trên trang cuộc thi"}
+              </p>
+              <div className="overflow-hidden rounded-[1.1rem] border theme-border theme-panel-subtle">
+                <div className="relative aspect-[4/3]">
+                  {story.featuredImage || story.image ? (
+                    <Image
+                      src={story.featuredImage || story.image}
+                      alt={pickText(locale, story.title)}
+                      fill
+                      sizes="280px"
+                      unoptimized={unoptimizedImage(
+                        story.featuredImage || story.image,
+                      )}
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-sm theme-text-soft">
+                      {locale === "en" ? "No image" : "Chưa có ảnh"}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <label className="theme-button-secondary inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold">
+                <Upload className="h-4 w-4" />
+                {uploadingImageKey === "featured"
+                  ? locale === "en"
+                    ? "Uploading..."
+                    : "Đang tải..."
+                  : locale === "en"
+                    ? "Upload featured image"
+                    : "Tải ảnh nổi bật"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={uploadingImageKey === "featured"}
+                  className="hidden"
+                  onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    if (!file) return;
+                    void uploadSeasonImage(
+                      file,
+                      "featured",
+                      (next, imageUrl) => {
+                        const nextStoryIndex = findSeasonRecordIndex(
+                          next.organizer.seasonStories,
+                          year,
+                        );
+                        if (nextStoryIndex >= 0)
+                          next.organizer.seasonStories[
+                            nextStoryIndex
+                          ].featuredImage = imageUrl;
+                      },
+                    );
+                  }}
+                />
+              </label>
+              <label className="space-y-2">
+                <span className="text-sm theme-text-muted">
+                  Featured image path
+                </span>
+                <input
+                  value={story.featuredImage ?? ""}
+                  placeholder={
+                    locale === "en"
+                      ? "Falls back to hero image when empty"
+                      : "Để trống sẽ dùng ảnh hero"
+                  }
+                  onChange={(event) =>
+                    setDraft((current) =>
+                      updateDraftContent(current, (next) => {
+                        next.organizer.seasonStories[storyIndex].featuredImage =
+                          event.target.value;
+                      }),
+                    )
+                  }
+                  className={fieldClassName}
+                />
+              </label>
+            </div>
           </div>
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-[160px_minmax(0,1fr)]">
@@ -505,15 +660,23 @@ export function SeasonArchiveContentEditor({
                     const nextYear = event.target.value;
                     setDraft((current) =>
                       updateDraftContent(current, (next) => {
-                        const nextStoryIndex = findSeasonRecordIndex(next.organizer.seasonStories, year);
-                        const nextArchiveIndex = findSeasonRecordIndex(next.organizer.seasonArchives ?? [], year);
+                        const nextStoryIndex = findSeasonRecordIndex(
+                          next.organizer.seasonStories,
+                          year,
+                        );
+                        const nextArchiveIndex = findSeasonRecordIndex(
+                          next.organizer.seasonArchives ?? [],
+                          year,
+                        );
 
                         if (nextStoryIndex >= 0) {
-                          next.organizer.seasonStories[nextStoryIndex].year = nextYear;
+                          next.organizer.seasonStories[nextStoryIndex].year =
+                            nextYear;
                         }
 
                         if (nextArchiveIndex >= 0) {
-                          next.organizer.seasonArchives[nextArchiveIndex].year = nextYear;
+                          next.organizer.seasonArchives[nextArchiveIndex].year =
+                            nextYear;
                         }
                       }),
                     );
@@ -528,7 +691,8 @@ export function SeasonArchiveContentEditor({
                 onChange={(language, value) =>
                   setDraft((current) =>
                     updateDraftContent(current, (next) => {
-                      next.organizer.seasonStories[storyIndex].label[language] = value;
+                      next.organizer.seasonStories[storyIndex].label[language] =
+                        value;
                     }),
                   )
                 }
@@ -541,7 +705,8 @@ export function SeasonArchiveContentEditor({
               onChange={(language, value) =>
                 setDraft((current) =>
                   updateDraftContent(current, (next) => {
-                    next.organizer.seasonStories[storyIndex].title[language] = value;
+                    next.organizer.seasonStories[storyIndex].title[language] =
+                      value;
                   }),
                 )
               }
@@ -553,7 +718,8 @@ export function SeasonArchiveContentEditor({
               onChange={(language, value) =>
                 setDraft((current) =>
                   updateDraftContent(current, (next) => {
-                    next.organizer.seasonStories[storyIndex].body[language] = value;
+                    next.organizer.seasonStories[storyIndex].body[language] =
+                      value;
                   }),
                 )
               }
@@ -566,23 +732,28 @@ export function SeasonArchiveContentEditor({
               onChange={(itemIndex, language, value) =>
                 setDraft((current) =>
                   updateDraftContent(current, (next) => {
-                    next.organizer.seasonStories[storyIndex].stats[itemIndex][language] = value;
+                    next.organizer.seasonStories[storyIndex].stats[itemIndex][
+                      language
+                    ] = value;
                   }),
                 )
               }
               onAdd={() =>
                 setDraft((current) =>
                   updateDraftContent(current, (next) => {
-                    next.organizer.seasonStories[storyIndex].stats.push(createBlankLocalizedText());
+                    next.organizer.seasonStories[storyIndex].stats.push(
+                      createBlankLocalizedText(),
+                    );
                   }),
                 )
               }
               onRemove={(itemIndex) =>
                 setDraft((current) =>
                   updateDraftContent(current, (next) => {
-                    next.organizer.seasonStories[storyIndex].stats = next.organizer.seasonStories[
-                      storyIndex
-                    ].stats.filter((_, currentIndex) => currentIndex !== itemIndex);
+                    next.organizer.seasonStories[storyIndex].stats =
+                      next.organizer.seasonStories[storyIndex].stats.filter(
+                        (_, currentIndex) => currentIndex !== itemIndex,
+                      );
                   }),
                 )
               }
@@ -603,7 +774,9 @@ export function SeasonArchiveContentEditor({
           onChange={(language, value) =>
             setDraft((current) =>
               updateDraftContent(current, (next) => {
-                next.organizer.seasonArchives[archiveIndex].overviewTitle[language] = value;
+                next.organizer.seasonArchives[archiveIndex].overviewTitle[
+                  language
+                ] = value;
               }),
             )
           }
@@ -616,30 +789,38 @@ export function SeasonArchiveContentEditor({
           onChange={(itemIndex, language, value) =>
             setDraft((current) =>
               updateDraftContent(current, (next) => {
-                next.organizer.seasonArchives[archiveIndex].overview[itemIndex][language] = value;
+                next.organizer.seasonArchives[archiveIndex].overview[itemIndex][
+                  language
+                ] = value;
               }),
             )
           }
           onAdd={() =>
             setDraft((current) =>
               updateDraftContent(current, (next) => {
-                next.organizer.seasonArchives[archiveIndex].overview.push(createBlankLocalizedText());
+                next.organizer.seasonArchives[archiveIndex].overview.push(
+                  createBlankLocalizedText(),
+                );
               }),
             )
           }
           onRemove={(itemIndex) =>
             setDraft((current) =>
               updateDraftContent(current, (next) => {
-                next.organizer.seasonArchives[archiveIndex].overview = next.organizer.seasonArchives[
-                  archiveIndex
-                ].overview.filter((_, currentIndex) => currentIndex !== itemIndex);
+                next.organizer.seasonArchives[archiveIndex].overview =
+                  next.organizer.seasonArchives[archiveIndex].overview.filter(
+                    (_, currentIndex) => currentIndex !== itemIndex,
+                  );
               }),
             )
           }
         />
         <div className="grid gap-3 md:grid-cols-2">
           {archive.stats.map((stat, statIndex) => (
-            <div key={`season-stat-${statIndex}`} className="rounded-[1.25rem] border theme-border px-4 py-4">
+            <div
+              key={`season-stat-${statIndex}`}
+              className="rounded-[1.25rem] border theme-border px-4 py-4"
+            >
               <div className="grid gap-4 md:grid-cols-[140px_minmax(0,1fr)]">
                 <label className="space-y-2">
                   <span className="text-sm theme-text-muted">Value</span>
@@ -648,7 +829,9 @@ export function SeasonArchiveContentEditor({
                     onChange={(event) =>
                       setDraft((current) =>
                         updateDraftContent(current, (next) => {
-                          next.organizer.seasonArchives[archiveIndex].stats[statIndex].value = event.target.value;
+                          next.organizer.seasonArchives[archiveIndex].stats[
+                            statIndex
+                          ].value = event.target.value;
                         }),
                       )
                     }
@@ -662,7 +845,9 @@ export function SeasonArchiveContentEditor({
                   onChange={(language, value) =>
                     setDraft((current) =>
                       updateDraftContent(current, (next) => {
-                        next.organizer.seasonArchives[archiveIndex].stats[statIndex].label[language] = value;
+                        next.organizer.seasonArchives[archiveIndex].stats[
+                          statIndex
+                        ].label[language] = value;
                       }),
                     )
                   }
@@ -675,14 +860,21 @@ export function SeasonArchiveContentEditor({
 
       <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <BlockIntro title="Top 5 teams" description="Each team becomes one full-width block on the public page." />
+          <BlockIntro
+            title="Top 5 teams"
+            description="Each team becomes one full-width block on the public page."
+          />
           <button
             type="button"
             onClick={() =>
               setDraft((current) =>
                 updateDraftContent(current, (next) => {
                   next.organizer.seasonArchives[archiveIndex].topTeams.push(
-                    createSeasonArchiveTeamDraft(next.organizer.seasonArchives[archiveIndex].topTeams.length, year),
+                    createSeasonArchiveTeamDraft(
+                      next.organizer.seasonArchives[archiveIndex].topTeams
+                        .length,
+                      year,
+                    ),
                   );
                 }),
               )
@@ -695,10 +887,15 @@ export function SeasonArchiveContentEditor({
         </div>
         <div className="space-y-4">
           {archive.topTeams.map((team, teamIndex) => (
-            <Surface key={`season-team-${teamIndex}`} className="space-y-4 px-4 py-4">
+            <Surface
+              key={`season-team-${teamIndex}`}
+              className="space-y-4 px-4 py-4"
+            >
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold theme-text-strong">
-                  {locale === "en" ? `Team block ${teamIndex + 1}` : `Đội ${teamIndex + 1}`}
+                  {locale === "en"
+                    ? `Team block ${teamIndex + 1}`
+                    : `Đội ${teamIndex + 1}`}
                 </p>
                 <button
                   type="button"
@@ -706,9 +903,12 @@ export function SeasonArchiveContentEditor({
                   onClick={() =>
                     setDraft((current) =>
                       updateDraftContent(current, (next) => {
-                        next.organizer.seasonArchives[archiveIndex].topTeams = next.organizer.seasonArchives[
-                          archiveIndex
-                        ].topTeams.filter((_, currentIndex) => currentIndex !== teamIndex);
+                        next.organizer.seasonArchives[archiveIndex].topTeams =
+                          next.organizer.seasonArchives[
+                            archiveIndex
+                          ].topTeams.filter(
+                            (_, currentIndex) => currentIndex !== teamIndex,
+                          );
                       }),
                     )
                   }
@@ -726,7 +926,9 @@ export function SeasonArchiveContentEditor({
                   onChange={(language, value) =>
                     setDraft((current) =>
                       updateDraftContent(current, (next) => {
-                        next.organizer.seasonArchives[archiveIndex].topTeams[teamIndex].rank[language] = value;
+                        next.organizer.seasonArchives[archiveIndex].topTeams[
+                          teamIndex
+                        ].rank[language] = value;
                       }),
                     )
                   }
@@ -738,7 +940,9 @@ export function SeasonArchiveContentEditor({
                   onChange={(language, value) =>
                     setDraft((current) =>
                       updateDraftContent(current, (next) => {
-                        next.organizer.seasonArchives[archiveIndex].topTeams[teamIndex].name[language] = value;
+                        next.organizer.seasonArchives[archiveIndex].topTeams[
+                          teamIndex
+                        ].name[language] = value;
                       }),
                     )
                   }
@@ -751,7 +955,9 @@ export function SeasonArchiveContentEditor({
                 onChange={(language, value) =>
                   setDraft((current) =>
                     updateDraftContent(current, (next) => {
-                      next.organizer.seasonArchives[archiveIndex].topTeams[teamIndex].projectName[language] = value;
+                      next.organizer.seasonArchives[archiveIndex].topTeams[
+                        teamIndex
+                      ].projectName[language] = value;
                     }),
                   )
                 }
@@ -763,7 +969,9 @@ export function SeasonArchiveContentEditor({
                 onChange={(language, value) =>
                   setDraft((current) =>
                     updateDraftContent(current, (next) => {
-                      next.organizer.seasonArchives[archiveIndex].topTeams[teamIndex].projectDescription[language] = value;
+                      next.organizer.seasonArchives[archiveIndex].topTeams[
+                        teamIndex
+                      ].projectDescription[language] = value;
                     }),
                   )
                 }
@@ -778,7 +986,9 @@ export function SeasonArchiveContentEditor({
                     onClick={() =>
                       setDraft((current) =>
                         updateDraftContent(current, (next) => {
-                          next.organizer.seasonArchives[archiveIndex].topTeams[teamIndex].members.push({
+                          next.organizer.seasonArchives[archiveIndex].topTeams[
+                            teamIndex
+                          ].members.push({
                             name: "",
                             university: "",
                             major: "",
@@ -798,39 +1008,52 @@ export function SeasonArchiveContentEditor({
                       key={`team-${teamIndex}-member-${memberIndex}`}
                       className="grid gap-3 rounded-2xl border theme-border theme-panel-subtle px-3 py-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_40px]"
                     >
-                      {(["name", "university", "major"] as const).map((field) => (
-                        <label key={field} className="space-y-2">
-                          <span className="text-xs capitalize theme-text-muted">{field}</span>
-                          <input
-                            value={member[field]}
-                            onChange={(event) =>
-                              setDraft((current) =>
-                                updateDraftContent(current, (next) => {
-                                  next.organizer.seasonArchives[archiveIndex].topTeams[teamIndex].members[
-                                    memberIndex
-                                  ][field] = event.target.value;
-                                }),
-                              )
-                            }
-                            className={fieldClassName}
-                          />
-                        </label>
-                      ))}
+                      {(["name", "university", "major"] as const).map(
+                        (field) => (
+                          <label key={field} className="space-y-2">
+                            <span className="text-xs capitalize theme-text-muted">
+                              {field}
+                            </span>
+                            <input
+                              value={member[field]}
+                              onChange={(event) =>
+                                setDraft((current) =>
+                                  updateDraftContent(current, (next) => {
+                                    next.organizer.seasonArchives[
+                                      archiveIndex
+                                    ].topTeams[teamIndex].members[memberIndex][
+                                      field
+                                    ] = event.target.value;
+                                  }),
+                                )
+                              }
+                              className={fieldClassName}
+                            />
+                          </label>
+                        ),
+                      )}
                       <button
                         type="button"
                         disabled={team.members.length <= 1}
                         onClick={() =>
                           setDraft((current) =>
                             updateDraftContent(current, (next) => {
-                              next.organizer.seasonArchives[archiveIndex].topTeams[teamIndex].members =
-                                next.organizer.seasonArchives[archiveIndex].topTeams[teamIndex].members.filter(
-                                  (_, currentIndex) => currentIndex !== memberIndex,
+                              next.organizer.seasonArchives[
+                                archiveIndex
+                              ].topTeams[teamIndex].members =
+                                next.organizer.seasonArchives[
+                                  archiveIndex
+                                ].topTeams[teamIndex].members.filter(
+                                  (_, currentIndex) =>
+                                    currentIndex !== memberIndex,
                                 );
                             }),
                           )
                         }
                         className="theme-button-danger mt-6 inline-flex h-10 w-10 items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
-                        aria-label={locale === "en" ? "Delete member" : "Xóa thành viên"}
+                        aria-label={
+                          locale === "en" ? "Delete member" : "Xóa thành viên"
+                        }
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -855,7 +1078,11 @@ export function SeasonArchiveContentEditor({
               setDraft((current) =>
                 updateDraftContent(current, (next) => {
                   next.organizer.seasonArchives[archiveIndex].photoSlides.push(
-                    createSeasonArchiveSlideDraft(next.organizer.seasonArchives[archiveIndex].photoSlides.length, year),
+                    createSeasonArchiveSlideDraft(
+                      next.organizer.seasonArchives[archiveIndex].photoSlides
+                        .length,
+                      year,
+                    ),
                   );
                 }),
               )
@@ -868,7 +1095,10 @@ export function SeasonArchiveContentEditor({
         </div>
         <div className="grid gap-4 xl:grid-cols-2">
           {archive.photoSlides.map((slide, slideIndex) => (
-            <div key={`season-slide-${slideIndex}`} className="rounded-[1.35rem] border theme-border px-4 py-4">
+            <div
+              key={`season-slide-${slideIndex}`}
+              className="rounded-[1.35rem] border theme-border px-4 py-4"
+            >
               <div className="grid gap-4 md:grid-cols-[180px_minmax(0,1fr)]">
                 <div className="space-y-3">
                   <div className="overflow-hidden rounded-2xl border theme-border theme-panel-subtle">
@@ -908,13 +1138,21 @@ export function SeasonArchiveContentEditor({
                           const file = event.target.files?.[0];
                           event.target.value = "";
                           if (!file) return;
-                          void uploadSeasonImage(file, `slide-${slideIndex}`, (next, imageUrl) => {
-                            const nextArchiveIndex = findSeasonRecordIndex(next.organizer.seasonArchives, year);
-                            if (nextArchiveIndex >= 0) {
-                              next.organizer.seasonArchives[nextArchiveIndex].photoSlides[slideIndex].image =
-                                imageUrl;
-                            }
-                          });
+                          void uploadSeasonImage(
+                            file,
+                            `slide-${slideIndex}`,
+                            (next, imageUrl) => {
+                              const nextArchiveIndex = findSeasonRecordIndex(
+                                next.organizer.seasonArchives,
+                                year,
+                              );
+                              if (nextArchiveIndex >= 0) {
+                                next.organizer.seasonArchives[
+                                  nextArchiveIndex
+                                ].photoSlides[slideIndex].image = imageUrl;
+                              }
+                            },
+                          );
                         }}
                       />
                     </label>
@@ -924,9 +1162,13 @@ export function SeasonArchiveContentEditor({
                       onClick={() =>
                         setDraft((current) =>
                           updateDraftContent(current, (next) => {
-                            next.organizer.seasonArchives[archiveIndex].photoSlides = next.organizer.seasonArchives[
+                            next.organizer.seasonArchives[
                               archiveIndex
-                            ].photoSlides.filter((_, currentIndex) => currentIndex !== slideIndex);
+                            ].photoSlides = next.organizer.seasonArchives[
+                              archiveIndex
+                            ].photoSlides.filter(
+                              (_, currentIndex) => currentIndex !== slideIndex,
+                            );
                           }),
                         )
                       }
@@ -945,7 +1187,9 @@ export function SeasonArchiveContentEditor({
                       onChange={(event) =>
                         setDraft((current) =>
                           updateDraftContent(current, (next) => {
-                            next.organizer.seasonArchives[archiveIndex].photoSlides[slideIndex].image =
+                            next.organizer.seasonArchives[
+                              archiveIndex
+                            ].photoSlides[slideIndex].image =
                               event.target.value;
                           }),
                         )
@@ -960,7 +1204,9 @@ export function SeasonArchiveContentEditor({
                     onChange={(language, value) =>
                       setDraft((current) =>
                         updateDraftContent(current, (next) => {
-                          next.organizer.seasonArchives[archiveIndex].photoSlides[slideIndex].alt[language] = value;
+                          next.organizer.seasonArchives[
+                            archiveIndex
+                          ].photoSlides[slideIndex].alt[language] = value;
                         }),
                       )
                     }

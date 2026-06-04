@@ -25,9 +25,15 @@ import { getOrganizerSeasonHref } from "@/components/organizer-page";
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
 import { pickText } from "@/lib/site";
-import type { EditableOrganizerSeasonArchive, EditableOrganizerSeasonStory, Locale } from "@/types/site";
+import type {
+  EditableOrganizerSeasonArchive,
+  EditableOrganizerSeasonStory,
+  Locale,
+} from "@/types/site";
 
-function createFallbackSeasonArchive(story: EditableOrganizerSeasonStory): EditableOrganizerSeasonArchive {
+function createFallbackSeasonArchive(
+  story: EditableOrganizerSeasonStory,
+): EditableOrganizerSeasonArchive {
   return {
     year: story.year,
     overviewTitle: story.title,
@@ -51,15 +57,18 @@ const statisticStyles = [
   },
   {
     Icon: GraduationCap,
-    className: "border-emerald-300/35 bg-emerald-500/12 text-emerald-600 dark:text-emerald-200",
+    className:
+      "border-emerald-300/35 bg-emerald-500/12 text-emerald-600 dark:text-emerald-200",
   },
   {
     Icon: Trophy,
-    className: "border-amber-300/40 bg-amber-500/14 text-amber-600 dark:text-amber-200",
+    className:
+      "border-amber-300/40 bg-amber-500/14 text-amber-600 dark:text-amber-200",
   },
   {
     Icon: Banknote,
-    className: "border-fuchsia-300/35 bg-fuchsia-500/12 text-fuchsia-600 dark:text-fuchsia-200",
+    className:
+      "border-fuchsia-300/35 bg-fuchsia-500/12 text-fuchsia-600 dark:text-fuchsia-200",
   },
 ];
 
@@ -70,19 +79,26 @@ function shouldUseUnoptimizedImage(src: string) {
 export function OrganizerSeasonRoute({ year }: { year: string }) {
   const { hasHydrated, locale, pageContent } = useSiteState();
   const decodedYear = decodeURIComponent(year);
-  const organizerContent = pageContent.organizer as typeof pageContent.organizer & {
-    seasonArchives?: EditableOrganizerSeasonArchive[];
-  };
+  const organizerContent =
+    pageContent.organizer as typeof pageContent.organizer & {
+      seasonArchives?: EditableOrganizerSeasonArchive[];
+    };
   const seasonStories = organizerContent.seasonStories ?? [];
   const story = seasonStories.find((item) => item.year === decodedYear);
-  const relatedStories = seasonStories.filter((item) => item.year !== decodedYear).slice(0, 3);
+  const relatedStories = seasonStories
+    .filter((item) => item.year !== decodedYear)
+    .slice(0, 3);
 
   if (!hasHydrated && !story) {
     return (
       <Surface className="px-6 py-6 md:px-8 md:py-8">
         <SectionHeading
           eyebrow={locale === "en" ? "Organizer" : "Ban tổ chức"}
-          title={locale === "en" ? "Loading season story..." : "Đang tải câu chuyện mùa thi..."}
+          title={
+            locale === "en"
+              ? "Loading season story..."
+              : "Đang tải câu chuyện mùa thi..."
+          }
           description={
             locale === "en"
               ? "Waiting for the organizer content dataset to hydrate."
@@ -100,7 +116,11 @@ export function OrganizerSeasonRoute({ year }: { year: string }) {
         <Surface className="px-6 py-6 md:px-8 md:py-8">
           <SectionHeading
             eyebrow={locale === "en" ? "Organizer" : "Ban tổ chức"}
-            title={locale === "en" ? "Season story not found." : "Không tìm thấy câu chuyện mùa thi."}
+            title={
+              locale === "en"
+                ? "Season story not found."
+                : "Không tìm thấy câu chuyện mùa thi."
+            }
             description={
               locale === "en"
                 ? "The selected season may have been removed from the current organizer content."
@@ -113,7 +133,8 @@ export function OrganizerSeasonRoute({ year }: { year: string }) {
   }
 
   const seasonArchive =
-    organizerContent.seasonArchives?.find((item) => item.year === story.year) ?? createFallbackSeasonArchive(story);
+    organizerContent.seasonArchives?.find((item) => item.year === story.year) ??
+    createFallbackSeasonArchive(story);
 
   return (
     <SeasonDetailContent
@@ -156,7 +177,10 @@ function SeasonDetailContent({
   const activePhoto = photoSlides[safeActivePhotoIndex] ?? photoSlides[0];
   const shouldShowTeamMembers = story.year !== "2019";
   const shiftPhoto = (direction: number) => {
-    setActivePhotoIndex((current) => (current + direction + photoSlides.length) % photoSlides.length);
+    setActivePhotoIndex(
+      (current) =>
+        (current + direction + photoSlides.length) % photoSlides.length,
+    );
   };
 
   useEffect(() => {
@@ -174,7 +198,9 @@ function SeasonDetailContent({
       }
 
       if (event.key === "ArrowLeft") {
-        setActivePhotoIndex((current) => (current - 1 + photoSlides.length) % photoSlides.length);
+        setActivePhotoIndex(
+          (current) => (current - 1 + photoSlides.length) % photoSlides.length,
+        );
       }
 
       if (event.key === "ArrowRight") {
@@ -190,15 +216,18 @@ function SeasonDetailContent({
     };
   }, [isPhotoLightboxOpen, photoSlides.length]);
 
+  const seasonHeroImage =
+    story.image || story.featuredImage || "/theme-feature-1.jpg";
+
   return (
     <div className="space-y-14">
       <section className="theme-card-shadow-soft relative overflow-hidden rounded-[2rem] border theme-border-strong">
         <Image
-          src={story.image}
+          src={seasonHeroImage}
           alt={pickText(locale, story.title)}
           fill
           sizes="100vw"
-          unoptimized={shouldUseUnoptimizedImage(story.image)}
+          unoptimized={shouldUseUnoptimizedImage(seasonHeroImage)}
           className="object-cover"
           priority
         />
@@ -231,13 +260,17 @@ function SeasonDetailContent({
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/64">
                   {locale === "en" ? "Season" : "Mùa"}
                 </p>
-                <p className="mt-2 text-sm font-semibold text-white">{story.year}</p>
+                <p className="mt-2 text-sm font-semibold text-white">
+                  {story.year}
+                </p>
               </div>
               <div>
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/64">
                   {locale === "en" ? "Focus" : "Trọng tâm"}
                 </p>
-                <p className="mt-2 text-sm font-semibold leading-7 text-white/90">{pickText(locale, story.label)}</p>
+                <p className="mt-2 text-sm font-semibold leading-7 text-white/90">
+                  {pickText(locale, story.label)}
+                </p>
               </div>
               <div className="rounded-[1.35rem] border border-white/10 bg-white/6 px-4 py-4">
                 <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/64">
@@ -270,7 +303,9 @@ function SeasonDetailContent({
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                   {locale === "en" ? "Season story" : "Câu chuyện mùa thi"}
                 </p>
-                <p className="mt-1 text-lg font-semibold theme-text-strong">{story.year}</p>
+                <p className="mt-1 text-lg font-semibold theme-text-strong">
+                  {story.year}
+                </p>
               </div>
             </div>
             <div>
@@ -279,7 +314,10 @@ function SeasonDetailContent({
               </h2>
               <div className="mt-4 space-y-3">
                 {seasonArchive.overview.map((paragraph) => (
-                  <p key={paragraph.en} className="text-base leading-8 theme-text-body">
+                  <p
+                    key={paragraph.en}
+                    className="text-base leading-8 theme-text-body"
+                  >
                     {pickText(locale, paragraph)}
                   </p>
                 ))}
@@ -301,7 +339,9 @@ function SeasonDetailContent({
                     >
                       <Icon className="h-6 w-6" />
                     </span>
-                    <p className="theme-heading mt-4 text-3xl font-semibold theme-text-strong">{item.value}</p>
+                    <p className="theme-heading mt-4 text-3xl font-semibold theme-text-strong">
+                      {item.value}
+                    </p>
                     <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] theme-eyebrow">
                       {pickText(locale, item.label)}
                     </p>
@@ -329,7 +369,9 @@ function SeasonDetailContent({
                     >
                       <div
                         className={`grid gap-4 lg:items-start ${
-                          shouldShowTeamMembers ? "lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)]" : ""
+                          shouldShowTeamMembers
+                            ? "lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.72fr)]"
+                            : ""
                         }`}
                       >
                         <div className="space-y-3">
@@ -421,10 +463,16 @@ function SeasonDetailContent({
                     type="button"
                     onClick={() => setIsPhotoLightboxOpen(true)}
                     className="absolute inset-0 z-10 cursor-zoom-in"
-                    aria-label={locale === "en" ? "Open featured image viewer" : "Mở trình xem hình ảnh nổi bật"}
+                    aria-label={
+                      locale === "en"
+                        ? "Open featured image viewer"
+                        : "Mở trình xem hình ảnh nổi bật"
+                    }
                   >
                     <span className="sr-only">
-                      {locale === "en" ? "Open featured image viewer" : "Mở trình xem hình ảnh nổi bật"}
+                      {locale === "en"
+                        ? "Open featured image viewer"
+                        : "Mở trình xem hình ảnh nổi bật"}
                     </span>
                   </button>
                   {photoSlides.length > 1 ? (
@@ -433,7 +481,9 @@ function SeasonDetailContent({
                         type="button"
                         onClick={() => shiftPhoto(-1)}
                         className="absolute left-4 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/28 bg-slate-950/46 text-white shadow-[0_18px_34px_rgba(2,6,23,0.26)] backdrop-blur-md transition duration-300 hover:-translate-x-0.5 hover:bg-slate-950/64"
-                        aria-label={locale === "en" ? "Previous photo" : "Ảnh trước"}
+                        aria-label={
+                          locale === "en" ? "Previous photo" : "Ảnh trước"
+                        }
                       >
                         <ChevronLeft className="h-5 w-5" />
                       </button>
@@ -441,7 +491,9 @@ function SeasonDetailContent({
                         type="button"
                         onClick={() => shiftPhoto(1)}
                         className="absolute right-4 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/28 bg-slate-950/46 text-white shadow-[0_18px_34px_rgba(2,6,23,0.26)] backdrop-blur-md transition duration-300 hover:translate-x-0.5 hover:bg-slate-950/64"
-                        aria-label={locale === "en" ? "Next photo" : "Ảnh tiếp theo"}
+                        aria-label={
+                          locale === "en" ? "Next photo" : "Ảnh tiếp theo"
+                        }
                       >
                         <ChevronRight className="h-5 w-5" />
                       </button>
@@ -452,10 +504,14 @@ function SeasonDetailContent({
                             type="button"
                             onClick={() => setActivePhotoIndex(index)}
                             className={`h-2.5 rounded-full transition-all ${
-                              index === safeActivePhotoIndex ? "w-8 bg-white" : "w-2.5 bg-white/52 hover:bg-white/78"
+                              index === safeActivePhotoIndex
+                                ? "w-8 bg-white"
+                                : "w-2.5 bg-white/52 hover:bg-white/78"
                             }`}
                             aria-label={
-                              locale === "en" ? `Open photo ${index + 1}` : `Mở ảnh ${index + 1}`
+                              locale === "en"
+                                ? `Open photo ${index + 1}`
+                                : `Mở ảnh ${index + 1}`
                             }
                           />
                         ))}
@@ -474,7 +530,11 @@ function SeasonDetailContent({
           </p>
           <div className="mt-5 space-y-4">
             {relatedStories.map((item) => (
-              <Link key={item.year} href={getOrganizerSeasonHref(item.year)} className="block">
+              <Link
+                key={item.year}
+                href={getOrganizerSeasonHref(item.year)}
+                className="block"
+              >
                 <div className="rounded-[1.7rem] border theme-border theme-panel px-4 py-4 transition hover:border-sky-300/28 hover:bg-[var(--panel-strong)]">
                   <StatusPill>{item.year}</StatusPill>
                   <p className="mt-4 text-base font-semibold leading-7 theme-text-strong">
@@ -495,7 +555,11 @@ function SeasonDetailContent({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label={locale === "en" ? "Featured images viewer" : "Trình xem hình ảnh nổi bật"}
+          aria-label={
+            locale === "en"
+              ? "Featured images viewer"
+              : "Trình xem hình ảnh nổi bật"
+          }
           className="season-gallery-lightbox fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/92 px-4 py-5 text-white backdrop-blur-xl sm:px-6"
           onClick={() => setIsPhotoLightboxOpen(false)}
         >
@@ -506,7 +570,9 @@ function SeasonDetailContent({
               setIsPhotoLightboxOpen(false);
             }}
             className="absolute right-4 top-4 z-30 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-white/10 text-white shadow-[0_18px_40px_rgba(2,6,23,0.36)] backdrop-blur-md transition duration-300 hover:bg-white/18 sm:right-6 sm:top-6"
-            aria-label={locale === "en" ? "Close image viewer" : "Đóng trình xem ảnh"}
+            aria-label={
+              locale === "en" ? "Close image viewer" : "Đóng trình xem ảnh"
+            }
           >
             <X className="h-5 w-5" />
           </button>
@@ -563,7 +629,10 @@ function SeasonDetailContent({
 
 function BackToOrganizerLink({ locale }: { locale: Locale }) {
   return (
-    <Link href="/organizer" className="inline-flex items-center gap-2 text-sm font-semibold text-sky-600 dark:text-sky-200">
+    <Link
+      href="/organizer"
+      className="inline-flex items-center gap-2 text-sm font-semibold text-sky-600 dark:text-sky-200"
+    >
       <ArrowLeft className="h-4 w-4" />
       {locale === "en" ? "Back to organizer page" : "Quay lại trang giới thiệu"}
     </Link>

@@ -1,7 +1,12 @@
 export type Locale = "en" | "vi";
 export type Theme = "dark" | "light";
 export type SubmissionRound = "round-2" | "round-3";
-export type UserRole = "student" | "supporter" | "judge" | "moderator" | "admin";
+export type UserRole =
+  | "student"
+  | "supporter"
+  | "judge"
+  | "moderator"
+  | "admin";
 export type CompetitionStage = "round-1" | "round-2" | "round-3";
 export type CompetitionState = "not-eligible" | CompetitionStage;
 export type CompetitionRoundKey = CompetitionStage;
@@ -363,7 +368,9 @@ export interface JudgeDashboardTeamTask {
   scoredAt?: string;
 }
 
-export type JudgeDashboardTask = JudgeDashboardRound1Task | JudgeDashboardTeamTask;
+export type JudgeDashboardTask =
+  | JudgeDashboardRound1Task
+  | JudgeDashboardTeamTask;
 
 export interface JudgeDashboardRoundGroup {
   round: CompetitionRoundKey;
@@ -509,6 +516,7 @@ export interface EditableJudgeRoundSection extends EditableSectionCopy {
 export interface EditableOrganizerSeasonStory {
   year: string;
   image: string;
+  featuredImage?: string;
   label: LocalizedText;
   title: LocalizedText;
   body: LocalizedText;
