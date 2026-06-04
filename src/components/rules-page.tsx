@@ -45,8 +45,6 @@ const policyIconClasses = [
   "border-cyan-700/24 bg-[linear-gradient(135deg,rgba(6,182,212,0.24),rgba(34,211,238,0.16))] text-cyan-950 shadow-[0_10px_24px_rgba(6,182,212,0.08)] dark:text-cyan-100",
   "border-emerald-700/24 bg-[linear-gradient(135deg,rgba(16,185,129,0.24),rgba(52,211,153,0.16))] text-emerald-950 shadow-[0_10px_24px_rgba(16,185,129,0.08)] dark:text-emerald-100",
 ] as const;
-const specificRuleIcons = [Sparkles, ShieldAlert, Medal] as const;
-
 const roundRubricLinks: Record<"01" | "02" | "03", RubricFileId> = {
   "01": "round-1-essay",
   "02": "round-2-report",
@@ -204,11 +202,11 @@ function RoundDownloadCard({
           )}
         </div>
         <div className="min-w-0">
-          <p className="whitespace-nowrap text-[0.95rem] font-semibold leading-6 theme-text-strong sm:text-base">
+          <p className="whitespace-nowrap text-sm font-normal leading-6 theme-text-body sm:text-[0.95rem]">
             {title}
           </p>
           {!downloadUrl ? (
-            <p className="mt-1 text-xs font-semibold leading-5 text-amber-800 dark:text-amber-100">
+            <p className="mt-1 text-xs font-normal leading-5 text-amber-800 dark:text-amber-100">
               {unavailableLabel}
             </p>
           ) : null}
@@ -608,7 +606,7 @@ export function RulesPage() {
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                         {pickText(locale, pageContent.rules.specificRoundRulesLabel)}
                       </p>
-                      {round.id === "01" ? (
+                      {round.id === "01" || round.id === "02" ? (
                         <div className="mt-5">
                           <RichRulesText
                             body={
@@ -659,7 +657,7 @@ export function RulesPage() {
                       ) : (
                         <div className="mt-4 grid gap-3 md:grid-cols-3">
                           {round.specificRules.map((note, index) => {
-                            const NoteIcon = specificRuleIcons[index] ?? Sparkles;
+                            const NoteIcon = [Sparkles, ShieldAlert, Medal][index] ?? Sparkles;
 
                             return (
                             <div

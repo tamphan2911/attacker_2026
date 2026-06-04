@@ -7,7 +7,7 @@ export const rubricFileDefinitions = [
     id: "round-1-essay",
     label: {
       en: "Round 1 essay rubric",
-      vi: "Rubric chấm tự luận Vòng 1",
+      vi: "Rubric tự luận Vòng 1",
     },
     publicDownloadLabel: {
       en: "Download Round 1 essay rubric PDF",
@@ -18,7 +18,7 @@ export const rubricFileDefinitions = [
     id: "round-2-report",
     label: {
       en: "Round 2 report rubric",
-      vi: "Rubric chấm báo cáo Vòng 2",
+      vi: "Rubric Vòng 2",
     },
     publicDownloadLabel: {
       en: "Download Round 2 report rubric PDF",
@@ -29,7 +29,7 @@ export const rubricFileDefinitions = [
     id: "round-3-final-presentation",
     label: {
       en: "Final presentation rubric",
-      vi: "Rubric chấm thuyết trình chung kết",
+      vi: "Rubric Chung kết",
     },
     publicDownloadLabel: {
       en: "Download final presentation rubric PDF",

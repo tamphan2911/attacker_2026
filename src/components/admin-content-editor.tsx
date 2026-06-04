@@ -3135,14 +3135,18 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                       )
                     }
                   />
-                  {round.id === "01" ? (
+                  {round.id === "01" || round.id === "02" ? (
                     <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
                       <BlockIntro
-                        title="Round 1 specific rules"
-                        description="This rich text field replaces the three specific-rule cards for Round 1 on the public rules page."
+                        title={round.id === "01" ? "Round 1 specific rules" : "Round 2 specific rules"}
+                        description={
+                          round.id === "01"
+                            ? "This rich text field replaces the three specific-rule cards for Round 1 on the public rules page."
+                            : "This rich text field replaces the three specific-rule cards for Round 2 on the public rules page."
+                        }
                       />
                       <LocalizedRichTextEditor
-                        label="Round 1 specific rules"
+                        label={round.id === "01" ? "Round 1 specific rules" : "Round 2 specific rules"}
                         value={round.specificRulesRichText ?? createRichRulesFallback(round.specificRules)}
                         onChange={(language, value) =>
                           setDraft((current) =>
