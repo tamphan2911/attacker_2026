@@ -1823,8 +1823,8 @@ export function Round1ExamPage() {
 	              {currentQuestion.type === "essay" ? (
 	                <div className="mt-5 rounded-[1.35rem] border border-sky-700/18 bg-[linear-gradient(135deg,rgba(224,242,254,0.9),rgba(219,234,254,0.72))] px-4 py-3.5 text-sm leading-7 text-slate-900 shadow-[0_14px_34px_rgba(14,116,144,0.08)] dark:border-sky-300/18 dark:bg-[linear-gradient(135deg,rgba(56,189,248,0.16),rgba(37,99,235,0.12))] dark:text-sky-100">
 	                  {locale === "en"
-	                    ? `The essay answer can be shorter than 300 words. Keep it clear and no more than ${round1WordLimit} words.`
-	                    : `Câu trả lời tự luận có thể ngắn hơn 300 từ. Hãy trình bày rõ ý và không vượt quá ${round1WordLimit} từ.`}
+	                    ? `Present your ideas clearly and do not exceed ${round1WordLimit} words.`
+	                    : `Trình bày rõ ý và không được vượt quá ${round1WordLimit} từ.`}
 	                </div>
 	              ) : null}
 
@@ -2066,8 +2066,8 @@ export function Round1ExamPage() {
                   <div className="flex flex-col gap-3 text-sm leading-7 sm:flex-row sm:items-center sm:justify-between">
                     <p className="theme-text-soft">
                       {locale === "en"
-                        ? `No minimum word count is required. Keep the answer within ${round1WordLimit} words.`
-                        : `Không bắt buộc tối thiểu 300 từ. Hãy giữ câu trả lời trong giới hạn ${round1WordLimit} từ.`}
+                        ? `Keep the answer within ${round1WordLimit} words.`
+                        : `Hãy giữ câu trả lời trong giới hạn ${round1WordLimit} từ.`}
                     </p>
                     <div
                       className={`inline-flex items-center justify-end gap-2 self-end rounded-full border px-3.5 py-2 text-xs font-semibold shadow-[0_10px_24px_rgba(15,23,42,0.06)] ${
