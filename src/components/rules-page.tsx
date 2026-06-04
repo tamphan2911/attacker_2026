@@ -180,38 +180,46 @@ function RoundDownloadCard({
 }) {
   const Icon = kind === "rubric" ? FileDown : FileText;
 
+  const content = (
+    <>
+      <span
+        aria-hidden="true"
+        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] border ${
+          downloadUrl
+            ? "border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.28),rgba(59,130,246,0.18))] text-sky-950 shadow-[0_14px_30px_rgba(14,165,233,0.12)] dark:border-sky-300/20 dark:bg-sky-300/[0.12] dark:text-sky-100"
+            : "border-amber-300/38 bg-amber-300/12 text-amber-800 opacity-80 dark:border-amber-200/24 dark:text-amber-100"
+        }`}
+      >
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-normal leading-6 theme-text-body sm:text-[0.95rem]">
+          {title}
+        </span>
+        {!downloadUrl ? (
+          <span className="mt-0.5 block text-xs font-normal leading-5 text-amber-800 dark:text-amber-100">
+            {unavailableLabel}
+          </span>
+        ) : null}
+      </span>
+    </>
+  );
+
+  if (downloadUrl) {
+    return (
+      <a
+        href={downloadUrl}
+        aria-label={buttonLabel}
+        className="flex items-center gap-3 rounded-[1rem] px-1 py-1 text-left transition hover:translate-x-0.5 active:translate-x-0"
+      >
+        {content}
+      </a>
+    );
+  }
+
   return (
-    <div className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4 sm:px-5">
-      <div className="flex items-center justify-center gap-3 text-left">
-        <div className="shrink-0">
-          {downloadUrl ? (
-            <a
-              href={downloadUrl}
-              aria-label={buttonLabel}
-              className="inline-flex h-12 w-12 items-center justify-center rounded-[1rem] border border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.28),rgba(59,130,246,0.18))] text-sky-950 shadow-[0_14px_30px_rgba(14,165,233,0.12)] transition hover:-translate-y-0.5 hover:border-sky-500/45 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.38),rgba(59,130,246,0.26))] active:translate-y-0 dark:border-sky-300/20 dark:bg-sky-300/[0.12] dark:text-sky-100"
-            >
-              <Icon className="h-5 w-5" />
-            </a>
-          ) : (
-            <span
-              aria-label={unavailableLabel}
-              className="inline-flex h-12 w-12 cursor-not-allowed items-center justify-center rounded-[1rem] border border-amber-300/38 bg-amber-300/12 text-amber-800 opacity-80 dark:border-amber-200/24 dark:text-amber-100"
-            >
-              <Icon className="h-5 w-5" />
-            </span>
-          )}
-        </div>
-        <div className="min-w-0">
-          <p className="whitespace-nowrap text-sm font-normal leading-6 theme-text-body sm:text-[0.95rem]">
-            {title}
-          </p>
-          {!downloadUrl ? (
-            <p className="mt-1 text-xs font-normal leading-5 text-amber-800 dark:text-amber-100">
-              {unavailableLabel}
-            </p>
-          ) : null}
-        </div>
-      </div>
+    <div aria-label={unavailableLabel} className="flex cursor-not-allowed items-center gap-3 rounded-[1rem] px-1 py-1 text-left">
+      {content}
     </div>
   );
 }
