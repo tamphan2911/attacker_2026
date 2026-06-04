@@ -8,7 +8,6 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock3,
-  Download,
   FileCheck2,
   FileDown,
   FileText,
@@ -151,6 +150,13 @@ function RichRulesText({ body }: { body: string }) {
   );
 }
 
+function joinLocalizedRules(
+  locale: "en" | "vi",
+  rules: Array<{ en: string; vi: string }>,
+) {
+  return rules.map((item) => item[locale]).join("\n");
+}
+
 type PublicRubricRecord = {
   id: RubricFileId;
   downloadUrl: string;
@@ -178,26 +184,37 @@ function RoundDownloadCard({
 
   return (
     <div className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4">
-      <div className="flex items-start gap-3">
-        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.24),rgba(59,130,246,0.14))] text-sky-950 dark:border-sky-300/20 dark:bg-sky-300/[0.12] dark:text-sky-100">
-          <Icon className="h-4.5 w-4.5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold theme-text-strong">{title}</p>
+      <div className="flex items-center justify-center gap-4 text-center">
+        <div className="group relative shrink-0">
           {downloadUrl ? (
             <a
               href={downloadUrl}
               aria-label={buttonLabel}
               title={buttonLabel}
-              className="theme-button-primary mt-4 inline-flex h-11 w-11 items-center justify-center rounded-full p-0 transition hover:-translate-y-0.5 active:translate-y-0"
+              className="inline-flex h-12 w-12 items-center justify-center rounded-[1rem] border border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.28),rgba(59,130,246,0.18))] text-sky-950 shadow-[0_14px_30px_rgba(14,165,233,0.12)] transition hover:-translate-y-0.5 hover:border-sky-500/45 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.38),rgba(59,130,246,0.26))] active:translate-y-0 dark:border-sky-300/20 dark:bg-sky-300/[0.12] dark:text-sky-100"
             >
-              <Download className="h-5 w-5" />
+              <Icon className="h-5 w-5" />
             </a>
           ) : (
-            <p className="mt-4 rounded-[1rem] border border-amber-300/38 bg-amber-300/12 px-3 py-2 text-sm font-semibold text-amber-800 dark:border-amber-200/24 dark:text-amber-100">
+            <span
+              aria-label={unavailableLabel}
+              title={unavailableLabel}
+              className="inline-flex h-12 w-12 cursor-not-allowed items-center justify-center rounded-[1rem] border border-amber-300/38 bg-amber-300/12 text-amber-800 opacity-80 dark:border-amber-200/24 dark:text-amber-100"
+            >
+              <Icon className="h-5 w-5" />
+            </span>
+          )}
+          <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-20 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+            {downloadUrl ? buttonLabel : unavailableLabel}
+          </span>
+        </div>
+        <div className="min-w-0">
+          <p className="text-base font-semibold leading-7 theme-text-strong">{title}</p>
+          {!downloadUrl ? (
+            <p className="mt-1 text-xs font-semibold leading-5 text-amber-800 dark:text-amber-100">
               {unavailableLabel}
             </p>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
@@ -594,7 +611,21 @@ export function RulesPage() {
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                         {pickText(locale, pageContent.rules.specificRoundRulesLabel)}
                       </p>
-                      {round.id === "03" ? (
+                      {round.id === "01" ? (
+                        <div className="mt-5">
+                          <RichRulesText
+                            body={
+                              pickText(
+                                locale,
+                                round.specificRulesRichText ?? {
+                                  en: joinLocalizedRules("en", round.specificRules),
+                                  vi: joinLocalizedRules("vi", round.specificRules),
+                                },
+                              )
+                            }
+                          />
+                        </div>
+                      ) : round.id === "03" ? (
                         <div className="mt-5 space-y-6">
                           <div>
                             <p className="theme-heading text-lg font-semibold theme-text-strong">

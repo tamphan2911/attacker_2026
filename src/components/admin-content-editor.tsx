@@ -123,6 +123,13 @@ function createBlankLocalizedText(): LocalizedText {
   return { en: "", vi: "" };
 }
 
+function createRichRulesFallback(specificRules: LocalizedText[]): LocalizedText {
+  return {
+    en: specificRules.map((item) => item.en).join("\n"),
+    vi: specificRules.map((item) => item.vi).join("\n"),
+  };
+}
+
 function createTestimonialDraft(index: number): TestimonialItem {
   return {
     id: `testimonial-${Date.now()}-${index}`,
@@ -3128,7 +3135,28 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                       )
                     }
                   />
-                  {round.id === "03" ? (
+                  {round.id === "01" ? (
+                    <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
+                      <BlockIntro
+                        title="Round 1 specific rules"
+                        description="This rich text field replaces the three specific-rule cards for Round 1 on the public rules page."
+                      />
+                      <LocalizedRichTextEditor
+                        label="Round 1 specific rules"
+                        value={round.specificRulesRichText ?? createRichRulesFallback(round.specificRules)}
+                        onChange={(language, value) =>
+                          setDraft((current) =>
+                            updateDraftContent(current, (next) => {
+                              const targetRound = next.rules.rounds[index];
+                              targetRound.specificRulesRichText =
+                                targetRound.specificRulesRichText ?? createRichRulesFallback(targetRound.specificRules);
+                              targetRound.specificRulesRichText[language] = value;
+                            }),
+                          )
+                        }
+                      />
+                    </Surface>
+                  ) : round.id === "03" ? (
                     <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">
                       <BlockIntro
                         title="Round 3 split rules"

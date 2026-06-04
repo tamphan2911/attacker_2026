@@ -495,6 +495,7 @@ export interface EditableRulesJumpItem {
 export interface EditableRulesRoundSection extends RoundItem {
   focus: LocalizedText;
   specificRules: LocalizedText[];
+  specificRulesRichText?: LocalizedText;
   roundNotes: LocalizedText[];
   round3EmergingRules?: LocalizedText;
   round3FinalRules?: LocalizedText;
