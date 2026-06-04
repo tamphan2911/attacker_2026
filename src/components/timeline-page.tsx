@@ -6,15 +6,24 @@ import {
   ArrowRight,
   CalendarDays,
   CheckCircle2,
+  CircleHelp,
   Clock3,
   Flag,
   FileBadge2,
+  FileText,
   FileUp,
+  Home,
+  LayoutDashboard,
+  Newspaper,
   Presentation,
   Route,
   ShieldCheck,
+  Trophy,
+  UserPlus,
   UserRound,
+  UsersRound,
   X,
+  type LucideIcon,
 } from "lucide-react";
 
 import { TEAM_MIN_MEMBERS } from "@/data/site-content";
@@ -120,7 +129,7 @@ interface TimelineActionLink {
   key: string;
   href?: string;
   label: LocalizedText;
-  icon: typeof ArrowRight;
+  icon: LucideIcon;
   action?: "eligibility";
   disabled?: boolean;
   title?: LocalizedText;
@@ -128,6 +137,28 @@ interface TimelineActionLink {
 
 function getTimelineItemKey(item: TimelineItem) {
   return item.id;
+}
+
+function getTimelineSupportLinkIcon(href: string, itemId: string): LucideIcon {
+  if (href === "/") return Home;
+  if (href === "/auth") return UserPlus;
+  if (href === "/dashboard") return LayoutDashboard;
+  if (href === "/round-1") return FileBadge2;
+  if (href.startsWith("/rules")) return ShieldCheck;
+  if (href === "/competition/faq") return CircleHelp;
+  if (href === "/news") return Newspaper;
+  if (href === "/competition/judges") return UsersRound;
+  if (href === "/competition/round-1-results") return Trophy;
+  if (href === "/competition/finalists") return Trophy;
+  if (href === "/competition/final-results") return Trophy;
+  if (href === "/competition/emerging-results") return Trophy;
+  if (href === "/competition") {
+    return itemId === "round-3-final-presentation" ? Presentation : Route;
+  }
+
+  if (href.includes("submission") || href.includes("report")) return FileText;
+
+  return Route;
 }
 
 function buildTimelineActionLinks({
@@ -294,7 +325,7 @@ function buildTimelineActionLinks({
           ? "/competition/finalists"
           : supportLink.href,
       label: supportLink.label,
-      icon: ArrowRight,
+      icon: getTimelineSupportLinkIcon(supportLink.href, item.id),
     });
   }
 
