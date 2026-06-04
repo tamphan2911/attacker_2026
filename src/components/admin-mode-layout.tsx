@@ -2,21 +2,35 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
+  Archive,
   CalendarClock,
+  ClipboardCheck,
+  ClipboardList,
   FilePenLine,
   FileQuestion,
   Files,
+  FileText,
+  Gauge,
+  Handshake,
   Images,
   Landmark,
   LayoutDashboard,
+  ListChecks,
   Mail,
   MessageCircle,
   MessageSquare,
   Newspaper,
+  PanelLeftClose,
+  PanelLeftOpen,
+  ShieldCheck,
   TableProperties,
+  Trophy,
+  UserCheck,
   Users,
   Users2,
+  type LucideIcon,
 } from "lucide-react";
 
 import { pickText } from "@/lib/site";
@@ -30,11 +44,11 @@ function cn(...values: Array<string | undefined | false>) {
 
 type AdminNavItem = {
   href: string;
-  icon: typeof LayoutDashboard;
+  icon: LucideIcon;
   label: LocalizedText;
   description: LocalizedText;
   adminOnly?: boolean;
-  children?: Array<{ href: string; label: LocalizedText }>;
+  children?: Array<{ href: string; icon: LucideIcon; label: LocalizedText }>;
 };
 
 const adminNavGroups: Array<{
@@ -61,8 +75,8 @@ const adminNavGroups: Array<{
         label: { en: "Content", vi: "Nội dung" },
         description: { en: "Page copy and reusable content", vi: "Copy trang và nội dung dùng chung" },
         children: [
-          { href: "/admin/content", label: { en: "Pages & types", vi: "Trang và nhóm nội dung" } },
-          { href: "/admin/content/sponsors", label: { en: "Sponsors", vi: "Nhà tài trợ" } },
+          { href: "/admin/content", icon: FileText, label: { en: "Pages & types", vi: "Trang và nhóm nội dung" } },
+          { href: "/admin/content/sponsors", icon: Handshake, label: { en: "Sponsors", vi: "Nhà tài trợ" } },
         ],
       },
       {
@@ -71,11 +85,11 @@ const adminNavGroups: Array<{
         label: { en: "Seasons", vi: "Mùa thi" },
         description: { en: "Independent season archive editor", vi: "Trình chỉnh sửa mùa thi độc lập" },
         children: [
-          { href: "/admin/seasons", label: { en: "Season list", vi: "Danh sách mùa thi" } },
-          { href: "/admin/seasons/2023", label: { en: "Season 2023", vi: "Mùa 2023" } },
-          { href: "/admin/seasons/2024", label: { en: "Season 2024", vi: "Mùa 2024" } },
-          { href: "/admin/seasons/2025", label: { en: "Season 2025", vi: "Mùa 2025" } },
-          { href: "/admin/seasons/2026", label: { en: "Season 2026", vi: "Mùa 2026" } },
+          { href: "/admin/seasons", icon: Archive, label: { en: "Season list", vi: "Danh sách mùa thi" } },
+          { href: "/admin/seasons/2023", icon: CalendarClock, label: { en: "Season 2023", vi: "Mùa 2023" } },
+          { href: "/admin/seasons/2024", icon: CalendarClock, label: { en: "Season 2024", vi: "Mùa 2024" } },
+          { href: "/admin/seasons/2025", icon: CalendarClock, label: { en: "Season 2025", vi: "Mùa 2025" } },
+          { href: "/admin/seasons/2026", icon: CalendarClock, label: { en: "Season 2026", vi: "Mùa 2026" } },
         ],
       },
       {
@@ -84,7 +98,7 @@ const adminNavGroups: Array<{
         label: { en: "News", vi: "Tin tức" },
         description: { en: "Newsroom articles", vi: "Bài viết newsroom" },
         children: [
-          { href: "/admin/news", label: { en: "Article list", vi: "Danh sách bài viết" } },
+          { href: "/admin/news", icon: ClipboardList, label: { en: "Article list", vi: "Danh sách bài viết" } },
         ],
       },
     ],
@@ -98,9 +112,9 @@ const adminNavGroups: Array<{
         label: { en: "Users", vi: "Người dùng" },
         description: { en: "Participant records", vi: "Hồ sơ thí sinh" },
         children: [
-          { href: "/admin/users", label: { en: "Participant list", vi: "Danh sách thí sinh" } },
-          { href: "/admin/judges", label: { en: "Judge", vi: "Giám khảo" } },
-          { href: "/admin/organizer-team", label: { en: "Organizer team", vi: "Ban tổ chức" } },
+          { href: "/admin/users", icon: Users, label: { en: "Participant list", vi: "Danh sách thí sinh" } },
+          { href: "/admin/judges", icon: UserCheck, label: { en: "Judge", vi: "Giám khảo" } },
+          { href: "/admin/organizer-team", icon: ShieldCheck, label: { en: "Organizer team", vi: "Ban tổ chức" } },
         ],
       },
       {
@@ -109,7 +123,7 @@ const adminNavGroups: Array<{
         label: { en: "Messages", vi: "Tin nhắn" },
         description: { en: "Conversation moderation", vi: "Quản lý cuộc trò chuyện" },
         children: [
-          { href: "/admin/messages", label: { en: "Conversation list", vi: "Danh sách cuộc trò chuyện" } },
+          { href: "/admin/messages", icon: MessageCircle, label: { en: "Conversation list", vi: "Danh sách cuộc trò chuyện" } },
         ],
       },
       {
@@ -118,7 +132,7 @@ const adminNavGroups: Array<{
         label: { en: "Teams", vi: "Đội thi" },
         description: { en: "Teams and roster status", vi: "Đội thi và trạng thái đội hình" },
         children: [
-          { href: "/admin/teams", label: { en: "Team list", vi: "Danh sách đội thi" } },
+          { href: "/admin/teams", icon: Users2, label: { en: "Team list", vi: "Danh sách đội thi" } },
         ],
       },
       {
@@ -128,7 +142,7 @@ const adminNavGroups: Array<{
         description: { en: "Activation and password-reset email copy", vi: "Nội dung email kích hoạt và đặt lại mật khẩu" },
         adminOnly: true,
         children: [
-          { href: "/admin/email-templates", label: { en: "System email templates", vi: "Mẫu email hệ thống" } },
+          { href: "/admin/email-templates", icon: Mail, label: { en: "System email templates", vi: "Mẫu email hệ thống" } },
         ],
       },
       {
@@ -138,7 +152,7 @@ const adminNavGroups: Array<{
         description: { en: "Official dates for each timeline step", vi: "Ngày chính thức cho từng bước lịch trình" },
         adminOnly: true,
         children: [
-          { href: "/admin/timeline", label: { en: "Timeline schedule", vi: "Lịch trình chính thức" } },
+          { href: "/admin/timeline", icon: CalendarClock, label: { en: "Timeline schedule", vi: "Lịch trình chính thức" } },
         ],
       },
       {
@@ -148,7 +162,7 @@ const adminNavGroups: Array<{
         description: { en: "Uploaded image storage", vi: "Storage hình ảnh đã tải lên" },
         adminOnly: true,
         children: [
-          { href: "/admin/storage/images", label: { en: "Uploaded images", vi: "Hình ảnh đã tải lên" } },
+          { href: "/admin/storage/images", icon: Images, label: { en: "Uploaded images", vi: "Hình ảnh đã tải lên" } },
         ],
       },
       {
@@ -158,7 +172,7 @@ const adminNavGroups: Array<{
         description: { en: "Team submission uploads", vi: "PDF bài nộp của đội" },
         adminOnly: true,
         children: [
-          { href: "/admin/storage/submission-files", label: { en: "Submission PDFs", vi: "PDF bài nộp" } },
+          { href: "/admin/storage/submission-files", icon: Files, label: { en: "Submission PDFs", vi: "PDF bài nộp" } },
         ],
       },
     ],
@@ -172,9 +186,9 @@ const adminNavGroups: Array<{
         label: { en: "Round 1", vi: "Vòng 1" },
         description: { en: "Banks, scores, and review", vi: "Ngân hàng đề, điểm số và chấm bài" },
         children: [
-          { href: "/admin/round-1", label: { en: "Round 1 test bank", vi: "Ngân hàng đề Vòng 1" } },
-          { href: "/admin/round-1/scores", label: { en: "Round 1 scores", vi: "Điểm Vòng 1" } },
-          { href: "/admin/round-1/exams", label: { en: "Round 1 attempt", vi: "Lượt thi Vòng 1" } },
+          { href: "/admin/round-1", icon: FileQuestion, label: { en: "Round 1 test bank", vi: "Ngân hàng đề Vòng 1" } },
+          { href: "/admin/round-1/scores", icon: Trophy, label: { en: "Round 1 scores", vi: "Điểm Vòng 1" } },
+          { href: "/admin/round-1/exams", icon: ClipboardCheck, label: { en: "Round 1 attempt", vi: "Lượt thi Vòng 1" } },
         ],
       },
       {
@@ -183,11 +197,11 @@ const adminNavGroups: Array<{
         label: { en: "Round 2", vi: "Vòng 2" },
         description: { en: "Round 2 submission review", vi: "Rà soát bài nộp Vòng 2" },
         children: [
-          { href: "/admin/submissions", label: { en: "Round 2 submissions", vi: "Bài nộp Vòng 2" } },
-          { href: "/admin/submissions/scores", label: { en: "Round 2 scores", vi: "Điểm Vòng 2" } },
-          { href: "/admin/submissions/gpt-scores", label: { en: "GPT scores", vi: "Điểm GPT" } },
-          { href: "/admin/submissions/rubrics", label: { en: "Rubric", vi: "Rubric" } },
-          { href: "/admin/submissions/round-3", label: { en: "Final/Emerging submissions", vi: "Bài nộp chung kết/Đội ươm mầm" } },
+          { href: "/admin/submissions", icon: TableProperties, label: { en: "Round 2 submissions", vi: "Bài nộp Vòng 2" } },
+          { href: "/admin/submissions/scores", icon: Trophy, label: { en: "Round 2 scores", vi: "Điểm Vòng 2" } },
+          { href: "/admin/submissions/gpt-scores", icon: Gauge, label: { en: "GPT scores", vi: "Điểm GPT" } },
+          { href: "/admin/submissions/rubrics", icon: ListChecks, label: { en: "Rubric", vi: "Rubric" } },
+          { href: "/admin/submissions/round-3", icon: FileText, label: { en: "Final/Emerging submissions", vi: "Bài nộp chung kết/Đội ươm mầm" } },
         ],
       },
       {
@@ -196,7 +210,7 @@ const adminNavGroups: Array<{
         label: { en: "Forum", vi: "Diễn đàn" },
         description: { en: "Thread moderation", vi: "Quản lý thảo luận" },
         children: [
-          { href: "/admin/forum", label: { en: "Thread list", vi: "Danh sách chủ đề" } },
+          { href: "/admin/forum", icon: MessageSquare, label: { en: "Thread list", vi: "Danh sách chủ đề" } },
         ],
       },
     ],
@@ -213,7 +227,7 @@ function isActiveRoute(pathname: string, href: string) {
 
 function getActiveChildHref(
   pathname: string,
-  children: Array<{ href: string; label: LocalizedText }> | undefined,
+  children: Array<{ href: string; icon: LucideIcon; label: LocalizedText }> | undefined,
 ) {
   if (!children?.length) {
     return null;
@@ -277,39 +291,75 @@ function AccessDenied() {
 export function AdminModeLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { locale, canAccessAdminMode, currentUser } = useSiteState();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   if (!canAccessAdminMode) {
     return <AccessDenied />;
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
+    <div
+      className={cn(
+        "grid gap-6 transition-[grid-template-columns] duration-300 ease-out xl:grid",
+        isSidebarCollapsed
+          ? "xl:grid-cols-[84px_minmax(0,1fr)]"
+          : "xl:grid-cols-[280px_minmax(0,1fr)]",
+      )}
+    >
       <aside className="xl:sticky xl:top-24 xl:self-start">
-        <Surface className="overflow-hidden px-4 py-4 md:px-5">
-          <div className="rounded-[1.7rem] border border-white/12 bg-[linear-gradient(135deg,#0b3158_0%,#105892_52%,#1772d0_100%)] px-4 py-5 text-white shadow-[0_24px_44px_rgba(11,49,88,0.22)]">
-            <p className="inline-flex items-center rounded-full border border-white/14 bg-white/12 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/88">
-              {locale === "en" ? "Admin mode" : "Chế độ admin"}
-            </p>
-            <p className="mt-3 text-xl font-semibold text-white">
-              {locale === "en" ? "Control center" : "Trung tâm điều phối"}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span className="inline-flex min-h-8 items-center justify-center rounded-full border border-white/14 bg-white/12 px-3 py-1 text-center text-xs font-medium text-white whitespace-nowrap">
-                {currentUser.role === "admin" ? "Admin" : "Moderator"}
-              </span>
-              <span className="inline-flex min-h-8 items-center justify-center rounded-full border border-white/14 bg-white/10 px-3 py-1 text-center text-xs font-medium text-white/92 whitespace-nowrap">
-                {currentUser.name}
-              </span>
-            </div>
+        <Surface
+          className={cn(
+            "overflow-visible px-3 py-3 transition-all duration-300 ease-out",
+            isSidebarCollapsed ? "md:px-2" : "md:px-5",
+          )}
+        >
+          <div
+            className={cn(
+              "flex items-center rounded-[1.35rem] border border-white/12 bg-[linear-gradient(135deg,#0b3158_0%,#105892_52%,#1772d0_100%)] text-white shadow-[0_24px_44px_rgba(11,49,88,0.18)] transition-all duration-300 ease-out",
+              isSidebarCollapsed ? "justify-center px-2 py-2" : "justify-between gap-3 px-4 py-3",
+            )}
+          >
+            {!isSidebarCollapsed ? (
+              <p className="min-w-0 truncate text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-white/88">
+                {locale === "en" ? "Admin mode" : "Chế độ admin"}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed((current) => !current)}
+              aria-label={
+                isSidebarCollapsed
+                  ? locale === "en"
+                    ? "Expand admin sidebar"
+                    : "Mở rộng thanh admin"
+                  : locale === "en"
+                    ? "Collapse admin sidebar"
+                    : "Thu gọn thanh admin"
+              }
+              title={
+                isSidebarCollapsed
+                  ? locale === "en"
+                    ? "Expand sidebar"
+                    : "Mở rộng sidebar"
+                  : locale === "en"
+                    ? "Collapse sidebar"
+                    : "Thu gọn sidebar"
+              }
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/16 bg-white/12 text-white transition hover:-translate-y-0.5 hover:bg-white/20 active:translate-y-0"
+            >
+              {isSidebarCollapsed ? <PanelLeftOpen className="h-4.5 w-4.5" /> : <PanelLeftClose className="h-4.5 w-4.5" />}
+            </button>
           </div>
 
-          <div className="mt-5 space-y-5">
+          <div className={cn("space-y-5 transition-all duration-300 ease-out", isSidebarCollapsed ? "mt-3" : "mt-5")}>
             {adminNavGroups.map((group) => (
-              <div key={group.label.en} className="space-y-2">
-                <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-muted">
-                  {pickText(locale, group.label)}
-                </p>
-                <div className="space-y-1.5">
+              <div key={group.label.en} className={cn("space-y-2", isSidebarCollapsed && "flex flex-col items-center")}>
+                {!isSidebarCollapsed ? (
+                  <p className="px-3 text-[0.68rem] font-semibold uppercase tracking-[0.24em] theme-text-muted">
+                    {pickText(locale, group.label)}
+                  </p>
+                ) : null}
+                <div className={cn("space-y-1.5", isSidebarCollapsed && "flex w-full flex-col items-center")}>
                   {group.items
                     .filter((item) => !item.adminOnly || currentUser.role === "admin")
                     .map((item) => {
@@ -318,11 +368,15 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                     const Icon = item.icon;
 
                     return (
-                      <div key={item.href} className="space-y-1">
+                      <div key={item.href} className={cn("space-y-1", isSidebarCollapsed && "flex w-full flex-col items-center")}>
                         <Link
                           href={item.href}
+                          title={pickText(locale, item.label)}
                           className={cn(
-                            "group flex items-start gap-3 rounded-[1.25rem] px-3 py-3 transition",
+                            "group flex rounded-[1.25rem] transition",
+                            isSidebarCollapsed
+                              ? "h-12 w-12 items-center justify-center p-0"
+                              : "items-start gap-3 px-3 py-3",
                             active
                               ? "bg-[linear-gradient(135deg,rgba(10,29,52,0.98),rgba(23,114,208,0.94))] text-white shadow-[0_18px_34px_rgba(23,114,208,0.16)]"
                               : "bg-white/36 text-[var(--text-strong)] hover:bg-[rgba(23,114,208,0.08)] hover:text-[var(--text-strong)] dark:bg-transparent",
@@ -330,7 +384,8 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                         >
                           <div
                             className={cn(
-                              "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border",
+                              "flex shrink-0 items-center justify-center rounded-2xl border transition-all duration-300",
+                              isSidebarCollapsed ? "h-10 w-10" : "mt-0.5 h-10 w-10",
                               active
                                 ? "border-white/14 bg-white/10 text-white"
                                 : "theme-border theme-panel-strong text-[var(--brand)]",
@@ -338,6 +393,7 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                           >
                             <Icon className="h-4.5 w-4.5" />
                           </div>
+                          {!isSidebarCollapsed ? (
                           <div className="min-w-0 flex-1">
                             <p className={cn("text-sm font-semibold", active && "text-white")}>
                               {pickText(locale, item.label)}
@@ -346,30 +402,42 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
                               {pickText(locale, item.description)}
                             </p>
                           </div>
+                          ) : null}
                         </Link>
 
                         {item.children?.length ? (
-                          <div className="ml-[3.35rem] space-y-1 border-l theme-border pl-4">
+                          <div
+                            className={cn(
+                              "space-y-1 transition-all duration-300",
+                              isSidebarCollapsed
+                                ? "flex flex-col items-center border-l-0 pl-0"
+                                : "ml-[3.35rem] border-l theme-border pl-4",
+                            )}
+                          >
                             {item.children.map((child) => {
                               const childActive = activeChildHref === child.href;
+                              const ChildIcon = child.icon;
                               return (
                                 <Link
                                   key={child.href}
                                   href={child.href}
+                                  title={pickText(locale, child.label)}
                                   className={cn(
-                                    "flex items-center gap-2 rounded-xl px-2.5 py-2 text-xs font-medium transition",
+                                    "flex items-center rounded-xl text-xs font-medium transition",
+                                    isSidebarCollapsed ? "h-8 w-8 justify-center p-0" : "gap-2 px-2.5 py-2",
                                     childActive
                                       ? "bg-[rgba(23,114,208,0.1)] text-[var(--text-strong)]"
                                       : "theme-text-body hover:bg-[rgba(23,114,208,0.06)] hover:text-[var(--text-strong)]",
                                   )}
                                 >
-                                  <span
-                                    className={cn(
-                                      "h-1.5 w-1.5 rounded-full",
-                                      childActive ? "bg-[var(--brand)]" : "bg-slate-300 dark:bg-white/28",
-                                    )}
-                                  />
-                                  {pickText(locale, child.label)}
+                                  {isSidebarCollapsed ? (
+                                    <ChildIcon className={cn("h-3.5 w-3.5", childActive && "text-[var(--brand)]")} />
+                                  ) : (
+                                    <>
+                                      <ChildIcon className={cn("h-3.5 w-3.5 shrink-0", childActive && "text-[var(--brand)]")} />
+                                      <span className="min-w-0 truncate">{pickText(locale, child.label)}</span>
+                                    </>
+                                  )}
                                 </Link>
                               );
                             })}
@@ -385,7 +453,7 @@ export function AdminModeLayout({ children }: { children: React.ReactNode }) {
         </Surface>
       </aside>
 
-      <div className="min-w-0">{children}</div>
+      <div className="min-w-0 transition-all duration-300 ease-out">{children}</div>
     </div>
   );
 }
