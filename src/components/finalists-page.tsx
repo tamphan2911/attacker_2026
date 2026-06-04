@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { SectionHeading, StatusPill, Surface } from "@/components/site-ui";
@@ -90,14 +89,6 @@ function GuidancePanel({
           <p className="mt-3 text-xs leading-6 theme-text-soft">
             {pickText(locale, panel.emailLabel)}: {organizerEmail}
           </p>
-        </div>
-        <div className="flex shrink-0 flex-wrap gap-3">
-          <Link
-            href="/dashboard#round-3-section"
-            className="theme-button-primary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold"
-          >
-            {pickText(locale, panel.reportLabel)}
-          </Link>
         </div>
       </div>
     </Surface>
