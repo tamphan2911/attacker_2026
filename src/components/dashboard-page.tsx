@@ -2878,6 +2878,7 @@ export function DashboardPage() {
               {incomingInvitations.length > 0 ? (
                 incomingInvitations.map((invitation) => {
                   const team = teams.find((item) => item.id === invitation.teamId);
+                  const inviter = users.find((user) => user.id === invitation.fromUserId);
                   const isTargetTeamFull = Boolean(team && team.memberIds.length >= TEAM_MAX_MEMBERS);
 
                   if (!team) {
@@ -2899,8 +2900,8 @@ export function DashboardPage() {
                             ? "This team is now full. If you try to accept, the invitation will expire and you will not enter the team."
                             : "Đội này hiện đã đủ thành viên. Nếu bạn thử chấp nhận, lời mời sẽ hết hiệu lực và bạn sẽ không vào được đội."
                           : locale === "en"
-                            ? "Accepting works only if this account is not already in another team."
-                            : "Chỉ có thể chấp nhận nếu tài khoản này hiện không ở đội nào khác."}
+                            ? `${inviter?.name ?? "A team leader"} invited you to join ${team.name}.`
+                            : `${inviter?.name ?? "Một đội trưởng"} đã mời bạn vào đội ${team.name}.`}
                       </p>
                       <div className="mt-4 grid grid-cols-2 gap-3">
                         <button
