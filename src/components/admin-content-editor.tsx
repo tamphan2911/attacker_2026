@@ -2107,6 +2107,18 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                   )
                 }
               />
+              <LocalizedFieldEditor
+                label="Opportunity note"
+                rows={5}
+                value={draft.competition.emergingRewardOpportunityNote}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.competition.emergingRewardOpportunityNote[language] = value;
+                    }),
+                  )
+                }
+              />
             </Surface>
 
             <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">

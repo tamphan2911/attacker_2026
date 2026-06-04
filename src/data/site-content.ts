@@ -1303,9 +1303,13 @@ export const defaultPageContent: SitePageContent = {
       title: { en: "Emerging Teams", vi: "Đội ươm mầm" },
       amount: { en: "Top 10 teams", vi: "Top 10 đội" },
       note: {
-        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities. Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.",
-        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác. Tùy theo chương trình đồng hành tại ngày thuyết trình chung kết, các đội nổi bật có thể nhận thêm quà tặng, học bổng, mentoring, tuyển dụng hoặc cơ hội trao đổi đầu tư từ giám khảo, nhà tài trợ và khách mời.",
+        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
+        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
       },
+    },
+    emergingRewardOpportunityNote: {
+      en: "Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.",
+      vi: "Tùy theo chương trình đồng hành tại ngày thuyết trình chung kết, các đội nổi bật có thể nhận thêm quà tặng, học bổng, cố vấn chuyên môn, tuyển dụng hoặc cơ hội trao đổi đầu tư từ giám khảo, nhà tài trợ và khách mời.",
     },
     competitionPath: {
       eyebrow: { en: "Additional opportunities", vi: "Quyền lợi mở rộng" },
@@ -3865,6 +3869,18 @@ export function mergePageContentWithDefaults(
     if (splitHomeEmergingRewardNote) {
       nextContent.home.emergingReward.note = splitHomeEmergingRewardNote.before;
       nextContent.home.emergingRewardOpportunityNote = splitHomeEmergingRewardNote.after;
+    }
+  }
+
+  if (!content?.competition?.emergingRewardOpportunityNote) {
+    const splitCompetitionEmergingRewardNote = splitLocalizedTextAtMarker(nextContent.competition.emergingReward.note, {
+      en: " Depending on partner availability",
+      vi: " Tùy theo chương trình",
+    });
+
+    if (splitCompetitionEmergingRewardNote) {
+      nextContent.competition.emergingReward.note = splitCompetitionEmergingRewardNote.before;
+      nextContent.competition.emergingRewardOpportunityNote = splitCompetitionEmergingRewardNote.after;
     }
   }
 
