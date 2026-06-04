@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 import { useSiteState } from "@/components/providers/site-state-provider";
 import { ScrollToTopButton } from "@/components/scroll-to-top-button";
@@ -9,6 +10,8 @@ import { SiteHeader } from "@/components/site-header";
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const { theme } = useSiteState();
+  const pathname = usePathname();
+  const isAdminRoute = pathname === "/admin" || pathname.startsWith("/admin/");
 
   return (
     <div data-theme={theme} className="theme-shell relative min-h-screen overflow-x-hidden">
@@ -23,7 +26,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       />
       <div className="relative flex min-h-screen flex-col">
         <SiteHeader />
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-12 pt-6 md:px-8 md:pt-8">
+        <main className={`mx-auto w-full flex-1 px-4 pb-12 pt-6 md:px-8 md:pt-8 ${isAdminRoute ? "max-w-none" : "max-w-7xl"}`}>
           {children}
         </main>
         <SiteFooter />
