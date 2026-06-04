@@ -34,6 +34,15 @@ const ROUND2_AI_JUDGE_PERSPECTIVES = [
       "Bạn là giám khảo chuyên về kinh doanh, tài chính và mô hình thị trường. Ưu tiên đánh giá độ rõ của vấn đề, phân khúc khách hàng, nhu cầu thị trường, mô hình doanh thu/chi phí, tác động tài chính-xã hội, dữ liệu kiểm chứng, rủi ro kinh doanh và mức độ thuyết phục của chiến lược go-to-market.",
     commentGuide:
       "Nhận xét phải thể hiện rõ góc nhìn kinh doanh/tài chính: thị trường, khách hàng, mô hình tạo giá trị, tính bền vững tài chính, dữ liệu kiểm chứng, rủi ro thương mại và tác động. Không tập trung quá sâu vào kiến trúc kỹ thuật trừ khi nó ảnh hưởng trực tiếp đến mô hình kinh doanh.",
+    requiredCommentFocus: [
+      "vấn đề thị trường và chân dung khách hàng/người dùng",
+      "mô hình doanh thu, chi phí, khả năng tạo giá trị và bền vững tài chính",
+      "bằng chứng kiểm chứng nhu cầu, quy mô thị trường hoặc traction nếu có",
+      "rủi ro thương mại, cạnh tranh, pháp lý/tài chính và go-to-market",
+      "khuyến nghị cải thiện về dữ liệu thị trường, mô hình kinh doanh và tác động",
+    ],
+    avoidCommentFocus:
+      "Không dành nhiều dung lượng cho kiến trúc hệ thống, API, blockchain, bảo mật hoặc stack kỹ thuật nếu các yếu tố đó không trực tiếp ảnh hưởng đến thương mại hóa.",
   },
   {
     label: "Giám khảo GPT 2 - Góc nhìn công nghệ/fintech",
@@ -42,6 +51,15 @@ const ROUND2_AI_JUDGE_PERSPECTIVES = [
       "Bạn là giám khảo chuyên về công nghệ, IT, blockchain và fintech. Ưu tiên đánh giá kiến trúc giải pháp, khả thi kỹ thuật, dữ liệu/hạ tầng, bảo mật, tích hợp hệ thống tài chính, nguyên mẫu/demo, rủi ro vận hành-pháp lý, khả năng mở rộng và bằng chứng thực thi.",
     commentGuide:
       "Nhận xét phải thể hiện rõ góc nhìn công nghệ/fintech: cách giải pháp vận hành, mức độ sẵn sàng kỹ thuật, dữ liệu, bảo mật, tích hợp, blockchain/AI/API nếu có, prototype/MVP/demo và rủi ro triển khai. Không lặp lại trọng tâm thị trường/tài chính nếu báo cáo không gắn nó với lựa chọn công nghệ.",
+    requiredCommentFocus: [
+      "kiến trúc giải pháp, luồng xử lý và mức độ rõ của cách hệ thống vận hành",
+      "khả thi kỹ thuật, dữ liệu, hạ tầng, bảo mật và tích hợp với hệ sinh thái tài chính",
+      "vai trò của blockchain, AI, API, fintech stack hoặc công nghệ lõi nếu báo cáo có nêu",
+      "mức độ sẵn sàng của prototype/MVP/demo, bằng chứng triển khai và khả năng mở rộng",
+      "khuyến nghị cải thiện về thiết kế kỹ thuật, kiểm thử, bảo mật, dữ liệu và vận hành",
+    ],
+    avoidCommentFocus:
+      "Không dành nhiều dung lượng cho quy mô thị trường, mô hình doanh thu hoặc chiến lược marketing nếu các yếu tố đó không gắn trực tiếp với quyết định công nghệ.",
   },
 ] as const;
 
@@ -376,6 +394,8 @@ async function scoreReportWithOpenAi({
             `Bạn đang đóng vai ${judgePerspective.label}. ${judgePerspective.focus}`,
             "Hãy đọc file PDF báo cáo, chấm theo rubric được cung cấp, và trả về JSON đúng schema.",
             `Góc nhìn bắt buộc của nhận xét: ${judgePerspective.commentGuide}`,
+            `Các trọng tâm bắt buộc phải xuất hiện trong comment: ${judgePerspective.requiredCommentFocus.join("; ")}.`,
+            `Giới hạn trọng tâm để khác giám khảo còn lại: ${judgePerspective.avoidCommentFocus}`,
             "Điểm từng tiêu chí phải nằm trong giới hạn tối đa của chính tiêu chí đó, cho phép một chữ số thập phân.",
             "Nhận xét phải bằng tiếng Việt, cụ thể, chuyên nghiệp, tránh văn phong chung chung.",
             "Đây là một lượt chấm độc lập; nhận xét phải khác rõ với giám khảo còn lại về trọng tâm phân tích, ví dụ cụ thể và khuyến nghị cải thiện.",
@@ -403,6 +423,10 @@ async function scoreReportWithOpenAi({
                 task:
                   "Chấm báo cáo Vòng 2 mới nhất của đội theo rubric. Tổng điểm không cần trả về vì hệ thống tự cộng từ từng tiêu chí.",
                 judgePerspective,
+                commentPerspectiveRequirements: {
+                  mustDiscuss: judgePerspective.requiredCommentFocus,
+                  shouldAvoidOverEmphasizing: judgePerspective.avoidCommentFocus,
+                },
                 team: {
                   name: submission.team.name,
                   tag: submission.team.tag,
@@ -426,6 +450,8 @@ async function scoreReportWithOpenAi({
                   "Điểm thưởng phải hiếm; nếu không có bằng chứng triển khai hoặc kiểm chứng thật, điểm thưởng nên bằng 0.",
                   "Comment phải gồm các phần: Tổng quan, Điểm mạnh, Điểm yếu/Rủi ro, Cơ hội, Thách thức, Gợi ý cải thiện, và Nhận xét theo rubric.",
                   `Trong từng phần comment, ưu tiên nội dung theo đúng góc nhìn ${judgePerspective.label}.`,
+                  `Mỗi phần comment cần có ít nhất một ý gắn với các trọng tâm này nếu báo cáo có dữ liệu liên quan: ${judgePerspective.requiredCommentFocus.join("; ")}.`,
+                  `Không để comment giống một nhận xét tổng quát; hạn chế trọng tâm sau: ${judgePerspective.avoidCommentFocus}`,
                   "Không dùng cùng cách diễn đạt với một giám khảo tổng quát; hãy viết như một chuyên gia thật đang phản biện từ chuyên môn của mình.",
                   "Trong phần Nhận xét theo rubric, nhắc ngắn từng tiêu chí và lý do điểm.",
                   "Nếu báo cáo có sản phẩm hoặc demo đáng tin cậy, hãy nêu rõ sản phẩm đó ảnh hưởng thế nào đến điểm khả thi, công nghệ và điểm thưởng.",
