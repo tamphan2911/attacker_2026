@@ -491,7 +491,6 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
 
   const syncSiteData = useCallback(async () => {
     const response = await fetch("/api/site-data", {
-      cache: "no-store",
       credentials: "same-origin",
     });
 

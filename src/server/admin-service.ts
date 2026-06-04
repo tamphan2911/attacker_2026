@@ -29,6 +29,7 @@ import { deleteJudgeImageFile, getJudgeImageStorageKeyFromUrl } from "@/server/j
 import { DEFAULT_JUDGE_PASSWORD, getJudgeLoginIdFromProfileId } from "@/server/judge-account-utils";
 import { deleteNewsImageFile, getNewsImageStorageKeyFromUrl } from "@/server/news-image-storage";
 import { ensureRound1SubmissionArchive } from "@/server/round1-submission-archive";
+import { invalidateSiteDataCache } from "@/server/site-data-cache";
 import type {
   EditableOrganizerSeasonArchive,
   EditableOrganizerSeasonStory,
@@ -168,6 +169,7 @@ export async function savePageContentByAdmin(
     },
   });
 
+  invalidateSiteDataCache();
   return ok({ saved: true });
 }
 
@@ -301,6 +303,7 @@ export async function saveSeasonContentByAdmin(payload: {
     },
   });
 
+  invalidateSiteDataCache();
   return ok({ saved: true });
 }
 
@@ -517,6 +520,7 @@ export async function saveRound1TopicsByAdmin(
     });
   });
 
+  invalidateSiteDataCache();
   return ok({ saved: true, topics });
 }
 
@@ -541,6 +545,7 @@ export async function saveSponsorsByAdmin(
     },
   });
 
+  invalidateSiteDataCache();
   return ok({ saved: true });
 }
 
@@ -565,6 +570,8 @@ async function saveJudges(judges: JudgeProfile[]) {
       payload: JSON.stringify(normalizedJudges),
     },
   });
+
+  invalidateSiteDataCache();
 }
 
 export async function createJudgeByAdmin(
@@ -733,6 +740,7 @@ export async function createNewsPostByAdmin(
     },
   });
 
+  invalidateSiteDataCache();
   return ok({ slug: payload.slug }, 201);
 }
 
@@ -804,6 +812,7 @@ export async function updateNewsPostByAdmin(
     }),
   );
 
+  invalidateSiteDataCache();
   return ok({ slug: payload.slug });
 }
 
@@ -829,6 +838,7 @@ export async function deleteNewsPostByAdmin(slug: string): Promise<ServiceResult
     }),
   );
 
+  invalidateSiteDataCache();
   return ok({ slug });
 }
 
@@ -1379,6 +1389,7 @@ export async function createRound1QuestionByAdmin(
     },
   });
 
+  invalidateSiteDataCache();
   return ok({ bankId, questionId }, 201);
 }
 
@@ -1436,6 +1447,7 @@ export async function updateRound1QuestionByAdmin(
     },
   });
 
+  invalidateSiteDataCache();
   return ok({ bankId, questionId: nextQuestionId });
 }
 
@@ -1468,6 +1480,7 @@ export async function deleteRound1QuestionByAdmin(
     },
   });
 
+  invalidateSiteDataCache();
   return ok({ bankId, questionId });
 }
 
@@ -1499,6 +1512,7 @@ export async function updateRound1FixedEssayPromptByAdmin(
     },
   });
 
+  invalidateSiteDataCache();
   return ok({ bankId });
 }
 

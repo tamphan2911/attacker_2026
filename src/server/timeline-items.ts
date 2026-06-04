@@ -2,6 +2,7 @@ import { timelineItems as defaultTimelineItems } from "@/data/site-content";
 import { prisma } from "@/lib/db";
 import { normalizeLocalizedText } from "@/lib/site";
 import { normalizeTimelineTime } from "@/lib/timeline-dates";
+import { invalidateSiteDataCache } from "@/server/site-data-cache";
 import type { LocalizedText, NavItem, TimelineItem } from "@/types/site";
 
 const TIMELINE_ITEMS_SCOPE = "site-timeline-items";
@@ -99,4 +100,6 @@ export async function saveTimelineItems(items: TimelineItem[]) {
       payload: JSON.stringify(normalizedItems),
     },
   });
+
+  invalidateSiteDataCache();
 }
