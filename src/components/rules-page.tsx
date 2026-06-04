@@ -183,14 +183,13 @@ function RoundDownloadCard({
   const Icon = kind === "rubric" ? FileDown : FileText;
 
   return (
-    <div className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4">
-      <div className="flex items-center justify-center gap-4 text-center">
-        <div className="group relative shrink-0">
+    <div className="theme-rules-note-card rounded-[1.35rem] border px-4 py-4 sm:px-5">
+      <div className="flex items-center justify-center gap-3 text-left">
+        <div className="shrink-0">
           {downloadUrl ? (
             <a
               href={downloadUrl}
               aria-label={buttonLabel}
-              title={buttonLabel}
               className="inline-flex h-12 w-12 items-center justify-center rounded-[1rem] border border-sky-700/24 bg-[linear-gradient(135deg,rgba(14,165,233,0.28),rgba(59,130,246,0.18))] text-sky-950 shadow-[0_14px_30px_rgba(14,165,233,0.12)] transition hover:-translate-y-0.5 hover:border-sky-500/45 hover:bg-[linear-gradient(135deg,rgba(14,165,233,0.38),rgba(59,130,246,0.26))] active:translate-y-0 dark:border-sky-300/20 dark:bg-sky-300/[0.12] dark:text-sky-100"
             >
               <Icon className="h-5 w-5" />
@@ -198,18 +197,16 @@ function RoundDownloadCard({
           ) : (
             <span
               aria-label={unavailableLabel}
-              title={unavailableLabel}
               className="inline-flex h-12 w-12 cursor-not-allowed items-center justify-center rounded-[1rem] border border-amber-300/38 bg-amber-300/12 text-amber-800 opacity-80 dark:border-amber-200/24 dark:text-amber-100"
             >
               <Icon className="h-5 w-5" />
             </span>
           )}
-          <span className="theme-header-tooltip pointer-events-none absolute left-1/2 top-full z-20 mt-3 -translate-x-1/2 whitespace-nowrap rounded-full px-3 py-1.5 text-[0.68rem] font-medium opacity-0 transition duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
-            {downloadUrl ? buttonLabel : unavailableLabel}
-          </span>
         </div>
         <div className="min-w-0">
-          <p className="text-base font-semibold leading-7 theme-text-strong">{title}</p>
+          <p className="whitespace-nowrap text-[0.95rem] font-semibold leading-6 theme-text-strong sm:text-base">
+            {title}
+          </p>
           {!downloadUrl ? (
             <p className="mt-1 text-xs font-semibold leading-5 text-amber-800 dark:text-amber-100">
               {unavailableLabel}
@@ -501,7 +498,7 @@ export function RulesPage() {
               id={meta.anchor}
               className="theme-rules-round-shell scroll-mt-36 overflow-hidden rounded-[2rem] border px-5 py-6 md:px-7 md:py-7"
             >
-              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_400px]">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                     {pickText(locale, round.label)}
