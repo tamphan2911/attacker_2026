@@ -1256,8 +1256,8 @@ export function DashboardPage() {
                         <p className="mt-4 text-lg font-semibold theme-text-strong">{team.name}</p>
                         <p className="mt-2 text-sm leading-7 theme-text-muted">
                           {locale === "en"
-                            ? `${requester?.name ?? "The team leader"} wants to lock this roster before Round 1. Once everyone accepts, invites, leaving the team, and leadership transfer all stop.`
-                            : `${requester?.name ?? "Đội trưởng"} muốn khoá đội hình này trước vòng 1. Khi tất cả thành viên xác nhận, đội sẽ được khóa chính thức và không thể thay đổi thành viên, chuyển quyền đội trưởng hoặc hủy khóa đội nữa.`}
+                            ? `${requester?.name ?? "The team leader"} sent a request to lock the roster before Round 1. Once every member confirms, the roster will be officially locked and members cannot be changed, leadership cannot be transferred, and the team lock request cannot be canceled.`
+                            : `${requester?.name ?? "Đội trưởng"} đã gửi yêu cầu khóa đội hình trước Vòng 1. Khi tất cả thành viên xác nhận, đội hình sẽ được khóa chính thức và không thể thay đổi thành viên, chuyển quyền đội trưởng hoặc hủy yêu cầu khóa đội.`}
                         </p>
                         <div className="mt-4 flex flex-wrap gap-3">
                           <button
