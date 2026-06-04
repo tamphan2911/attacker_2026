@@ -192,6 +192,11 @@ function mergeScopedPageContent(
       return nextContent;
     case "page:competition":
       nextContent.competition = incoming.competition;
+      nextContent.organizer.header = incoming.organizer.header;
+      nextContent.organizer.heroBadges = incoming.organizer.heroBadges;
+      nextContent.organizer.heroCard = incoming.organizer.heroCard;
+      nextContent.organizer.metrics = incoming.organizer.metrics;
+      nextContent.organizer.contentModules = incoming.organizer.contentModules;
       nextContent.organizer.competitionLinkLabel = incoming.organizer.competitionLinkLabel;
       return nextContent;
     case "page:faq":
