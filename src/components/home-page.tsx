@@ -8,6 +8,8 @@ import {
   Award,
   Badge,
   BriefcaseBusiness,
+  ChevronLeft,
+  ChevronRight,
   Crown,
   GraduationCap,
   Quote,
@@ -144,6 +146,16 @@ export function HomePage() {
     });
   };
 
+  const moveHeroSlide = (direction: "previous" | "next") => {
+    setActiveSlide((current) => {
+      if (direction === "previous") {
+        return (current - 1 + heroDeck.length) % heroDeck.length;
+      }
+
+      return (current + 1) % heroDeck.length;
+    });
+  };
+
   useEffect(() => {
     if (heroDeck.length <= 1) {
       return;
@@ -182,6 +194,27 @@ export function HomePage() {
               />
             </div>
           ))}
+
+          {heroDeck.length > 1 ? (
+            <div className="pointer-events-none absolute inset-y-0 left-0 right-0 z-20 flex items-center justify-between px-5">
+              <button
+                type="button"
+                onClick={() => moveHeroSlide("previous")}
+                aria-label={locale === "en" ? "Previous hero slide" : "Slide trước"}
+                className="pointer-events-auto group/hero-nav inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/18 bg-slate-950/18 text-white/72 opacity-55 shadow-[0_18px_48px_rgba(2,6,23,0.24)] backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-x-0.5 hover:border-white/38 hover:bg-white/18 hover:text-white hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              >
+                <ChevronLeft className="h-5 w-5 transition-transform duration-300 group-hover/hero-nav:-translate-x-0.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => moveHeroSlide("next")}
+                aria-label={locale === "en" ? "Next hero slide" : "Slide tiếp theo"}
+                className="pointer-events-auto group/hero-nav inline-flex h-12 w-12 items-center justify-center rounded-full border border-white/18 bg-slate-950/18 text-white/72 opacity-55 shadow-[0_18px_48px_rgba(2,6,23,0.24)] backdrop-blur-xl transition-all duration-300 ease-out hover:translate-x-0.5 hover:border-white/38 hover:bg-white/18 hover:text-white hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+              >
+                <ChevronRight className="h-5 w-5 transition-transform duration-300 group-hover/hero-nav:translate-x-0.5" />
+              </button>
+            </div>
+          ) : null}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-6 z-10 flex justify-center">
             <div className="pointer-events-auto flex gap-2 rounded-full border border-white/20 bg-slate-950/34 px-3 py-2 shadow-[0_14px_42px_rgba(2,6,23,0.24)] backdrop-blur-md">
