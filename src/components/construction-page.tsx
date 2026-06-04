@@ -8,6 +8,14 @@ import type { Locale, SitePageContent } from "@/types/site";
 
 export const CONSTRUCTION_ACCESS_COOKIE = "attacker_construction_access";
 const CONSTRUCTION_PASSWORD = "Tamdeptrai";
+const SITE_TIME_ZONE = "Asia/Ho_Chi_Minh";
+
+interface RemainingParts {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
 
 function formatLaunchDate(value: string, locale: Locale) {
   if (locale === "vi") {
@@ -16,11 +24,13 @@ function formatLaunchDate(value: string, locale: Locale) {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
+      timeZone: SITE_TIME_ZONE,
     }).format(date);
     const dateLabel = new Intl.DateTimeFormat("vi-VN", {
       day: "2-digit",
       month: "long",
       year: "numeric",
+      timeZone: SITE_TIME_ZONE,
     }).format(date);
 
     return `lúc ${timeLabel} - ngày ${dateLabel}`;
@@ -32,10 +42,11 @@ function formatLaunchDate(value: string, locale: Locale) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: SITE_TIME_ZONE,
   }).format(new Date(value));
 }
 
-function getRemainingParts(targetAt: string) {
+function getRemainingParts(targetAt: string): RemainingParts {
   const remainingMs = Math.max(0, new Date(targetAt).getTime() - Date.now());
   const totalSeconds = Math.floor(remainingMs / 1000);
   const days = Math.floor(totalSeconds / 86400);
@@ -55,7 +66,12 @@ function CountdownBlock({
   locale: Locale;
   targetAt: string;
 }) {
-  const [remaining, setRemaining] = useState(() => getRemainingParts(targetAt));
+  const [remaining, setRemaining] = useState<RemainingParts>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
   const parts = useMemo(
     () => [
       { value: remaining.days, label: pickText(locale, content.daysLabel) },
@@ -67,11 +83,17 @@ function CountdownBlock({
   );
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
+    const refreshTimer = window.setTimeout(() => {
+      setRemaining(getRemainingParts(targetAt));
+    }, 0);
+    const intervalTimer = window.setInterval(() => {
       setRemaining(getRemainingParts(targetAt));
     }, 1000);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearTimeout(refreshTimer);
+      window.clearInterval(intervalTimer);
+    };
   }, [targetAt]);
 
   return (
