@@ -593,7 +593,7 @@ export function RulesPage() {
                         ? formatDateRangeLabel(locale, roundWindow.startDate, roundWindow.endDate, roundWindow.startTime, roundWindow.endTime)
                         : pickText(locale, round.duration)}
                     </span>
-                    <span className={`inline-flex max-w-xl items-start gap-2 rounded-[1.15rem] border px-4 py-3 text-sm font-medium leading-6 ${meta.chipClass}`}>
+                    <span className={`inline-flex max-w-xl items-center gap-2 rounded-[1.15rem] border px-4 py-3 text-sm font-medium leading-6 ${meta.chipClass}`}>
                       <CheckCircle2 className="h-4 w-4 shrink-0" />
                       {pickText(locale, round.focus)}
                     </span>
