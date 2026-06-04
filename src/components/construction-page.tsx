@@ -115,6 +115,20 @@ function CountdownBlock({
   );
 }
 
+function LaunchDateText({ locale, targetAt }: { locale: Locale; targetAt: string }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setIsMounted(true);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  return isMounted ? formatLaunchDate(targetAt, locale) : "";
+}
+
 export function ConstructionPage({
   content,
   targetAt,
@@ -158,7 +172,9 @@ export function ConstructionPage({
 
         <p className="mx-auto mt-7 max-w-2xl text-sm leading-7 text-slate-200">
           {pickText(locale, content.waitPrefix)}{" "}
-          <span className="font-semibold text-white">{formatLaunchDate(targetAt, locale)}</span>
+          <span className="font-semibold text-white">
+            <LaunchDateText locale={locale} targetAt={targetAt} />
+          </span>
         </p>
       </section>
     </div>
@@ -245,7 +261,9 @@ export function ConstructionAuthGate({
 
         <p className="mt-5 text-center text-xs leading-6 text-slate-200">
           {pickText(locale, content.waitPrefix)}{" "}
-          <span className="font-semibold text-white">{formatLaunchDate(targetAt, locale)}</span>
+          <span className="font-semibold text-white">
+            <LaunchDateText locale={locale} targetAt={targetAt} />
+          </span>
         </p>
       </div>
     </div>
