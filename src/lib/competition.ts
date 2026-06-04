@@ -278,7 +278,7 @@ function pickRound2AdvancementStatusLabel(locale: Locale, team: TeamProfile, now
       return locale === "en" ? "Stop at Final round" : "Dừng chân tại chung kết";
     }
 
-    return locale === "en" ? "Finalist" : "Đội chung kết";
+    return locale === "en" ? "Finalist" : "Đội Chung kết";
   }
 
   if (team.round2Advancement === "emerging") {

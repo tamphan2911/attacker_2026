@@ -64,7 +64,7 @@ function createSeasonArchiveTeamDraft(index: number, year = "2026"): EditableOrg
   ];
 
   return {
-    rank: rankLabels[index] ?? { en: "Finalist", vi: "Đội chung kết" },
+    rank: rankLabels[index] ?? { en: "Finalist", vi: "Đội Chung kết" },
     name: { en: `Team ${index + 1}`, vi: `Đội ${index + 1}` },
     projectName: { en: `Attacker ${year} project`, vi: `Dự án Attacker ${year}` },
     projectDescription: createBlankLocalizedText(),
