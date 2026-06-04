@@ -1522,8 +1522,8 @@ export function Round1ExamPage() {
                         : "Phần tự luận",
                     body:
                       locale === "en"
-                        ? `${ROUND1_ESSAY_TOTAL} essay questions stay at the end of the paper. Each answer can be shorter than 300 words, cannot exceed ${round1WordLimit} words, and is reviewed manually later.`
-                        : `Gồm ${ROUND1_ESSAY_TOTAL} câu ở cuối đề. Mỗi câu có thể ngắn hơn 300 từ, cần trình bày rõ ý và không vượt quá ${round1WordLimit} từ.`,
+                        ? `Includes ${ROUND1_ESSAY_TOTAL} questions at the end of the exam. Each answer should present ideas clearly and must not exceed ${round1WordLimit} words.`
+                        : `Gồm ${ROUND1_ESSAY_TOTAL} câu ở cuối đề. Mỗi câu cần trình bày rõ ý và không vượt quá ${round1WordLimit} từ.`,
                   },
                   {
                     icon: <ShieldCheck className="h-5 w-5 text-amber-300" />,
