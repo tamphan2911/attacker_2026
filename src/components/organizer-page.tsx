@@ -167,9 +167,9 @@ export function OrganizerContent({
 
         <div className="grid gap-5 xl:grid-cols-2">
           {seasonStories.map((season) => (
-            <Surface key={season.year} className="overflow-hidden px-0 py-0">
-              <div className="grid gap-0 lg:min-h-[336px] lg:grid-cols-[220px_minmax(0,1fr)] lg:items-stretch">
-                <div className="relative min-h-[260px] overflow-hidden lg:h-full lg:min-h-full">
+            <Surface key={season.year} className="h-full overflow-hidden px-0 py-0">
+              <div className="grid h-full gap-0 lg:min-h-[336px] lg:grid-cols-[220px_minmax(0,1fr)] lg:items-stretch">
+                <div className="relative min-h-[260px] overflow-hidden lg:min-h-0 lg:self-stretch">
                   <Link
                     href={getOrganizerSeasonHref(season.year)}
                     aria-label={pickText(locale, season.title)}
