@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bot, Download, Search, Trash2 } from "lucide-react";
+import { Bot, Download, Route, Search, Trash2 } from "lucide-react";
 
 import { AdminBulkDeleteDialog } from "@/components/admin-bulk-delete-dialog";
 import {
@@ -61,6 +61,18 @@ function statusLabel(locale: "en" | "vi", status: AdminRound2GptScoreRow["status
   }
 }
 
+function roundTone(round: AdminRound2GptScoreRow["round"]): "info" | "success" {
+  return round === "round-3" ? "success" : "info";
+}
+
+function roundLabel(locale: "en" | "vi", round: AdminRound2GptScoreRow["round"]) {
+  if (round === "round-3") {
+    return locale === "en" ? "Round 3" : "Vòng 3";
+  }
+
+  return locale === "en" ? "Round 2" : "Vòng 2";
+}
+
 export function AdminRound2GptScoresManager() {
   const { locale } = useSiteState();
   useAdminTitleScroll();
@@ -68,6 +80,7 @@ export function AdminRound2GptScoresManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [roundFilter, setRoundFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedReviewIds, setSelectedReviewIds] = useState<string[]>([]);
   const [pendingDelete, setPendingDelete] = useState<{
@@ -80,6 +93,10 @@ export function AdminRound2GptScoresManager() {
     const normalizedSearch = search.trim().toLowerCase();
     return rows.filter((row) => {
       if (statusFilter && row.status !== statusFilter) {
+        return false;
+      }
+
+      if (roundFilter && row.round !== roundFilter) {
         return false;
       }
 
@@ -96,12 +113,14 @@ export function AdminRound2GptScoresManager() {
         row.error ?? "",
         row.submittedByName,
         row.submittedByLoginId,
+        roundLabel("en", row.round),
+        roundLabel("vi", row.round),
       ]
         .join(" ")
         .toLowerCase()
         .includes(normalizedSearch);
     });
-  }, [rows, search, statusFilter]);
+  }, [rows, roundFilter, search, statusFilter]);
 
   const { page, pageCount, setPage, startIndex, paginatedRows } = useAdminTablePagination(filteredRows);
   const selectedRows = useMemo(
@@ -116,7 +135,7 @@ export function AdminRound2GptScoresManager() {
       const response = await fetch("/api/admin/round-2/gpt-scores", { cache: "no-store" });
       const payload = (await response.json().catch(() => null)) as { rows?: AdminRound2GptScoreRow[]; error?: string } | null;
       if (!response.ok) {
-        throw new Error(payload?.error ?? (locale === "en" ? "Could not load Round 2 GPT scores." : "Không thể tải điểm GPT Vòng 2."));
+        throw new Error(payload?.error ?? (locale === "en" ? "Could not load GPT report scores." : "Không thể tải điểm GPT báo cáo."));
       }
       setRows(payload?.rows ?? []);
       setSelectedReviewIds([]);
@@ -174,7 +193,7 @@ export function AdminRound2GptScoresManager() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, setPage, statusFilter]);
+  }, [roundFilter, search, setPage, statusFilter]);
 
   const visibleIds = paginatedRows.map((row) => row.reviewId);
   const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => selectedReviewIds.includes(id));
@@ -184,12 +203,12 @@ export function AdminRound2GptScoresManager() {
       <div id={ADMIN_TITLE_ID} className="scroll-mt-32 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-3xl">
           <p className="theme-heading text-3xl font-semibold theme-text-strong">
-            {locale === "en" ? "Round 2 GPT scores" : "Điểm GPT Vòng 2"}
+            {locale === "en" ? "GPT report scores" : "Điểm GPT báo cáo"}
           </p>
           <p className="mt-3 text-sm leading-7 theme-text-muted">
             {locale === "en"
-              ? "Review GPT scoring entries, clear failed or outdated AI scores, and keep human judge scores untouched."
-              : "Quản lý các lượt chấm GPT, xóa điểm AI lỗi hoặc cũ, và không ảnh hưởng điểm giám khảo chấm thủ công."}
+              ? "Review GPT scoring entries for Round 2 and Round 3 reports, clear failed or outdated AI scores, and keep human judge scores untouched."
+              : "Quản lý các lượt chấm GPT cho báo cáo Vòng 2 và Vòng 3, xóa điểm AI lỗi hoặc cũ, và không ảnh hưởng điểm giám khảo chấm thủ công."}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -222,7 +241,7 @@ export function AdminRound2GptScoresManager() {
       ) : null}
 
       <Surface className="px-5 py-5 md:px-6">
-        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px_260px]">
           <label className="space-y-2">
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
               <Search className="h-4 w-4" />
@@ -234,6 +253,22 @@ export function AdminRound2GptScoresManager() {
               placeholder={locale === "en" ? "Team, file, model, error..." : "Đội, tệp, model, lỗi..."}
               className="theme-field h-12 w-full rounded-[1.15rem] border px-4 text-sm outline-none"
             />
+          </label>
+          <label className="space-y-2">
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
+              <Route className="h-4 w-4" />
+              {locale === "en" ? "Round" : "Vòng"}
+            </span>
+            <select
+              value={roundFilter}
+              onChange={(event) => setRoundFilter(event.target.value)}
+              className="theme-field h-12 w-full rounded-[1.15rem] border px-4 text-sm outline-none"
+            >
+              <option value="">{locale === "en" ? "All rounds" : "Tất cả vòng"}</option>
+              {(["round-2", "round-3"] as const).map((round) => (
+                <option key={round} value={round}>{roundLabel(locale, round)}</option>
+              ))}
+            </select>
           </label>
           <label className="space-y-2">
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] theme-eyebrow">
@@ -256,7 +291,7 @@ export function AdminRound2GptScoresManager() {
 
       <Surface className="overflow-hidden px-0 py-0">
         <div className="overflow-x-auto">
-          <table className="min-w-[1320px] text-left text-sm">
+          <table className="min-w-[1420px] text-left text-sm">
             <thead className="theme-table-head">
               <tr>
                 <th className="px-4 py-3">
@@ -276,6 +311,7 @@ export function AdminRound2GptScoresManager() {
                 </th>
                 {[
                   "#",
+                  locale === "en" ? "Round" : "Vòng",
                   locale === "en" ? "Team / report" : "Đội / báo cáo",
                   "GPT",
                   locale === "en" ? "Judge slots" : "Ô giám khảo",
@@ -293,13 +329,13 @@ export function AdminRound2GptScoresManager() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-5 py-10 text-center theme-text-muted">
+                  <td colSpan={10} className="px-5 py-10 text-center theme-text-muted">
                     {locale === "en" ? "Loading GPT score entries..." : "Đang tải điểm GPT..."}
                   </td>
                 </tr>
               ) : paginatedRows.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-5 py-10 text-center theme-text-muted">
+                  <td colSpan={10} className="px-5 py-10 text-center theme-text-muted">
                     {locale === "en" ? "No GPT score entries match this view." : "Không có điểm GPT phù hợp."}
                   </td>
                 </tr>
@@ -316,6 +352,9 @@ export function AdminRound2GptScoresManager() {
                       />
                     </td>
                     <td className="px-4 py-4 font-medium theme-text-soft">{startIndex + index + 1}</td>
+                    <td className="px-4 py-4 align-top">
+                      <StatusPill tone={roundTone(row.round)}>{roundLabel(locale, row.round)}</StatusPill>
+                    </td>
                     <td className="px-4 py-4">
                       <div className="space-y-1">
                         <p className="font-semibold theme-text-strong">{row.teamName}</p>
@@ -390,19 +429,19 @@ export function AdminRound2GptScoresManager() {
         locale={locale}
         title={
           pendingDelete?.mode === "all"
-            ? locale === "en" ? "Delete all Round 2 GPT scores?" : "Xóa toàn bộ điểm GPT Vòng 2?"
-            : locale === "en" ? "Delete Round 2 GPT score entries?" : "Xóa điểm GPT Vòng 2?"
+            ? locale === "en" ? "Delete all GPT report scores?" : "Xóa toàn bộ điểm GPT báo cáo?"
+            : locale === "en" ? "Delete GPT report score entries?" : "Xóa điểm GPT báo cáo?"
         }
         description={
           pendingDelete?.mode === "all"
             ? locale === "en"
-              ? "This clears every Round 2 GPT score entry and removes AI-filled judge scores. Human judge scores remain untouched. The delete-all password is required."
-              : "Thao tác này xóa toàn bộ điểm GPT Vòng 2 và xóa điểm giám khảo do AI điền. Điểm giám khảo chấm thủ công không bị ảnh hưởng. Cần nhập mật khẩu xác nhận."
+              ? "This clears every Round 2 and Round 3 GPT report score entry and removes AI-filled judge scores. Human judge scores remain untouched. The delete-all password is required."
+              : "Thao tác này xóa toàn bộ điểm GPT báo cáo Vòng 2 và Vòng 3, đồng thời xóa điểm giám khảo do AI điền. Điểm giám khảo chấm thủ công không bị ảnh hưởng. Cần nhập mật khẩu xác nhận."
             : locale === "en"
               ? "This clears the selected GPT score entries and removes AI-filled judge scores for those submissions. Human judge scores remain untouched."
               : "Thao tác này xóa các điểm GPT đã chọn và xóa điểm giám khảo do AI điền cho các bài đó. Điểm người chấm thủ công không bị ảnh hưởng."
         }
-        items={(pendingDelete?.rows ?? []).map((row) => `${row.teamName} · ${row.title} · ${statusLabel(locale, row.status)}`)}
+        items={(pendingDelete?.rows ?? []).map((row) => `${roundLabel(locale, row.round)} · ${row.teamName} · ${row.title} · ${statusLabel(locale, row.status)}`)}
         confirmLabel={locale === "en" ? "Delete GPT scores" : "Xóa điểm GPT"}
         busy={deleting}
         passwordRequired={pendingDelete?.mode === "all"}

@@ -7,9 +7,12 @@ import {
 
 import { prisma } from "@/lib/db";
 
+const GPT_SCORE_SUBMISSION_ROUNDS = [SubmissionRound.ROUND_2, SubmissionRound.ROUND_3];
+
 export type AdminRound2GptScoreRow = {
   reviewId: string;
   submissionId: string;
+  round: "round-2" | "round-3";
   teamId: string;
   teamName: string;
   teamTag: string;
@@ -52,11 +55,15 @@ function serializeStatus(status: Round2AiReportScoringStatus): AdminRound2GptSco
   }
 }
 
+function serializeRound(round: SubmissionRound): AdminRound2GptScoreRow["round"] {
+  return round === SubmissionRound.ROUND_3 ? "round-3" : "round-2";
+}
+
 export async function readAdminRound2GptScoreRows(): Promise<AdminRound2GptScoreRow[]> {
   const reviews = await prisma.round2AiReportReview.findMany({
     where: {
       submission: {
-        round: SubmissionRound.ROUND_2,
+        round: { in: GPT_SCORE_SUBMISSION_ROUNDS },
       },
     },
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
@@ -96,6 +103,7 @@ export async function readAdminRound2GptScoreRows(): Promise<AdminRound2GptScore
   return reviews.map((review) => ({
     reviewId: review.id,
     submissionId: review.submissionId,
+    round: serializeRound(review.submission.round),
     teamId: review.submission.team.id,
     teamName: review.submission.team.name,
     teamTag: review.submission.team.tag,
@@ -133,7 +141,7 @@ export async function deleteAdminRound2GptScores(options: {
   const where = options.deleteAll
     ? {
         submission: {
-          round: SubmissionRound.ROUND_2,
+          round: { in: GPT_SCORE_SUBMISSION_ROUNDS },
         },
       }
     : {
@@ -141,7 +149,7 @@ export async function deleteAdminRound2GptScores(options: {
           in: options.reviewIds ?? [],
         },
         submission: {
-          round: SubmissionRound.ROUND_2,
+          round: { in: GPT_SCORE_SUBMISSION_ROUNDS },
         },
       };
 
