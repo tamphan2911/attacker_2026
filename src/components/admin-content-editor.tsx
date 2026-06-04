@@ -1557,6 +1557,18 @@ export function ContentPageEditor({ pageId }: { pageId: ContentPageId }) {
                   )
                 }
               />
+              <LocalizedFieldEditor
+                label="Lower note box"
+                rows={4}
+                value={draft.home.emergingRewardOpportunityNote}
+                onChange={(language, value) =>
+                  setDraft((current) =>
+                    updateDraftContent(current, (next) => {
+                      next.home.emergingRewardOpportunityNote[language] = value;
+                    }),
+                  )
+                }
+              />
             </Surface>
 
             <Surface className="space-y-5 px-5 py-5 md:px-6 md:py-6">

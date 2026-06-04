@@ -660,6 +660,7 @@ export interface SitePageContent {
     rewards: EditableSectionCopy;
     rewardCards: EditableRewardCard[];
     emergingReward: EditableRewardHighlight;
+    emergingRewardOpportunityNote: LocalizedText;
     competitionPath: EditablePathBlock;
     sponsorsStripLinkLabel: LocalizedText;
     testimonialsSection: EditableSectionCopy;

@@ -1004,9 +1004,13 @@ export const defaultPageContent: SitePageContent = {
       title: { en: "Emerging Teams", vi: "Đội ươm mầm" },
       amount: { en: "Top 10 teams", vi: "Top 10 đội" },
       note: {
-        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities. Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.",
-        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác. Tùy theo chương trình đồng hành tại ngày thuyết trình chung kết, các đội nổi bật có thể nhận thêm quà tặng, học bổng, mentoring, tuyển dụng hoặc cơ hội trao đổi đầu tư từ giám khảo, nhà tài trợ và khách mời.",
+        en: "Teams ranked immediately after the top 5 in Round 2 receive recognition, certificates, and sponsor-side opportunities.",
+        vi: "Các đội xếp ngay sau top 5 ở Vòng 2 nhận danh hiệu, giấy chứng nhận và các cơ hội đồng hành từ đối tác.",
       },
+    },
+    emergingRewardOpportunityNote: {
+      en: "Depending on partner availability at the final presentation event, standout teams may also receive gifts, scholarships, mentorship, recruitment, or investment opportunities from judges, sponsors, and invited guests.",
+      vi: "Tùy theo chương trình đồng hành tại ngày thuyết trình chung kết, các đội nổi bật có thể nhận thêm quà tặng, học bổng, mentoring, tuyển dụng hoặc cơ hội trao đổi đầu tư từ giám khảo, nhà tài trợ và khách mời.",
     },
     competitionPath: {
       eyebrow: { en: "Additional opportunities", vi: "Quyền lợi mở rộng" },
@@ -3802,6 +3806,42 @@ function applyLegacyVietnameseRulesCopyReplacements<T>(value: T): T {
   return value;
 }
 
+function splitLocalizedTextAtMarker(value: LocalizedText, marker: LocalizedText) {
+  const splitLanguage = (text: string, languageMarker: string) => {
+    const markerIndex = text.indexOf(languageMarker);
+
+    if (markerIndex < 0) {
+      return null;
+    }
+
+    const before = text.slice(0, markerIndex).trim();
+    const after = text.slice(markerIndex).trim();
+
+    if (!before || !after) {
+      return null;
+    }
+
+    return { before, after };
+  };
+  const englishSplit = splitLanguage(value.en, marker.en);
+  const vietnameseSplit = splitLanguage(value.vi, marker.vi);
+
+  if (!englishSplit || !vietnameseSplit) {
+    return null;
+  }
+
+  return {
+    before: {
+      en: englishSplit.before,
+      vi: vietnameseSplit.before,
+    },
+    after: {
+      en: englishSplit.after,
+      vi: vietnameseSplit.after,
+    },
+  };
+}
+
 export function mergePageContentWithDefaults(
   content?: Partial<SitePageContent> | null,
 ): SitePageContent {
@@ -3814,6 +3854,18 @@ export function mergePageContentWithDefaults(
 
   if (legacyHeaderLogoImage && !content?.siteHeader?.brandLogoDarkImage) {
     nextContent.siteHeader.brandLogoDarkImage = legacyHeaderLogoImage;
+  }
+
+  if (!content?.home?.emergingRewardOpportunityNote) {
+    const splitHomeEmergingRewardNote = splitLocalizedTextAtMarker(nextContent.home.emergingReward.note, {
+      en: " Depending on partner availability",
+      vi: " Tùy theo chương trình",
+    });
+
+    if (splitHomeEmergingRewardNote) {
+      nextContent.home.emergingReward.note = splitHomeEmergingRewardNote.before;
+      nextContent.home.emergingRewardOpportunityNote = splitHomeEmergingRewardNote.after;
+    }
   }
 
   if (
