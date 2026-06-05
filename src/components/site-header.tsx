@@ -50,22 +50,22 @@ function HeaderBrandLogo({
   const darkImage = darkImageSrc || lightImage;
 
   return (
-    <span className="relative block h-11 w-11 overflow-hidden rounded-[1.15rem] transition duration-300 group-hover:-translate-y-0.5 sm:h-[3.9rem] sm:w-[16.5rem]">
+    <span className="relative block h-12 w-[10.75rem] max-w-[58vw] overflow-hidden rounded-[1.15rem] transition duration-300 group-hover:-translate-y-0.5 sm:h-[3.9rem] sm:w-[16.5rem] sm:max-w-none">
       <Image
         src={lightImage}
         alt={label}
         fill
-        sizes="(min-width: 640px) 264px, 44px"
+        sizes="(min-width: 640px) 264px, 58vw"
         unoptimized={lightImage.startsWith("/api/content-images/")}
-        className="object-cover dark:hidden"
+        className="object-contain dark:hidden"
       />
       <Image
         src={darkImage}
         alt={label}
         fill
-        sizes="(min-width: 640px) 264px, 44px"
+        sizes="(min-width: 640px) 264px, 58vw"
         unoptimized={darkImage.startsWith("/api/content-images/")}
-        className="hidden object-cover dark:block"
+        className="hidden object-contain dark:block"
       />
     </span>
   );
