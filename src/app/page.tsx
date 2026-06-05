@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ConstructionPage } from "@/components/construction-page";
 import { HomePage } from "@/components/home-page";
 import { readConstructionGateState } from "@/server/construction-gate";
+import { readCachedSiteData } from "@/server/site-data-service";
 
 export const metadata: Metadata = {
   title: "Home",
@@ -15,5 +16,7 @@ export default async function Page() {
     return <ConstructionPage content={gate.constructionContent} targetAt={gate.targetAt} locale="vi" />;
   }
 
-  return <HomePage />;
+  const initialSiteData = process.env.DATABASE_URL ? await readCachedSiteData() : undefined;
+
+  return <HomePage initialSiteData={initialSiteData} />;
 }

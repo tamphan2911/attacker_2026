@@ -173,7 +173,7 @@ interface WorkspaceApiPayload {
   round1Submissions: Round1Submission[];
 }
 
-interface SiteDataApiPayload {
+export interface SiteDataApiPayload {
   pageContent: SitePageContent;
   sponsors: SponsorProfile[];
   judges: JudgeProfile[];
@@ -404,7 +404,13 @@ function createInitialSnapshot(): AppSnapshot {
   };
 }
 
-export function SiteStateProvider({ children }: { children: ReactNode }) {
+export function SiteStateProvider({
+  children,
+  initialSiteData,
+}: {
+  children: ReactNode;
+  initialSiteData?: SiteDataApiPayload;
+}) {
   const { data: session, status: authStatus, update: updateSession } = useSession();
   const [locale, setLocaleState] = useState<Locale>("vi");
   const [theme, setThemeState] = useState<Theme>("light");
@@ -417,14 +423,22 @@ export function SiteStateProvider({ children }: { children: ReactNode }) {
   const [teamLockRequests, setTeamLockRequests] =
     useState<Round1TeamLockRequest[]>(mockRound1TeamLockRequests);
   const [submissions, setSubmissions] = useState<TeamSubmission[]>(mockSubmissions);
-  const [round1TestBanks, setRound1TestBanks] = useState<Round1TestBank[]>(seedRound1TestBanks);
-  const [round1Topics, setRound1Topics] = useState<string[]>(() => deriveRound1TopicsFromBanks(seedRound1TestBanks));
+  const [round1TestBanks, setRound1TestBanks] = useState<Round1TestBank[]>(
+    () => initialSiteData?.round1TestBanks ?? seedRound1TestBanks,
+  );
+  const [round1Topics, setRound1Topics] = useState<string[]>(
+    () => normalizeRound1Topics(initialSiteData?.round1Topics ?? deriveRound1TopicsFromBanks(seedRound1TestBanks)),
+  );
   const [round1Submissions, setRound1Submissions] = useState<Round1Submission[]>(seedRound1Submissions);
-  const [newsPosts, setNewsPosts] = useState<NewsPost[]>(seedNewsPosts);
-  const [sponsors, setSponsors] = useState<SponsorProfile[]>(seedSponsorProfiles);
-  const [judges, setJudges] = useState<JudgeProfile[]>(seedJudgeProfiles);
-  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(seedTimelineItems);
-  const [pageContent, setPageContent] = useState<SitePageContent>(() => clonePageContent(defaultPageContent));
+  const [newsPosts, setNewsPosts] = useState<NewsPost[]>(() => initialSiteData?.newsPosts ?? seedNewsPosts);
+  const [sponsors, setSponsors] = useState<SponsorProfile[]>(
+    () => normalizeSponsorProfiles(initialSiteData?.sponsors ?? seedSponsorProfiles),
+  );
+  const [judges, setJudges] = useState<JudgeProfile[]>(() => initialSiteData?.judges ?? seedJudgeProfiles);
+  const [timelineItems, setTimelineItems] = useState<TimelineItem[]>(() => initialSiteData?.timelineItems ?? seedTimelineItems);
+  const [pageContent, setPageContent] = useState<SitePageContent>(() =>
+    mergePageContentWithDefaults(initialSiteData?.pageContent ?? clonePageContent(defaultPageContent)),
+  );
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
   const isAuthenticated = authStatus === "authenticated" && Boolean(session?.user?.id);

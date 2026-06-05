@@ -3,12 +3,21 @@
 import type { ReactNode } from "react";
 import { SessionProvider } from "next-auth/react";
 
-import { SiteStateProvider } from "@/components/providers/site-state-provider";
+import {
+  SiteStateProvider,
+  type SiteDataApiPayload,
+} from "@/components/providers/site-state-provider";
 
-export function AppProviders({ children }: { children: ReactNode }) {
+export function AppProviders({
+  children,
+  initialSiteData,
+}: {
+  children: ReactNode;
+  initialSiteData?: SiteDataApiPayload;
+}) {
   return (
     <SessionProvider>
-      <SiteStateProvider>{children}</SiteStateProvider>
+      <SiteStateProvider initialSiteData={initialSiteData}>{children}</SiteStateProvider>
     </SessionProvider>
   );
 }

@@ -19,7 +19,10 @@ import {
 
 import { defaultPageContent } from "@/data/site-content";
 import { pickText } from "@/lib/site";
-import { useSiteState } from "@/components/providers/site-state-provider";
+import {
+  useSiteState,
+  type SiteDataApiPayload,
+} from "@/components/providers/site-state-provider";
 import { Surface } from "@/components/site-ui";
 
 const homepageRewardItems = [
@@ -87,13 +90,21 @@ function pickRewardAmount(locale: "en" | "vi", amount: { en: string; vi: string 
   return pickText(locale, amount);
 }
 
-export function HomePage() {
+function getHeroImageSignature(content: typeof defaultPageContent) {
+  return content.home.heroSlides.map((slide) => slide.image).join("|");
+}
+
+export function HomePage({ initialSiteData }: { initialSiteData?: SiteDataApiPayload }) {
   const { locale, pageContent, sponsors } = useSiteState();
   const [activeSlide, setActiveSlide] = useState(0);
   const [expandedTestimonials, setExpandedTestimonials] = useState<Set<string>>(() => new Set());
+  const shouldUseInitialSiteData =
+    Boolean(initialSiteData) && getHeroImageSignature(pageContent) === getHeroImageSignature(defaultPageContent);
+  const displayPageContent = shouldUseInitialSiteData && initialSiteData ? initialSiteData.pageContent : pageContent;
+  const displaySponsors = shouldUseInitialSiteData && initialSiteData ? initialSiteData.sponsors : sponsors;
   const heroSlides =
-    pageContent.home.heroSlides.length > 0
-      ? pageContent.home.heroSlides
+    displayPageContent.home.heroSlides.length > 0
+      ? displayPageContent.home.heroSlides
       : defaultPageContent.home.heroSlides;
   const heroDeck = heroSlides.map((slide, index) =>
     index === 0
@@ -107,7 +118,7 @@ export function HomePage() {
       : slide,
   );
   const metricItems =
-    pageContent.home.metrics.length > 0 ? pageContent.home.metrics : defaultPageContent.home.metrics;
+    displayPageContent.home.metrics.length > 0 ? displayPageContent.home.metrics : defaultPageContent.home.metrics;
   const visibleMetricItems = metricItems.filter((item) => {
     const metricText = [
       item.value,
@@ -122,16 +133,16 @@ export function HomePage() {
     return !(metricText.includes("2026") && metricText.includes("momentum"));
   });
   const rewardCards =
-    pageContent.home.rewardCards.length > 0 ? pageContent.home.rewardCards : defaultPageContent.home.rewardCards;
-  const rewardSection = pageContent.home.rewards;
+    displayPageContent.home.rewardCards.length > 0 ? displayPageContent.home.rewardCards : defaultPageContent.home.rewardCards;
+  const rewardSection = displayPageContent.home.rewards;
   const rewardSectionTitle = locale === "vi" ? "Cơ cấu giải thưởng" : "Prize structure";
-  const emergingReward = pageContent.home.emergingReward;
-  const testimonialsSection = pageContent.home.testimonialsSection;
+  const emergingReward = displayPageContent.home.emergingReward;
+  const testimonialsSection = displayPageContent.home.testimonialsSection;
   const testimonialsTitle =
     locale === "vi" ? "Cảm nhận từ các mùa trước" : "Voices from earlier seasons";
-  const visibleSponsors = sponsors.filter((sponsor) => !sponsor.hidden);
+  const visibleSponsors = displaySponsors.filter((sponsor) => !sponsor.hidden);
   const sponsorMarqueeItems = [...visibleSponsors, ...visibleSponsors];
-  const testimonialItems = pageContent.home.testimonials;
+  const testimonialItems = displayPageContent.home.testimonials;
   const testimonialMarqueeItems = [...testimonialItems, ...testimonialItems];
 
   const toggleTestimonial = (key: string) => {
@@ -325,7 +336,7 @@ export function HomePage() {
             </div>
             <div className="theme-home-reward-aside rounded-[1.6rem] border px-5 py-5 backdrop-blur-md">
               <p className="theme-text-muted text-sm leading-7">
-                {pickText(locale, pageContent.home.emergingRewardOpportunityNote)}
+                {pickText(locale, displayPageContent.home.emergingRewardOpportunityNote)}
               </p>
             </div>
           </div>
@@ -336,7 +347,7 @@ export function HomePage() {
       <section className="space-y-5">
         <div className="flex justify-end">
           <Link href="/competition/sponsors" className="inline-flex items-center gap-2 text-sm font-semibold theme-accent">
-            {pickText(locale, pageContent.home.sponsorsStripLinkLabel)}
+            {pickText(locale, displayPageContent.home.sponsorsStripLinkLabel)}
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -463,7 +474,7 @@ export function HomePage() {
 
           <div className="flex justify-end">
             <Link href="/competition#competition-journey" className="inline-flex items-center justify-center gap-2 text-sm font-semibold theme-accent md:justify-end">
-              {pickText(locale, pageContent.home.testimonialsLinkLabel)}
+              {pickText(locale, displayPageContent.home.testimonialsLinkLabel)}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
