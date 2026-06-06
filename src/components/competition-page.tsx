@@ -91,7 +91,7 @@ export function CompetitionPage() {
       : [];
   const rewardSection = pageContent.competition.rewards;
   const competitionDisplayTitle =
-    locale === "vi" ? "Cuộc thi ý tưởng Fintech sinh viên Việt Nam" : "Vietnamese student fintech idea competition";
+    locale === "vi" ? "Cuộc thi ý tưởng Fintech dành cho sinh viên Việt Nam" : "Vietnamese student fintech idea competition";
   const competitionJourneyTitle =
     locale === "vi" ? "Hành trình đồng hành cùng chuyên gia" : "A journey guided by experts";
   const rewardSectionTitle = locale === "vi" ? "Cơ cấu giải thưởng" : "Prize structure";

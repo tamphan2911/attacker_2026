@@ -1145,7 +1145,7 @@ export const defaultPageContent: SitePageContent = {
       eyebrow: { en: "Competition", vi: "Cuộc thi" },
       title: {
         en: "Vietnamese student fintech idea competition",
-        vi: "Cuộc thi ý tưởng Fintech sinh viên Việt Nam",
+        vi: "Cuộc thi ý tưởng Fintech dành cho sinh viên Việt Nam",
       },
       description: {
         en: "Attacker 2026 starts with an individual qualifier built from 40 objective questions plus 2 essay questions, then moves the best teams into judge-scored project evaluation and a live final defense. Progression is determined by team results, not solo participation alone.",
