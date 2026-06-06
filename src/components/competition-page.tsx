@@ -99,25 +99,27 @@ export function CompetitionPage() {
 
   return (
     <div className="space-y-20">
-      <section className="scroll-mt-28 pt-4">
-        <div className="max-w-none space-y-4">
-          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
-            {pickText(locale, pageContent.competition.intro.eyebrow)}
-          </p>
-          <h2 className="theme-heading theme-text-strong text-3xl font-semibold tracking-tight md:text-[2.55rem] md:leading-[1.06] lg:whitespace-nowrap xl:text-[2.85rem]">
-            {competitionDisplayTitle}
-          </h2>
-        </div>
-      </section>
+      <div className="space-y-8">
+        <section className="scroll-mt-28 pt-4">
+          <div className="max-w-none space-y-4">
+            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
+              {pickText(locale, pageContent.competition.intro.eyebrow)}
+            </p>
+            <h2 className="theme-heading theme-text-strong text-3xl font-semibold tracking-tight md:text-[2.55rem] md:leading-[1.06] lg:whitespace-nowrap xl:text-[2.85rem]">
+              {competitionDisplayTitle}
+            </h2>
+          </div>
+        </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        {highlightItems.map((item) => (
-          <Surface key={item.title.en} className="px-6 py-6">
-            <InfoKicker>{pickText(locale, item.title)}</InfoKicker>
-            <p className="mt-4 text-sm leading-7 theme-text-muted">{pickText(locale, item.description)}</p>
-          </Surface>
-        ))}
-      </section>
+        <section className="grid gap-4 lg:grid-cols-3">
+          {highlightItems.map((item) => (
+            <Surface key={item.title.en} className="px-6 py-6">
+              <InfoKicker>{pickText(locale, item.title)}</InfoKicker>
+              <p className="mt-4 text-sm leading-7 theme-text-muted">{pickText(locale, item.description)}</p>
+            </Surface>
+          ))}
+        </section>
+      </div>
 
       <section id="competition-journey" className="scroll-mt-28 space-y-5">
         <div className="max-w-none space-y-3">
