@@ -6,7 +6,7 @@ import { getCompetitionRoundWindow } from "@/lib/competition";
 import { formatDateRangeLabel, pickText } from "@/lib/site";
 import { OrganizerContent } from "@/components/organizer-page";
 import { useSiteState } from "@/components/providers/site-state-provider";
-import { InfoKicker, SectionHeading, StatusPill, Surface } from "@/components/site-ui";
+import { InfoKicker, StatusPill, Surface } from "@/components/site-ui";
 
 const competitionRewardItems = [
   {
@@ -100,10 +100,14 @@ export function CompetitionPage() {
   return (
     <div className="space-y-20">
       <section className="scroll-mt-28 pt-4">
-        <SectionHeading
-          eyebrow={pickText(locale, pageContent.competition.intro.eyebrow)}
-          title={competitionDisplayTitle}
-        />
+        <div className="max-w-none space-y-4">
+          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
+            {pickText(locale, pageContent.competition.intro.eyebrow)}
+          </p>
+          <h2 className="theme-heading theme-text-strong text-3xl font-semibold tracking-tight md:text-[2.55rem] md:leading-[1.06] lg:whitespace-nowrap xl:text-[2.85rem]">
+            {competitionDisplayTitle}
+          </h2>
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
@@ -115,12 +119,18 @@ export function CompetitionPage() {
         ))}
       </section>
 
-      <section id="competition-journey" className="scroll-mt-28 space-y-8">
-        <SectionHeading
-          eyebrow={pickText(locale, pageContent.competition.rounds.eyebrow)}
-          title={competitionJourneyTitle}
-          description={pickText(locale, pageContent.competition.rounds.description)}
-        />
+      <section id="competition-journey" className="scroll-mt-28 space-y-5">
+        <div className="max-w-none space-y-3">
+          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.34em]">
+            {pickText(locale, pageContent.competition.rounds.eyebrow)}
+          </p>
+          <h2 className="theme-heading theme-text-strong text-3xl font-semibold tracking-tight md:text-[2.55rem] md:leading-[1.06] lg:whitespace-nowrap xl:text-[2.85rem]">
+            {competitionJourneyTitle}
+          </h2>
+          <p className="max-w-4xl theme-text-muted text-base leading-8 md:text-lg">
+            {pickText(locale, pageContent.competition.rounds.description)}
+          </p>
+        </div>
 
         <div className="space-y-6">
           {roundCards.map((item, index) => (
