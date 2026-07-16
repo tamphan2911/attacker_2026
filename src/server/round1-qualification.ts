@@ -29,12 +29,18 @@ export async function readRound1QualifiedTeamIds(limit = ROUND1_QUALIFIED_TEAM_L
       select: {
         id: true,
         name: true,
+        members: {
+          select: {
+            userId: true,
+          },
+        },
       },
       orderBy: [{ createdAt: "asc" }],
     }),
     prisma.round1Submission.findMany({
       select: {
         teamId: true,
+        userId: true,
         objectiveScore: true,
         essayScore: true,
         totalScore: true,
@@ -53,21 +59,33 @@ export async function readRound1QualifiedTeamIds(limit = ROUND1_QUALIFIED_TEAM_L
 
   return teams
     .map((team) => {
+      const teamMemberIds = new Set(team.members.map((member) => member.userId));
       const teamSubmissions = submissionsByTeamId.get(team.id) ?? [];
-      const scoredSubmissions = teamSubmissions.filter(
+      const currentMemberSubmissions = teamSubmissions.filter((submission) =>
+        teamMemberIds.has(submission.userId),
+      );
+      const completedMemberIds = new Set(currentMemberSubmissions.map((submission) => submission.userId));
+      const scoredSubmissions = currentMemberSubmissions.filter(
         (submission) => submission.essayScore != null && submission.totalScore != null,
       );
+      const scoredMemberIds = new Set(scoredSubmissions.map((submission) => submission.userId));
 
       return {
         teamId: team.id,
         teamName: team.name,
-        completedMembers: teamSubmissions.length,
-        scoredMembers: scoredSubmissions.length,
+        memberCount: team.members.length,
+        completedMembers: completedMemberIds.size,
+        scoredMembers: scoredMemberIds.size,
         averageObjectiveScore: average(scoredSubmissions.map((submission) => submission.objectiveScore)),
         averageTotalScore: average(scoredSubmissions.map((submission) => submission.totalScore ?? 0)),
       };
     })
-    .filter((group) => group.scoredMembers > 0)
+    .filter(
+      (group) =>
+        group.memberCount > 0 &&
+        group.completedMembers === group.memberCount &&
+        group.scoredMembers === group.memberCount,
+    )
     .sort(
       (left, right) =>
         right.averageTotalScore - left.averageTotalScore ||
