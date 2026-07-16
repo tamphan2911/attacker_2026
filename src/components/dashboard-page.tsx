@@ -828,23 +828,26 @@ export function DashboardPage() {
   const submittedTeamRound1Results = currentTeamRound1Results.flatMap(({ submission }) =>
     submission ? [submission] : [],
   );
+  const completedTeamRound1Results = submittedTeamRound1Results.filter(
+    (submission) => !submission.isForfeited,
+  );
   const hasAnyTeamRound1Result = submittedTeamRound1Results.length > 0;
   const hasCompleteTeamRound1Results =
     currentTeamRound1Results.length > 0 &&
-    submittedTeamRound1Results.length === currentTeamRound1Results.length;
+    completedTeamRound1Results.length === currentTeamRound1Results.length;
   const teamRound1ObjectiveAverage = hasCompleteTeamRound1Results
-    ? averageNumbers(submittedTeamRound1Results.map((submission) => submission.objectiveScore))
+    ? averageNumbers(completedTeamRound1Results.map((submission) => submission.objectiveScore))
     : null;
   const teamRound1EssayAverage =
-    hasCompleteTeamRound1Results && submittedTeamRound1Results.every((submission) => submission.essayScore != null)
-      ? averageNumbers(submittedTeamRound1Results.map((submission) => submission.essayScore ?? 0))
+    hasCompleteTeamRound1Results && completedTeamRound1Results.every((submission) => submission.essayScore != null)
+      ? averageNumbers(completedTeamRound1Results.map((submission) => submission.essayScore ?? 0))
       : null;
   const teamRound1TotalAverage =
-    hasCompleteTeamRound1Results && submittedTeamRound1Results.every((submission) => submission.totalScore != null)
-      ? averageNumbers(submittedTeamRound1Results.map((submission) => submission.totalScore ?? 0))
+    hasCompleteTeamRound1Results && completedTeamRound1Results.every((submission) => submission.totalScore != null)
+      ? averageNumbers(completedTeamRound1Results.map((submission) => submission.totalScore ?? 0))
       : null;
   const teamRound1DurationAverage = hasCompleteTeamRound1Results
-    ? averageNumbers(submittedTeamRound1Results.map((submission) => submission.durationMinutes))
+    ? averageNumbers(completedTeamRound1Results.map((submission) => submission.durationMinutes))
     : null;
   const teamRound1ResultPending =
     !hasCompleteTeamRound1Results ||
@@ -1603,16 +1606,30 @@ export function DashboardPage() {
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex min-w-0 items-start gap-3">
                           <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-sky-600/18 bg-white/68 text-sky-700 shadow-[0_12px_28px_rgba(14,116,144,0.10)] dark:border-sky-200/18 dark:bg-white/10 dark:text-sky-100 dark:shadow-none">
-                            <ShieldCheck className="h-4.5 w-4.5" />
+                            {currentRound1Submission?.isForfeited ? (
+                              <AlertTriangle className="h-4.5 w-4.5" />
+                            ) : (
+                              <ShieldCheck className="h-4.5 w-4.5" />
+                            )}
                           </span>
                           <div className="min-w-0">
                             <p className="text-sm font-semibold">
-                              {locale === "en" ? "Round 1 test already completed" : "Bạn đã hoàn tất bài thi Vòng 1"}
+                              {currentRound1Submission?.isForfeited
+                                ? locale === "en"
+                                  ? "Round 1 ended before the test was completed"
+                                  : "Bài thi chưa hoàn tất khi Vòng 1 kết thúc"
+                                : locale === "en"
+                                  ? "Round 1 test already completed"
+                                  : "Bạn đã hoàn tất bài thi Vòng 1"}
                             </p>
                             <p className="mt-1 text-sm leading-6 text-slate-700 dark:text-sky-100/78">
-                              {locale === "en"
-                                ? "Each participant can take Round 1 only once. You can review the saved result in the Round 1 result block below."
-                                : "Mỗi thí sinh chỉ được làm bài Vòng 1 một lần. Bạn có thể xem kết quả đã lưu tại khối Kết quả Vòng 1 bên dưới."}
+                              {currentRound1Submission?.isForfeited
+                                ? locale === "en"
+                                  ? "The portal is locked and this participant's Round 1 score has been recorded as 0."
+                                  : "Cổng thi đã khóa và điểm Vòng 1 của thí sinh này được ghi nhận là 0."
+                                : locale === "en"
+                                  ? "Each participant can take Round 1 only once. You can review the saved result in the Round 1 result block below."
+                                  : "Mỗi thí sinh chỉ được làm bài Vòng 1 một lần. Bạn có thể xem kết quả đã lưu tại khối Kết quả Vòng 1 bên dưới."}
                             </p>
                           </div>
                         </div>
@@ -2587,8 +2604,9 @@ export function DashboardPage() {
                       </thead>
                       <tbody>
                         {currentTeamRound1Results.map(({ member, submission }, index) => {
+                          const forfeited = Boolean(submission?.isForfeited);
                           const resultPending = Boolean(
-                            submission && (submission.essayScore == null || submission.totalScore == null),
+                            submission && !forfeited && (submission.essayScore == null || submission.totalScore == null),
                           );
 
                           return (
@@ -2614,6 +2632,8 @@ export function DashboardPage() {
                               <td className="px-4 py-4 theme-text-body">
                                 {!submission
                                   ? "—"
+                                  : forfeited
+                                    ? `0 / ${ROUND1_ESSAY_MAX_SCORE}`
                                   : submission.essayScore == null
                                     ? locale === "en"
                                       ? "Pending"
@@ -2623,6 +2643,8 @@ export function DashboardPage() {
                               <td className="px-4 py-4 theme-text-body">
                                 {!submission
                                   ? "—"
+                                  : forfeited
+                                    ? `0 / ${ROUND1_TOTAL_MAX_SCORE}`
                                   : submission.totalScore == null
                                     ? locale === "en"
                                       ? "Pending"
@@ -2649,6 +2671,8 @@ export function DashboardPage() {
                                   tone={
                                     !submission
                                       ? "default"
+                                      : forfeited
+                                        ? "warning"
                                       : resultPending
                                         ? "warning"
                                         : "success"
@@ -2658,6 +2682,10 @@ export function DashboardPage() {
                                     ? locale === "en"
                                       ? "Not submitted"
                                       : "Chưa nộp"
+                                    : forfeited
+                                      ? locale === "en"
+                                        ? "Did not finish"
+                                        : "Không hoàn tất"
                                     : resultPending
                                       ? locale === "en"
                                         ? "Essay review pending"

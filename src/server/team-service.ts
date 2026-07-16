@@ -19,9 +19,13 @@ import {
 
 import { TEAM_MAX_MEMBERS, TEAM_MIN_MEMBERS } from "@/data/site-content";
 import { prisma } from "@/lib/db";
-import { getCompetitionRoundWindow, getTimelineItemById } from "@/lib/competition";
-import { getTimelineEndDateTime, getTimelineStartDateTime } from "@/lib/timeline-dates";
+import { getCompetitionRoundWindow } from "@/lib/competition";
+import { getTimelineEndDateTime } from "@/lib/timeline-dates";
 import { prepareAvatarImageReplacement } from "@/server/avatar-image-storage";
+import {
+  getRound1ExamWindowState,
+  syncRound1DeadlineForfeitures,
+} from "@/server/round1-deadline";
 import { assignRound1SubmissionToRandomJudge } from "@/server/round1-judge-assignment";
 import { syncRound1QualificationStages } from "@/server/round1-qualification";
 import {
@@ -71,32 +75,6 @@ function ok<T>(data: T, status = 200): ServiceSuccess<T> {
 
 function fail(status: number, error: string): ServiceFailure {
   return { ok: false, status, error };
-}
-
-async function getRound1ExamWindowStatus(now = new Date()) {
-  const timelineItems = await readTimelineItems();
-  const round1Window =
-    getTimelineItemById("round-1-individual-qualifier", timelineItems) ??
-    getCompetitionRoundWindow("round-1", timelineItems) ??
-    getCompetitionRoundWindow("round-1");
-
-  if (!round1Window) {
-    return "open";
-  }
-
-  if (now.getTime() < getTimelineStartDateTime(round1Window).getTime()) {
-    return "not-started";
-  }
-
-  if (now.getTime() > getTimelineEndDateTime(round1Window).getTime()) {
-    return "closed";
-  }
-
-  return "open";
-}
-
-async function isRound1Finished(now = new Date()) {
-  return (await getRound1ExamWindowStatus(now)) === "closed";
 }
 
 async function isSubmissionRoundFinished(round: SubmissionRound, now = new Date()) {
@@ -1559,6 +1537,8 @@ async function loadRound1ExamActorContext(tx: Prisma.TransactionClient, actorId:
 export async function getRound1ExamState(
   actorId: string,
 ): Promise<ServiceResult<{ attempt: PersistedRound1Attempt | null; submission: Round1Submission | null; autoSubmitted?: boolean }>> {
+  await syncRound1DeadlineForfeitures({ userId: actorId });
+
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: actorId } });
     if (!user) {
@@ -1596,18 +1576,22 @@ export async function getRound1ExamState(
 export async function startRound1Attempt(
   actorId: string,
 ): Promise<ServiceResult<{ attempt: PersistedRound1Attempt | null; submission: Round1Submission | null; autoSubmitted?: boolean }>> {
+  const round1ExamWindow = await getRound1ExamWindowState();
+  if (round1ExamWindow.status === "closed") {
+    await syncRound1DeadlineForfeitures({ userId: actorId });
+  }
+
   return prisma.$transaction(async (tx) => {
     const actorContext = await loadRound1ExamActorContext(tx, actorId);
     if (!actorContext.ok) {
       return fail(actorContext.status, actorContext.error);
     }
 
-    const round1ExamWindowStatus = await getRound1ExamWindowStatus();
-    if (round1ExamWindowStatus === "not-started") {
+    if (round1ExamWindow.status === "not-started") {
       return fail(409, "Round 1 has not started yet. New Round 1 attempts are not open.");
     }
 
-    if (round1ExamWindowStatus === "closed") {
+    if (round1ExamWindow.status === "closed") {
       return fail(409, "Round 1 is finished. New Round 1 submissions are closed.");
     }
 
@@ -1641,7 +1625,10 @@ export async function startRound1Attempt(
     }
 
     const startedAt = new Date();
-    const deadlineAt = new Date(startedAt.getTime() + objectiveBank.durationMinutes * 60 * 1000);
+    const personalDeadlineAt = startedAt.getTime() + objectiveBank.durationMinutes * 60 * 1000;
+    const deadlineAt = new Date(
+      Math.min(personalDeadlineAt, round1ExamWindow.endsAt?.getTime() ?? personalDeadlineAt),
+    );
     const questions = createRound1ExamPaper({
       objectiveBank: mapStoredBankToAppBank(objectiveBank, "objective"),
       essayBank: mapStoredBankToAppBank(essayBank, "essay"),
@@ -1676,6 +1663,8 @@ export async function saveRound1AttemptProgress(
     answers: Record<string, Round1QuestionResponse>;
   },
 ): Promise<ServiceResult<{ attempt: PersistedRound1Attempt | null; submission: Round1Submission | null; autoSubmitted?: boolean }>> {
+  await syncRound1DeadlineForfeitures({ userId: actorId });
+
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: actorId } });
     if (!user) {
@@ -1694,6 +1683,11 @@ export async function saveRound1AttemptProgress(
     });
     if (!attempt) {
       return fail(404, "Round 1 attempt not found.");
+    }
+
+    if (isRound1AttemptExpired(attempt)) {
+      const submission = await finalizeRound1AttemptRecord(tx, attempt, payload);
+      return ok({ attempt: null, submission, autoSubmitted: true });
     }
 
     const questionCount = parseRound1AttemptQuestions(attempt.questions).length;
@@ -1721,6 +1715,8 @@ export async function completeRound1Attempt(
     answers?: Record<string, Round1QuestionResponse>;
   },
 ): Promise<ServiceResult<{ submission: Round1Submission }>> {
+  await syncRound1DeadlineForfeitures({ userId: actorId });
+
   return prisma.$transaction(async (tx) => {
     const existingSubmission = await tx.round1Submission.findUnique({
       where: { userId: actorId },
@@ -1752,6 +1748,11 @@ export async function submitRound1Attempt(
     answers?: unknown;
   },
 ): Promise<ServiceResult<{ submissionId: string }>> {
+  const round1ExamWindow = await getRound1ExamWindowState();
+  if (round1ExamWindow.status === "closed") {
+    await syncRound1DeadlineForfeitures({ userId: actorId });
+  }
+
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.findUnique({ where: { id: actorId } });
     if (!user) {
@@ -1789,7 +1790,7 @@ export async function submitRound1Attempt(
       return fail(409, "The team must finish the Round 1 lock protocol before any member can start the exam.");
     }
 
-    if (await isRound1Finished()) {
+    if (round1ExamWindow.status === "closed") {
       return fail(409, "Round 1 is finished. New Round 1 submissions are closed.");
     }
 

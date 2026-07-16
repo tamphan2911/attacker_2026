@@ -16,6 +16,7 @@ import {
   ROUND1_QUALIFIED_TEAM_LIMIT,
   syncRound1QualificationStages,
 } from "@/server/round1-qualification";
+import { syncRound1DeadlineForfeitures } from "@/server/round1-deadline";
 import { readTimelineItems } from "@/server/timeline-items";
 
 function average(values: number[]) {
@@ -28,6 +29,7 @@ function average(values: number[]) {
 
 export async function GET() {
   const [timelineItems, currentUser] = await Promise.all([readTimelineItems(), getCurrentDbUser()]);
+  await syncRound1DeadlineForfeitures();
   const announcementItem = timelineItems.find((item) => item.id === ROUND1_RESULT_ANNOUNCEMENT_TIMELINE_ID);
   const released = isRound1ResultAnnouncementReleased(timelineItems);
   const canPreviewBeforeRelease = currentUser ? hasElevatedRole(currentUser.role) : false;
@@ -98,8 +100,8 @@ export async function GET() {
     .map((team) => {
       const teamMemberIds = new Set(team.members.map((member) => member.user.id));
       const teamSubmissions = submissionsByTeamId.get(team.id) ?? [];
-      const currentMemberSubmissions = teamSubmissions.filter((submission) =>
-        teamMemberIds.has(submission.userId),
+      const currentMemberSubmissions = teamSubmissions.filter(
+        (submission) => teamMemberIds.has(submission.userId) && !submission.isForfeited,
       );
       const completedMemberIds = new Set(currentMemberSubmissions.map((submission) => submission.userId));
       const scoredSubmissions = currentMemberSubmissions.filter(

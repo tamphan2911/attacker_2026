@@ -67,6 +67,15 @@ export async function assignRound1SubmissionToRandomJudge(
   db: AssignmentDb,
   submissionId: string,
 ) {
+  const submission = await db.round1Submission.findUnique({
+    where: { id: submissionId },
+    select: { isForfeited: true },
+  });
+
+  if (!submission || submission.isForfeited) {
+    return null;
+  }
+
   const existingAssignment = await db.round1JudgeReview.findFirst({
     where: { submissionId },
     select: { id: true, judgeUserId: true },
@@ -104,6 +113,7 @@ export async function assignRound1SubmissionToRandomJudge(
 export async function ensureRound1JudgeAssignments(db: AssignmentDb) {
   const submissionsWithoutAssignment = await db.round1Submission.findMany({
     where: {
+      isForfeited: false,
       judgeReviews: {
         none: {},
       },

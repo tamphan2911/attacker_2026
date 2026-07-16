@@ -193,6 +193,7 @@ export async function GET() {
           answers: submission.answers,
           rightCount: submission.rightCount,
           essayScore: submission.essayScore,
+          isForfeited: submission.isForfeited,
         })),
       );
     }
@@ -324,6 +325,7 @@ export async function GET() {
         answers: submission.answers,
         rightCount: submission.rightCount,
         essayScore: submission.essayScore,
+        isForfeited: submission.isForfeited,
       })),
     );
   }

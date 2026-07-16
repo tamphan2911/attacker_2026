@@ -270,6 +270,7 @@ export interface Round1Submission {
   teamId: string;
   userId: string;
   submittedAt: string;
+  isForfeited?: boolean;
   rightCount: number;
   wrongCount: number;
   score: number;

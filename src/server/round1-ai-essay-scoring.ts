@@ -163,6 +163,7 @@ const noHumanScoredReviewWhere = {
 
 function candidateWhere(mode: Round1AiEssayScoringJobMode): Prisma.Round1SubmissionWhereInput {
   const base: Prisma.Round1SubmissionWhereInput = {
+    isForfeited: false,
     judgeReviews: {
       some: {},
       ...noHumanScoredReviewWhere,

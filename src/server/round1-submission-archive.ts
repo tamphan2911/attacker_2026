@@ -351,7 +351,7 @@ export function buildRound1SubmissionArchiveFromBanks({
 type SubmissionArchiveContext = Pick<
   DbRound1Submission,
   "id" | "bankId" | "answers" | "rightCount" | "essayScore"
->;
+> & { isForfeited?: boolean };
 
 async function loadObjectiveAndEssayBanks(bankId: string) {
   const [objectiveBank, activeEssayBank, latestEssayBank] = await Promise.all([
@@ -385,6 +385,15 @@ export async function ensureRound1SubmissionArchive(
   const needsEssayBreakdown =
     typeof submission.essayScore === "number" &&
     Object.keys(essayQuestionScores).length < ROUND1_ESSAY_TOTAL;
+
+  if (submission.isForfeited) {
+    return {
+      questions: parsedArchive.questions,
+      answers: parsedArchive.answers,
+      essayQuestionScores,
+      repaired: false,
+    };
+  }
 
   if (!needsCanonicalPaper && !needsEssayBreakdown) {
     return {

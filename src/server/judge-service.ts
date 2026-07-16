@@ -184,6 +184,7 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
 
     const round1Submissions = await prisma.round1Submission.findMany({
       where: {
+        isForfeited: false,
         judgeReviews: {
           some: { judgeUserId: userId },
         },
@@ -416,6 +417,10 @@ export async function getJudgeRound1Detail(
 
   if (!submission) {
     return fail(404, "Round 1 submission not found.");
+  }
+
+  if (submission.isForfeited) {
+    return fail(409, "This Round 1 attempt was forfeited at the deadline and cannot be scored.");
   }
 
   if (submission.judgeReviews.length === 0) {

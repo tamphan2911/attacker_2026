@@ -1532,11 +1532,15 @@ export async function updateRound1EssayScoreByAdmin(
 > {
   const submission = await prisma.round1Submission.findUnique({
     where: { id: submissionId },
-    select: { id: true, bankId: true, rightCount: true, objectiveScore: true, essayScore: true, answers: true },
+    select: { id: true, bankId: true, rightCount: true, objectiveScore: true, essayScore: true, answers: true, isForfeited: true },
   });
 
   if (!submission) {
     return fail(404, "Round 1 submission not found.");
+  }
+
+  if (submission.isForfeited) {
+    return fail(409, "This Round 1 attempt was forfeited at the deadline and must remain at zero.");
   }
 
   const archive = await ensureRound1SubmissionArchive({

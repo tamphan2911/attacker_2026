@@ -429,6 +429,7 @@ model Round1Submission {
   teamId          String
   userId          String
   submittedAt     DateTime            @default(now())
+  isForfeited     Boolean             @default(false)
   rightCount      Int
   wrongCount      Int
   score           Float

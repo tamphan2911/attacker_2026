@@ -2,6 +2,7 @@ import { CompetitionStage } from "@prisma/client";
 
 import { canApplyRound1Qualification } from "@/lib/competition";
 import { prisma } from "@/lib/db";
+import { syncRound1DeadlineForfeitures } from "@/server/round1-deadline";
 import { readTimelineItems } from "@/server/timeline-items";
 import type { TimelineItem } from "@/types/site";
 
@@ -24,6 +25,8 @@ function average(values: number[]) {
 }
 
 export async function readRound1QualifiedTeamIds(limit = ROUND1_QUALIFIED_TEAM_LIMIT) {
+  await syncRound1DeadlineForfeitures();
+
   const [teams, submissions] = await Promise.all([
     prisma.team.findMany({
       select: {
@@ -41,6 +44,7 @@ export async function readRound1QualifiedTeamIds(limit = ROUND1_QUALIFIED_TEAM_L
       select: {
         teamId: true,
         userId: true,
+        isForfeited: true,
         objectiveScore: true,
         essayScore: true,
         totalScore: true,
@@ -61,8 +65,8 @@ export async function readRound1QualifiedTeamIds(limit = ROUND1_QUALIFIED_TEAM_L
     .map((team) => {
       const teamMemberIds = new Set(team.members.map((member) => member.userId));
       const teamSubmissions = submissionsByTeamId.get(team.id) ?? [];
-      const currentMemberSubmissions = teamSubmissions.filter((submission) =>
-        teamMemberIds.has(submission.userId),
+      const currentMemberSubmissions = teamSubmissions.filter(
+        (submission) => teamMemberIds.has(submission.userId) && !submission.isForfeited,
       );
       const completedMemberIds = new Set(currentMemberSubmissions.map((submission) => submission.userId));
       const scoredSubmissions = currentMemberSubmissions.filter(

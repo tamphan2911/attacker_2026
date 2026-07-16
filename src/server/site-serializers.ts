@@ -423,6 +423,7 @@ export function serializeRound1Submission(
     teamId: submission.teamId,
     userId: submission.userId,
     submittedAt: submission.submittedAt.toISOString(),
+    isForfeited: submission.isForfeited,
     rightCount: submission.rightCount,
     wrongCount: submission.wrongCount,
     score: submission.score,

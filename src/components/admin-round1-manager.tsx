@@ -112,7 +112,8 @@ interface IndividualScoreRow {
   gptScoredAt?: string;
   totalScore: number | null;
   submittedAt: string;
-  reviewStatus: "pending" | "reviewed";
+  isForfeited: boolean;
+  reviewStatus: "pending" | "reviewed" | "forfeited";
   judgeName?: string;
   judgeLoginId?: string;
   judgeScoredAt?: string;
@@ -409,7 +410,8 @@ function buildTeamResultGroups(
     }, []);
 
     const completedRows = memberRows.filter(
-      (row): row is MemberResultRow & { submission: Round1Submission } => Boolean(row.submission),
+      (row): row is MemberResultRow & { submission: Round1Submission } =>
+        Boolean(row.submission && !row.submission.isForfeited),
     );
 
     const reviewedRows = completedRows.filter(
@@ -729,6 +731,10 @@ function WaitingEssayScoreBadge({ locale, label }: { locale: Locale; label?: str
 }
 
 function GptScoreCell({ locale, row }: { locale: Locale; row: IndividualScoreRow }) {
+  if (row.isForfeited) {
+    return <StatusPill>{locale === "en" ? "Not required" : "Không cần chấm"}</StatusPill>;
+  }
+
   if (row.gptScore != null) {
     return (
       <div className="space-y-1.5">
@@ -795,7 +801,12 @@ function buildIndividualScoreRows(
         gptScoredAt: submission.aiEssayReview?.scoredAt,
         totalScore: submission.totalScore,
         submittedAt: submission.submittedAt,
-        reviewStatus: isRound1EssayPending(submission) ? "pending" : "reviewed",
+        isForfeited: Boolean(submission.isForfeited),
+        reviewStatus: submission.isForfeited
+          ? "forfeited"
+          : isRound1EssayPending(submission)
+            ? "pending"
+            : "reviewed",
         judgeName: judgeReview?.judgeName,
         judgeLoginId: judgeReview?.judgeLoginId,
         judgeScoredAt: judgeReview?.scoredAt,
@@ -827,6 +838,7 @@ function buildTeamScoreExportRows(teamGroups: TeamResultGroup[]) {
     rank: group.rank ?? "",
     team: group.team.name,
     teamTag: group.team.tag,
+    memberUniversities: getTeamMemberUniversities(group),
     members: group.memberRows.length,
     completedMembers: group.completedRows.length,
     scoredMembers: group.scoredRows.length,
@@ -836,6 +848,13 @@ function buildTeamScoreExportRows(teamGroups: TeamResultGroup[]) {
     latestSubmittedAt: group.latestSubmittedAt ?? "",
     standing: group.scoredRows.length === 0 ? "Waiting for score" : "Reviewed",
   }));
+}
+
+function getTeamMemberUniversities(group: TeamResultGroup) {
+  return group.memberRows
+    .map((row) => row.student.university.trim())
+    .filter(Boolean)
+    .join(", ");
 }
 
 function getStandingTone(group: TeamResultGroup): "info" | "success" | "warning" {
@@ -1468,6 +1487,7 @@ export function AdminRound1ScoresManager() {
             group.team.tag,
             group.team.id,
             group.rank ? String(group.rank) : "",
+            getTeamMemberUniversities(group),
             ...group.memberRows.map((row) => `${row.student.name} ${row.student.loginId ?? ""} ${row.student.email}`),
           ].join(" "),
           teamScoreSearch,
@@ -1850,6 +1870,8 @@ export function AdminRound1ScoresManager() {
                               : "Đã phân công, chờ chấm"}
                         </p>
                       </div>
+                    ) : row.isForfeited ? (
+                      <StatusPill>{locale === "en" ? "Not required" : "Không cần chấm"}</StatusPill>
                     ) : (
                       <StatusPill tone="warning">{locale === "en" ? "Not assigned" : "Chưa phân công"}</StatusPill>
                     )}
@@ -1857,7 +1879,11 @@ export function AdminRound1ScoresManager() {
                   <td className="px-4 py-4 theme-text-body">{formatDateLabel(locale, row.submittedAt)}</td>
                   <td className="px-4 py-4 text-center">
                     <StatusPill tone={row.reviewStatus === "reviewed" ? "success" : "warning"}>
-                      {row.reviewStatus === "reviewed"
+                      {row.reviewStatus === "forfeited"
+                        ? locale === "en"
+                          ? "Deadline zero"
+                          : "0 điểm do quá hạn"
+                        : row.reviewStatus === "reviewed"
                         ? locale === "en"
                           ? "Reviewed"
                           : "Đã chấm"
@@ -1947,6 +1973,7 @@ export function AdminRound1ScoresManager() {
                   "#",
                   locale === "en" ? "Rank" : "Hạng",
                   locale === "en" ? "Team" : "Đội",
+                  locale === "en" ? "Member universities" : "Trường của thành viên",
                   locale === "en" ? "Scored" : "Đã chấm",
                   locale === "en" ? "Objective avg" : "TB trắc nghiệm",
                   locale === "en" ? "Essay avg" : "TB tự luận",
@@ -2000,6 +2027,9 @@ export function AdminRound1ScoresManager() {
                     <Link href={`/admin/teams/${group.team.id}`} className="font-semibold theme-accent">
                       {group.team.name}
                     </Link>
+                  </td>
+                  <td className="min-w-[20rem] max-w-[30rem] whitespace-normal px-4 py-4 leading-6 theme-text-body">
+                    {getTeamMemberUniversities(group) || "--"}
                   </td>
                   <td className="px-4 py-4 theme-text-body">
                     {group.scoredRows.length}/{group.memberRows.length}

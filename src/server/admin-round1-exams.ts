@@ -19,6 +19,7 @@ import {
   parseRound1ArchiveAnswers,
   parseRound1ArchiveQuestions,
 } from "@/server/round1-submission-archive";
+import { syncRound1DeadlineForfeitures } from "@/server/round1-deadline";
 import type {
   AdminRound1AiScoringStatus,
   AdminRound1ExamDetail,
@@ -138,6 +139,8 @@ function fail(status: number, error: string): ServiceFailure {
 }
 
 export async function readAdminRound1ExamRows(): Promise<AdminRound1ExamListRow[]> {
+  await syncRound1DeadlineForfeitures();
+
   const teams = await prisma.team.findMany({
     where: {
       round1LockStatus: TeamRound1LockStatus.LOCKED,
@@ -189,6 +192,7 @@ export async function readAdminRound1ExamRows(): Promise<AdminRound1ExamListRow[
                   answers: submission.answers,
                   rightCount: submission.rightCount,
                   essayScore: submission.essayScore,
+                  isForfeited: submission.isForfeited,
                 })
               : null;
             const attemptQuestions = attempt ? parseRound1ArchiveQuestions(attempt.questions) : [];
@@ -251,6 +255,8 @@ export async function readAdminRound1ExamRows(): Promise<AdminRound1ExamListRow[
 }
 
 export async function readAdminRound1ExamDetail(userId: string): Promise<AdminRound1ExamDetail | null> {
+  await syncRound1DeadlineForfeitures({ userId });
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: {
@@ -295,6 +301,7 @@ export async function readAdminRound1ExamDetail(userId: string): Promise<AdminRo
         answers: submission.answers,
         rightCount: submission.rightCount,
         essayScore: submission.essayScore,
+        isForfeited: submission.isForfeited,
       })
     : null;
   const attemptQuestions = attempt ? parseRound1ArchiveQuestions(attempt.questions) : [];
@@ -394,11 +401,15 @@ export async function clearAdminRound1EssayScore(
 ): Promise<ServiceResult<{ submissionId: string }>> {
   const submission = await prisma.round1Submission.findUnique({
     where: { id: submissionId },
-    select: { id: true, bankId: true, answers: true, rightCount: true, essayScore: true },
+    select: { id: true, bankId: true, answers: true, rightCount: true, essayScore: true, isForfeited: true },
   });
 
   if (!submission) {
     return fail(404, "Round 1 submission not found.");
+  }
+
+  if (submission.isForfeited) {
+    return fail(409, "This Round 1 attempt was forfeited at the deadline and must remain at zero.");
   }
 
   const archive = await ensureRound1SubmissionArchive({
