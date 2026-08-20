@@ -276,6 +276,17 @@ function createAiStatusMeta(locale: "en" | "vi", status: AdminRound2ScoreRow["ai
 }
 
 function AiScoreCell({ locale, row }: { locale: "en" | "vi"; row: AdminRound2ScoreRow }) {
+  if (!row.hasReport) {
+    return (
+      <div className="space-y-2">
+        <StatusPill tone="default">{locale === "en" ? "GPT skipped" : "Bỏ qua GPT"}</StatusPill>
+        <p className="max-w-[220px] text-xs leading-5 theme-text-soft">
+          {locale === "en" ? "No report file was submitted." : "Đội không nộp tệp báo cáo."}
+        </p>
+      </div>
+    );
+  }
+
   const meta = createAiStatusMeta(locale, row.aiScoring.status);
 
   return (
@@ -736,6 +747,7 @@ export function AdminRound2ScoresManager() {
           row.teamTag,
           row.title,
           row.resourceLabel,
+          row.hasReport ? "report submitted" : "no report missing report",
           row.submittedByName,
           row.submittedByLoginId,
           row.aiScoring.status,
@@ -836,6 +848,9 @@ export function AdminRound2ScoresManager() {
       sortedRows.map((row) => ({
         Team: row.teamName,
         Tag: row.teamTag,
+        ReportStatus: row.hasReport
+          ? locale === "en" ? "Submitted" : "Đã nộp"
+          : locale === "en" ? "Not submitted" : "Không nộp",
         Title: row.title,
         Version: row.version,
         Judge1: row.judges[0]?.judgeName ?? "",
@@ -1285,10 +1300,19 @@ export function AdminRound2ScoresManager() {
                         <Link href={`/admin/teams/${row.teamId}`} className="inline-flex max-w-[260px] truncate font-semibold theme-text-strong transition hover:opacity-80">
                           {row.teamName}
                         </Link>
-                        <p className="text-xs theme-text-soft">{`#${row.teamTag} · ${row.title}`}</p>
-                        <Link href={`/admin/users/${row.submittedByUserId}/profile`} className="text-xs theme-text-muted transition hover:opacity-80">
-                          {locale === "en" ? "Submitted by" : "Nộp bởi"} {row.submittedByName} ({row.submittedByLoginId})
-                        </Link>
+                        <p className="text-xs theme-text-soft">{`#${row.teamTag}`}</p>
+                        {row.hasReport ? (
+                          <>
+                            <p className="text-xs theme-text-soft">{row.title}</p>
+                            <Link href={`/admin/users/${row.submittedByUserId}/profile`} className="text-xs theme-text-muted transition hover:opacity-80">
+                              {locale === "en" ? "Submitted by" : "Nộp bởi"} {row.submittedByName} ({row.submittedByLoginId})
+                            </Link>
+                          </>
+                        ) : (
+                          <StatusPill tone="warning">
+                            {locale === "en" ? "No Round 2 report" : "Không nộp báo cáo Vòng 2"}
+                          </StatusPill>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-4 align-top">
@@ -1370,10 +1394,18 @@ export function AdminRound2ScoresManager() {
                       )}
                     </td>
                     <td className="px-4 py-4 align-top">
-                      <p className="theme-text-body">{formatDateTime(locale, row.submittedAt)}</p>
+                      <p className="theme-text-body">
+                        {row.hasReport
+                          ? formatDateTime(locale, row.submittedAt)
+                          : locale === "en" ? "Deadline passed" : "Đã quá hạn"}
+                      </p>
                     </td>
                     <td className="px-4 py-4 align-top">
-                      <StatusPill>{`${locale === "en" ? "v" : "bản"}${row.version}`}</StatusPill>
+                      {row.hasReport ? (
+                        <StatusPill>{`${locale === "en" ? "v" : "bản"}${row.version}`}</StatusPill>
+                      ) : (
+                        <span className="theme-text-soft">--</span>
+                      )}
                     </td>
                     <td className="px-4 py-4 align-top">
                       <div className="flex flex-col items-center gap-2">

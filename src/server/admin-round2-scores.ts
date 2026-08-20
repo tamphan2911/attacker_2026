@@ -124,6 +124,7 @@ export async function readAdminRound2ScoreRows(): Promise<AdminRound2ScoreRow[]>
 
       return {
         submissionId: submission.id,
+        hasReport: !submission.isPlaceholder,
         teamId: submission.team.id,
         teamName: submission.team.name,
         teamTag: submission.team.tag,

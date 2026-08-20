@@ -214,16 +214,32 @@ function JudgeTeamSubmissionTable({
                 <p className="mt-1 text-xs theme-text-soft">{task.teamTag}</p>
               </td>
               <td className="px-4 py-4">
-                <p className="font-semibold theme-text-body">{task.title}</p>
-                <p className="mt-1 text-xs theme-text-soft">
-                  {`${locale === "en" ? "Version" : "Phiên bản"} ${task.version} · ${task.resourceLabel}`}
-                </p>
+                {task.hasReport ? (
+                  <>
+                    <p className="font-semibold theme-text-body">{task.title}</p>
+                    <p className="mt-1 text-xs theme-text-soft">
+                      {`${locale === "en" ? "Version" : "Phiên bản"} ${task.version} · ${task.resourceLabel}`}
+                    </p>
+                  </>
+                ) : (
+                  <StatusPill tone="warning">
+                    {locale === "en" ? "No report submitted" : "Không nộp báo cáo"}
+                  </StatusPill>
+                )}
               </td>
               <td className="px-4 py-4">
-                <p className="text-sm theme-text-body">{formatDateLabel(locale, task.submittedAt)}</p>
-                <p className="mt-1 text-xs theme-text-soft">
-                  {locale === "en" ? `Submitted by ${task.submittedByName}` : `Người nộp: ${task.submittedByName}`}
-                </p>
+                {task.hasReport ? (
+                  <>
+                    <p className="text-sm theme-text-body">{formatDateLabel(locale, task.submittedAt)}</p>
+                    <p className="mt-1 text-xs theme-text-soft">
+                      {locale === "en" ? `Submitted by ${task.submittedByName}` : `Người nộp: ${task.submittedByName}`}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm theme-text-soft">
+                    {locale === "en" ? "Round 2 deadline passed" : "Đã quá hạn nộp Vòng 2"}
+                  </p>
+                )}
               </td>
               <td className="px-4 py-4 text-center">
                 <StatusIcon locale={locale} status={task.status} />

@@ -19,6 +19,7 @@ export interface AdminRound2AiScoringRecord {
 
 export interface AdminRound2ScoreRow {
   submissionId: string;
+  hasReport: boolean;
   teamId: string;
   teamName: string;
   teamTag: string;

@@ -660,9 +660,13 @@ export function JudgeTeamSubmissionScorePage({
               {detail.teamName}
             </h1>
             <p className="mt-3 text-sm leading-7 theme-text-muted">
-              {locale === "en"
-                ? "Download the team file, review the summary, then save your score and judge note."
-                : "Tải tệp bài nộp của đội, xem phần tóm tắt, sau đó lưu điểm và ghi chú chấm."}
+              {detail.hasReport
+                ? locale === "en"
+                  ? "Download the team file, review the summary, then save your score and judge note."
+                  : "Tải tệp bài nộp của đội, xem phần tóm tắt, sau đó lưu điểm và ghi chú chấm."
+                : locale === "en"
+                  ? "This team did not submit a Round 2 report. Complete the rubric and save your score normally."
+                  : "Đội này không nộp báo cáo Vòng 2. Hãy hoàn tất rubric và lưu điểm như bình thường."}
             </p>
           </div>
           <Link
@@ -700,8 +704,18 @@ export function JudgeTeamSubmissionScorePage({
               <p className="text-xs font-semibold uppercase tracking-[0.28em] theme-eyebrow">
                 {locale === "en" ? "Submission summary" : "Tóm tắt bài nộp"}
               </p>
-              <h2 className="mt-2 text-2xl font-semibold theme-text-strong">{detail.title}</h2>
-              <p className="mt-4 text-sm leading-7 theme-text-muted">{detail.summary}</p>
+              <h2 className="mt-2 text-2xl font-semibold theme-text-strong">
+                {detail.hasReport
+                  ? detail.title
+                  : locale === "en" ? "No Round 2 report submitted" : "Không nộp báo cáo Vòng 2"}
+              </h2>
+              <p className="mt-4 text-sm leading-7 theme-text-muted">
+                {detail.hasReport
+                  ? detail.summary
+                  : locale === "en"
+                    ? "The submission deadline has passed without a report file. This scoring record remains available so both assigned judges can enter rubric scores."
+                    : "Đã hết hạn nộp nhưng đội không có tệp báo cáo. Dòng chấm điểm vẫn được giữ để hai giám khảo được phân công có thể nhập điểm rubric."}
+              </p>
             </div>
           </Surface>
 
@@ -844,7 +858,11 @@ export function JudgeTeamSubmissionScorePage({
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
                         {locale === "en" ? "Report title" : "Tên bài nộp"}
                       </p>
-                      <p className="mt-1 text-sm font-semibold leading-6 theme-text-strong">{detail.title}</p>
+                      <p className="mt-1 text-sm font-semibold leading-6 theme-text-strong">
+                        {detail.hasReport
+                          ? detail.title
+                          : locale === "en" ? "No report submitted" : "Không nộp báo cáo"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -855,8 +873,16 @@ export function JudgeTeamSubmissionScorePage({
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
                         {locale === "en" ? "Submitted by" : "Người nộp"}
                       </p>
-                      <p className="mt-1 text-sm font-semibold theme-text-strong">{detail.submittedByName}</p>
-                      <p className="mt-1 text-xs theme-text-soft">{formatDateLabel(locale, detail.submittedAt)}</p>
+                      <p className="mt-1 text-sm font-semibold theme-text-strong">
+                        {detail.hasReport
+                          ? detail.submittedByName
+                          : locale === "en" ? "Not submitted" : "Chưa nộp"}
+                      </p>
+                      <p className="mt-1 text-xs theme-text-soft">
+                        {detail.hasReport
+                          ? formatDateLabel(locale, detail.submittedAt)
+                          : locale === "en" ? "Deadline passed" : "Đã quá hạn"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -867,8 +893,14 @@ export function JudgeTeamSubmissionScorePage({
                       <p className="text-xs font-semibold uppercase tracking-[0.18em] theme-text-soft">
                         {locale === "en" ? "Version / file" : "Phiên bản / tệp"}
                       </p>
-                      <p className="mt-1 text-sm font-semibold theme-text-strong">{`Version ${detail.version}`}</p>
-                      <p className="mt-1 break-words text-xs leading-5 theme-text-soft">{detail.resourceLabel}</p>
+                      <p className="mt-1 text-sm font-semibold theme-text-strong">
+                        {detail.hasReport ? `Version ${detail.version}` : "--"}
+                      </p>
+                      <p className="mt-1 break-words text-xs leading-5 theme-text-soft">
+                        {detail.hasReport
+                          ? detail.resourceLabel
+                          : locale === "en" ? "No file available" : "Không có tệp"}
+                      </p>
                       {detail.resourceSizeBytes ? (
                         <p className="mt-1 text-xs theme-text-faint">{formatBytes(detail.resourceSizeBytes)}</p>
                       ) : null}

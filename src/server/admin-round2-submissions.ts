@@ -105,6 +105,7 @@ export async function readAdminRound2SubmissionRows(): Promise<{
     prisma.teamSubmission.findMany({
       where: {
         round: SubmissionRound.ROUND_2,
+        isPlaceholder: false,
       },
       orderBy: [{ submittedAt: "desc" }, { version: "desc" }],
       include: {

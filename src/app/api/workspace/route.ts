@@ -112,7 +112,7 @@ export async function GET() {
         }),
         currentTeamId
           ? prisma.teamSubmission.findMany({
-              where: { teamId: currentTeamId },
+              where: { teamId: currentTeamId, isPlaceholder: false },
               orderBy: [{ submittedAt: "desc" }],
             })
           : Promise.resolve([]),
@@ -307,11 +307,12 @@ export async function GET() {
       }),
       elevated
         ? prisma.teamSubmission.findMany({
+            where: { isPlaceholder: false },
             orderBy: [{ submittedAt: "desc" }],
           })
         : currentTeamId
           ? prisma.teamSubmission.findMany({
-              where: { teamId: currentTeamId },
+              where: { teamId: currentTeamId, isPlaceholder: false },
               orderBy: [{ submittedAt: "desc" }],
             })
           : Promise.resolve([]),

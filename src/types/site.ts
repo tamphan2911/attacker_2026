@@ -356,6 +356,7 @@ export interface JudgeDashboardRound1Task {
 export interface JudgeDashboardTeamTask {
   kind: SubmissionRound;
   submissionId: string;
+  hasReport: boolean;
   teamId: string;
   teamName: string;
   teamTag: string;
@@ -434,6 +435,7 @@ export interface JudgeTeamSubmissionDetail {
   round: SubmissionRound;
   round3Bracket?: "finalist" | "emerging" | null;
   submissionId: string;
+  hasReport: boolean;
   teamId: string;
   teamName: string;
   teamTag: string;

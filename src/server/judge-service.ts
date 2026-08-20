@@ -336,6 +336,7 @@ export async function getJudgeDashboardData(userId: string): Promise<ServiceResu
           return {
             kind: round,
             submissionId: submission.id,
+            hasReport: !submission.isPlaceholder,
             teamId: submission.team.id,
             teamName: submission.team.name,
             teamTag: submission.team.tag,
@@ -677,6 +678,7 @@ export async function getJudgeTeamSubmissionDetail(
     round,
     round3Bracket,
     submissionId: submission.id,
+    hasReport: !submission.isPlaceholder,
     teamId: submission.team.id,
     teamName: submission.team.name,
     teamTag: submission.team.tag,

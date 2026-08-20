@@ -453,6 +453,7 @@ model TeamSubmission {
   teamId             String
   round              SubmissionRound
   version            Int
+  isPlaceholder      Boolean                      @default(false)
   title              String
   summary            String
   resourceSource     TeamSubmissionResourceSource

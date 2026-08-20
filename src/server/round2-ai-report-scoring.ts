@@ -571,6 +571,7 @@ async function readLatestRound2Submissions() {
   const submissions = await prisma.teamSubmission.findMany({
     where: {
       round: SubmissionRound.ROUND_2,
+      isPlaceholder: false,
       ...(deadlineAt ? { submittedAt: { lte: deadlineAt } } : {}),
     },
     orderBy: [{ submittedAt: "desc" }, { version: "desc" }],
@@ -630,6 +631,14 @@ function isEligibleSubmission(
   mode: Round2AiReportScoringJobMode,
   retryJobCreatedAt?: Date,
 ) {
+  if (
+    submission.isPlaceholder ||
+    submission.resourceSource !== TeamSubmissionResourceSource.UPLOAD ||
+    !submission.resourceStorageKey
+  ) {
+    return false;
+  }
+
   if (hasHumanScoredReview(submission.judgeReviews)) {
     return false;
   }
