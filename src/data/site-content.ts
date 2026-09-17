@@ -2581,7 +2581,7 @@ export const defaultPageContent: SitePageContent = {
     finalStandingsEyebrow: { en: "Final standings", vi: "Xếp hạng chung cuộc" },
     finalStandingsTitle: { en: "Final results", vi: "KẾT QUẢ CHUNG KẾT" },
     presentationDayLabel: { en: "Presentation day", vi: "Ngày thuyết trình" },
-    presentationDateValue: { en: "Jul 04, 2026", vi: "04 thg 7, 2026" },
+    presentationDateValue: { en: "29/09/2026", vi: "29/09/2026" },
     presentationPlaceLabel: { en: "Presentation place", vi: "Địa điểm thuyết trình" },
     presentationPlaceValue: {
       en: "Rex Hotel Saigon, 141 Nguyen Hue, Sai Gon Ward, Ho Chi Minh City",
@@ -3858,6 +3858,14 @@ export function mergePageContentWithDefaults(
 
   if (legacyHeaderLogoImage && !content?.siteHeader?.brandLogoDarkImage) {
     nextContent.siteHeader.brandLogoDarkImage = legacyHeaderLogoImage;
+  }
+
+  if (nextContent.finalResults.presentationDateValue.en === "Jul 04, 2026") {
+    nextContent.finalResults.presentationDateValue.en = defaultPageContent.finalResults.presentationDateValue.en;
+  }
+
+  if (nextContent.finalResults.presentationDateValue.vi === "04 thg 7, 2026") {
+    nextContent.finalResults.presentationDateValue.vi = defaultPageContent.finalResults.presentationDateValue.vi;
   }
 
   if (!content?.home?.emergingRewardOpportunityNote) {
